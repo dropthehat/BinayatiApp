@@ -1,0 +1,37 @@
+# Our Building · بنايتنا — Commercial Mobile App Master Spec (V1.0)
+
+## 1. Product Vision & Scope
+A commercial, bilingual (English/Arabic) property management mobile application for residential buildings (Syndic / Building Committee + Natour / Collector).
+- **V1 Focus:** Single-building management, monthly recurring fees, custom split/unit dues, variable per-apartment services, building expense bills, real-time collector ticking, in-app/push payment notifications, and 1-tap bilingual WhatsApp invoices & receipts.
+- **Excluded from V1 (Future Pro Add-ons):** Water meter AI OCR, multi-building switching, partial payments/credit wallets.
+
+## 2. Technical Stack (AI-Friendly Workflow)
+- **Frontend UI:** Vanilla HTML5 / CSS3 (CSS Variables for Light/Dark mode) / ES6 JavaScript (Single-Page Application architecture).
+- **Native Mobile Wrapper:** CapacitorJS (compiles the web bundle into native iOS Xcode and Android Studio projects for App Store & Play Store distribution).
+- **Local Storage (Offline-First):** Browser `localStorage` / IndexedDB (instant 0.05s boot, works offline in basements/elevators).
+- **Cloud Database & Sync (Production Phase):** Supabase (PostgreSQL + Realtime WebSockets + Edge Functions for native Push Notifications).
+
+## 3. Core Data Model (Database Schema)
+1. **`building`:**
+   - `id`, `name_en` ("Block C"), `name_ar` ("البلوك C"), `exchange_rate` (default `89500` LBP/USD), `collector_name_en` ("Anas"), `collector_name_ar` ("أنس"), `pin_admin`, `collector_token`.
+2. **`apartments` (Directory):**
+   - `id` ("PC01"), `unit` ("SS2R"), `name_en`, `name_ar`, `phone` (WhatsApp digits), `active` (boolean).
+3. **`cycles` (Monthly Billing Rounds):**
+   - `id` ("2026-11"), `label_en` ("November 2026"), `label_ar` ("تشرين الثاني 2026"), `published` (boolean).
+   - **`fixed_charges`:** Array of `{ id, label_en, label_ar, amount, currency ('USD'|'LBP'), exceptions: { [aptId]: customAmount } }`. (Default: Maintenance & Collector Fee).
+   - **`dues` (One-off / Split Charges):** Array of `{ id, label_en, label_ar, mode ('split'|'each'), amount, currency ('USD'|'LBP') }`.
+   - **`services` (Per-Apartment Variable Charges):** Array of `{ id, label_en, label_ar, currency ('USD'|'LBP'), amounts: { [aptId]: number } }` (e.g., Internet, Dish, Generator).
+   - **`bills` (Building Outflow Payables):** Array of `{ id, label_en, label_ar, amount, currency ('USD'|'LBP'), paid: boolean }`.
+4. **`payments` (Tick State):**
+   - Map of `{ [cycleId]: { [chargeId]: { [aptId]: { paid: true, at: ISO_TIMESTAMP } } } }`.
+5. **`activity_log` (Notifications & Audit Trail):**
+   - Array of `{ id, timestamp, apt_id, apt_name, charge_label, amount, currency, action ('paid'|'unpaid') }`.
+
+## 4. Dual-Currency Accounting Rules
+- Every charge (`fixed`, `due`, `service`, `bill`) carries an explicit `currency` (`USD` or `LBP`).
+- **Collector & Dashboard Totals:** Track and display USD (`$`) and LBP (`ل.ل.`) buckets separately so physical cash in the Natour's hand matches 1:1, while showing a combined USD-equivalent progress bar using `building.exchange_rate`.
+- **Treasury Balance:** `Starting Balance + Total Collected (converted or bucketed) - Paid Building Bills`.
+
+## 5. WhatsApp Bilingual Message Templates
+- **Invoice / Reminder (`📣`):** Arabic block followed by English block. Lists all active charges for the month, marks already-paid items with `✅`, and highlights the remaining USD and/or LBP total to hand to the Collector.
+- **Payment Receipt (`🧾`):** Appears as soon as >=1 item is paid. Lists items received (`✅`) and clearly states either `🎉 All settled` or `⚠️ Still remaining` with exact breakdown.

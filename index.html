@@ -3,302 +3,397 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Our Building · بنايتنا — V1 App Prototype</title>
+<title>Bina2itna · بنايتنا — Smart Building Treasury & Collector</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #f1f7ff; --card: #ffffff; --ink: #0f1c2e; --mut: #5b6f8a;
-  --line: #d9e5f5; --soft: #e8f0fe; --acc: #0b6cf0; --aq: #0e7c86;
-  --ok: #1a7f4b; --okbg: #e3f5ec; --warn: #b54708; --wbg: #fef3c7;
-  --bad: #b42318; --errbg: #fee2e2; --zebra: #f7faff;
+  --bg: #f3f6fa; --card: #ffffff; --ink: #0b1526; --mut: #62748e;
+  --line: #e2e8f0; --soft: #edf4fe; --acc: #0b6cf0; --aq: #0e8678;
+  --ok: #15803d; --okbg: #dcfce7; --warn: #b45309; --wbg: #fef3c7;
+  --bad: #b91c1c; --errbg: #fee2e2; --zebra: #f8fafc;
+  --grad: linear-gradient(135deg, #ff7a00 0%, #ff5400 100%);
 }
 :root[data-theme="dark"] {
-  --bg: #0d1520; --card: #142031; --ink: #e6eefb; --mut: #8fa6c4;
-  --line: #233450; --soft: #1b2d48; --acc: #4da3ff; --aq: #4cc3cd;
-  --ok: #4ade80; --okbg: #10301f; --warn: #fbbf24; --wbg: #3a2a0b;
-  --bad: #f87171; --errbg: #3a1416; --zebra: #172639;
+  --bg: #090f19; --card: #111a28; --ink: #f1f5f9; --mut: #8b9db5;
+  --line: #1e2c40; --soft: #172437; --acc: #3b82f6; --aq: #14b8a6;
+  --ok: #22c55e; --okbg: #052e16; --warn: #f59e0b; --wbg: #451a03;
+  --bad: #ef4444; --errbg: #450a0a; --zebra: #141f30;
+  --grad: linear-gradient(135deg, #c2410c 0%, #9a3412 100%);
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
-  font: 15px/1.45 "IBM Plex Sans Arabic", system-ui, -apple-system, sans-serif;
-  font-variant-numeric: tabular-nums; padding-bottom: 90px;
+  font: 14.5px/1.45 "Plus Jakarta Sans", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums; padding-bottom: 95px;
 }
-button, input, select { font: inherit; color: inherit; }
-button { cursor: pointer; border: 0; border-radius: 10px; padding: 8px 14px; font-weight: 600; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; border: 0; border-radius: 12px; font-weight: 700; }
 
-/* Simulator Role Switcher Bar (Top) */
-.sim-bar {
-  background: #0f1c2e; color: #fff; padding: 8px 14px; font-size: 13px;
+/* Simulator Control Strip */
+.sim-strip {
+  background: #090e17; color: #fff; padding: 7px 14px; font-size: 12.5px;
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #233450;
+  position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #1a2638;
 }
-.sim-pills { display: flex; background: #1e2f47; border-radius: 999px; padding: 3px; gap: 4px; }
-.sim-pills button {
-  background: transparent; color: #9ab0ce; border-radius: 999px; padding: 5px 12px; font-size: 12px;
-}
+.sim-pills { display: flex; background: #162030; border-radius: 999px; padding: 2px; }
+.sim-pills button { background: transparent; color: #94a3b8; border-radius: 999px; padding: 4px 11px; font-size: 11.5px; }
 .sim-pills button.on { background: var(--acc); color: #fff; }
-.sim-actions { display: flex; gap: 6px; align-items: center; }
-.sim-actions button {
-  background: #1e2f47; color: #e6eefb; border-radius: 8px; padding: 5px 10px; font-size: 12px;
-}
+.sim-meta { display: flex; gap: 5px; }
+.sim-meta button { background: #162030; color: #cbd5e1; border-radius: 7px; padding: 4px 8px; font-size: 11.5px; }
 
-/* App Shell Container */
-.shell { max-width: 580px; margin: 0 auto; }
+.shell { max-width: 540px; margin: 0 auto; }
 
-/* App Header */
-header.app-hdr {
+/* Sticky Header */
+header.app-bar {
   background: var(--card); border-bottom: 1px solid var(--line);
-  padding: 14px 16px 0; position: sticky; top: 43px; z-index: 40;
+  padding: 12px 16px 0; position: sticky; top: 38px; z-index: 40;
 }
-.brand {
-  display: flex; align-items: center; gap: 6px; font-size: 11px;
-  font-weight: 700; letter-spacing: .05em; color: var(--acc); margin-bottom: 2px;
+.brand-label {
+  display: flex; align-items: center; gap: 5px; font-size: 10.5px;
+  font-weight: 800; letter-spacing: .06em; color: var(--acc); text-transform: uppercase;
 }
-.hdr-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-bottom: 10px; }
-.hdr-row h1 { margin: 0; font-size: 20px; }
-.badge-cycle {
-  background: var(--soft); color: var(--acc); padding: 4px 10px;
-  border-radius: 999px; font-size: 12px; font-weight: 700;
+.bar-main { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding-bottom: 10px; }
+.bar-main h1 { margin: 0; font-size: 19px; font-weight: 800; }
+.cycle-badge {
+  background: var(--soft); color: var(--acc); padding: 5px 12px;
+  border-radius: 999px; font-size: 12px; font-weight: 700; border: 1px solid var(--line);
 }
 
-/* Navigation Tabs (Manager Mode) */
-.nav-tabs {
+/* Tab Navigation */
+nav.tab-row {
   display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; border-top: 1px solid var(--line);
 }
-.nav-tabs::-webkit-scrollbar { display: none; }
-.nav-tabs button {
+nav.tab-row::-webkit-scrollbar { display: none; }
+nav.tab-row button {
   flex: 1 0 auto; background: transparent; color: var(--mut); border-radius: 0;
-  padding: 10px 12px; border-bottom: 2.5px solid transparent; font-size: 14px;
+  padding: 10px 10px; border-bottom: 2.5px solid transparent; font-size: 13px; font-weight: 700;
 }
-.nav-tabs button.on { color: var(--acc); border-bottom-color: var(--acc); }
+nav.tab-row button.on { color: var(--acc); border-bottom-color: var(--acc); }
 
-/* Cards & Common UI */
+/* Card System */
 .card {
   background: var(--card); border: 1px solid var(--line);
-  border-radius: 16px; padding: 16px; margin: 12px 14px;
+  border-radius: 20px; padding: 18px; margin: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.03);
 }
-.card h2 { margin: 0 0 4px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
-.hint { color: var(--mut); font-size: 12.5px; margin: 0 0 12px; }
-.hero {
-  background: linear-gradient(135deg, var(--card) 55%, rgba(14,154,167,.14));
-  border-top: 4px solid var(--aq);
-}
-.dual-money {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0;
-}
-.money-box {
-  background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
-}
-.money-box small { display: block; color: var(--mut); font-size: 11.5px; }
-.money-box b { font-size: 22px; font-weight: 800; display: block; margin-top: 2px; }
-.money-box span.rem { font-size: 12px; color: var(--bad); font-weight: 600; }
-.money-box span.ok { font-size: 12px; color: var(--ok); font-weight: 600; }
+.card h2 { margin: 0 0 6px; font-size: 16px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
+.subtext { color: var(--mut); font-size: 12.5px; margin: 0 0 14px; }
 
-.pbar { height: 10px; background: var(--line); border-radius: 6px; overflow: hidden; margin: 8px 0; }
-.pbar i { display: block; height: 100%; background: var(--ok); transition: width .25s ease; }
+/* DIB-Style Treasury Card */
+.treasury-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 22px;
+  padding: 20px; margin: 12px 14px; position: relative; overflow: hidden;
+  box-shadow: 0 4px 20px -2px rgba(11, 108, 240, 0.08);
+}
+.treasury-card::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: var(--acc);
+}
+.t-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.t-title { font-size: 14px; font-weight: 800; color: var(--mut); display: flex; align-items: center; gap: 6px; }
 
-/* Collector Apartment Rows */
-.flt-bar {
-  display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px;
+/* Currency Toggle Pill */
+.cur-toggle {
+  display: inline-flex; align-items: center; background: var(--bg);
+  border: 1.5px solid var(--line); border-radius: 999px; padding: 3px; gap: 3px;
 }
-.btn-outline {
-  border: 1.5px solid var(--acc); background: transparent; color: var(--acc);
-  border-radius: 999px; padding: 6px 14px; font-size: 13px;
+.cur-toggle button {
+  background: transparent; color: var(--mut); border-radius: 999px;
+  padding: 4px 10px; font-size: 11px; font-weight: 800; transition: all .15s;
 }
-.btn-outline.on { background: var(--acc); color: #fff; }
+.cur-toggle button.active { background: var(--acc); color: #fff; box-shadow: 0 1px 4px rgba(11,108,240,.3); }
 
-.apt-list { margin: 12px 14px; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
-.band {
-  background: var(--acc); color: #fff; font-weight: 700; padding: 10px 14px;
-  display: flex; justify-content: space-between; align-items: center; font-size: 14px;
+.t-main-val { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; margin: 4px 0 14px; line-height: 1.1; }
+.t-main-val small { font-size: 14px; font-weight: 600; color: var(--mut); }
+
+.drawer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.drawer {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px;
 }
-.apt {
-  padding: 12px 14px; background: var(--card); border-bottom: 1px solid var(--line);
+.drawer span { display: block; font-size: 11px; font-weight: 700; color: var(--mut); text-transform: uppercase; }
+.drawer b { font-size: 18px; font-weight: 800; display: block; margin-top: 3px; }
+
+/* Monthly Collection Tracker Card */
+.month-picker-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.cycle-select {
+  background: var(--bg); border: 1.5px solid var(--line); border-radius: 10px;
+  padding: 5px 10px; font-weight: 700; font-size: 13px;
 }
-.apt:last-child { border-bottom: 0; }
-.apt.z { background: var(--zebra); }
-.apt.settled { background: var(--okbg); }
-.apt-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.apt-name { font-weight: 700; font-size: 16px; flex: 1; }
-.apt-name small { color: var(--mut); font-weight: 500; font-size: 13px; margin-inline-start: 6px; }
-.apt-right { display: flex; align-items: center; gap: 6px; }
-.owe-tag { font-weight: 800; font-size: 14px; color: var(--bad); }
-.owe-tag.done { color: var(--ok); font-size: 16px; }
+.progress-rail { height: 9px; background: var(--line); border-radius: 999px; overflow: hidden; margin: 10px 0 6px; }
+.progress-fill { height: 100%; background: var(--ok); border-radius: 999px; transition: width .3s ease; }
+
+/* Publish Status Bar */
+.pub-banner {
+  padding: 12px 14px; border-radius: 14px; display: flex; align-items: center;
+  justify-content: space-between; gap: 10px; margin-top: 14px;
+}
+.pub-banner.live { background: var(--okbg); color: var(--ok); border: 1px solid rgba(22,163,74,.2); }
+.pub-banner.draft { background: var(--wbg); color: var(--warn); border: 1px solid rgba(217,119,6,.2); }
+.pub-banner button { padding: 7px 14px; font-size: 12.5px; }
+
+/* Collector Rows */
+.filter-strip { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.pill-btn {
+  border: 1.5px solid var(--line); background: var(--card); color: var(--ink);
+  border-radius: 999px; padding: 6px 14px; font-size: 12.5px; font-weight: 700;
+}
+.pill-btn.active { background: var(--acc); color: #fff; border-color: var(--acc); }
+
+.apt-table { border: 1px solid var(--line); border-radius: 18px; overflow: hidden; margin: 12px 14px; }
+.apt-card { padding: 13px 14px; background: var(--card); border-bottom: 1px solid var(--line); }
+.apt-card:last-child { border-bottom: 0; }
+.apt-card.paid-all { background: var(--okbg); }
+.apt-card.z { background: var(--zebra); }
+.apt-row-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.apt-title { font-weight: 800; font-size: 15.5px; }
+.apt-code {
+  background: var(--bg); color: var(--mut); border: 1px solid var(--line);
+  padding: 2px 7px; border-radius: 6px; font-size: 11.5px; font-weight: 800; margin-inline-start: 6px;
+}
+.apt-due { font-weight: 800; font-size: 14px; color: var(--bad); }
+.apt-due.cleared { color: var(--ok); font-size: 16px; }
 
 .wa-btn {
-  text-decoration: none; font-size: 18px; padding: 5px 7px; border-radius: 8px;
-  background: var(--bg); border: 1px solid var(--line); line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 10px; background: var(--bg);
+  border: 1px solid var(--line); font-size: 16px; text-decoration: none;
 }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+
+.chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
 .chip {
-  border: 1.5px solid var(--line); border-radius: 999px; padding: 7px 12px;
-  font-size: 13px; font-weight: 600; background: var(--card); color: var(--ink);
-  display: inline-flex; align-items: center; gap: 5px; transition: transform .08s;
+  border: 1.5px solid var(--line); border-radius: 999px; padding: 6px 11px;
+  font-size: 12.5px; font-weight: 700; background: var(--card); color: var(--ink);
+  display: inline-flex; align-items: center; gap: 5px;
 }
-.chip:active { transform: scale(0.96); }
-.chip.on { background: var(--okbg); border-color: var(--ok); color: var(--ok); }
-.chip.on::before { content: "✓"; font-weight: 800; }
+.chip.ticked { background: var(--okbg); border-color: var(--ok); color: var(--ok); }
+.chip.ticked::before { content: "✓"; font-weight: 900; }
 
-/* Inputs & Tables in Setup */
-.field-row {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 8px; padding: 8px 0; border-top: 1px solid var(--line);
+/* Input Styles */
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--mut); margin-bottom: 4px; }
+.form-row { display: flex; gap: 8px; align-items: center; }
+.row-divider { padding: 9px 0; border-top: 1px solid var(--line); }
+.row-divider:first-of-type { border-top: 0; }
+input[type="text"], input[type="number"], select, textarea {
+  width: 100%; background: var(--bg); border: 1.5px solid var(--line);
+  border-radius: 10px; padding: 8px 11px; font-size: 13.5px; font-weight: 600;
 }
-.field-row:first-of-type { border-top: 0; }
-input[type="text"], input[type="number"], select {
-  background: var(--bg); border: 1.5px solid var(--line); border-radius: 9px; padding: 7px 10px;
-}
-input.num-in { width: 105px; text-align: right; font-weight: 700; }
-.btn-primary { background: var(--acc); color: #fff; }
-.btn-soft { background: var(--soft); color: var(--acc); width: 100%; margin-top: 8px; }
-.btn-del { background: var(--errbg); color: var(--bad); padding: 6px 10px; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--acc); }
+.btn-sm-del { background: var(--errbg); color: var(--bad); padding: 7px 11px; border-radius: 9px; }
 
-/* Activity Feed & Notification Toast */
-.feed-item {
+/* Feed / Transactions */
+.feed-row {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 0; border-top: 1px solid var(--line); font-size: 13.5px;
+  padding: 9px 0; border-top: 1px solid var(--line); font-size: 13px;
 }
-.feed-item:first-child { border-top: 0; }
-.feed-dot {
-  width: 8px; height: 8px; border-radius: 50%; background: var(--ok);
-  display: inline-block; margin-inline-end: 8px;
+.feed-row:first-child { border-top: 0; }
+.feed-left { display: flex; align-items: center; gap: 8px; }
+.feed-tag {
+  width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; font-weight: 800; font-size: 11px;
 }
-.feed-dot.un { background: var(--warn); }
+.feed-tag.in { background: var(--okbg); color: var(--ok); }
+.feed-tag.out { background: var(--errbg); color: var(--bad); }
 
-#push-toast {
-  position: fixed; top: 52px; left: 50%; transform: translateX(-50%) translateY(-20px);
-  background: #0f1c2e; color: #fff; padding: 11px 16px; border-radius: 14px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.35); font-size: 13.5px; font-weight: 600;
-  display: flex; align-items: center; gap: 10px; z-index: 999;
-  opacity: 0; pointer-events: none; transition: all .25s cubic-bezier(.2,.8,.2,1);
-  border: 1px solid #334e73; max-width: 92vw;
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200;
+  display: none; align-items: center; justify-content: center; padding: 16px;
 }
-#push-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.modal-box {
+  background: var(--card); border-radius: 20px; width: 100%; max-width: 440px;
+  padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,.3);
+}
+.modal-box h3 { margin: 0 0 8px; font-size: 17px; font-weight: 800; }
+
+#toast {
+  position: fixed; top: 48px; left: 50%; transform: translateX(-50%) translateY(-20px);
+  background: #0b1526; color: #fff; padding: 10px 16px; border-radius: 14px;
+  font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px;
+  z-index: 999; opacity: 0; pointer-events: none; transition: all .25s ease;
+  border: 1px solid #1e2c40; box-shadow: 0 10px 25px rgba(0,0,0,.3); max-width: 90vw;
+}
+#toast.pop { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 
-<!-- TOP SIMULATOR BAR (For testing Manager vs Natour views) -->
-<div class="sim-bar">
+<!-- SIMULATOR CONTROL BAR -->
+<div class="sim-strip">
   <div class="sim-pills">
-    <button id="role-mgr" class="on" onclick="setRole('mgr')">👨‍💼 Manager App</button>
-    <button id="role-col" onclick="setRole('col')">👷‍♂️ Natour App</button>
+    <button id="btn-mgr" class="on" onclick="setRole('mgr')">👨‍💼 Manager</button>
+    <button id="btn-col" onclick="setRole('col')">👷‍♂️ Natour (Collector)</button>
   </div>
-  <div class="sim-actions">
+  <div class="sim-meta">
     <button id="btn-lang" onclick="toggleLang()">العربية</button>
-    <button id="btn-theme" onclick="toggleTheme()">◐</button>
+    <button onclick="toggleTheme()">◐</button>
   </div>
 </div>
 
-<!-- LIVE PUSH NOTIFICATION SIMULATOR TOAST -->
-<div id="push-toast">🔔 <span id="push-text"></span></div>
+<div id="toast">🔔 <span id="toast-txt"></span></div>
 
 <div class="shell">
-  <!-- HEADER -->
-  <header class="app-hdr">
-    <div class="brand">
-      <svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2.5C8 7.6 5.5 11 5.5 14.5a6.5 6.5 0 0 0 13 0C18.5 11 16 7.6 12 2.5z" fill="currentColor"/></svg>
-      <span>OUR BUILDING · بنايتنا</span>
+  <!-- APP HEADER -->
+  <header class="app-bar">
+    <div class="brand-label">
+      <svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 2.5C8 7.6 5.5 11 5.5 14.5a6.5 6.5 0 0 0 13 0C18.5 11 16 7.6 12 2.5z" fill="currentColor"/></svg>
+      <span>BINA2ITNA · بنايتنا</span>
     </div>
-    <div class="hdr-row">
-      <h1 id="hdr-title">Block C · مبنى C</h1>
-      <span class="badge-cycle" id="hdr-month">November 2026</span>
+    <div class="bar-main">
+      <h1 id="bld-name">Block C</h1>
+      <span class="cycle-badge" id="active-month-pill">October 2026</span>
     </div>
-    <nav class="nav-tabs" id="mgr-nav">
-      <button data-tab="dash" class="on" onclick="setTab('dash')">📊 Dashboard</button>
-      <button data-tab="setup" onclick="setTab('setup')">⚙️ Monthly Setup</button>
-      <button data-tab="bills" onclick="setTab('bills')">🧾 Building Bills</button>
-      <button data-tab="dir" onclick="setTab('dir')">👥 Directory</button>
+    <nav class="tab-row" id="mgr-nav">
+      <button data-tab="dash" class="on" onclick="setTab('dash')">📊 Overview</button>
+      <button data-tab="cycles" onclick="setTab('cycles')">📅 Months</button>
+      <button data-tab="setup" onclick="setTab('setup')">⚙️ Charges</button>
+      <button data-tab="expenses" onclick="setTab('expenses')">🧾 Expenses</button>
+      <button data-tab="wa" onclick="setTab('wa')">💬 WhatsApp</button>
+      <button data-tab="dir" onclick="setTab('dir')">🏢 Units</button>
     </nav>
   </header>
 
-  <!-- MAIN VIEW CONTAINER -->
-  <main id="view"></main>
+  <!-- CONTENT INJECTION -->
+  <main id="app-view"></main>
+</div>
+
+<!-- OUT-OF-POCKET EXPENSE MODAL -->
+<div class="modal-overlay" id="exp-modal">
+  <div class="modal-box">
+    <h3>Log Building Expense / Fix</h3>
+    <p class="subtext">Paid directly by manager (e.g. cleaning supplies, bulbs, lock repair). Deducts immediately from the Treasury.</p>
+    <div class="form-group">
+      <label>Description</label>
+      <input type="text" id="m-exp-desc" placeholder="e.g. Cleaning product & sponges">
+    </div>
+    <div class="form-row form-group">
+      <div style="flex:2">
+        <label>Amount</label>
+        <input type="number" id="m-exp-amt" placeholder="0">
+      </div>
+      <div style="flex:1">
+        <label>Currency</label>
+        <select id="m-exp-cur">
+          <option value="USD">USD ($)</option>
+          <option value="LBP">LBP (ل.ل.)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:16px">
+      <button style="flex:1;background:var(--line);padding:10px" onclick="closeModal('exp-modal')">Cancel</button>
+      <button style="flex:2;background:var(--bad);color:#fff;padding:10px" onclick="saveDirectExpense()">Save Outflow</button>
+    </div>
+  </div>
 </div>
 
 <script>
 /* ============================================================================
-   1. DEFAULT V1 STATE (Extracted from your Block C setup + Dual Currency)
+   DATA ARCHITECTURE (Separated Treasury, Multi-Month History, Custom Units)
    ============================================================================ */
-var STORAGE_KEY = 'bina2itna_v1_state';
-var ROLE = 'mgr'; // 'mgr' | 'col'
-var TAB = 'dash'; // 'dash' | 'setup' | 'bills' | 'dir'
+var STORAGE_KEY = 'bina2itna_v3_store';
+var ROLE = 'mgr';
+var TAB = 'dash';
 var LANG = 'en';
 var UNPAID_ONLY = false;
+var TREASURY_REF_CUR = 'USD'; // 'USD' or 'LBP'
+var SELECTED_MONTH = 'October 2026';
 
-var DEFAULT_STATE = {
-  building: {
-    nameEn: 'Block C',
-    nameAr: 'البلوك C',
+var DEFAULT_DATA = {
+  settings: {
+    bldEn: 'Block C Residences',
+    bldAr: 'بناية البلوك C',
     collectorEn: 'Anas',
     collectorAr: 'أنس',
     rate: 89500,
-    startBalanceUsd: 420
+    treasuryMode: 'split', // 'split' (USD+LBP drawers) or 'single'
+    initialUsd: 450,
+    initialLbp: 18000000
   },
-  month: 'November 2026',
+  // Active/Past Month Cycles (Separated progress)
+  cycles: {
+    'October 2026': {
+      published: true,
+      fixed: [
+        { id: 'f_maint', en: 'Maintenance', ar: 'صيانة المبنى', amt: 20, cur: 'USD', exc: { 'U_1A': 15 } },
+        { id: 'f_natour', en: 'Collector Fee', ar: 'أتعاب الناطور', amt: 15, cur: 'USD', exc: {} }
+      ],
+      dues: [
+        { id: 'd_water', en: 'Water Bill Share', ar: 'فاتورة المياه المشتركة', amt: 1250000, cur: 'LBP', mode: 'each' }
+      ],
+      services: [
+        { id: 's_net', en: 'Internet', ar: 'اشتراك الإنترنت', cur: 'USD', map: { 'U_SS2R': 20, 'U_2B': 25 } },
+        { id: 's_gen', en: 'Private Generator', ar: 'المولد الخاص', cur: 'USD', map: { 'U_SS2R': 45, 'U_2A': 50 } }
+      ],
+      paid: {
+        'f_maint': { 'U_SS2R': 1, 'U_2B': 1 },
+        'f_natour': { 'U_SS2R': 1, 'U_2B': 1 },
+        'd_water': { 'U_SS2R': 1 },
+        's_net': { 'U_2B': 1 }
+      }
+    },
+    'September 2026': {
+      published: true,
+      fixed: [
+        { id: 'f_maint', en: 'Maintenance', ar: 'صيانة المبنى', amt: 20, cur: 'USD', exc: { 'U_1A': 15 } },
+        { id: 'f_natour', en: 'Collector Fee', ar: 'أتعاب الناطور', amt: 15, cur: 'USD', exc: {} }
+      ],
+      dues: [
+        { id: 'd_water', en: 'Water Bill Share', ar: 'فاتورة المياه المشتركة', amt: 1100000, cur: 'LBP', mode: 'each' }
+      ],
+      services: [
+        { id: 's_net', en: 'Internet', ar: 'اشتراك الإنترنت', cur: 'USD', map: { 'U_SS2R': 20, 'U_2B': 25 } }
+      ],
+      paid: {
+        'f_maint': { 'U_SS2R': 1, 'U_SS1R': 1, 'U_1A': 1, 'U_2A': 1, 'U_2B': 1 },
+        'f_natour': { 'U_SS2R': 1, 'U_SS1R': 1, 'U_1A': 1, 'U_2A': 1, 'U_2B': 1 },
+        'd_water': { 'U_SS2R': 1, 'U_SS1R': 1, 'U_1A': 1, 'U_2A': 1, 'U_2B': 1 },
+        's_net': { 'U_SS2R': 1, 'U_2B': 1 }
+      }
+    }
+  },
+  // Flexible Apartment / Unit Directory
   apartments: [
-    { id: 'PC01', unit: 'SS2R', en: 'Rami Haddad', ar: 'رامي حداد', ph: '9613111222' },
-    { id: 'PC02', unit: 'SS1R', en: 'Nadia Khoury', ar: 'ناديا خوري', ph: '9613222333' },
-    { id: 'PC04', unit: '1R',   en: 'Inan',         ar: 'عنان',       ph: '9613444555' },
-    { id: 'PC06', unit: 'SS1L', en: 'Treasury (SS1L)', ar: 'أمين الصندوق (SS1L)', ph: '9613666777' },
-    { id: 'PC07', unit: '2L',   en: 'Karim Salameh', ar: 'كريم سلامة', ph: '9613777888' },
-    { id: 'PC09', unit: '2R',   en: 'Carl Halal',   ar: 'كارل حلال',  ph: '9613999000' }
+    { id: 'U_SS2R', floor: 'SS2', letter: 'R', customCode: 'SS2R', en: 'Ahmad El-Khatib', ar: 'أحمد الخطيب', ph: '9613100200' },
+    { id: 'U_SS1R', floor: 'SS1', letter: 'R', customCode: 'SS1R', en: 'Nadia Khoury', ar: 'ناديا خوري', ph: '9613200300' },
+    { id: 'U_1A',   floor: '1',   letter: 'A', customCode: '1A',   en: 'Hadi Mansour', ar: 'هادي منصور', ph: '9613400500' },
+    { id: 'U_2A',   floor: '2',   letter: 'A', customCode: '2A',   en: 'Karim Salameh', ar: 'كريم سلامة', ph: '9613700800' },
+    { id: 'U_2B',   floor: '2',   letter: 'B', customCode: '2B',   en: 'Ziad Nader', ar: 'زياد نادر', ph: '9613900100' }
   ],
-  fixed: [
-    { id: 'f_maint', en: 'Maintenance', ar: 'الصيانة', amt: 20, cur: 'USD', exc: { 'PC04': 15 } },
-    { id: 'f_anas',  en: "Anas's fee",  ar: 'أتعاب أنس', amt: 15, cur: 'USD', exc: {} }
+  // Persistent Cumulative Outflow Expenses
+  expenses: [
+    { id: 'exp_1', desc: 'Cleaning liquids, mop & sponges', amt: 14, cur: 'USD', date: 'Oct 4', by: 'Manager' },
+    { id: 'exp_2', desc: 'Entrance LED bulbs replacement', amt: 480000, cur: 'LBP', date: 'Oct 8', by: 'Manager' },
+    { id: 'exp_3', desc: 'Elevator monthly service maintenance', amt: 65, cur: 'USD', date: 'Oct 10', by: 'Contract' }
   ],
-  dues: [
-    { id: 'd_water', en: 'Cistern Water Share', ar: 'حصة صهريج المياه', mode: 'each', amt: 1350000, cur: 'LBP' }
+  // Live Activity Feed Log
+  activity: [
+    { id: 'a_1', desc: 'Entrance LED bulbs replacement', sub: 'Building Expense', amt: 480000, cur: 'LBP', type: 'out', at: 'Oct 8' },
+    { id: 'a_2', desc: 'Ziad Nader (2B)', sub: 'Maintenance + Fee + Net', amt: 60, cur: 'USD', type: 'in', at: 'Oct 6' },
+    { id: 'a_3', desc: 'Cleaning liquids, mop & sponges', sub: 'Building Expense', amt: 14, cur: 'USD', type: 'out', at: 'Oct 4' },
+    { id: 'a_4', desc: 'Ahmad El-Khatib (SS2R)', sub: 'Maintenance + Fee', amt: 35, cur: 'USD', type: 'in', at: 'Oct 3' }
   ],
-  services: [
-    { id: 's_net', en: 'Internet', ar: 'اشتراك الإنترنت', cur: 'USD', map: { 'PC01': 20, 'PC02': 20, 'PC04': 20, 'PC09': 25 } },
-    { id: 's_gen', en: 'Private Generator', ar: 'المولد الخاص', cur: 'USD', map: { 'PC01': 45, 'PC07': 50, 'PC09': 40 } }
-  ],
-  bills: [
-    { id: 'b_elev', en: 'Elevator bill', ar: 'فاتورة المصعد', amt: 65, cur: 'USD', paid: true },
-    { id: 'b_gen',  en: 'Shared generator bill', ar: 'فاتورة المشترك', amt: 4475000, cur: 'LBP', paid: false }
-  ],
-  paid: {
-    'f_maint': { 'PC01': 1, 'PC09': 1 },
-    'f_anas':  { 'PC01': 1, 'PC09': 1 },
-    's_net':   { 'PC09': 1 },
-    's_gen':   { 'PC09': 1 },
-    'd_water': { 'PC01': 1, 'PC09': 1 }
-  },
-  log: [
-    { at: '10:15 AM', apt: 'Carl Halal (2R)', item: 'Cistern Water Share', amt: 1350000, cur: 'LBP', on: true },
-    { at: '10:14 AM', apt: 'Carl Halal (2R)', item: 'Maintenance', amt: 20, cur: 'USD', on: true },
-    { at: 'Yesterday', apt: 'Rami Haddad (SS2R)', item: 'Maintenance', amt: 20, cur: 'USD', on: true }
-  ]
+  waTemplate: '💧 *{building}*\nفاتورة شهر: *{month}*\n\nتحية طيبة *{name}* ({unit})، 👋\n{items}\n\n👉 *المبلغ المطلوب تسليمه إلى {collector}:*\n*{due}*\n\nنشكر حسن تعاونكم معنا! 🙏✨'
 };
 
-var S = loadState();
-function loadState() {
-  try {
-    var raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {}
-  return JSON.parse(JSON.stringify(DEFAULT_STATE));
+var DB = loadDB();
+function loadDB() {
+  try { var r = localStorage.getItem(STORAGE_KEY); if (r) return JSON.parse(r); } catch (e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
 }
-function saveState() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); } catch (e) {}
+function saveDB() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); } catch (e) {}
 }
 
 /* ============================================================================
-   2. HELPERS & ACCOUNTING ENGINE (USD + LBP)
+   ACCOUNTING & COMPUTATION ENGINE
    ============================================================================ */
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"]/g, function(c) {
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
   });
 }
-function fmtMoney(amt, cur) {
-  var n = Math.round((Number(amt) || 0) * 100) / 100;
-  if (cur === 'LBP') return Math.round(n).toLocaleString('en-US') + (LANG === 'ar' ? ' ل.ل.' : ' LBP');
-  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+function fmt(n, cur) {
+  var v = Math.round((Number(n) || 0) * 100) / 100;
+  if (cur === 'LBP') return Math.round(v).toLocaleString('en-US') + (LANG === 'ar' ? ' ل.ل.' : ' LBP');
+  return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 function arMon(s) {
   var M = {january:'كانون الثاني',february:'شباط',march:'آذار',april:'نيسان',may:'أيار',june:'حزيران',july:'تموز',august:'آب',september:'أيلول',october:'تشرين الأول',november:'تشرين الثاني',december:'كانون الأول'};
@@ -306,207 +401,196 @@ function arMon(s) {
   return x && M[x[1].toLowerCase()] ? M[x[1].toLowerCase()] + ' ' + x[2] : String(s || '');
 }
 
-// Builds the unified list of charge columns for all apartments
-function getColumns() {
-  var cols = [], nApts = S.apartments.length || 1;
-  S.fixed.forEach(function(f) {
-    if (f.amt <= 0 && Object.keys(f.exc || {}).length === 0) return;
+function getCycleCols(cycleKey) {
+  var cyc = DB.cycles[cycleKey] || { fixed: [], dues: [], services: [] };
+  var cols = [];
+  (cyc.fixed || []).forEach(function(f) {
     cols.push({
-      id: f.id, en: f.en, ar: f.ar, cur: f.cur || 'USD',
-      amtFor: function(aptId) {
-        return (f.exc && f.exc[aptId] != null && f.exc[aptId] !== '') ? Number(f.exc[aptId]) : Number(f.amt);
-      }
+      id: f.id, en: f.en, ar: f.ar, cur: f.cur,
+      valFor: function(uId) { return (f.exc && f.exc[uId] != null) ? Number(f.exc[uId]) : Number(f.amt); }
     });
   });
-  S.dues.forEach(function(d) {
-    var each = d.mode === 'each' ? Number(d.amt) : (d.cur === 'LBP' ? Math.round(d.amt / nApts) : Math.round((d.amt / nApts) * 100) / 100);
-    if (each <= 0) return;
+  (cyc.dues || []).forEach(function(d) {
     cols.push({
-      id: d.id, en: d.en, ar: d.ar || d.en, cur: d.cur || 'USD',
-      amtFor: function() { return each; }
+      id: d.id, en: d.en, ar: d.ar, cur: d.cur,
+      valFor: function() { return Number(d.amt); }
     });
   });
-  S.services.forEach(function(sv) {
-    var hasAny = S.apartments.some(function(a) { return Number((sv.map || {})[a.id]) > 0; });
-    if (!hasAny) return;
+  (cyc.services || []).forEach(function(s) {
     cols.push({
-      id: sv.id, en: sv.en, ar: sv.ar || sv.en, cur: sv.cur || 'USD',
-      amtFor: function(aptId) { return Number((sv.map || {})[aptId]) || 0; }
+      id: s.id, en: s.en, ar: s.ar, cur: s.cur,
+      valFor: function(uId) { return Number((s.map || {})[uId]) || 0; }
     });
   });
   return cols;
 }
 
-function isPaid(colId, aptId) {
-  return !!(S.paid[colId] && S.paid[colId][aptId]);
+function getCycleStats(cycleKey) {
+  var cyc = DB.cycles[cycleKey];
+  if (!cyc) return { usdGot: 0, usdSum: 0, lbpGot: 0, lbpSum: 0, settled: 0, total: DB.apartments.length, pct: 0 };
+  var cols = getCycleCols(cycleKey);
+  var usdGot = 0, usdSum = 0, lbpGot = 0, lbpSum = 0, settled = 0;
+  var rate = Number(DB.settings.rate) || 89500;
+
+  DB.apartments.forEach(function(apt) {
+    var allPaid = true;
+    cols.forEach(function(c) {
+      var v = c.valFor(apt.id);
+      if (v <= 0) return;
+      var isTicked = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][apt.id]);
+      if (!isTicked) allPaid = false;
+      if (c.cur === 'LBP') { lbpSum += v; if (isTicked) lbpGot += v; }
+      else { usdSum += v; if (isTicked) usdGot += v; }
+    });
+    if (allPaid && cols.length) settled++;
+  });
+
+  var eqGot = usdGot + (lbpGot / rate);
+  var eqSum = usdSum + (lbpSum / rate);
+  var pct = eqSum > 0 ? Math.min(100, Math.round((eqGot / eqSum) * 100)) : 0;
+  return { usdGot: usdGot, usdSum: usdSum, lbpGot: lbpGot, lbpSum: lbpSum, settled: settled, total: DB.apartments.length, pct: pct };
 }
 
-function calcMetrics() {
-  var cols = getColumns();
-  var usdSum = 0, usdGot = 0, lbpSum = 0, lbpGot = 0, settledCount = 0;
-  var rate = Number(S.building.rate) || 89500;
+function getTreasuryData() {
+  var rate = Number(DB.settings.rate) || 89500;
+  var totalUsdCollectedAllTime = 0;
+  var totalLbpCollectedAllTime = 0;
 
-  S.apartments.forEach(function(a) {
-    var aptAllPaid = true;
-    cols.forEach(function(c) {
-      var v = c.amtFor(a.id);
-      if (v <= 0) return;
-      var pd = isPaid(c.id, a.id);
-      if (!pd) aptAllPaid = false;
-      if (c.cur === 'LBP') { lbpSum += v; if (pd) lbpGot += v; }
-      else { usdSum += v; if (pd) usdGot += v; }
-    });
-    if (aptAllPaid && cols.length) settledCount++;
+  // Add all collected funds from all historical cycles
+  Object.keys(DB.cycles).forEach(function(ck) {
+    var s = getCycleStats(ck);
+    totalUsdCollectedAllTime += s.usdGot;
+    totalLbpCollectedAllTime += s.lbpGot;
   });
 
-  var eqSum = usdSum + (lbpSum / rate);
-  var eqGot = usdGot + (lbpGot / rate);
-  var pct = eqSum > 0 ? Math.min(100, Math.round((eqGot / eqSum) * 100)) : 0;
-
-  // Building Outflow Bills
-  var billsUsdPaid = 0, billsLbpPaid = 0;
-  S.bills.forEach(function(b) {
-    if (!b.paid) return;
-    if (b.cur === 'LBP') billsLbpPaid += Number(b.amt) || 0;
-    else billsUsdPaid += Number(b.amt) || 0;
+  // Deduct all outflow expenses
+  var totalUsdExpenses = 0;
+  var totalLbpExpenses = 0;
+  DB.expenses.forEach(function(e) {
+    if (e.cur === 'LBP') totalLbpExpenses += Number(e.amt) || 0;
+    else totalUsdExpenses += Number(e.amt) || 0;
   });
+
+  var netUsdDrawer = (Number(DB.settings.initialUsd) || 0) + totalUsdCollectedAllTime - totalUsdExpenses;
+  var netLbpDrawer = (Number(DB.settings.initialLbp) || 0) + totalLbpCollectedAllTime - totalLbpExpenses;
+
+  var unifiedRefUsd = netUsdDrawer + (netLbpDrawer / rate);
+  var unifiedRefLbp = netLbpDrawer + (netUsdDrawer * rate);
 
   return {
-    cols: cols,
-    usdSum: usdSum, usdGot: usdGot, usdRem: usdSum - usdGot,
-    lbpSum: lbpSum, lbpGot: lbpGot, lbpRem: lbpSum - lbpGot,
-    settled: settledCount, totalApts: S.apartments.length, pct: pct,
-    treasuryUsd: (Number(S.building.startBalanceUsd) || 0) + usdGot - billsUsdPaid,
-    treasuryLbp: lbpGot - billsLbpPaid
+    netUsd: netUsdDrawer,
+    netLbp: netLbpDrawer,
+    refTotal: TREASURY_REF_CUR === 'USD' ? unifiedRefUsd : unifiedRefLbp,
+    refCur: TREASURY_REF_CUR
   };
 }
 
 /* ============================================================================
-   3. WHATSAPP INVOICE (📣) & RECEIPT (🧾) GENERATOR
+   INTERACTIONS & TICKING ENGINE
    ============================================================================ */
-function buildWhatsAppMsg(apt, mode) {
-  var cols = getColumns();
-  var pAr = [], pEn = [], uAr = [], uEn = [];
-  var paidUsd = 0, paidLbp = 0, dueUsd = 0, dueLbp = 0;
-
-  cols.forEach(function(c) {
-    var v = c.amtFor(apt.id);
-    if (v <= 0) return;
-    var pd = isPaid(c.id, apt.id);
-    var fEn = c.cur === 'LBP' ? Math.round(v).toLocaleString('en-US') + ' LBP' : '$' + v;
-    var fAr = c.cur === 'LBP' ? Math.round(v).toLocaleString('en-US') + ' ل.ل.' : '$' + v;
-
-    if (pd) {
-      if (c.cur === 'LBP') paidLbp += v; else paidUsd += v;
-      pAr.push('• ' + (c.ar || c.en) + ': ' + fAr + ' ✅');
-      pEn.push('• ' + c.en + ': ' + fEn + ' ✅');
-    } else {
-      if (c.cur === 'LBP') dueLbp += v; else dueUsd += v;
-      uAr.push('• ' + (c.ar || c.en) + ': ' + fAr);
-      uEn.push('• ' + c.en + ': ' + fEn);
-    }
-  });
-
-  function joinTotals(u, l, isAr) {
-    var parts = [];
-    if (u > 0) parts.push('$' + (Math.round(u * 100) / 100));
-    if (l > 0) parts.push(Math.round(l).toLocaleString('en-US') + (isAr ? ' ل.ل.' : ' LBP'));
-    return parts.join(isAr ? ' + ' : ' + ') || '$0';
-  }
-
-  var nameAr = apt.ar || apt.en;
-  var monAr = arMon(S.month);
-  var colEn = S.building.collectorEn || 'Anas';
-  var colAr = S.building.collectorAr || 'أنس';
-  var bldEn = S.building.nameEn || 'Block C';
-  var bldAr = S.building.nameAr || 'البلوك C';
-
-  var hdr = mode === 'rc'
-    ? '🧾 *إيصال ' + bldAr + ' · ' + bldEn + ' Receipt*'
-    : '🏢 *فاتورة ' + bldAr + ' · ' + bldEn + ' Invoice*';
-
-  var ar = '', en = '';
-  if (mode === 'rc') {
-    var gotStrAr = joinTotals(paidUsd, paidLbp, true);
-    var gotStrEn = joinTotals(paidUsd, paidLbp, false);
-    var remStrAr = joinTotals(dueUsd, dueLbp, true);
-    var remStrEn = joinTotals(dueUsd, dueLbp, false);
-    ar = 'تحية طيبة *' + nameAr + '*، 👋\n\n' + bldAr + ' · *' + monAr + '*\n\n'
-       + '✅ *إيصال استلام* — وصلنا منكم *' + gotStrAr + '*:\n' + pAr.join('\n') + '\n\n'
-       + (uAr.length ? '⚠️ *المتبقي عليكم:*\n' + uAr.join('\n') + '\n*المجموع: ' + remStrAr + '*\n\nيُرجى تسليمه إلى ' + colAr + '.' : '🎉 لا يوجد أي مبلغ متبقٍّ عليكم — كل شيء مسدَّد.')
-       + '\n\nنشكر لكم حسن تعاونكم معنا! 🙏✨';
-    en = 'Hello *' + apt.en + '*, 👋\n\n' + bldEn + ' · *' + S.month + '*\n\n'
-       + '✅ *Payment receipt* — we received *' + gotStrEn + '*:\n' + pEn.join('\n') + '\n\n'
-       + (uEn.length ? '⚠️ *Still remaining:*\n' + uEn.join('\n') + '\n*Total: ' + remStrEn + '*\n\nPlease pass it to ' + colEn + '.' : '🎉 Nothing is left to pay — you are all settled.')
-       + '\n\nThank you for your valued cooperation! 🙏✨';
-  } else {
-    var allAr = pAr.concat(uAr).join('\n');
-    var allEn = pEn.concat(uEn).join('\n');
-    var dueStrAr = joinTotals(dueUsd, dueLbp, true);
-    var dueStrEn = joinTotals(dueUsd, dueLbp, false);
-    ar = 'تحية طيبة *' + nameAr + '*، 👋\n\n' + bldAr + ' · *' + monAr + '*\n' + allAr + '\n\n'
-       + (uAr.length ? '👉 *المبلغ المستحق: ' + dueStrAr + ' — يُرجى تسليمه إلى ' + colAr + '.*' : 'لا يترتب عليكم أي مبلغ هذا الشهر — كل شيء مسدّد. ✅')
-       + '\n\nنشكر لكم حسن تعاونكم معنا! 🙏✨';
-    en = 'Hello *' + apt.en + '*, 👋\n\n' + bldEn + ' · *' + S.month + '*\n' + allEn + '\n\n'
-       + (uEn.length ? '👉 *Total due: ' + dueStrEn + ' — please pass it to ' + colEn + '.*' : 'You have nothing to pay this month — all settled. ✅')
-       + '\n\nThank you for your valued cooperation! 🙏✨';
-  }
-
-  var note = '────────────────────\n_ملاحظة: هذه رسالة تلقائية. لأي استفسار أو تعديل، يُرجى الرد مباشرة عبر هذه المحادثة._\n_Note: This is an automated message. For any questions or corrections, please reply directly to this chat._\n\n💧 *بنايتنا · Our Building*';
-  var fullText = hdr + '\n\n' + ar + '\n\n' + en + '\n\n' + note;
-  return 'https://wa.me/' + String(apt.ph || '').replace(/\D/g, '') + '?text=' + encodeURIComponent(fullText);
+function toast(msg) {
+  var el = document.getElementById('toast');
+  document.getElementById('toast-txt').textContent = msg;
+  el.classList.add('pop');
+  setTimeout(function() { el.classList.remove('pop'); }, 3400);
 }
 
-/* ============================================================================
-   4. TICKING ENGINE + PUSH NOTIFICATION SIMULATION
-   ============================================================================ */
-var toastTimer = null;
-function showPushToast(txt) {
-  var el = document.getElementById('push-toast');
-  document.getElementById('push-text').textContent = txt;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(function() { el.classList.remove('show'); }, 3500);
-}
+function toggleCollectorTick(colId, aptId) {
+  var cyc = DB.cycles[SELECTED_MONTH];
+  if (!cyc) return;
+  cyc.paid = cyc.paid || {};
+  cyc.paid[colId] = cyc.paid[colId] || {};
+  var willBePaid = !cyc.paid[colId][aptId];
 
-function toggleTick(colId, aptId) {
-  var cols = getColumns();
-  var col = cols.filter(function(c) { return c.id === colId; })[0];
-  var apt = S.apartments.filter(function(a) { return a.id === aptId; })[0];
-  if (!col || !apt) return;
+  if (willBePaid) cyc.paid[colId][aptId] = 1;
+  else delete cyc.paid[colId][aptId];
 
-  if (!S.paid[colId]) S.paid[colId] = {};
-  var newVal = !S.paid[colId][aptId];
-  if (newVal) S.paid[colId][aptId] = 1;
-  else delete S.paid[colId][aptId];
+  var col = getCycleCols(SELECTED_MONTH).filter(function(c) { return c.id === colId; })[0];
+  var apt = DB.apartments.filter(function(a) { return a.id === aptId; })[0];
+  var amt = col.valFor(aptId);
 
-  var amt = col.amtFor(aptId);
-  var nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  S.log.unshift({
-    at: nowStr,
-    apt: apt.en + ' (' + apt.unit + ')',
-    item: col.en,
+  DB.activity.unshift({
+    id: 'a_' + Date.now(),
+    desc: apt.en + ' (' + (apt.customCode || apt.floor + apt.letter) + ')',
+    sub: col.en,
     amt: amt,
     cur: col.cur,
-    on: newVal
+    type: willBePaid ? 'in' : 'revert',
+    at: 'Just now'
   });
-  S.log = S.log.slice(0, 30);
-  saveState();
-
-  var msg = (newVal ? 'Paid: ' : 'Unmarked: ') + apt.en + ' (' + apt.unit + ') · ' + col.en + ' ' + fmtMoney(amt, col.cur);
-  showPushToast(msg);
+  DB.activity = DB.activity.slice(0, 30);
+  saveDB();
+  toast((willBePaid ? 'Received: ' : 'Reverted: ') + apt.en + ' · ' + col.en);
   render();
 }
 
+function saveDirectExpense() {
+  var desc = document.getElementById('m-exp-desc').value.trim();
+  var amt = Number(document.getElementById('m-exp-amt').value) || 0;
+  var cur = document.getElementById('m-exp-cur').value;
+  if (!desc || amt <= 0) { alert('Please enter a description and amount.'); return; }
+
+  DB.expenses.unshift({
+    id: 'exp_' + Date.now(), desc: desc, amt: amt, cur: cur, date: 'Today', by: 'Manager'
+  });
+  DB.activity.unshift({
+    id: 'act_' + Date.now(), desc: desc, sub: 'Manager Outflow', amt: amt, cur: cur, type: 'out', at: 'Just now'
+  });
+  saveDB();
+  closeModal('exp-modal');
+  toast('Expense recorded: - ' + fmt(amt, cur));
+  render();
+}
+
+function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
 /* ============================================================================
-   5. VIEW RENDERERS
+   WHATSAPP MESSAGE GENERATOR
+   ============================================================================ */
+function makeWhatsAppUrl(apt) {
+  var cyc = DB.cycles[SELECTED_MONTH];
+  var cols = getCycleCols(SELECTED_MONTH);
+  var lines = [];
+  var dueUsd = 0, dueLbp = 0;
+
+  cols.forEach(function(c) {
+    var v = c.valFor(apt.id);
+    if (v <= 0) return;
+    var isTicked = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][apt.id]);
+    var itemStr = '• ' + (LANG === 'ar' ? (c.ar || c.en) : c.en) + ': ' + fmt(v, c.cur) + (isTicked ? ' ✅' : '');
+    lines.push(itemStr);
+    if (!isTicked) {
+      if (c.cur === 'LBP') dueLbp += v; else dueUsd += v;
+    }
+  });
+
+  var dueParts = [];
+  if (dueUsd > 0) dueParts.push(fmt(dueUsd, 'USD'));
+  if (dueLbp > 0) dueParts.push(fmt(dueLbp, 'LBP'));
+  var dueFormatted = dueParts.join(' + ') || (LANG === 'ar' ? 'مسدّد بالكامل 🎉' : 'All Settled 🎉');
+
+  var msg = DB.waTemplate
+    .replace('{building}', LANG === 'ar' ? DB.settings.bldAr : DB.settings.bldEn)
+    .replace('{month}', LANG === 'ar' ? arMon(SELECTED_MONTH) : SELECTED_MONTH)
+    .replace('{name}', LANG === 'ar' ? (apt.ar || apt.en) : apt.en)
+    .replace('{unit}', apt.customCode || (apt.floor + apt.letter))
+    .replace('{items}', lines.join('\n'))
+    .replace('{due}', dueFormatted)
+    .replace('{collector}', LANG === 'ar' ? DB.settings.collectorAr : DB.settings.collectorEn);
+
+  return 'https://wa.me/' + String(apt.ph || '').replace(/\D/g, '') + '?text=' + encodeURIComponent(msg);
+}
+
+/* ============================================================================
+   VIEWS RENDERER
    ============================================================================ */
 function render() {
   document.documentElement.lang = LANG;
   document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
   document.getElementById('btn-lang').textContent = LANG === 'ar' ? 'English' : 'العربية';
-  document.getElementById('hdr-title').textContent = LANG === 'ar' ? S.building.nameAr : S.building.nameEn;
-  document.getElementById('hdr-month').textContent = LANG === 'ar' ? arMon(S.month) : S.month;
+  document.getElementById('bld-name').textContent = LANG === 'ar' ? DB.settings.bldAr : DB.settings.bldEn;
+  document.getElementById('active-month-pill').textContent = LANG === 'ar' ? arMon(SELECTED_MONTH) : SELECTED_MONTH;
 
   var nav = document.getElementById('mgr-nav');
   nav.style.display = ROLE === 'mgr' ? 'flex' : 'none';
@@ -514,214 +598,303 @@ function render() {
   if (ROLE === 'col') {
     renderCollectorView();
   } else {
-    if (TAB === 'dash') renderDashboardView();
-    else if (TAB === 'setup') renderSetupView();
-    else if (TAB === 'bills') renderBillsView();
-    else if (TAB === 'dir') renderDirectoryView();
+    if (TAB === 'dash') renderOverviewView();
+    else if (TAB === 'cycles') renderMonthsView();
+    else if (TAB === 'setup') renderChargesSetupView();
+    else if (TAB === 'expenses') renderExpensesView();
+    else if (TAB === 'wa') renderWhatsAppConfigView();
+    else if (TAB === 'dir') renderUnitsDirectoryView();
   }
 }
 
-/* ---- A. COLLECTOR VIEW (NATOUR) ---- */
+/* ---- 1. OVERVIEW (DIB-Style Treasury + Independent Monthly Tracker) ---- */
+function renderOverviewView() {
+  var t = getTreasuryData();
+  var s = getCycleStats(SELECTED_MONTH);
+  var cyc = DB.cycles[SELECTED_MONTH];
+  var h = '';
+
+  // DIB-INSPIRED TREASURY PORTFOLIO CARD
+  h += '<div class="treasury-card">';
+  h += '<div class="t-head">';
+  h += '<span class="t-title"><span>🏛️ Building Treasury</span></span>';
+  h += '<div class="cur-toggle">';
+  h += '<button class="' + (TREASURY_REF_CUR === 'USD' ? 'active' : '') + '" onclick="TREASURY_REF_CUR=\'USD\';render()">USD</button>';
+  h += '<button class="' + (TREASURY_REF_CUR === 'LBP' ? 'active' : '') + '" onclick="TREASURY_REF_CUR=\'LBP\';render()">LBP</button>';
+  h += '</div></div>';
+
+  h += '<div class="t-main-val" dir="ltr">' + fmt(t.refTotal, t.refCur) + ' <small>(' + t.refCur + ' Ref)</small></div>';
+  h += '<div class="drawer-grid">';
+  h += '<div class="drawer"><span>USD Physical Drawer</span><b dir="ltr">' + fmt(t.netUsd, 'USD') + '</b></div>';
+  h += '<div class="drawer"><span>LBP Physical Drawer</span><b dir="ltr">' + fmt(t.netLbp, 'LBP') + '</b></div>';
+  h += '</div>';
+  h += '<button class="pill-btn" style="width:100%;margin-top:14px;background:var(--soft);color:var(--acc)" onclick="openModal(\'exp-modal\')">+ Log Direct Out-of-Pocket Expense</button>';
+  h += '</div>';
+
+  // MONTHLY COLLECTION CARD (Isolated from Treasury)
+  h += '<div class="card">';
+  h += '<div class="month-picker-bar">';
+  h += '<h2><span>Monthly Collection</span></h2>';
+  h += '<select class="cycle-select" onchange="SELECTED_MONTH=this.value;render()">';
+  Object.keys(DB.cycles).forEach(function(ck) {
+    h += '<option value="' + esc(ck) + '"' + (ck === SELECTED_MONTH ? ' selected' : '') + '>' + esc(ck) + '</option>';
+  });
+  h += '</select></div>';
+
+  h += '<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--mut);font-weight:700">';
+  h += '<span>Progress (' + s.settled + '/' + s.total + ' units settled)</span><span>' + s.pct + '%</span>';
+  h += '</div>';
+  h += '<div class="progress-rail"><div class="progress-fill" style="width:' + s.pct + '%"></div></div>';
+
+  h += '<div class="drawer-grid" style="margin-top:10px">';
+  h += '<div class="drawer"><span>Collected USD</span><b dir="ltr">' + fmt(s.usdGot, 'USD') + ' <small style="font-size:12px;font-weight:600;color:var(--mut)">/ ' + fmt(s.usdSum, 'USD') + '</small></b></div>';
+  h += '<div class="drawer"><span>Collected LBP</span><b dir="ltr">' + fmt(s.lbpGot, 'LBP') + ' <small style="font-size:12px;font-weight:600;color:var(--mut)">/ ' + fmt(s.lbpSum, 'LBP') + '</small></b></div>';
+  h += '</div>';
+
+  // Publish Status Trigger
+  var isLive = cyc && cyc.published;
+  h += '<div class="pub-banner ' + (isLive ? 'live' : 'draft') + '">';
+  h += '<div><b>' + (isLive ? '● Live on Natour Phone' : '○ Draft Mode (Hidden from Natour)') + '</b><div style="font-size:11.5px;opacity:.85">' + (isLive ? 'Natour can see and tick charges' : 'Configure charges before publishing') + '</div></div>';
+  h += '<button class="pill-btn" style="background:#fff;color:#0b1526" onclick="DB.cycles[\'' + SELECTED_MONTH + '\'].published=!DB.cycles[\'' + SELECTED_MONTH + '\'].published;saveDB();render()">' + (isLive ? 'Unpublish' : 'Publish Month') + '</button>';
+  h += '</div>';
+  h += '</div>';
+
+  // LIVE PAYMENTS & EXPENSES ACTIVITY FEED
+  h += '<div class="card">';
+  h += '<h2><span>Feed: Payments & Outflows</span><small style="font-size:12px;color:var(--mut)">Real-time</small></h2>';
+  if (!DB.activity.length) {
+    h += '<div class="subtext">No transactions recorded yet.</div>';
+  } else {
+    DB.activity.slice(0, 8).forEach(function(a) {
+      var isOut = a.type === 'out';
+      h += '<div class="feed-row">';
+      h += '<div class="feed-left"><div class="feed-tag ' + (isOut ? 'out' : 'in') + '">' + (isOut ? '−' : '+') + '</div>';
+      h += '<div><b>' + esc(a.desc) + '</b><div style="font-size:11.5px;color:var(--mut)">' + esc(a.sub) + ' · ' + esc(a.at) + '</div></div></div>';
+      h += '<div dir="ltr" style="font-weight:800;color:' + (isOut ? 'var(--bad)' : 'var(--ok)') + '">' + (isOut ? '- ' : '+ ') + fmt(a.amt, a.cur) + '</div>';
+      h += '</div>';
+    });
+  }
+  h += '</div>';
+
+  document.getElementById('app-view').innerHTML = h;
+}
+
+/* ---- 2. NATOUR COLLECTOR VIEW ---- */
 function renderCollectorView() {
-  var m = calcMetrics();
+  var cyc = DB.cycles[SELECTED_MONTH];
+  if (!cyc || !cyc.published) {
+    document.getElementById('app-view').innerHTML = '<div class="card" style="text-align:center;padding:40px"><h3>⏳ Month Not Published</h3><p class="subtext">The building committee has not published the ' + esc(SELECTED_MONTH) + ' cycle for collection yet.</p></div>';
+    return;
+  }
+  var s = getCycleStats(SELECTED_MONTH);
+  var cols = getCycleCols(SELECTED_MONTH);
   var ar = LANG === 'ar';
   var h = '';
 
-  // Sticky Summary Card
-  h += '<div class="card hero">';
-  h += '<h2><span>' + (ar ? 'تحصيل الشهر' : 'Monthly Collection') + '</span><small style="color:var(--mut);font-size:13px">' + m.settled + ' / ' + m.totalApts + ' ' + (ar ? 'سدّدوا بالكامل' : 'settled') + '</small></h2>';
-  h += '<div class="dual-money">';
-  h += '<div class="money-box"><small>' + (ar ? 'دولار تم تحصيله' : 'USD Collected') + '</small><b dir="ltr">' + fmtMoney(m.usdGot, 'USD') + '</b><span class="' + (m.usdRem > 0 ? 'rem' : 'ok') + '" dir="ltr">' + (ar ? 'المتبقي: ' : 'Rem: ') + fmtMoney(m.usdRem, 'USD') + '</span></div>';
-  h += '<div class="money-box"><small>' + (ar ? 'ل.ل. تم تحصيلها' : 'LBP Collected') + '</small><b dir="ltr">' + fmtMoney(m.lbpGot, 'LBP') + '</b><span class="' + (m.lbpRem > 0 ? 'rem' : 'ok') + '" dir="ltr">' + (ar ? 'المتبقي: ' : 'Rem: ') + fmtMoney(m.lbpRem, 'LBP') + '</span></div>';
-  h += '</div>';
-  h += '<div class="pbar"><i style="width:' + m.pct + '%"></i></div>';
-  h += '<div class="flt-bar">';
-  h += '<button class="btn-outline' + (UNPAID_ONLY ? ' on' : '') + '" onclick="UNPAID_ONLY=!UNPAID_ONLY;render()">' + (UNPAID_ONLY ? (ar ? 'عرض الكل' : 'Show All') : (ar ? 'غير المدفوعين فقط' : 'Unpaid Only')) + '</button>';
-  h += '<small style="color:var(--mut);font-size:12px">' + (ar ? '📣 تذكير · 🧾 إيصال واتساب' : '📣 Reminder · 🧾 Receipt') + '</small>';
+  h += '<div class="card" style="margin-top:14px;border-top:4px solid var(--acc)">';
+  h += '<h2><span>' + (ar ? 'تحصيل شهر ' + arMon(SELECTED_MONTH) : 'Collection: ' + SELECTED_MONTH) + '</span><span style="font-size:13px;color:var(--mut)">' + s.settled + '/' + s.total + ' settled</span></h2>';
+  h += '<div class="progress-rail"><div class="progress-fill" style="width:' + s.pct + '%"></div></div>';
+  h += '<div class="filter-strip" style="margin-top:12px">';
+  h += '<button class="pill-btn ' + (UNPAID_ONLY ? 'active' : '') + '" onclick="UNPAID_ONLY=!UNPAID_ONLY;render()">' + (UNPAID_ONLY ? (ar ? 'عرض الكل' : 'Show All') : (ar ? 'غير المسددين فقط' : 'Unpaid Only')) + '</button>';
+  h += '<small style="color:var(--mut);font-weight:700">📣 WhatsApp Invoice</small>';
   h += '</div></div>';
 
-  // Apartments List
-  h += '<div class="apt-list">';
-  h += '<div class="band"><span>' + esc(ar ? S.building.nameAr : S.building.nameEn) + '</span><span>' + m.pct + '%</span></div>';
-
-  var shown = 0;
-  S.apartments.forEach(function(apt, idx) {
-    var owedUsd = 0, owedLbp = 0, paidAny = false;
-    m.cols.forEach(function(c) {
-      var v = c.amtFor(apt.id);
-      if (v <= 0) return;
-      if (isPaid(c.id, apt.id)) paidAny = true;
-      else { if (c.cur === 'LBP') owedLbp += v; else owedUsd += v; }
+  h += '<div class="apt-table">';
+  DB.apartments.forEach(function(apt, idx) {
+    var dueUsd = 0, dueLbp = 0;
+    cols.forEach(function(c) {
+      var v = c.valFor(apt.id); if (v <= 0) return;
+      var isTicked = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][apt.id]);
+      if (!isTicked) { if (c.cur === 'LBP') dueLbp += v; else dueUsd += v; }
     });
-    var isSettled = owedUsd === 0 && owedLbp === 0;
-    if (UNPAID_ONLY && isSettled) return;
-    shown++;
+    var isDone = dueUsd === 0 && dueLbp === 0;
+    if (UNPAID_ONLY && isDone) return;
 
-    var oweParts = [];
-    if (owedUsd > 0) oweParts.push(fmtMoney(owedUsd, 'USD'));
-    if (owedLbp > 0) oweParts.push(fmtMoney(owedLbp, 'LBP'));
+    var dueStrs = [];
+    if (dueUsd > 0) dueStrs.push(fmt(dueUsd, 'USD'));
+    if (dueLbp > 0) dueStrs.push(fmt(dueLbp, 'LBP'));
+    var code = apt.customCode || (apt.floor + apt.letter);
 
-    var dispName = ar ? (apt.ar || apt.en) : apt.en;
-    h += '<div class="apt' + (idx % 2 ? ' z' : '') + (isSettled ? ' settled' : '') + '">';
-    h += '<div class="apt-top">';
-    h += '<div class="apt-name">' + esc(dispName) + '<small>(' + esc(apt.unit) + ')</small></div>';
-    h += '<div class="apt-right">';
-    h += '<span class="owe-tag' + (isSettled ? ' done' : '') + '" dir="ltr">' + (isSettled ? '✓' : oweParts.join(' + ')) + '</span>';
+    h += '<div class="apt-card' + (idx % 2 ? ' z' : '') + (isDone ? ' paid-all' : '') + '">';
+    h += '<div class="apt-row-head">';
+    h += '<div><span class="apt-title">' + esc(ar ? (apt.ar || apt.en) : apt.en) + '</span><span class="apt-code">' + esc(code) + '</span></div>';
+    h += '<div style="display:flex;align-items:center;gap:8px">';
+    h += '<span class="apt-due' + (isDone ? ' cleared' : '') + '" dir="ltr">' + (isDone ? '✓' : dueStrs.join(' + ')) + '</span>';
     if (apt.ph) {
-      h += '<a class="wa-btn" href="' + buildWhatsAppMsg(apt, 'inv') + '" target="_blank" title="Send WhatsApp Invoice">📣</a>';
-      if (paidAny) {
-        h += '<a class="wa-btn" href="' + buildWhatsAppMsg(apt, 'rc') + '" target="_blank" title="Send WhatsApp Receipt">🧾</a>';
-      }
+      h += '<a class="wa-btn" href="' + makeWhatsAppUrl(apt) + '" target="_blank" title="WhatsApp Message">📣</a>';
     }
     h += '</div></div>';
 
-    // Chips
-    h += '<div class="chips">';
-    m.cols.forEach(function(c) {
-      var v = c.amtFor(apt.id);
-      if (v <= 0) return;
-      var pd = isPaid(c.id, apt.id);
-      var lbl = ar ? (c.ar || c.en) : c.en;
-      h += '<button class="chip' + (pd ? ' on' : '') + '" onclick="toggleTick(\'' + c.id + '\',\'' + apt.id + '\')">'
-        + esc(lbl) + ' <span dir="ltr">' + fmtMoney(v, c.cur) + '</span></button>';
+    h += '<div class="chip-grid">';
+    cols.forEach(function(c) {
+      var v = c.valFor(apt.id); if (v <= 0) return;
+      var isTicked = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][apt.id]);
+      h += '<button class="chip' + (isTicked ? ' ticked' : '') + '" onclick="toggleCollectorTick(\'' + c.id + '\',\'' + apt.id + '\')">'
+        + esc(ar ? (c.ar || c.en) : c.en) + ' <span dir="ltr">' + fmt(v, c.cur) + '</span></button>';
     });
     h += '</div></div>';
   });
-
-  if (shown === 0) {
-    h += '<div style="padding:28px;text-align:center;color:var(--ok);font-weight:700">' + (ar ? 'الجميع سدّد بالكامل ✅' : 'Everyone has settled ✅') + '</div>';
-  }
   h += '</div>';
-  document.getElementById('view').innerHTML = h;
+  document.getElementById('app-view').innerHTML = h;
 }
 
-/* ---- B. MANAGER DASHBOARD VIEW ---- */
-function renderDashboardView() {
-  var m = calcMetrics();
-  var h = '';
-
-  // Treasury + Collection Overview
-  h += '<div class="card hero">';
-  h += '<h2><span>Building Treasury & Collection</span><small style="color:var(--mut);font-weight:500">Rate: ' + Number(S.building.rate).toLocaleString() + ' LBP/$</small></h2>';
-  h += '<div class="dual-money">';
-  h += '<div class="money-box"><small>Treasury Cash (USD)</small><b dir="ltr">' + fmtMoney(m.treasuryUsd, 'USD') + '</b><span class="ok" dir="ltr">Collected: ' + fmtMoney(m.usdGot, 'USD') + ' / ' + fmtMoney(m.usdSum, 'USD') + '</span></div>';
-  h += '<div class="money-box"><small>Treasury Cash (LBP)</small><b dir="ltr">' + fmtMoney(m.treasuryLbp, 'LBP') + '</b><span class="ok" dir="ltr">Collected: ' + fmtMoney(m.lbpGot, 'LBP') + '</span></div>';
+/* ---- 3. MONTH CYCLES MANAGER ---- */
+function renderMonthsView() {
+  var h = '<div class="card"><h2>Billing Months & Mid-Cycle Additions</h2><p class="subtext">Manage active and past billing rounds.</p>';
+  Object.keys(DB.cycles).forEach(function(ck) {
+    var c = DB.cycles[ck];
+    h += '<div class="row-divider" style="display:flex;justify-content:space-between;align-items:center">';
+    h += '<div><b>' + esc(ck) + '</b><div style="font-size:12px;color:var(--mut)">' + (c.published ? '✅ Live for Collector' : '🔒 Draft') + '</div></div>';
+    h += '<button class="pill-btn" onclick="SELECTED_MONTH=\'' + ck + '\';setTab(\'dash\')">View Month</button>';
+    h += '</div>';
+  });
+  h += '<button class="pill-btn" style="width:100%;margin-top:12px;background:var(--soft);color:var(--acc)" onclick="promptNewCycle()">+ Start New Month Cycle</button>';
   h += '</div>';
-  h += '<div class="pbar"><i style="width:' + m.pct + '%"></i></div>';
-  h += '<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--mut)"><span>' + m.settled + ' of ' + m.totalApts + ' apartments fully settled (' + m.pct + '%)</span><button class="btn-outline" style="padding:3px 10px;font-size:12px" onclick="setRole(\'col\')">Open Natour View →</button></div>';
-  h += '</div>';
-
-  // Live Notifications / Latest Payments Activity Feed
-  h += '<div class="card">';
-  h += '<h2><span>🔔 Latest Payments Activity</span><small style="color:var(--mut);font-size:12px">Live Feed</small></h2>';
-  h += '<p class="hint">Every time ' + esc(S.building.collectorEn) + ' ticks or unticks a charge, you get a push notification and an entry here.</p>';
-  if (!S.log.length) {
-    h += '<div style="color:var(--mut);font-size:13px">No activity yet.</div>';
-  } else {
-    S.log.slice(0, 8).forEach(function(item) {
-      h += '<div class="feed-item"><div><span class="feed-dot' + (item.on ? '' : ' un') + '"></span><b>' + esc(item.apt) + '</b> · ' + esc(item.item) + '</div><div dir="ltr" style="font-weight:700;color:' + (item.on ? 'var(--ok)' : 'var(--warn)') + '">' + (item.on ? '+' : '↺ ') + fmtMoney(item.amt, item.cur) + ' <small style="color:var(--mut);font-weight:400">' + esc(item.at) + '</small></div></div>';
-    });
-  }
-  h += '</div>';
-
-  document.getElementById('view').innerHTML = h;
+  document.getElementById('app-view').innerHTML = h;
 }
 
-/* ---- C. MANAGER MONTHLY SETUP VIEW ---- */
-function renderSetupView() {
+function promptNewCycle() {
+  var name = prompt('Enter new month label (e.g. November 2026):');
+  if (!name || DB.cycles[name]) return;
+  // Clone previous cycle configuration
+  var prev = DB.cycles[SELECTED_MONTH] || { fixed: [], dues: [], services: [] };
+  DB.cycles[name] = {
+    published: false,
+    fixed: JSON.parse(JSON.stringify(prev.fixed || [])),
+    dues: [],
+    services: JSON.parse(JSON.stringify(prev.services || [])),
+    paid: {}
+  };
+  SELECTED_MONTH = name;
+  saveDB();
+  render();
+  toast('Started new cycle: ' + name);
+}
+
+/* ---- 4. CHARGES SETUP (Fixed Fees, Split Dues, Services) ---- */
+function renderChargesSetupView() {
+  var cyc = DB.cycles[SELECTED_MONTH];
+  if (!cyc) { document.getElementById('app-view').innerHTML = ''; return; }
   var h = '';
 
-  // 1. Cycle & Exchange Rate
-  h += '<div class="card"><h2>1. Cycle & Currency Rate</h2><p class="hint">Set the active month and LBP exchange rate.</p>';
-  h += '<div class="field-row"><span>Active Month</span><input type="text" value="' + esc(S.month) + '" onchange="S.month=this.value.trim();saveState();render()"></div>';
-  h += '<div class="field-row"><span>Exchange Rate (LBP per $1)</span><input class="num-in" type="number" value="' + S.building.rate + '" onchange="S.building.rate=Number(this.value)||89500;saveState();render()"></div>';
+  // Mid-Month Split Due Adder
+  h += '<div class="card" style="border-top:3px solid var(--warn)">';
+  h += '<h2><span>Emergency / Mid-Month Split Due</span></h2>';
+  h += '<p class="subtext">Water pump fix, emergency repair, or unexpected cost. Choose to add to current month or queue for next month.</p>';
+  h += '<button class="pill-btn" style="width:100%;background:var(--wbg);color:var(--warn)" onclick="promptMidMonthDue()">+ Add Split Due (Current or Next Month)</button>';
   h += '</div>';
 
-  // 2. Fixed Monthly Charges
-  h += '<div class="card"><h2>2. Fixed Monthly Charges</h2><p class="hint">Charged to every apartment (e.g., Maintenance & Natour Fee).</p>';
-  S.fixed.forEach(function(f, idx) {
-    h += '<div class="field-row"><div style="flex:1"><b>' + esc(f.en) + '</b> <small style="color:var(--mut)">(' + esc(f.ar) + ')</small></div>';
-    h += '<input class="num-in" type="number" value="' + f.amt + '" onchange="S.fixed[' + idx + '].amt=Number(this.value)||0;saveState();render()">';
-    h += '<select onchange="S.fixed[' + idx + '].cur=this.value;saveState();render()"><option value="USD"' + (f.cur==='USD'?' selected':'') + '>USD ($)</option><option value="LBP"' + (f.cur==='LBP'?' selected':'') + '>LBP (ل.ل.)</option></select>';
+  // Fixed Monthly Charges
+  h += '<div class="card"><h2><span>Fixed Charges (' + esc(SELECTED_MONTH) + ')</span></h2>';
+  cyc.fixed.forEach(function(f, idx) {
+    h += '<div class="row-divider">';
+    h += '<div class="form-row" style="margin-bottom:6px"><input type="text" value="' + esc(f.en) + '" style="flex:2" placeholder="Label EN" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed[' + idx + '].en=this.value;saveDB()"><input type="text" dir="rtl" value="' + esc(f.ar) + '" style="flex:2" placeholder="الاسم بالعربية" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed[' + idx + '].ar=this.value;saveDB()"><button class="btn-sm-del" onclick="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed.splice(' + idx + ',1);saveDB();render()">✕</button></div>';
+    h += '<div class="form-row"><input type="number" style="flex:2" value="' + f.amt + '" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed[' + idx + '].amt=Number(this.value)||0;saveDB();render()"><select style="flex:1" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed[' + idx + '].cur=this.value;saveDB();render()"><option value="USD"' + (f.cur==='USD'?' selected':'') + '>USD</option><option value="LBP"' + (f.cur==='LBP'?' selected':'') + '>LBP</option></select></div>';
     h += '</div>';
   });
+  h += '<button class="pill-btn" style="width:100%;margin-top:10px;background:var(--soft);color:var(--acc)" onclick="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed.push({id:\'f_\'+Date.now(),en:\'New Charge\',ar:\'رسم جديد\',amt:0,cur:\'USD\',exc:{}});saveDB();render()">+ Add Fixed Fee</button>';
   h += '</div>';
 
-  // 3. One-Off / Split Dues
-  h += '<div class="card"><h2>3. Extra Dues (Split or Per Unit)</h2><p class="hint">Add water cistern shares, repairs, or extra dues in USD or LBP.</p>';
-  S.dues.forEach(function(d, idx) {
-    h += '<div class="field-row" style="flex-wrap:wrap">';
-    h += '<input type="text" placeholder="English Name" value="' + esc(d.en) + '" style="flex:1;min-width:120px" onchange="S.dues[' + idx + '].en=this.value;saveState()">';
-    h += '<input type="text" dir="rtl" placeholder="الاسم بالعربية" value="' + esc(d.ar) + '" style="flex:1;min-width:120px" onchange="S.dues[' + idx + '].ar=this.value;saveState()">';
-    h += '<select onchange="S.dues[' + idx + '].mode=this.value;saveState();render()"><option value="each"' + (d.mode==='each'?' selected':'') + '>Each Apt</option><option value="split"' + (d.mode==='split'?' selected':'') + '>Split Total</option></select>';
-    h += '<input class="num-in" type="number" value="' + d.amt + '" onchange="S.dues[' + idx + '].amt=Number(this.value)||0;saveState();render()">';
-    h += '<select onchange="S.dues[' + idx + '].cur=this.value;saveState();render()"><option value="USD"' + (d.cur==='USD'?' selected':'') + '>USD</option><option value="LBP"' + (d.cur==='LBP'?' selected':'') + '>LBP</option></select>';
-    h += '<button class="btn-del" onclick="S.dues.splice(' + idx + ',1);saveState();render()">✕</button>';
-    h += '</div>';
-  });
-  h += '<button class="btn-soft" onclick="S.dues.push({id:\'d_\'+Date.now(),en:\'New Due\',ar:\'رسم إضافي\',mode:\'each\',amt:0,cur:\'USD\'});saveState();render()">+ Add Extra Due</button>';
-  h += '</div>';
+  // Per-Apartment Services (Mobile-Friendly Stacked Layout)
+  h += '<div class="card"><h2><span>Per-Apartment Services</span></h2>';
+  cyc.services.forEach(function(sv, sIdx) {
+    h += '<div style="border:1.5px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px">';
+    h += '<div class="form-row" style="margin-bottom:6px"><input type="text" value="' + esc(sv.en) + '" style="flex:2;font-weight:700" placeholder="Service EN" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].services[' + sIdx + '].en=this.value;saveDB()"><select style="flex:1" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].services[' + sIdx + '].cur=this.value;saveDB();render()"><option value="USD"' + (sv.cur==='USD'?' selected':'') + '>USD</option><option value="LBP"' + (sv.cur==='LBP'?' selected':'') + '>LBP</option></select><button class="btn-sm-del" onclick="DB.cycles[\'' + SELECTED_MONTH + '\'].services.splice(' + sIdx + ',1);saveDB();render()">✕</button></div>';
+    h += '<div class="form-row" style="margin-bottom:8px"><input type="text" dir="rtl" value="' + esc(sv.ar) + '" placeholder="الاسم بالعربية" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].services[' + sIdx + '].ar=this.value;saveDB()"></div>';
 
-  // 4. Per-Apartment Services (Internet, Generator, etc.)
-  h += '<div class="card"><h2>4. Per-Apartment Services</h2><p class="hint">Variable monthly amounts per unit (leave 0 if apartment is not subscribed).</p>';
-  S.services.forEach(function(sv, sIdx) {
-    h += '<div style="border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px">';
-    h += '<div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">';
-    h += '<input type="text" value="' + esc(sv.en) + '" style="flex:1;font-weight:700" onchange="S.services[' + sIdx + '].en=this.value;saveState()">';
-    h += '<input type="text" dir="rtl" value="' + esc(sv.ar) + '" style="flex:1" onchange="S.services[' + sIdx + '].ar=this.value;saveState()">';
-    h += '<select onchange="S.services[' + sIdx + '].cur=this.value;saveState();render()"><option value="USD"' + (sv.cur==='USD'?' selected':'') + '>USD</option><option value="LBP"' + (sv.cur==='LBP'?' selected':'') + '>LBP</option></select>';
-    h += '</div>';
-    S.apartments.forEach(function(a) {
-      var val = (sv.map && sv.map[a.id]) || '';
-      h += '<div class="field-row"><span>' + esc(a.en) + ' <small style="color:var(--mut)">(' + esc(a.unit) + ')</small></span>';
-      h += '<input class="num-in" type="number" placeholder="0" value="' + val + '" onchange="S.services[' + sIdx + '].map[\'' + a.id + '\']=Number(this.value)||0;saveState()"></div>';
+    DB.apartments.forEach(function(apt) {
+      var val = (sv.map && sv.map[apt.id]) || '';
+      var code = apt.customCode || (apt.floor + apt.letter);
+      h += '<div class="row-divider" style="display:flex;justify-content:space-between;align-items:center;padding:5px 0">';
+      h += '<span style="font-size:13px"><b>' + esc(code) + '</b> <small style="color:var(--mut)">' + esc(apt.en) + '</small></span>';
+      h += '<input type="number" style="width:100px;text-align:right" placeholder="0" value="' + val + '" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].services[' + sIdx + '].map[\'' + apt.id + '\']=Number(this.value)||0;saveDB()">';
+      h += '</div>';
     });
     h += '</div>';
   });
+  h += '<button class="pill-btn" style="width:100%;background:var(--soft);color:var(--acc)" onclick="DB.cycles[\'' + SELECTED_MONTH + '\'].services.push({id:\'s_\'+Date.now(),en:\'New Service\',ar:\'خدمة جديدة\',cur:\'USD\',map:{}});saveDB();render()">+ Add Service Category</button>';
   h += '</div>';
 
-  document.getElementById('view').innerHTML = h;
+  document.getElementById('app-view').innerHTML = h;
 }
 
-/* ---- D. BUILDING BILLS (OUTFLOWS) VIEW ---- */
-function renderBillsView() {
-  var h = '<div class="card"><h2>Building Payables (Outflows)</h2><p class="hint">Track Elevator, Shared Generator, and maintenance expenses paid from the building treasury.</p>';
-  S.bills.forEach(function(b, idx) {
-    h += '<div class="field-row" style="flex-wrap:wrap">';
-    h += '<input type="text" value="' + esc(b.en) + '" style="flex:1;min-width:130px" onchange="S.bills[' + idx + '].en=this.value;saveState()">';
-    h += '<input class="num-in" type="number" value="' + b.amt + '" onchange="S.bills[' + idx + '].amt=Number(this.value)||0;saveState();render()">';
-    h += '<select onchange="S.bills[' + idx + '].cur=this.value;saveState();render()"><option value="USD"' + (b.cur==='USD'?' selected':'') + '>USD</option><option value="LBP"' + (b.cur==='LBP'?' selected':'') + '>LBP</option></select>';
-    h += '<label style="display:flex;align-items:center;gap:5px;font-weight:700;color:' + (b.paid ? 'var(--ok)' : 'var(--bad)') + '"><input type="checkbox"' + (b.paid ? ' checked' : '') + ' onchange="S.bills[' + idx + '].paid=this.checked;saveState();render()"> ' + (b.paid ? 'Settled' : 'Due') + '</label>';
-    h += '</div>';
+function promptMidMonthDue() {
+  var desc = prompt('Enter due title (e.g. Water pump repair):');
+  if (!desc) return;
+  var amt = Number(prompt('Amount per apartment:')) || 0;
+  if (amt <= 0) return;
+  var cur = prompt('Currency (USD or LBP):', 'USD').toUpperCase() === 'LBP' ? 'LBP' : 'USD';
+  var target = confirm('Press OK to add to CURRENT month (' + SELECTED_MONTH + ')\nPress CANCEL to schedule for NEXT month.') ? SELECTED_MONTH : prompt('Enter target month name:', 'November 2026');
+
+  if (!DB.cycles[target]) {
+    DB.cycles[target] = { published: false, fixed: [], dues: [], services: [], paid: {} };
+  }
+  DB.cycles[target].dues.push({
+    id: 'd_' + Date.now(), en: desc, ar: desc, amt: amt, cur: cur, mode: 'each'
   });
-  h += '<button class="btn-soft" onclick="S.bills.push({id:\'b_\'+Date.now(),en:\'Repair Bill\',ar:\'فاتورة تصليح\',amt:0,cur:\'USD\',paid:false});saveState();render()">+ Add Building Bill</button>';
-  h += '</div>';
-  document.getElementById('view').innerHTML = h;
+  saveDB();
+  toast('Added due to ' + target);
+  render();
 }
 
-/* ---- E. DIRECTORY VIEW ---- */
-function renderDirectoryView() {
-  var h = '<div class="card"><h2>Apartments & WhatsApp Directory</h2><p class="hint">Edit resident names (English & Arabic) and WhatsApp numbers.</p>';
-  S.apartments.forEach(function(a, idx) {
-    h += '<div style="padding:10px 0;border-top:1px solid var(--line)">';
-    h += '<div style="display:flex;gap:6px;margin-bottom:6px"><input type="text" value="' + esc(a.unit) + '" style="width:70px;font-weight:700" onchange="S.apartments[' + idx + '].unit=this.value;saveState()">';
-    h += '<input type="text" value="' + esc(a.en) + '" placeholder="English Name" style="flex:1" onchange="S.apartments[' + idx + '].en=this.value;saveState()"></div>';
-    h += '<div style="display:flex;gap:6px"><input type="text" dir="rtl" value="' + esc(a.ar) + '" placeholder="الاسم بالعربية" style="flex:1" onchange="S.apartments[' + idx + '].ar=this.value;saveState()">';
-    h += '<input type="text" value="' + esc(a.ph) + '" placeholder="9613..." style="width:140px" onchange="S.apartments[' + idx + '].ph=this.value;saveState()"></div>';
+/* ---- 5. EXPENSES & INITIAL SETTINGS ---- */
+function renderExpensesView() {
+  var h = '<div class="card"><h2><span>Initial Cash & Rate</span></h2>';
+  h += '<div class="form-row form-group"><div><label>Initial USD Cash</label><input type="number" value="' + DB.settings.initialUsd + '" onchange="DB.settings.initialUsd=Number(this.value)||0;saveDB();render()"></div>';
+  h += '<div><label>Initial LBP Cash</label><input type="number" value="' + DB.settings.initialLbp + '" onchange="DB.settings.initialLbp=Number(this.value)||0;saveDB();render()"></div></div>';
+  h += '<div class="form-group"><label>Exchange Rate (LBP / $1)</label><input type="number" value="' + DB.settings.rate + '" onchange="DB.settings.rate=Number(this.value)||89500;saveDB();render()"></div>';
+  h += '</div>';
+
+  h += '<div class="card"><h2><span>Outflow Expenses History</span><button class="pill-btn" style="background:var(--errbg);color:var(--bad)" onclick="openModal(\'exp-modal\')">+ Add Expense</button></h2>';
+  DB.expenses.forEach(function(e, i) {
+    h += '<div class="row-divider" style="display:flex;justify-content:space-between;align-items:center">';
+    h += '<div><b>' + esc(e.desc) + '</b><div style="font-size:11.5px;color:var(--mut)">' + esc(e.date) + ' · ' + esc(e.by) + '</div></div>';
+    h += '<div dir="ltr" style="font-weight:800;color:var(--bad)">- ' + fmt(e.amt, e.cur) + '</div>';
     h += '</div>';
   });
-  h += '<button class="btn-soft" onclick="S.apartments.push({id:\'PC\'+(S.apartments.length+10),unit:\'NEW\',en:\'New Resident\',ar:\'ساكن جديد\',ph:\'961\'});saveState();render()">+ Add Apartment</button>';
   h += '</div>';
-  document.getElementById('view').innerHTML = h;
+  document.getElementById('app-view').innerHTML = h;
+}
+
+/* ---- 6. WHATSAPP TEMPLATE ENGINE ---- */
+function renderWhatsAppConfigView() {
+  var h = '<div class="card"><h2><span>WhatsApp Message Customizer</span></h2>';
+  h += '<p class="subtext">Use tags: {building}, {month}, {name}, {unit}, {items}, {due}, {collector}.</p>';
+  h += '<textarea style="height:190px;font-family:monospace;font-size:13px" onchange="DB.waTemplate=this.value;saveDB()">' + esc(DB.waTemplate) + '</textarea>';
+  h += '<button class="pill-btn" style="width:100%;margin-top:10px;background:var(--acc);color:#fff" onclick="toast(\'WhatsApp template saved!\')">Save Template</button>';
+  h += '</div>';
+  document.getElementById('app-view').innerHTML = h;
+}
+
+/* ---- 7. UNITS DIRECTORY (Flexible Floor + Letter / Custom Code) ---- */
+function renderUnitsDirectoryView() {
+  var h = '<div class="card"><h2><span>Building Units Directory</span></h2>';
+  h += '<p class="subtext">Floor + Letter, Apartment number, or custom code (e.g. SS2R, 1A, 2B, Ground Left).</p>';
+  DB.apartments.forEach(function(apt, idx) {
+    h += '<div class="row-divider">';
+    h += '<div class="form-row" style="margin-bottom:6px">';
+    h += '<input type="text" style="width:90px;font-weight:800" placeholder="Code (2B)" value="' + esc(apt.customCode || apt.floor + apt.letter) + '" onchange="DB.apartments[' + idx + '].customCode=this.value;saveDB()">';
+    h += '<input type="text" style="flex:2" placeholder="Name EN" value="' + esc(apt.en) + '" onchange="DB.apartments[' + idx + '].en=this.value;saveDB()">';
+    h += '<button class="btn-sm-del" onclick="DB.apartments.splice(' + idx + ',1);saveDB();render()">✕</button>';
+    h += '</div>';
+    h += '<div class="form-row">';
+    h += '<input type="text" dir="rtl" style="flex:2" placeholder="الاسم بالعربية" value="' + esc(apt.ar) + '" onchange="DB.apartments[' + idx + '].ar=this.value;saveDB()">';
+    h += '<input type="text" style="flex:2" placeholder="WhatsApp (961...)" value="' + esc(apt.ph) + '" onchange="DB.apartments[' + idx + '].ph=this.value;saveDB()">';
+    h += '</div>';
+    h += '</div>';
+  });
+  h += '<button class="pill-btn" style="width:100%;margin-top:12px;background:var(--soft);color:var(--acc)" onclick="DB.apartments.push({id:\'U_\'+Date.now(),floor:\'1\',letter:\'A\',customCode:\'1A\',en:\'New Resident\',ar:\'ساكن جديد\',ph:\'961\'});saveDB();render()">+ Add Unit</button>';
+  h += '</div>';
+  document.getElementById('app-view').innerHTML = h;
 }
 
 /* ============================================================================
-   6. NAVIGATION & CONTROLS
+   NAVIGATION CONTROLS
    ============================================================================ */
 function setRole(r) {
   ROLE = r;
-  document.getElementById('role-mgr').className = r === 'mgr' ? 'on' : '';
-  document.getElementById('role-col').className = r === 'col' ? 'on' : '';
+  document.getElementById('btn-mgr').className = r === 'mgr' ? 'on' : '';
+  document.getElementById('btn-col').className = r === 'col' ? 'on' : '';
   render();
 }
 function setTab(t) {
@@ -736,9 +909,8 @@ function toggleLang() {
   render();
 }
 function toggleTheme() {
-  var root = document.documentElement;
-  var cur = root.getAttribute('data-theme');
-  root.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  var r = document.documentElement;
+  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
 }
 
 render();

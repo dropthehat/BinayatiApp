@@ -1,313 +1,431 @@
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="en" dir="ltr" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Bina2itna · بنايتنا — Smart Building Treasury & Collector</title>
+<title>Bina2itna · بنايتنا — V4 Fintech Edition</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #f3f6fa; --card: #ffffff; --ink: #0b1526; --mut: #62748e;
-  --line: #e2e8f0; --soft: #edf4fe; --acc: #0b6cf0; --aq: #0e8678;
-  --ok: #15803d; --okbg: #dcfce7; --warn: #b45309; --wbg: #fef3c7;
-  --bad: #b91c1c; --errbg: #fee2e2; --zebra: #f8fafc;
-  --grad: linear-gradient(135deg, #ff7a00 0%, #ff5400 100%);
+  --bg: #f2f5f9; --card: #ffffff; --card2: #f8fafc; --ink: #0f172a; --mut: #64748b;
+  --line: #e2e8f0; --soft: #e0edff; --acc: #0b6cf0; --ok: #10b981; --okbg: rgba(16,185,129,.12);
+  --warn: #f59e0b; --wbg: rgba(245,158,11,.12); --bad: #ef4444; --errbg: rgba(239,68,68,.12);
+  --dock: rgba(255,255,255,0.88); --shadow: 0 8px 30px rgba(15,23,42,0.06);
 }
 :root[data-theme="dark"] {
-  --bg: #090f19; --card: #111a28; --ink: #f1f5f9; --mut: #8b9db5;
-  --line: #1e2c40; --soft: #172437; --acc: #3b82f6; --aq: #14b8a6;
-  --ok: #22c55e; --okbg: #052e16; --warn: #f59e0b; --wbg: #451a03;
-  --bad: #ef4444; --errbg: #450a0a; --zebra: #141f30;
-  --grad: linear-gradient(135deg, #c2410c 0%, #9a3412 100%);
+  --bg: #070b12; --card: #111823; --card2: #17202f; --ink: #f8fafc; --mut: #8b9bb4;
+  --line: #1e293b; --soft: #172554; --acc: #38bdf8; --ok: #34d399; --okbg: rgba(52,211,153,.14);
+  --warn: #fbbf24; --wbg: rgba(251,191,36,.14); --bad: #f87171; --errbg: rgba(248,113,113,.15);
+  --dock: rgba(17,24,35,0.85); --shadow: 0 12px 35px rgba(0,0,0,0.45);
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
   font: 14.5px/1.45 "Plus Jakarta Sans", "IBM Plex Sans Arabic", system-ui, sans-serif;
-  font-variant-numeric: tabular-nums; padding-bottom: 95px;
+  font-variant-numeric: tabular-nums; padding-bottom: 110px;
 }
 button, input, select, textarea { font: inherit; color: inherit; }
-button { cursor: pointer; border: 0; border-radius: 12px; font-weight: 700; }
+button { cursor: pointer; border: 0; border-radius: 12px; font-weight: 700; transition: all .15s ease; }
+button:active { transform: scale(0.97); }
 
-/* Simulator Control Strip */
+/* Top Dev Simulator Strip */
 .sim-strip {
-  background: #090e17; color: #fff; padding: 7px 14px; font-size: 12.5px;
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #1a2638;
+  background: #030712; color: #f8fafc; padding: 6px 12px; font-size: 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  position: sticky; top: 0; z-index: 150; border-bottom: 1px solid #1e293b;
 }
-.sim-pills { display: flex; background: #162030; border-radius: 999px; padding: 2px; }
-.sim-pills button { background: transparent; color: #94a3b8; border-radius: 999px; padding: 4px 11px; font-size: 11.5px; }
-.sim-pills button.on { background: var(--acc); color: #fff; }
-.sim-meta { display: flex; gap: 5px; }
-.sim-meta button { background: #162030; color: #cbd5e1; border-radius: 7px; padding: 4px 8px; font-size: 11.5px; }
+.sim-pills { display: flex; background: #111827; border-radius: 999px; padding: 2px; }
+.sim-pills button { background: transparent; color: #9ca3af; border-radius: 999px; padding: 4px 10px; font-size: 11px; }
+.sim-pills button.on { background: #2563eb; color: #fff; }
+.sim-right { display: flex; gap: 5px; }
+.sim-right button { background: #1f2937; color: #e5e7eb; border-radius: 8px; padding: 4px 8px; font-size: 11px; }
 
-.shell { max-width: 540px; margin: 0 auto; }
+.shell { max-width: 480px; margin: 0 auto; }
 
-/* Sticky Header */
-header.app-bar {
-  background: var(--card); border-bottom: 1px solid var(--line);
-  padding: 12px 16px 0; position: sticky; top: 38px; z-index: 40;
+/* Clean Fintech Top Header (with Top-Right Gear) */
+header.top-bar {
+  padding: 14px 18px 8px; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 35px; z-index: 50; background: var(--bg);
 }
-.brand-label {
-  display: flex; align-items: center; gap: 5px; font-size: 10.5px;
-  font-weight: 800; letter-spacing: .06em; color: var(--acc); text-transform: uppercase;
-}
-.bar-main { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding-bottom: 10px; }
-.bar-main h1 { margin: 0; font-size: 19px; font-weight: 800; }
-.cycle-badge {
-  background: var(--soft); color: var(--acc); padding: 5px 12px;
-  border-radius: 999px; font-size: 12px; font-weight: 700; border: 1px solid var(--line);
+.top-brand { font-size: 11px; font-weight: 800; color: var(--acc); letter-spacing: .06em; text-transform: uppercase; }
+.top-title { font-size: 20px; font-weight: 800; margin: 1px 0 0; }
+.hdr-actions { display: flex; align-items: center; gap: 8px; }
+.icon-btn {
+  width: 38px; height: 38px; border-radius: 50%; background: var(--card);
+  border: 1px solid var(--line); display: grid; place-items: center;
+  font-size: 17px; box-shadow: var(--shadow);
 }
 
-/* Tab Navigation */
-nav.tab-row {
-  display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; border-top: 1px solid var(--line);
-}
-nav.tab-row::-webkit-scrollbar { display: none; }
-nav.tab-row button {
-  flex: 1 0 auto; background: transparent; color: var(--mut); border-radius: 0;
-  padding: 10px 10px; border-bottom: 2.5px solid transparent; font-size: 13px; font-weight: 700;
-}
-nav.tab-row button.on { color: var(--acc); border-bottom-color: var(--acc); }
-
-/* Card System */
+/* Cards */
 .card {
-  background: var(--card); border: 1px solid var(--line);
-  border-radius: 20px; padding: 18px; margin: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.03);
+  background: var(--card); border: 1px solid var(--line); border-radius: 24px;
+  padding: 18px; margin: 12px 16px; box-shadow: var(--shadow);
 }
-.card h2 { margin: 0 0 6px; font-size: 16px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
-.subtext { color: var(--mut); font-size: 12.5px; margin: 0 0 14px; }
+.card-h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.card-h h2 { margin: 0; font-size: 16px; font-weight: 800; }
+.subtext { color: var(--mut); font-size: 12.5px; margin: 0 0 12px; }
 
-/* DIB-Style Treasury Card */
-.treasury-card {
-  background: var(--card); border: 1px solid var(--line); border-radius: 22px;
-  padding: 20px; margin: 12px 14px; position: relative; overflow: hidden;
-  box-shadow: 0 4px 20px -2px rgba(11, 108, 240, 0.08);
+/* DIB Neo Style Currency Switcher */
+.cur-switch {
+  display: inline-flex; align-items: center; background: var(--card2);
+  border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px;
 }
-.treasury-card::before {
-  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: var(--acc);
+.cur-switch button {
+  padding: 4px 11px; border-radius: 999px; background: transparent;
+  color: var(--mut); font-size: 11.5px; font-weight: 800;
 }
-.t-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.t-title { font-size: 14px; font-weight: 800; color: var(--mut); display: flex; align-items: center; gap: 6px; }
+.cur-switch button.on { background: var(--acc); color: #070b12; }
 
-/* Currency Toggle Pill */
-.cur-toggle {
-  display: inline-flex; align-items: center; background: var(--bg);
-  border: 1.5px solid var(--line); border-radius: 999px; padding: 3px; gap: 3px;
-}
-.cur-toggle button {
-  background: transparent; color: var(--mut); border-radius: 999px;
-  padding: 4px 10px; font-size: 11px; font-weight: 800; transition: all .15s;
-}
-.cur-toggle button.active { background: var(--acc); color: #fff; box-shadow: 0 1px 4px rgba(11,108,240,.3); }
+.big-balance { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; margin: 4px 0 14px; }
+.big-balance small { font-size: 13px; color: var(--mut); font-weight: 600; }
 
-.t-main-val { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; margin: 4px 0 14px; line-height: 1.1; }
-.t-main-val small { font-size: 14px; font-weight: 600; color: var(--mut); }
-
-.drawer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-.drawer {
-  background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px;
+.drawer-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.drawer-box {
+  background: var(--card2); border: 1px solid var(--line); border-radius: 16px; padding: 11px 13px;
 }
-.drawer span { display: block; font-size: 11px; font-weight: 700; color: var(--mut); text-transform: uppercase; }
-.drawer b { font-size: 18px; font-weight: 800; display: block; margin-top: 3px; }
+.drawer-box span { display: block; font-size: 11px; font-weight: 700; color: var(--mut); text-transform: uppercase; }
+.drawer-box b { display: block; font-size: 17px; font-weight: 800; margin-top: 3px; }
 
-/* Monthly Collection Tracker Card */
-.month-picker-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.cycle-select {
-  background: var(--bg); border: 1.5px solid var(--line); border-radius: 10px;
-  padding: 5px 10px; font-weight: 700; font-size: 13px;
+/* Month Pill Strip (Like Reference Image 3) */
+.month-pills {
+  display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
+  padding: 4px 16px 8px;
 }
-.progress-rail { height: 9px; background: var(--line); border-radius: 999px; overflow: hidden; margin: 10px 0 6px; }
-.progress-fill { height: 100%; background: var(--ok); border-radius: 999px; transition: width .3s ease; }
-
-/* Publish Status Bar */
-.pub-banner {
-  padding: 12px 14px; border-radius: 14px; display: flex; align-items: center;
-  justify-content: space-between; gap: 10px; margin-top: 14px;
+.month-pills::-webkit-scrollbar { display: none; }
+.mpill {
+  background: var(--card); border: 1px solid var(--line); color: var(--mut);
+  padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 700; white-space: nowrap;
 }
-.pub-banner.live { background: var(--okbg); color: var(--ok); border: 1px solid rgba(22,163,74,.2); }
-.pub-banner.draft { background: var(--wbg); color: var(--warn); border: 1px solid rgba(217,119,6,.2); }
-.pub-banner button { padding: 7px 14px; font-size: 12.5px; }
+.mpill.on { background: var(--acc); color: #070b12; border-color: var(--acc); }
 
-/* Collector Rows */
-.filter-strip { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.pill-btn {
-  border: 1.5px solid var(--line); background: var(--card); color: var(--ink);
-  border-radius: 999px; padding: 6px 14px; font-size: 12.5px; font-weight: 700;
+/* Semi-Circle Gauge & Donut Chart Containers */
+.chart-wrap {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  margin: 8px 0 14px;
 }
-.pill-btn.active { background: var(--acc); color: #fff; border-color: var(--acc); }
+.donut-center {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; pointer-events: none; text-align: center;
+}
+.donut-center b { font-size: 21px; font-weight: 800; }
+.donut-center span { font-size: 12px; color: var(--mut); font-weight: 600; }
 
-.apt-table { border: 1px solid var(--line); border-radius: 18px; overflow: hidden; margin: 12px 14px; }
-.apt-card { padding: 13px 14px; background: var(--card); border-bottom: 1px solid var(--line); }
+/* Expense Category Rows (Reference Image 3 & 4) */
+.cat-row {
+  display: flex; align-items: center; gap: 12px; padding: 11px 0;
+  border-top: 1px solid var(--line);
+}
+.cat-row:first-of-type { border-top: 0; }
+.cat-ico {
+  width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center;
+  font-size: 18px; flex: none;
+}
+.cat-mid { flex: 1; min-width: 0; }
+.cat-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+.cat-top b { font-size: 14px; font-weight: 700; }
+.cat-top span { font-size: 13.5px; font-weight: 800; }
+.cat-bar { height: 5px; background: var(--card2); border-radius: 999px; overflow: hidden; }
+.cat-bar i { display: block; height: 100%; border-radius: 999px; }
+
+/* Floating Bottom Dock (Reference Image 3, 4, 5) */
+nav.bottom-dock {
+  position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+  width: calc(100% - 28px); max-width: 440px; background: var(--dock);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--line); border-radius: 999px; padding: 6px;
+  display: flex; justify-content: space-around; align-items: center;
+  z-index: 90; box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+}
+nav.bottom-dock button {
+  flex: 1; background: transparent; color: var(--mut); border-radius: 999px;
+  padding: 7px 4px; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  font-size: 10.5px; font-weight: 700;
+}
+nav.bottom-dock button .ico { font-size: 18px; line-height: 1.1; }
+nav.bottom-dock button.on {
+  background: rgba(56, 189, 248, 0.15); color: var(--acc);
+}
+
+/* Floating Action Button (+) */
+.fab {
+  position: fixed; bottom: 84px; right: max(22px, calc(50% - 218px));
+  width: 52px; height: 52px; border-radius: 50%; background: var(--acc);
+  color: #070b12; font-size: 26px; font-weight: 800; display: grid; place-items: center;
+  box-shadow: 0 8px 25px rgba(56,189,248,0.4); z-index: 85;
+}
+
+/* Collector Apartment Cards */
+.apt-card {
+  padding: 13px 14px; background: var(--card); border-bottom: 1px solid var(--line);
+}
 .apt-card:last-child { border-bottom: 0; }
-.apt-card.paid-all { background: var(--okbg); }
-.apt-card.z { background: var(--zebra); }
-.apt-row-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.apt-title { font-weight: 800; font-size: 15.5px; }
-.apt-code {
-  background: var(--bg); color: var(--mut); border: 1px solid var(--line);
-  padding: 2px 7px; border-radius: 6px; font-size: 11.5px; font-weight: 800; margin-inline-start: 6px;
-}
-.apt-due { font-weight: 800; font-size: 14px; color: var(--bad); }
-.apt-due.cleared { color: var(--ok); font-size: 16px; }
-
-.wa-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 34px; height: 34px; border-radius: 10px; background: var(--bg);
-  border: 1px solid var(--line); font-size: 16px; text-decoration: none;
-}
-
+.apt-card.settled { background: var(--okbg); }
 .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
 .chip {
   border: 1.5px solid var(--line); border-radius: 999px; padding: 6px 11px;
-  font-size: 12.5px; font-weight: 700; background: var(--card); color: var(--ink);
+  font-size: 12.5px; font-weight: 700; background: var(--card2); color: var(--ink);
   display: inline-flex; align-items: center; gap: 5px;
 }
 .chip.ticked { background: var(--okbg); border-color: var(--ok); color: var(--ok); }
 .chip.ticked::before { content: "✓"; font-weight: 900; }
+.wa-btn {
+  width: 34px; height: 34px; border-radius: 10px; background: var(--card2);
+  border: 1px solid var(--line); display: inline-grid; place-items: center;
+  text-decoration: none; font-size: 16px;
+}
 
-/* Input Styles */
-.form-group { margin-bottom: 12px; }
-.form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--mut); margin-bottom: 4px; }
-.form-row { display: flex; gap: 8px; align-items: center; }
-.row-divider { padding: 9px 0; border-top: 1px solid var(--line); }
-.row-divider:first-of-type { border-top: 0; }
+/* Forms & Modals */
 input[type="text"], input[type="number"], select, textarea {
-  width: 100%; background: var(--bg); border: 1.5px solid var(--line);
-  border-radius: 10px; padding: 8px 11px; font-size: 13.5px; font-weight: 600;
+  width: 100%; background: var(--card2); border: 1.5px solid var(--line);
+  border-radius: 12px; padding: 9px 12px; font-size: 13.5px; font-weight: 600;
 }
-input:focus, select:focus, textarea:focus { outline: none; border-color: var(--acc); }
-.btn-sm-del { background: var(--errbg); color: var(--bad); padding: 7px 11px; border-radius: 9px; }
+.form-row { display: flex; gap: 8px; align-items: center; }
+.row-div { padding: 10px 0; border-top: 1px solid var(--line); }
+.row-div:first-of-type { border-top: 0; }
+.btn-del { background: var(--errbg); color: var(--bad); padding: 7px 11px; border-radius: 10px; }
 
-/* Feed / Transactions */
-.feed-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 9px 0; border-top: 1px solid var(--line); font-size: 13px;
+.modal-bg {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
+  z-index: 200; display: none; align-items: center; justify-content: center; padding: 16px;
 }
-.feed-row:first-child { border-top: 0; }
-.feed-left { display: flex; align-items: center; gap: 8px; }
-.feed-tag {
-  width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; font-weight: 800; font-size: 11px;
+.modal-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 26px;
+  width: 100%; max-width: 440px; max-height: 88vh; overflow-y: auto; padding: 22px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
 }
-.feed-tag.in { background: var(--okbg); color: var(--ok); }
-.feed-tag.out { background: var(--errbg); color: var(--bad); }
+.modal-card h3 { margin: 0 0 6px; font-size: 18px; font-weight: 800; }
 
-/* Modal */
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200;
-  display: none; align-items: center; justify-content: center; padding: 16px;
+/* Radio Cards for Onboarding */
+.choice-card {
+  border: 1.5px solid var(--line); background: var(--card2); border-radius: 16px;
+  padding: 13px 15px; margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; gap: 12px;
 }
-.modal-box {
-  background: var(--card); border-radius: 20px; width: 100%; max-width: 440px;
-  padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,.3);
-}
-.modal-box h3 { margin: 0 0 8px; font-size: 17px; font-weight: 800; }
+.choice-card.on { border-color: var(--acc); background: rgba(56,189,248,0.1); }
 
 #toast {
-  position: fixed; top: 48px; left: 50%; transform: translateX(-50%) translateY(-20px);
-  background: #0b1526; color: #fff; padding: 10px 16px; border-radius: 14px;
-  font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px;
-  z-index: 999; opacity: 0; pointer-events: none; transition: all .25s ease;
-  border: 1px solid #1e2c40; box-shadow: 0 10px 25px rgba(0,0,0,.3); max-width: 90vw;
+  position: fixed; top: 46px; left: 50%; transform: translateX(-50%) translateY(-20px);
+  background: #0f172a; color: #fff; padding: 10px 16px; border-radius: 999px;
+  font-size: 13px; font-weight: 700; z-index: 300; opacity: 0; pointer-events: none;
+  transition: all .25s ease; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,.4);
 }
 #toast.pop { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 
-<!-- SIMULATOR CONTROL BAR -->
+<!-- TOP DEV SIMULATOR BAR -->
 <div class="sim-strip">
   <div class="sim-pills">
-    <button id="btn-mgr" class="on" onclick="setRole('mgr')">👨‍💼 Manager</button>
-    <button id="btn-col" onclick="setRole('col')">👷‍♂️ Natour (Collector)</button>
+    <button id="sim-mgr" class="on" onclick="setRole('mgr')">👨‍💼 Manager</button>
+    <button id="sim-col" onclick="setRole('col')">👷‍♂️ Natour</button>
   </div>
-  <div class="sim-meta">
+  <div class="sim-right">
+    <button onclick="openOnboarding()">🚀 Onboarding</button>
     <button id="btn-lang" onclick="toggleLang()">العربية</button>
     <button onclick="toggleTheme()">◐</button>
   </div>
 </div>
 
-<div id="toast">🔔 <span id="toast-txt"></span></div>
+<div id="toast">🔔 <span id="toast-msg"></span></div>
 
 <div class="shell">
-  <!-- APP HEADER -->
-  <header class="app-bar">
-    <div class="brand-label">
-      <svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 2.5C8 7.6 5.5 11 5.5 14.5a6.5 6.5 0 0 0 13 0C18.5 11 16 7.6 12 2.5z" fill="currentColor"/></svg>
-      <span>BINA2ITNA · بنايتنا</span>
+  <!-- CLEAN FINTECH TOP HEADER -->
+  <header class="top-bar">
+    <div>
+      <div class="top-brand">💧 BINA2ITNA · بنايتنا</div>
+      <h1 class="top-title" id="hdr-title">Overview</h1>
     </div>
-    <div class="bar-main">
-      <h1 id="bld-name">Block C</h1>
-      <span class="cycle-badge" id="active-month-pill">October 2026</span>
+    <div class="hdr-actions">
+      <button class="icon-btn" id="btn-gear" onclick="openModal('settings-modal')" title="Settings">⚙️</button>
     </div>
-    <nav class="tab-row" id="mgr-nav">
-      <button data-tab="dash" class="on" onclick="setTab('dash')">📊 Overview</button>
-      <button data-tab="cycles" onclick="setTab('cycles')">📅 Months</button>
-      <button data-tab="setup" onclick="setTab('setup')">⚙️ Charges</button>
-      <button data-tab="expenses" onclick="setTab('expenses')">🧾 Expenses</button>
-      <button data-tab="wa" onclick="setTab('wa')">💬 WhatsApp</button>
-      <button data-tab="dir" onclick="setTab('dir')">🏢 Units</button>
-    </nav>
   </header>
 
-  <!-- CONTENT INJECTION -->
-  <main id="app-view"></main>
+  <!-- MAIN CONTENT -->
+  <main id="app-body"></main>
 </div>
 
-<!-- OUT-OF-POCKET EXPENSE MODAL -->
-<div class="modal-overlay" id="exp-modal">
-  <div class="modal-box">
-    <h3>Log Building Expense / Fix</h3>
-    <p class="subtext">Paid directly by manager (e.g. cleaning supplies, bulbs, lock repair). Deducts immediately from the Treasury.</p>
-    <div class="form-group">
-      <label>Description</label>
-      <input type="text" id="m-exp-desc" placeholder="e.g. Cleaning product & sponges">
+<!-- FLOATING ACTION BUTTON (+ Expense) -->
+<button class="fab" id="fab-add" onclick="openModal('exp-modal')" title="Add Expense">+</button>
+
+<!-- FLOATING BOTTOM NAVIGATION DOCK (Like Reference Images) -->
+<nav class="bottom-dock" id="mgr-dock">
+  <button data-tab="dash" class="on" onclick="setTab('dash')">
+    <span class="ico">📊</span><span>Overview</span>
+  </button>
+  <button data-tab="setup" onclick="setTab('setup')">
+    <span class="ico">🏷️</span><span>Charges</span>
+  </button>
+  <button data-tab="expenses" onclick="setTab('expenses')">
+    <span class="ico">🍩</span><span>Expenses</span>
+  </button>
+  <button data-tab="dir" onclick="setTab('dir')">
+    <span class="ico">🏢</span><span>Units</span>
+  </button>
+</nav>
+
+<!-- ==========================================================================
+     MODAL 1: FIRST-TIME ONBOARDING WIZARD (Initial Balance & Treasury Setup)
+     ========================================================================== -->
+<div class="modal-bg" id="onboard-modal">
+  <div class="modal-card">
+    <div class="top-brand" style="margin-bottom:4px">WELCOME TO BINA2ITNA</div>
+    <h3>Building & Treasury Setup</h3>
+    <p class="subtext">Configure your building once. You can always adjust this later via the ⚙️ Gear icon.</p>
+
+    <div class="form-row" style="margin-bottom:10px">
+      <div style="flex:1"><label style="font-size:11.5px;color:var(--mut)">Building Name</label><input type="text" id="ob-bld" value="Block C"></div>
+      <div style="flex:1"><label style="font-size:11.5px;color:var(--mut)">Collector (Natour)</label><input type="text" id="ob-col" value="Anas"></div>
     </div>
-    <div class="form-row form-group">
+
+    <label style="font-size:12px;font-weight:700;color:var(--mut);display:block;margin:12px 0 6px">1. Treasury Currency Mode</label>
+    <div class="choice-card on" id="ob-mode-split" onclick="selectObMode('split')">
+      <span style="font-size:22px">💵</span>
+      <div><b>Split USD & LBP Drawers</b><div style="font-size:12px;color:var(--mut)">Track physical USD and LBP cash separately + unified reference toggle.</div></div>
+    </div>
+    <div class="choice-card" id="ob-mode-single" onclick="selectObMode('single')">
+      <span style="font-size:22px">🏦</span>
+      <div><b>Single Unified Treasury (USD)</b><div style="font-size:12px;color:var(--mut)">Convert everything into one primary USD balance automatically.</div></div>
+    </div>
+
+    <label style="font-size:12px;font-weight:700;color:var(--mut);display:block;margin:14px 0 6px">2. Starting Treasury Balance</label>
+    <div class="choice-card on" id="ob-bal-zero" onclick="selectObBal('zero')">
+      <span style="font-size:20px">✨</span>
+      <div><b>Start Fresh from Zero ($0)</b><div style="font-size:12px;color:var(--mut)">Begin tracking with a clean slate.</div></div>
+    </div>
+    <div class="choice-card" id="ob-bal-existing" onclick="selectObBal('existing')">
+      <span style="font-size:20px">💼</span>
+      <div><b>Enter Existing Carry-Over Balance</b><div style="font-size:12px;color:var(--mut)">Add money already in the building box.</div></div>
+    </div>
+
+    <div id="ob-bal-inputs" style="display:none;margin-top:8px;padding:12px;background:var(--card2);border-radius:14px">
+      <div class="form-row">
+        <div style="flex:1"><label style="font-size:11px;color:var(--mut)">Existing USD ($)</label><input type="number" id="ob-usd" value="450"></div>
+        <div style="flex:1"><label style="font-size:11px;color:var(--mut)">Existing LBP (ل.ل.)</label><input type="number" id="ob-lbp" value="18000000"></div>
+      </div>
+    </div>
+
+    <button style="width:100%;margin-top:16px;padding:13px;background:var(--acc);color:#070b12;font-size:15px" onclick="finishOnboarding()">Save & Launch App →</button>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL 2: TOP-RIGHT SETTINGS GEAR (⚙️)
+     ========================================================================== -->
+<div class="modal-bg" id="settings-modal">
+  <div class="modal-card">
+    <div class="card-h">
+      <h3>⚙️ Building Settings</h3>
+      <button class="btn-del" onclick="closeModal('settings-modal')">✕</button>
+    </div>
+    <div class="row-div">
+      <label style="font-size:12px;color:var(--mut)">Building Name (EN / AR)</label>
+      <div class="form-row" style="margin-top:4px">
+        <input type="text" id="st-blden" onchange="DB.settings.bldEn=this.value;saveDB();render()">
+        <input type="text" dir="rtl" id="st-bldar" onchange="DB.settings.bldAr=this.value;saveDB();render()">
+      </div>
+    </div>
+    <div class="row-div">
+      <label style="font-size:12px;color:var(--mut)">Collector / Natour Name (EN / AR)</label>
+      <div class="form-row" style="margin-top:4px">
+        <input type="text" id="st-colen" onchange="DB.settings.collectorEn=this.value;saveDB();render()">
+        <input type="text" dir="rtl" id="st-colar" onchange="DB.settings.collectorAr=this.value;saveDB();render()">
+      </div>
+    </div>
+    <div class="row-div">
+      <label style="font-size:12px;color:var(--mut)">Exchange Rate (LBP per $1 USD)</label>
+      <input type="number" id="st-rate" style="margin-top:4px" onchange="DB.settings.rate=Number(this.value)||89500;saveDB();render()">
+    </div>
+    <div class="row-div">
+      <label style="font-size:12px;color:var(--mut)">Treasury Display Mode</label>
+      <select id="st-tmode" style="margin-top:4px" onchange="DB.settings.treasuryMode=this.value;saveDB();render()">
+        <option value="split">Split Drawers (USD + LBP) & Ref Switch</option>
+        <option value="single">Single Unified Treasury Only</option>
+      </select>
+    </div>
+    <div class="row-div">
+      <label style="font-size:12px;color:var(--mut)">WhatsApp Message Template ({name}, {unit}, {month}, {items}, {due}, {collector})</label>
+      <textarea id="st-wa" style="height:110px;margin-top:4px;font-family:monospace;font-size:12px" onchange="DB.waTemplate=this.value;saveDB()"></textarea>
+    </div>
+    <div class="row-div">
+      <button style="width:100%;padding:10px;background:var(--card2);border:1px solid var(--line)" onclick="closeModal('settings-modal');openOnboarding()">🚀 Re-run Initial Balance & Setup Wizard</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL 3: LOG CATEGORIZED EXPENSE (+)
+     ========================================================================== -->
+<div class="modal-bg" id="exp-modal">
+  <div class="modal-card">
+    <div class="card-h">
+      <h3>Add Building Expense</h3>
+      <button class="btn-del" onclick="closeModal('exp-modal')">✕</button>
+    </div>
+    <p class="subtext">Categorize building bills or direct manager out-of-pocket expenses (cleaning, bulbs, fixes).</p>
+    <div style="margin-bottom:10px">
+      <label style="font-size:12px;color:var(--mut)">Category</label>
+      <select id="ex-cat" style="margin-top:4px">
+        <option value="gen">⚡ Generator & Fuel</option>
+        <option value="elev">🛗 Elevator Maintenance</option>
+        <option value="water">💧 Water Bill</option>
+        <option value="clean">🧹 Cleaning & Supplies</option>
+        <option value="light">💡 Lighting & Bulbs</option>
+        <option value="repair">🔧 Repairs & Plumbing</option>
+      </select>
+    </div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:12px;color:var(--mut)">Description</label>
+      <input type="text" id="ex-desc" placeholder="e.g. Staircase LED bulbs or Shared Generator" style="margin-top:4px">
+    </div>
+    <div class="form-row" style="margin-bottom:16px">
       <div style="flex:2">
-        <label>Amount</label>
-        <input type="number" id="m-exp-amt" placeholder="0">
+        <label style="font-size:12px;color:var(--mut)">Amount</label>
+        <input type="number" id="ex-amt" placeholder="0" style="margin-top:4px">
       </div>
       <div style="flex:1">
-        <label>Currency</label>
-        <select id="m-exp-cur">
+        <label style="font-size:12px;color:var(--mut)">Currency</label>
+        <select id="ex-cur" style="margin-top:4px">
           <option value="USD">USD ($)</option>
           <option value="LBP">LBP (ل.ل.)</option>
         </select>
       </div>
     </div>
-    <div class="form-row" style="margin-top:16px">
-      <button style="flex:1;background:var(--line);padding:10px" onclick="closeModal('exp-modal')">Cancel</button>
-      <button style="flex:2;background:var(--bad);color:#fff;padding:10px" onclick="saveDirectExpense()">Save Outflow</button>
-    </div>
+    <button style="width:100%;padding:12px;background:var(--bad);color:#fff" onclick="saveCategorizedExpense()">Record Outflow Expense (−)</button>
   </div>
 </div>
 
 <script>
 /* ============================================================================
-   DATA ARCHITECTURE (Separated Treasury, Multi-Month History, Custom Units)
+   1. EXPENSE CATEGORIES & DATA STORE
    ============================================================================ */
-var STORAGE_KEY = 'bina2itna_v3_store';
+var STORAGE_KEY = 'bina2itna_v4_fintech';
 var ROLE = 'mgr';
 var TAB = 'dash';
 var LANG = 'en';
 var UNPAID_ONLY = false;
-var TREASURY_REF_CUR = 'USD'; // 'USD' or 'LBP'
+var REF_CUR = 'USD';
 var SELECTED_MONTH = 'October 2026';
 
-var DEFAULT_DATA = {
+var EXP_CATS = {
+  gen:    { id: 'gen',    en: 'Generator & Fuel',     ar: 'المولد والمازوت',    ico: '⚡', color: '#f59e0b' },
+  elev:   { id: 'elev',   en: 'Elevator',             ar: 'المصعد',             ico: '🛗', color: '#38bdf8' },
+  water:  { id: 'water',  en: 'Water Bill',           ar: 'فاتورة المياه',      ico: '💧', color: '#06b6d4' },
+  clean:  { id: 'clean',  en: 'Cleaning & Supplies',  ar: 'مواد تنظيف',         ico: '🧹', color: '#10b981' },
+  light:  { id: 'light',  en: 'Lighting & Bulbs',     ar: 'إنارة ولمبات',       ico: '💡', color: '#a855f7' },
+  repair: { id: 'repair', en: 'Repairs & Fixes',      ar: 'تصليحات وصيانة',     ico: '🔧', color: '#ec4899' }
+};
+
+var DEFAULT_DB = {
+  onboarded: true,
   settings: {
-    bldEn: 'Block C Residences',
-    bldAr: 'بناية البلوك C',
-    collectorEn: 'Anas',
-    collectorAr: 'أنس',
+    bldEn: 'Block C', bldAr: 'البلوك C',
+    collectorEn: 'Anas', collectorAr: 'أنس',
     rate: 89500,
-    treasuryMode: 'split', // 'split' (USD+LBP drawers) or 'single'
+    treasuryMode: 'split',
     initialUsd: 450,
     initialLbp: 18000000
   },
-  // Active/Past Month Cycles (Separated progress)
   cycles: {
     'October 2026': {
       published: true,
@@ -316,11 +434,12 @@ var DEFAULT_DATA = {
         { id: 'f_natour', en: 'Collector Fee', ar: 'أتعاب الناطور', amt: 15, cur: 'USD', exc: {} }
       ],
       dues: [
-        { id: 'd_water', en: 'Water Bill Share', ar: 'فاتورة المياه المشتركة', amt: 1250000, cur: 'LBP', mode: 'each' }
+        { id: 'd_water', en: 'Water Bill', ar: 'فاتورة المياه', amt: 1250000, cur: 'LBP' }
       ],
       services: [
-        { id: 's_net', en: 'Internet', ar: 'اشتراك الإنترنت', cur: 'USD', map: { 'U_SS2R': 20, 'U_2B': 25 } },
-        { id: 's_gen', en: 'Private Generator', ar: 'المولد الخاص', cur: 'USD', map: { 'U_SS2R': 45, 'U_2A': 50 } }
+        { id: 's_net', en: 'Internet', ar: 'اشتراك الإنترنت', cur: 'USD', map: { 'U_SS2R': 20, 'U_1A': 20, 'U_2B': 25 } },
+        { id: 's_gen', en: 'Private Generator', ar: 'المولد الخاص', cur: 'USD', map: { 'U_SS2R': 45, 'U_2A': 50 } },
+        { id: 's_dish', en: 'Satellite / Dish', ar: 'اشتراك الدش', cur: 'USD', map: { 'U_SS1R': 10, 'U_2B': 10 } }
       ],
       paid: {
         'f_maint': { 'U_SS2R': 1, 'U_2B': 1 },
@@ -336,7 +455,7 @@ var DEFAULT_DATA = {
         { id: 'f_natour', en: 'Collector Fee', ar: 'أتعاب الناطور', amt: 15, cur: 'USD', exc: {} }
       ],
       dues: [
-        { id: 'd_water', en: 'Water Bill Share', ar: 'فاتورة المياه المشتركة', amt: 1100000, cur: 'LBP', mode: 'each' }
+        { id: 'd_water', en: 'Water Bill', ar: 'فاتورة المياه', amt: 1100000, cur: 'LBP' }
       ],
       services: [
         { id: 's_net', en: 'Internet', ar: 'اشتراك الإنترنت', cur: 'USD', map: { 'U_SS2R': 20, 'U_2B': 25 } }
@@ -344,46 +463,46 @@ var DEFAULT_DATA = {
       paid: {
         'f_maint': { 'U_SS2R': 1, 'U_SS1R': 1, 'U_1A': 1, 'U_2A': 1, 'U_2B': 1 },
         'f_natour': { 'U_SS2R': 1, 'U_SS1R': 1, 'U_1A': 1, 'U_2A': 1, 'U_2B': 1 },
-        'd_water': { 'U_SS2R': 1, 'U_SS1R': 1, 'U_1A': 1, 'U_2A': 1, 'U_2B': 1 },
-        's_net': { 'U_SS2R': 1, 'U_2B': 1 }
+        'd_water': { 'U_SS2R': 1, 'U_SS1R': 1, 'U_1A': 1, 'U_2A': 1, 'U_2B': 1 }
       }
     }
   },
-  // Flexible Apartment / Unit Directory
   apartments: [
-    { id: 'U_SS2R', floor: 'SS2', letter: 'R', customCode: 'SS2R', en: 'Ahmad El-Khatib', ar: 'أحمد الخطيب', ph: '9613100200' },
-    { id: 'U_SS1R', floor: 'SS1', letter: 'R', customCode: 'SS1R', en: 'Nadia Khoury', ar: 'ناديا خوري', ph: '9613200300' },
-    { id: 'U_1A',   floor: '1',   letter: 'A', customCode: '1A',   en: 'Hadi Mansour', ar: 'هادي منصور', ph: '9613400500' },
-    { id: 'U_2A',   floor: '2',   letter: 'A', customCode: '2A',   en: 'Karim Salameh', ar: 'كريم سلامة', ph: '9613700800' },
-    { id: 'U_2B',   floor: '2',   letter: 'B', customCode: '2B',   en: 'Ziad Nader', ar: 'زياد نادر', ph: '9613900100' }
+    { id: 'U_SS2R', code: 'SS2R', en: 'Ahmad El-Khatib', ar: 'أحمد الخطيب', ph: '9613100200' },
+    { id: 'U_SS1R', code: 'SS1R', en: 'Nadia Khoury',    ar: 'ناديا خوري',  ph: '9613200300' },
+    { id: 'U_1A',   code: '1A',   en: 'Hadi Mansour',    ar: 'هادي منصور',  ph: '9613400500' },
+    { id: 'U_2A',   code: '2A',   en: 'Karim Salameh',   ar: 'كريم سلامة',  ph: '9613700800' },
+    { id: 'U_2B',   code: '2B',   en: 'Ziad Nader',      ar: 'زياد نادر',   ph: '9613900100' }
   ],
-  // Persistent Cumulative Outflow Expenses
   expenses: [
-    { id: 'exp_1', desc: 'Cleaning liquids, mop & sponges', amt: 14, cur: 'USD', date: 'Oct 4', by: 'Manager' },
-    { id: 'exp_2', desc: 'Entrance LED bulbs replacement', amt: 480000, cur: 'LBP', date: 'Oct 8', by: 'Manager' },
-    { id: 'exp_3', desc: 'Elevator monthly service maintenance', amt: 65, cur: 'USD', date: 'Oct 10', by: 'Contract' }
+    { id: 'e1', cat: 'gen',    desc: 'Shared Generator Fuel & Service', amt: 110,     cur: 'USD', month: 'October 2026', at: 'Oct 10' },
+    { id: 'e2', cat: 'elev',   desc: 'Elevator Monthly Maintenance',    amt: 65,      cur: 'USD', month: 'October 2026', at: 'Oct 8' },
+    { id: 'e3', cat: 'water',  desc: 'Building Water Tanker Fill',      amt: 4475000, cur: 'LBP', month: 'October 2026', at: 'Oct 6' },
+    { id: 'e4', cat: 'repair', desc: 'Entrance Door Lock Fix',          amt: 25,      cur: 'USD', month: 'October 2026', at: 'Oct 5' },
+    { id: 'e5', cat: 'clean',  desc: 'Detergent, Mop & Bleach',         amt: 14,      cur: 'USD', month: 'October 2026', at: 'Oct 3' },
+    { id: 'e6', cat: 'light',  desc: 'Staircase LED Lamps (x4)',        amt: 895000,  cur: 'LBP', month: 'October 2026', at: 'Oct 2' }
   ],
-  // Live Activity Feed Log
   activity: [
-    { id: 'a_1', desc: 'Entrance LED bulbs replacement', sub: 'Building Expense', amt: 480000, cur: 'LBP', type: 'out', at: 'Oct 8' },
-    { id: 'a_2', desc: 'Ziad Nader (2B)', sub: 'Maintenance + Fee + Net', amt: 60, cur: 'USD', type: 'in', at: 'Oct 6' },
-    { id: 'a_3', desc: 'Cleaning liquids, mop & sponges', sub: 'Building Expense', amt: 14, cur: 'USD', type: 'out', at: 'Oct 4' },
-    { id: 'a_4', desc: 'Ahmad El-Khatib (SS2R)', sub: 'Maintenance + Fee', amt: 35, cur: 'USD', type: 'in', at: 'Oct 3' }
+    { desc: 'Shared Generator Fuel & Service', sub: '⚡ Generator & Fuel', amt: 110, cur: 'USD', type: 'out', at: 'Oct 10' },
+    { desc: 'Ziad Nader (2B)', sub: 'Maintenance + Collector + Net', amt: 60, cur: 'USD', type: 'in', at: 'Oct 9' },
+    { desc: 'Elevator Monthly Maintenance', sub: '🛗 Elevator', amt: 65, cur: 'USD', type: 'out', at: 'Oct 8' },
+    { desc: 'Entrance Door Lock Fix', sub: '🔧 Repairs & Fixes', amt: 25, cur: 'USD', type: 'out', at: 'Oct 5' },
+    { desc: 'Detergent, Mop & Bleach', sub: '🧹 Cleaning & Supplies', amt: 14, cur: 'USD', type: 'out', at: 'Oct 3' }
   ],
-  waTemplate: '💧 *{building}*\nفاتورة شهر: *{month}*\n\nتحية طيبة *{name}* ({unit})، 👋\n{items}\n\n👉 *المبلغ المطلوب تسليمه إلى {collector}:*\n*{due}*\n\nنشكر حسن تعاونكم معنا! 🙏✨'
+  waTemplate: '💧 *{building}* · *{month}*\n\nتحية طيبة *{name}* ({unit})، 👋\n{items}\n\n👉 *المبلغ المطلوب تسليمه إلى {collector}:*\n*{due}*\n\nنشكر حسن تعاونكم! 🙏✨'
 };
 
 var DB = loadDB();
 function loadDB() {
   try { var r = localStorage.getItem(STORAGE_KEY); if (r) return JSON.parse(r); } catch (e) {}
-  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+  return JSON.parse(JSON.stringify(DEFAULT_DB));
 }
 function saveDB() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); } catch (e) {}
 }
 
 /* ============================================================================
-   ACCOUNTING & COMPUTATION ENGINE
+   2. CALCULATIONS & SVG CHARTS ENGINE
    ============================================================================ */
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"]/g, function(c) {
@@ -395,369 +514,389 @@ function fmt(n, cur) {
   if (cur === 'LBP') return Math.round(v).toLocaleString('en-US') + (LANG === 'ar' ? ' ل.ل.' : ' LBP');
   return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
-function arMon(s) {
-  var M = {january:'كانون الثاني',february:'شباط',march:'آذار',april:'نيسان',may:'أيار',june:'حزيران',july:'تموز',august:'آب',september:'أيلول',october:'تشرين الأول',november:'تشرين الثاني',december:'كانون الأول'};
-  var x = /^\s*([A-Za-z]+)\s+(\d{4})/.exec(String(s || ''));
-  return x && M[x[1].toLowerCase()] ? M[x[1].toLowerCase()] + ' ' + x[2] : String(s || '');
-}
 
-function getCycleCols(cycleKey) {
-  var cyc = DB.cycles[cycleKey] || { fixed: [], dues: [], services: [] };
+function getCycleCols(cKey) {
+  var cyc = DB.cycles[cKey] || { fixed: [], dues: [], services: [] };
   var cols = [];
   (cyc.fixed || []).forEach(function(f) {
-    cols.push({
-      id: f.id, en: f.en, ar: f.ar, cur: f.cur,
-      valFor: function(uId) { return (f.exc && f.exc[uId] != null) ? Number(f.exc[uId]) : Number(f.amt); }
-    });
+    cols.push({ id: f.id, en: f.en, ar: f.ar, cur: f.cur, valFor: function(uId) { return (f.exc && f.exc[uId] != null) ? Number(f.exc[uId]) : Number(f.amt); } });
   });
   (cyc.dues || []).forEach(function(d) {
-    cols.push({
-      id: d.id, en: d.en, ar: d.ar, cur: d.cur,
-      valFor: function() { return Number(d.amt); }
-    });
+    cols.push({ id: d.id, en: d.en, ar: d.ar, cur: d.cur, valFor: function() { return Number(d.amt); } });
   });
   (cyc.services || []).forEach(function(s) {
-    cols.push({
-      id: s.id, en: s.en, ar: s.ar, cur: s.cur,
-      valFor: function(uId) { return Number((s.map || {})[uId]) || 0; }
-    });
+    cols.push({ id: s.id, en: s.en, ar: s.ar, cur: s.cur, valFor: function(uId) { return Number((s.map || {})[uId]) || 0; } });
   });
   return cols;
 }
 
-function getCycleStats(cycleKey) {
-  var cyc = DB.cycles[cycleKey];
-  if (!cyc) return { usdGot: 0, usdSum: 0, lbpGot: 0, lbpSum: 0, settled: 0, total: DB.apartments.length, pct: 0 };
-  var cols = getCycleCols(cycleKey);
+function getCycleStats(cKey) {
+  var cyc = DB.cycles[cKey];
+  if (!cyc) return { usdGot:0, usdSum:0, lbpGot:0, lbpSum:0, eqGotUsd:0, eqSumUsd:0, settled:0, total:DB.apartments.length, pct:0 };
+  var cols = getCycleCols(cKey);
   var usdGot = 0, usdSum = 0, lbpGot = 0, lbpSum = 0, settled = 0;
   var rate = Number(DB.settings.rate) || 89500;
 
-  DB.apartments.forEach(function(apt) {
-    var allPaid = true;
+  DB.apartments.forEach(function(a) {
+    var allPd = true;
     cols.forEach(function(c) {
-      var v = c.valFor(apt.id);
-      if (v <= 0) return;
-      var isTicked = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][apt.id]);
-      if (!isTicked) allPaid = false;
-      if (c.cur === 'LBP') { lbpSum += v; if (isTicked) lbpGot += v; }
-      else { usdSum += v; if (isTicked) usdGot += v; }
+      var v = c.valFor(a.id); if (v <= 0) return;
+      var pd = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][a.id]);
+      if (!pd) allPd = false;
+      if (c.cur === 'LBP') { lbpSum += v; if (pd) lbpGot += v; }
+      else { usdSum += v; if (pd) usdGot += v; }
     });
-    if (allPaid && cols.length) settled++;
+    if (allPd && cols.length) settled++;
   });
-
-  var eqGot = usdGot + (lbpGot / rate);
-  var eqSum = usdSum + (lbpSum / rate);
-  var pct = eqSum > 0 ? Math.min(100, Math.round((eqGot / eqSum) * 100)) : 0;
-  return { usdGot: usdGot, usdSum: usdSum, lbpGot: lbpGot, lbpSum: lbpSum, settled: settled, total: DB.apartments.length, pct: pct };
+  var eqGotUsd = usdGot + (lbpGot / rate);
+  var eqSumUsd = usdSum + (lbpSum / rate);
+  var pct = eqSumUsd > 0 ? Math.min(100, Math.round((eqGotUsd / eqSumUsd) * 100)) : 0;
+  return { usdGot:usdGot, usdSum:usdSum, lbpGot:lbpGot, lbpSum:lbpSum, eqGotUsd:eqGotUsd, eqSumUsd:eqSumUsd, settled:settled, total:DB.apartments.length, pct:pct };
 }
 
-function getTreasuryData() {
+function getTreasury() {
   var rate = Number(DB.settings.rate) || 89500;
-  var totalUsdCollectedAllTime = 0;
-  var totalLbpCollectedAllTime = 0;
-
-  // Add all collected funds from all historical cycles
+  var inUsd = 0, inLbp = 0, outUsd = 0, outLbp = 0;
   Object.keys(DB.cycles).forEach(function(ck) {
-    var s = getCycleStats(ck);
-    totalUsdCollectedAllTime += s.usdGot;
-    totalLbpCollectedAllTime += s.lbpGot;
+    var st = getCycleStats(ck);
+    inUsd += st.usdGot; inLbp += st.lbpGot;
   });
-
-  // Deduct all outflow expenses
-  var totalUsdExpenses = 0;
-  var totalLbpExpenses = 0;
   DB.expenses.forEach(function(e) {
-    if (e.cur === 'LBP') totalLbpExpenses += Number(e.amt) || 0;
-    else totalUsdExpenses += Number(e.amt) || 0;
+    if (e.cur === 'LBP') outLbp += Number(e.amt) || 0;
+    else outUsd += Number(e.amt) || 0;
   });
+  var netUsd = (Number(DB.settings.initialUsd) || 0) + inUsd - outUsd;
+  var netLbp = (Number(DB.settings.initialLbp) || 0) + inLbp - outLbp;
+  var refVal = REF_CUR === 'USD' ? (netUsd + netLbp / rate) : (netLbp + netUsd * rate);
+  return { netUsd: netUsd, netLbp: netLbp, refVal: refVal };
+}
 
-  var netUsdDrawer = (Number(DB.settings.initialUsd) || 0) + totalUsdCollectedAllTime - totalUsdExpenses;
-  var netLbpDrawer = (Number(DB.settings.initialLbp) || 0) + totalLbpCollectedAllTime - totalLbpExpenses;
+// SVG Multi-Segment Donut Chart Builder (Reference Image 3)
+function buildDonutSvg(segments, totalUsdStr, subLabel) {
+  var r = 74, c = 2 * Math.PI * r;
+  var offset = 0;
+  var circles = '';
+  if (!segments.length) {
+    circles = '<circle cx="95" cy="95" r="' + r + '" fill="none" stroke="var(--line)" stroke-width="22"/>';
+  } else {
+    segments.forEach(function(seg) {
+      var len = Math.max(0, (seg.pct / 100) * c - 3);
+      circles += '<circle cx="95" cy="95" r="' + r + '" fill="none" stroke="' + seg.color + '" stroke-width="22" stroke-linecap="round" stroke-dasharray="' + len + ' ' + c + '" stroke-dashoffset="' + (-offset) + '" transform="rotate(-90 95 95)"/>';
+      offset += (seg.pct / 100) * c;
+    });
+  }
+  return '<div class="chart-wrap"><svg width="190" height="190" viewBox="0 0 190 190">' + circles + '</svg>'
+       + '<div class="donut-center"><b dir="ltr">' + totalUsdStr + '</b><span>' + esc(subLabel) + '</span></div></div>';
+}
 
-  var unifiedRefUsd = netUsdDrawer + (netLbpDrawer / rate);
-  var unifiedRefLbp = netLbpDrawer + (netUsdDrawer * rate);
-
-  return {
-    netUsd: netUsdDrawer,
-    netLbp: netLbpDrawer,
-    refTotal: TREASURY_REF_CUR === 'USD' ? unifiedRefUsd : unifiedRefLbp,
-    refCur: TREASURY_REF_CUR
-  };
+// SVG Semi-Circle Arc Gauge Builder (Reference Image 4)
+function buildGaugeSvg(pct, mainText, subText) {
+  var r = 80, arcLen = Math.PI * r;
+  var fillLen = (pct / 100) * arcLen;
+  return '<div class="chart-wrap" style="margin:2px 0 6px"><svg width="200" height="115" viewBox="0 0 200 115">'
+       + '<path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="var(--card2)" stroke-width="18" stroke-linecap="round"/>'
+       + '<path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="var(--acc)" stroke-width="18" stroke-linecap="round" stroke-dasharray="' + fillLen + ' ' + arcLen + '"/>'
+       + '</svg><div class="donut-center" style="top:28px"><b dir="ltr" style="font-size:20px">' + mainText + '</b><span>' + esc(subText) + '</span></div></div>';
 }
 
 /* ============================================================================
-   INTERACTIONS & TICKING ENGINE
-   ============================================================================ */
-function toast(msg) {
-  var el = document.getElementById('toast');
-  document.getElementById('toast-txt').textContent = msg;
-  el.classList.add('pop');
-  setTimeout(function() { el.classList.remove('pop'); }, 3400);
-}
-
-function toggleCollectorTick(colId, aptId) {
-  var cyc = DB.cycles[SELECTED_MONTH];
-  if (!cyc) return;
-  cyc.paid = cyc.paid || {};
-  cyc.paid[colId] = cyc.paid[colId] || {};
-  var willBePaid = !cyc.paid[colId][aptId];
-
-  if (willBePaid) cyc.paid[colId][aptId] = 1;
-  else delete cyc.paid[colId][aptId];
-
-  var col = getCycleCols(SELECTED_MONTH).filter(function(c) { return c.id === colId; })[0];
-  var apt = DB.apartments.filter(function(a) { return a.id === aptId; })[0];
-  var amt = col.valFor(aptId);
-
-  DB.activity.unshift({
-    id: 'a_' + Date.now(),
-    desc: apt.en + ' (' + (apt.customCode || apt.floor + apt.letter) + ')',
-    sub: col.en,
-    amt: amt,
-    cur: col.cur,
-    type: willBePaid ? 'in' : 'revert',
-    at: 'Just now'
-  });
-  DB.activity = DB.activity.slice(0, 30);
-  saveDB();
-  toast((willBePaid ? 'Received: ' : 'Reverted: ') + apt.en + ' · ' + col.en);
-  render();
-}
-
-function saveDirectExpense() {
-  var desc = document.getElementById('m-exp-desc').value.trim();
-  var amt = Number(document.getElementById('m-exp-amt').value) || 0;
-  var cur = document.getElementById('m-exp-cur').value;
-  if (!desc || amt <= 0) { alert('Please enter a description and amount.'); return; }
-
-  DB.expenses.unshift({
-    id: 'exp_' + Date.now(), desc: desc, amt: amt, cur: cur, date: 'Today', by: 'Manager'
-  });
-  DB.activity.unshift({
-    id: 'act_' + Date.now(), desc: desc, sub: 'Manager Outflow', amt: amt, cur: cur, type: 'out', at: 'Just now'
-  });
-  saveDB();
-  closeModal('exp-modal');
-  toast('Expense recorded: - ' + fmt(amt, cur));
-  render();
-}
-
-function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-/* ============================================================================
-   WHATSAPP MESSAGE GENERATOR
-   ============================================================================ */
-function makeWhatsAppUrl(apt) {
-  var cyc = DB.cycles[SELECTED_MONTH];
-  var cols = getCycleCols(SELECTED_MONTH);
-  var lines = [];
-  var dueUsd = 0, dueLbp = 0;
-
-  cols.forEach(function(c) {
-    var v = c.valFor(apt.id);
-    if (v <= 0) return;
-    var isTicked = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][apt.id]);
-    var itemStr = '• ' + (LANG === 'ar' ? (c.ar || c.en) : c.en) + ': ' + fmt(v, c.cur) + (isTicked ? ' ✅' : '');
-    lines.push(itemStr);
-    if (!isTicked) {
-      if (c.cur === 'LBP') dueLbp += v; else dueUsd += v;
-    }
-  });
-
-  var dueParts = [];
-  if (dueUsd > 0) dueParts.push(fmt(dueUsd, 'USD'));
-  if (dueLbp > 0) dueParts.push(fmt(dueLbp, 'LBP'));
-  var dueFormatted = dueParts.join(' + ') || (LANG === 'ar' ? 'مسدّد بالكامل 🎉' : 'All Settled 🎉');
-
-  var msg = DB.waTemplate
-    .replace('{building}', LANG === 'ar' ? DB.settings.bldAr : DB.settings.bldEn)
-    .replace('{month}', LANG === 'ar' ? arMon(SELECTED_MONTH) : SELECTED_MONTH)
-    .replace('{name}', LANG === 'ar' ? (apt.ar || apt.en) : apt.en)
-    .replace('{unit}', apt.customCode || (apt.floor + apt.letter))
-    .replace('{items}', lines.join('\n'))
-    .replace('{due}', dueFormatted)
-    .replace('{collector}', LANG === 'ar' ? DB.settings.collectorAr : DB.settings.collectorEn);
-
-  return 'https://wa.me/' + String(apt.ph || '').replace(/\D/g, '') + '?text=' + encodeURIComponent(msg);
-}
-
-/* ============================================================================
-   VIEWS RENDERER
+   3. SCREEN RENDERERS
    ============================================================================ */
 function render() {
-  document.documentElement.lang = LANG;
-  document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
-  document.getElementById('btn-lang').textContent = LANG === 'ar' ? 'English' : 'العربية';
-  document.getElementById('bld-name').textContent = LANG === 'ar' ? DB.settings.bldAr : DB.settings.bldEn;
-  document.getElementById('active-month-pill').textContent = LANG === 'ar' ? arMon(SELECTED_MONTH) : SELECTED_MONTH;
-
-  var nav = document.getElementById('mgr-nav');
-  nav.style.display = ROLE === 'mgr' ? 'flex' : 'none';
+  var titles = { dash: 'Overview', setup: 'Monthly Charges', expenses: 'Top Categories', dir: 'Building Units' };
+  document.getElementById('hdr-title').textContent = ROLE === 'col' ? (DB.settings.bldEn + ' · Collector') : (titles[TAB] || 'Overview');
+  document.getElementById('mgr-dock').style.display = ROLE === 'mgr' ? 'flex' : 'none';
+  document.getElementById('fab-add').style.display = (ROLE === 'mgr' && (TAB === 'dash' || TAB === 'expenses')) ? 'grid' : 'none';
 
   if (ROLE === 'col') {
-    renderCollectorView();
+    renderCollectorScreen();
   } else {
-    if (TAB === 'dash') renderOverviewView();
-    else if (TAB === 'cycles') renderMonthsView();
-    else if (TAB === 'setup') renderChargesSetupView();
-    else if (TAB === 'expenses') renderExpensesView();
-    else if (TAB === 'wa') renderWhatsAppConfigView();
-    else if (TAB === 'dir') renderUnitsDirectoryView();
+    if (TAB === 'dash') renderOverviewScreen();
+    else if (TAB === 'setup') renderChargesScreen();
+    else if (TAB === 'expenses') renderExpensesScreen();
+    else if (TAB === 'dir') renderUnitsScreen();
   }
 }
 
-/* ---- 1. OVERVIEW (DIB-Style Treasury + Independent Monthly Tracker) ---- */
-function renderOverviewView() {
-  var t = getTreasuryData();
+/* ---- SCREEN 1: OVERVIEW (DIB Treasury + Semi-Circle Month Collection + Feed) ---- */
+function renderOverviewScreen() {
+  var t = getTreasury();
   var s = getCycleStats(SELECTED_MONTH);
   var cyc = DB.cycles[SELECTED_MONTH];
   var h = '';
 
-  // DIB-INSPIRED TREASURY PORTFOLIO CARD
-  h += '<div class="treasury-card">';
-  h += '<div class="t-head">';
-  h += '<span class="t-title"><span>🏛️ Building Treasury</span></span>';
-  h += '<div class="cur-toggle">';
-  h += '<button class="' + (TREASURY_REF_CUR === 'USD' ? 'active' : '') + '" onclick="TREASURY_REF_CUR=\'USD\';render()">USD</button>';
-  h += '<button class="' + (TREASURY_REF_CUR === 'LBP' ? 'active' : '') + '" onclick="TREASURY_REF_CUR=\'LBP\';render()">LBP</button>';
-  h += '</div></div>';
-
-  h += '<div class="t-main-val" dir="ltr">' + fmt(t.refTotal, t.refCur) + ' <small>(' + t.refCur + ' Ref)</small></div>';
-  h += '<div class="drawer-grid">';
-  h += '<div class="drawer"><span>USD Physical Drawer</span><b dir="ltr">' + fmt(t.netUsd, 'USD') + '</b></div>';
-  h += '<div class="drawer"><span>LBP Physical Drawer</span><b dir="ltr">' + fmt(t.netLbp, 'LBP') + '</b></div>';
-  h += '</div>';
-  h += '<button class="pill-btn" style="width:100%;margin-top:14px;background:var(--soft);color:var(--acc)" onclick="openModal(\'exp-modal\')">+ Log Direct Out-of-Pocket Expense</button>';
-  h += '</div>';
-
-  // MONTHLY COLLECTION CARD (Isolated from Treasury)
+  // 1. Treasury Portfolio Card
   h += '<div class="card">';
-  h += '<div class="month-picker-bar">';
-  h += '<h2><span>Monthly Collection</span></h2>';
-  h += '<select class="cycle-select" onchange="SELECTED_MONTH=this.value;render()">';
-  Object.keys(DB.cycles).forEach(function(ck) {
-    h += '<option value="' + esc(ck) + '"' + (ck === SELECTED_MONTH ? ' selected' : '') + '>' + esc(ck) + '</option>';
-  });
-  h += '</select></div>';
+  h += '<div class="card-h"><h2>🏛️ Building Treasury</h2>';
+  h += '<div class="cur-switch"><button class="' + (REF_CUR==='USD'?'on':'') + '" onclick="REF_CUR=\'USD\';render()">USD $</button><button class="' + (REF_CUR==='LBP'?'on':'') + '" onclick="REF_CUR=\'LBP\';render()">LBP ل.ل</button></div></div>';
+  h += '<div class="big-balance" dir="ltr">' + fmt(t.refVal, REF_CUR) + ' <small>Net Balance</small></div>';
 
-  h += '<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--mut);font-weight:700">';
-  h += '<span>Progress (' + s.settled + '/' + s.total + ' units settled)</span><span>' + s.pct + '%</span>';
-  h += '</div>';
-  h += '<div class="progress-rail"><div class="progress-fill" style="width:' + s.pct + '%"></div></div>';
-
-  h += '<div class="drawer-grid" style="margin-top:10px">';
-  h += '<div class="drawer"><span>Collected USD</span><b dir="ltr">' + fmt(s.usdGot, 'USD') + ' <small style="font-size:12px;font-weight:600;color:var(--mut)">/ ' + fmt(s.usdSum, 'USD') + '</small></b></div>';
-  h += '<div class="drawer"><span>Collected LBP</span><b dir="ltr">' + fmt(s.lbpGot, 'LBP') + ' <small style="font-size:12px;font-weight:600;color:var(--mut)">/ ' + fmt(s.lbpSum, 'LBP') + '</small></b></div>';
-  h += '</div>';
-
-  // Publish Status Trigger
-  var isLive = cyc && cyc.published;
-  h += '<div class="pub-banner ' + (isLive ? 'live' : 'draft') + '">';
-  h += '<div><b>' + (isLive ? '● Live on Natour Phone' : '○ Draft Mode (Hidden from Natour)') + '</b><div style="font-size:11.5px;opacity:.85">' + (isLive ? 'Natour can see and tick charges' : 'Configure charges before publishing') + '</div></div>';
-  h += '<button class="pill-btn" style="background:#fff;color:#0b1526" onclick="DB.cycles[\'' + SELECTED_MONTH + '\'].published=!DB.cycles[\'' + SELECTED_MONTH + '\'].published;saveDB();render()">' + (isLive ? 'Unpublish' : 'Publish Month') + '</button>';
-  h += '</div>';
-  h += '</div>';
-
-  // LIVE PAYMENTS & EXPENSES ACTIVITY FEED
-  h += '<div class="card">';
-  h += '<h2><span>Feed: Payments & Outflows</span><small style="font-size:12px;color:var(--mut)">Real-time</small></h2>';
-  if (!DB.activity.length) {
-    h += '<div class="subtext">No transactions recorded yet.</div>';
-  } else {
-    DB.activity.slice(0, 8).forEach(function(a) {
-      var isOut = a.type === 'out';
-      h += '<div class="feed-row">';
-      h += '<div class="feed-left"><div class="feed-tag ' + (isOut ? 'out' : 'in') + '">' + (isOut ? '−' : '+') + '</div>';
-      h += '<div><b>' + esc(a.desc) + '</b><div style="font-size:11.5px;color:var(--mut)">' + esc(a.sub) + ' · ' + esc(a.at) + '</div></div></div>';
-      h += '<div dir="ltr" style="font-weight:800;color:' + (isOut ? 'var(--bad)' : 'var(--ok)') + '">' + (isOut ? '- ' : '+ ') + fmt(a.amt, a.cur) + '</div>';
-      h += '</div>';
-    });
+  if (DB.settings.treasuryMode === 'split') {
+    h += '<div class="drawer-row">';
+    h += '<div class="drawer-box"><span>USD Cash Drawer</span><b dir="ltr">' + fmt(t.netUsd, 'USD') + '</b></div>';
+    h += '<div class="drawer-box"><span>LBP Cash Drawer</span><b dir="ltr">' + fmt(t.netLbp, 'LBP') + '</b></div>';
+    h += '</div>';
   }
   h += '</div>';
 
-  document.getElementById('app-view').innerHTML = h;
+  // 2. Month Selector Pills + Semi-Circle Gauge (Separated Collection Progress)
+  h += '<div class="month-pills">';
+  Object.keys(DB.cycles).forEach(function(mKey) {
+    h += '<button class="mpill' + (mKey === SELECTED_MONTH ? ' on' : '') + '" onclick="SELECTED_MONTH=\'' + mKey + '\';render()">' + esc(mKey) + '</button>';
+  });
+  h += '<button class="mpill" onclick="createNewMonth()">+ New Month</button>';
+  h += '</div>';
+
+  h += '<div class="card">';
+  h += '<div class="card-h"><h2>Collection Progress</h2><span style="font-size:12px;color:var(--mut);font-weight:700">' + s.settled + ' of ' + s.total + ' units paid</span></div>';
+  h += buildGaugeSvg(s.pct, '$' + Math.round(s.eqGotUsd) + ' / $' + Math.round(s.eqSumUsd), SELECTED_MONTH + ' (' + s.pct + '%)');
+  h += '<div class="drawer-row" style="margin-top:8px">';
+  h += '<div class="drawer-box"><span>Collected USD</span><b dir="ltr">' + fmt(s.usdGot, 'USD') + ' <small style="font-size:11px;color:var(--mut)">/ ' + fmt(s.usdSum, 'USD') + '</small></b></div>';
+  h += '<div class="drawer-box"><span>Collected LBP</span><b dir="ltr">' + fmt(s.lbpGot, 'LBP') + ' <small style="font-size:11px;color:var(--mut)">/ ' + fmt(s.lbpSum, 'LBP') + '</small></b></div>';
+  h += '</div>';
+
+  var pub = cyc && cyc.published;
+  h += '<div style="margin-top:12px;padding:10px 14px;border-radius:14px;background:' + (pub ? 'var(--okbg)' : 'var(--wbg)') + ';display:flex;justify-content:space-between;align-items:center">';
+  h += '<span style="font-size:12.5px;font-weight:700;color:' + (pub ? 'var(--ok)' : 'var(--warn)') + '">' + (pub ? '● Published on Natour App' : '○ Draft Mode (Hidden)') + '</span>';
+  h += '<button style="padding:6px 12px;font-size:12px;background:var(--card);color:var(--ink)" onclick="DB.cycles[\'' + SELECTED_MONTH + '\'].published=!DB.cycles[\'' + SELECTED_MONTH + '\'].published;saveDB();render()">' + (pub ? 'Unpublish' : 'Publish Now') + '</button>';
+  h += '</div></div>';
+
+  // 3. Latest Activity Feed (+ Green Payments / - Red Outflows)
+  h += '<div class="card"><div class="card-h"><h2>Latest Activity</h2><small style="color:var(--mut);font-size:12px">Live</small></div>';
+  DB.activity.slice(0, 7).forEach(function(a) {
+    var isOut = a.type === 'out';
+    h += '<div class="cat-row">';
+    h += '<div class="cat-ico" style="background:' + (isOut ? 'var(--errbg);color:var(--bad)' : 'var(--okbg);color:var(--ok)') + '">' + (isOut ? '−' : '+') + '</div>';
+    h += '<div class="cat-mid"><div class="cat-top"><b>' + esc(a.desc) + '</b><span dir="ltr" style="color:' + (isOut ? 'var(--bad)' : 'var(--ok)') + '">' + (isOut ? '- ' : '+ ') + fmt(a.amt, a.cur) + '</span></div>';
+    h += '<div style="font-size:11.5px;color:var(--mut)">' + esc(a.sub) + ' · ' + esc(a.at) + '</div></div></div>';
+  });
+  h += '</div>';
+
+  document.getElementById('app-body').innerHTML = h;
 }
 
-/* ---- 2. NATOUR COLLECTOR VIEW ---- */
-function renderCollectorView() {
+/* ---- SCREEN 2: EXPENSE CATEGORIES & DONUT CHART (Reference Image 3 & 4) ---- */
+function renderExpensesScreen() {
+  var rate = Number(DB.settings.rate) || 89500;
+  var totalsByCat = {};
+  var grandUsd = 0;
+
+  DB.expenses.forEach(function(e) {
+    var usdEq = e.cur === 'LBP' ? (Number(e.amt) / rate) : Number(e.amt);
+    totalsByCat[e.cat] = (totalsByCat[e.cat] || 0) + usdEq;
+    grandUsd += usdEq;
+  });
+
+  var segments = Object.keys(totalsByCat).map(function(k) {
+    var c = EXP_CATS[k] || EXP_CATS.repair;
+    var val = totalsByCat[k];
+    return { id: k, en: c.en, ico: c.ico, color: c.color, usd: val, pct: grandUsd > 0 ? Math.round((val / grandUsd) * 100) : 0 };
+  }).sort(function(a, b) { return b.usd - a.usd; });
+
+  var h = '<div class="card">';
+  h += '<div class="card-h"><h2>Expenses Breakdown</h2><button style="padding:6px 12px;font-size:12px;background:var(--errbg);color:var(--bad)" onclick="openModal(\'exp-modal\')">+ Add Expense</button></div>';
+  h += buildDonutSvg(segments, '$' + Math.round(grandUsd).toLocaleString(), 'Total Outflows');
+
+  segments.forEach(function(seg) {
+    h += '<div class="cat-row">';
+    h += '<div class="cat-ico" style="background:' + seg.color + '22;color:' + seg.color + '">' + seg.ico + '</div>';
+    h += '<div class="cat-mid"><div class="cat-top"><b>' + esc(seg.en) + '</b><span dir="ltr">$' + Math.round(seg.usd) + ' <small style="color:var(--mut);font-weight:600">(' + seg.pct + '%)</small></span></div>';
+    h += '<div class="cat-bar"><i style="width:' + seg.pct + '%;background:' + seg.color + '"></i></div></div></div>';
+  });
+  h += '</div>';
+
+  // Itemized Expense List
+  h += '<div class="card"><div class="card-h"><h2>Itemized Expenses Log</h2></div>';
+  DB.expenses.forEach(function(e, idx) {
+    var c = EXP_CATS[e.cat] || EXP_CATS.repair;
+    h += '<div class="cat-row">';
+    h += '<div class="cat-ico" style="background:' + c.color + '22;color:' + c.color + '">' + c.ico + '</div>';
+    h += '<div class="cat-mid"><div class="cat-top"><b>' + esc(e.desc) + '</b><span dir="ltr" style="color:var(--bad)">- ' + fmt(e.amt, e.cur) + '</span></div>';
+    h += '<div style="font-size:11.5px;color:var(--mut)">' + esc(c.en) + ' · ' + esc(e.at) + '</div></div>';
+    h += '<button class="btn-del" onclick="DB.expenses.splice(' + idx + ',1);saveDB();render()">✕</button></div>';
+  });
+  h += '</div>';
+
+  document.getElementById('app-body').innerHTML = h;
+}
+
+/* ---- SCREEN 3: MONTHLY CHARGES SETUP ---- */
+function renderChargesScreen() {
+  var cyc = DB.cycles[SELECTED_MONTH];
+  var h = '<div class="month-pills">';
+  Object.keys(DB.cycles).forEach(function(mKey) {
+    h += '<button class="mpill' + (mKey === SELECTED_MONTH ? ' on' : '') + '" onclick="SELECTED_MONTH=\'' + mKey + '\';render()">' + esc(mKey) + '</button>';
+  });
+  h += '</div>';
+
+  // Fixed Monthly Charges
+  h += '<div class="card"><div class="card-h"><h2>Fixed Monthly Fees</h2></div><p class="subtext">Charged to all units (add, rename, or remove freely).</p>';
+  cyc.fixed.forEach(function(f, idx) {
+    h += '<div class="row-div">';
+    h += '<div class="form-row" style="margin-bottom:6px"><input type="text" value="' + esc(f.en) + '" placeholder="Name EN" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed[' + idx + '].en=this.value;saveDB()"><input type="text" dir="rtl" value="' + esc(f.ar) + '" placeholder="الاسم" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed[' + idx + '].ar=this.value;saveDB()"><button class="btn-del" onclick="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed.splice(' + idx + ',1);saveDB();render()">✕</button></div>';
+    h += '<div class="form-row"><input type="number" value="' + f.amt + '" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed[' + idx + '].amt=Number(this.value)||0;saveDB()"><select onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed[' + idx + '].cur=this.value;saveDB()"><option value="USD"' + (f.cur==='USD'?' selected':'') + '>USD ($)</option><option value="LBP"' + (f.cur==='LBP'?' selected':'') + '>LBP (ل.ل.)</option></select></div></div>';
+  });
+  h += '<button style="width:100%;margin-top:8px;padding:10px;background:var(--card2);color:var(--acc)" onclick="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed.push({id:\'f_\'+Date.now(),en:\'New Fee\',ar:\'رسم جديد\',amt:0,cur:\'USD\',exc:{}});saveDB();render()">+ Add Fixed Monthly Fee</button></div>';
+
+  // Split Dues (Water Bill, Repairs, Mid-month additions)
+  h += '<div class="card"><div class="card-h"><h2>Water Bill & Split Dues</h2></div><p class="subtext">Add shared water bills or schedule emergency split repairs.</p>';
+  cyc.dues.forEach(function(d, idx) {
+    h += '<div class="row-div"><div class="form-row" style="margin-bottom:6px"><input type="text" value="' + esc(d.en) + '" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].dues[' + idx + '].en=this.value;saveDB()"><input type="text" dir="rtl" value="' + esc(d.ar) + '" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].dues[' + idx + '].ar=this.value;saveDB()"><button class="btn-del" onclick="DB.cycles[\'' + SELECTED_MONTH + '\'].dues.splice(' + idx + ',1);saveDB();render()">✕</button></div>';
+    h += '<div class="form-row"><input type="number" value="' + d.amt + '" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].dues[' + idx + '].amt=Number(this.value)||0;saveDB()"><select onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].dues[' + idx + '].cur=this.value;saveDB()"><option value="USD"' + (d.cur==='USD'?' selected':'') + '>USD ($)</option><option value="LBP"' + (d.cur==='LBP'?' selected':'') + '>LBP (ل.ل.)</option></select></div></div>';
+  });
+  h += '<button style="width:100%;margin-top:8px;padding:10px;background:var(--wbg);color:var(--warn)" onclick="addScheduledDue()">+ Add Split Due (Current or Next Month)</button></div>';
+
+  // Per-Apartment Services (Stacked cleanly for mobile)
+  h += '<div class="card"><div class="card-h"><h2>Per-Apartment Services</h2></div><p class="subtext">Internet, Private Generator, Dish (0 = not subscribed).</p>';
+  cyc.services.forEach(function(sv, sIdx) {
+    h += '<div style="padding:12px;background:var(--card2);border:1px solid var(--line);border-radius:16px;margin-bottom:12px">';
+    h += '<div class="form-row" style="margin-bottom:6px"><input type="text" value="' + esc(sv.en) + '" style="flex:2;font-weight:800" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].services[' + sIdx + '].en=this.value;saveDB()"><select style="flex:1" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].services[' + sIdx + '].cur=this.value;saveDB()"><option value="USD"' + (sv.cur==='USD'?' selected':'') + '>USD</option><option value="LBP"' + (sv.cur==='LBP'?' selected':'') + '>LBP</option></select><button class="btn-del" onclick="DB.cycles[\'' + SELECTED_MONTH + '\'].services.splice(' + sIdx + ',1);saveDB();render()">✕</button></div>';
+    h += '<input type="text" dir="rtl" value="' + esc(sv.ar) + '" placeholder="الاسم بالعربية" style="margin-bottom:8px" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].services[' + sIdx + '].ar=this.value;saveDB()">';
+    DB.apartments.forEach(function(a) {
+      var v = (sv.map && sv.map[a.id]) || '';
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-top:1px solid var(--line)"><span><b>' + esc(a.code) + '</b> · ' + esc(a.en) + '</span><input type="number" style="width:95px;text-align:right" placeholder="0" value="' + v + '" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].services[' + sIdx + '].map[\'' + a.id + '\']=Number(this.value)||0;saveDB()"></div>';
+    });
+    h += '</div>';
+  });
+  h += '<button style="width:100%;padding:10px;background:var(--card2);color:var(--acc)" onclick="DB.cycles[\'' + SELECTED_MONTH + '\'].services.push({id:\'s_\'+Date.now(),en:\'New Service\',ar:\'خدمة جديدة\',cur:\'USD\',map:{}});saveDB();render()">+ Add Service</button></div>';
+
+  document.getElementById('app-body').innerHTML = h;
+}
+
+/* ---- SCREEN 4: UNITS DIRECTORY ---- */
+function renderUnitsScreen() {
+  var h = '<div class="card"><div class="card-h"><h2>Units & WhatsApp Directory</h2></div><p class="subtext">Supports Floor+Letter (1A, 2B) or custom codes (SS2R, G-Left).</p>';
+  DB.apartments.forEach(function(a, idx) {
+    h += '<div class="row-div"><div class="form-row" style="margin-bottom:6px"><input type="text" style="width:85px;font-weight:800" value="' + esc(a.code) + '" placeholder="Unit" onchange="DB.apartments[' + idx + '].code=this.value;saveDB()"><input type="text" value="' + esc(a.en) + '" placeholder="Resident EN" onchange="DB.apartments[' + idx + '].en=this.value;saveDB()"><button class="btn-del" onclick="DB.apartments.splice(' + idx + ',1);saveDB();render()">✕</button></div>';
+    h += '<div class="form-row"><input type="text" dir="rtl" value="' + esc(a.ar) + '" placeholder="الاسم بالعربية" onchange="DB.apartments[' + idx + '].ar=this.value;saveDB()"><input type="text" value="' + esc(a.ph) + '" placeholder="WhatsApp (961...)" onchange="DB.apartments[' + idx + '].ph=this.value;saveDB()"></div></div>';
+  });
+  h += '<button style="width:100%;margin-top:10px;padding:10px;background:var(--card2);color:var(--acc)" onclick="DB.apartments.push({id:\'U_\'+Date.now(),code:\'3A\',en:\'New Resident\',ar:\'ساكن جديد\',ph:\'961\'});saveDB();render()">+ Add Apartment Unit</button></div>';
+  document.getElementById('app-body').innerHTML = h;
+}
+
+/* ---- SCREEN 5: NATOUR COLLECTOR SCREEN ---- */
+function renderCollectorScreen() {
   var cyc = DB.cycles[SELECTED_MONTH];
   if (!cyc || !cyc.published) {
-    document.getElementById('app-view').innerHTML = '<div class="card" style="text-align:center;padding:40px"><h3>⏳ Month Not Published</h3><p class="subtext">The building committee has not published the ' + esc(SELECTED_MONTH) + ' cycle for collection yet.</p></div>';
+    document.getElementById('app-body').innerHTML = '<div class="card" style="text-align:center;padding:40px"><h3>⏳ Not Published Yet</h3><p class="subtext">' + esc(SELECTED_MONTH) + ' is still in draft mode.</p></div>';
     return;
   }
   var s = getCycleStats(SELECTED_MONTH);
   var cols = getCycleCols(SELECTED_MONTH);
-  var ar = LANG === 'ar';
-  var h = '';
+  var h = '<div class="card"><div class="card-h"><h2>' + esc(SELECTED_MONTH) + '</h2><span>' + s.settled + '/' + s.total + ' settled</span></div>';
+  h += '<div class="drawer-row"><div class="drawer-box"><span>USD Collected</span><b dir="ltr">' + fmt(s.usdGot, 'USD') + '</b></div><div class="drawer-box"><span>LBP Collected</span><b dir="ltr">' + fmt(s.lbpGot, 'LBP') + '</b></div></div>';
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><button class="mpill' + (UNPAID_ONLY ? ' on' : '') + '" onclick="UNPAID_ONLY=!UNPAID_ONLY;render()">' + (UNPAID_ONLY ? 'Show All Units' : 'Unpaid Only') + '</button><small style="color:var(--mut)">📣 Tap to send WhatsApp</small></div></div>';
 
-  h += '<div class="card" style="margin-top:14px;border-top:4px solid var(--acc)">';
-  h += '<h2><span>' + (ar ? 'تحصيل شهر ' + arMon(SELECTED_MONTH) : 'Collection: ' + SELECTED_MONTH) + '</span><span style="font-size:13px;color:var(--mut)">' + s.settled + '/' + s.total + ' settled</span></h2>';
-  h += '<div class="progress-rail"><div class="progress-fill" style="width:' + s.pct + '%"></div></div>';
-  h += '<div class="filter-strip" style="margin-top:12px">';
-  h += '<button class="pill-btn ' + (UNPAID_ONLY ? 'active' : '') + '" onclick="UNPAID_ONLY=!UNPAID_ONLY;render()">' + (UNPAID_ONLY ? (ar ? 'عرض الكل' : 'Show All') : (ar ? 'غير المسددين فقط' : 'Unpaid Only')) + '</button>';
-  h += '<small style="color:var(--mut);font-weight:700">📣 WhatsApp Invoice</small>';
-  h += '</div></div>';
-
-  h += '<div class="apt-table">';
-  DB.apartments.forEach(function(apt, idx) {
-    var dueUsd = 0, dueLbp = 0;
+  h += '<div class="card" style="padding:0;overflow:hidden">';
+  DB.apartments.forEach(function(a) {
+    var dueU = 0, dueL = 0;
     cols.forEach(function(c) {
-      var v = c.valFor(apt.id); if (v <= 0) return;
-      var isTicked = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][apt.id]);
-      if (!isTicked) { if (c.cur === 'LBP') dueLbp += v; else dueUsd += v; }
+      var v = c.valFor(a.id); if (v <= 0) return;
+      var pd = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][a.id]);
+      if (!pd) { if (c.cur === 'LBP') dueL += v; else dueU += v; }
     });
-    var isDone = dueUsd === 0 && dueLbp === 0;
-    if (UNPAID_ONLY && isDone) return;
+    var done = dueU === 0 && dueL === 0;
+    if (UNPAID_ONLY && done) return;
+    var dParts = []; if (dueU > 0) dParts.push(fmt(dueU, 'USD')); if (dueL > 0) dParts.push(fmt(dueL, 'LBP'));
 
-    var dueStrs = [];
-    if (dueUsd > 0) dueStrs.push(fmt(dueUsd, 'USD'));
-    if (dueLbp > 0) dueStrs.push(fmt(dueLbp, 'LBP'));
-    var code = apt.customCode || (apt.floor + apt.letter);
-
-    h += '<div class="apt-card' + (idx % 2 ? ' z' : '') + (isDone ? ' paid-all' : '') + '">';
-    h += '<div class="apt-row-head">';
-    h += '<div><span class="apt-title">' + esc(ar ? (apt.ar || apt.en) : apt.en) + '</span><span class="apt-code">' + esc(code) + '</span></div>';
-    h += '<div style="display:flex;align-items:center;gap:8px">';
-    h += '<span class="apt-due' + (isDone ? ' cleared' : '') + '" dir="ltr">' + (isDone ? '✓' : dueStrs.join(' + ')) + '</span>';
-    if (apt.ph) {
-      h += '<a class="wa-btn" href="' + makeWhatsAppUrl(apt) + '" target="_blank" title="WhatsApp Message">📣</a>';
-    }
-    h += '</div></div>';
-
+    h += '<div class="apt-card' + (done ? ' settled' : '') + '"><div style="display:flex;justify-content:space-between;align-items:center"><div><b>' + esc(a.en) + '</b> <span style="font-size:12px;color:var(--mut)">(' + esc(a.code) + ')</span></div>';
+    h += '<div style="display:flex;align-items:center;gap:8px"><b dir="ltr" style="color:' + (done ? 'var(--ok)' : 'var(--bad)') + '">' + (done ? '✓ Paid' : dParts.join(' + ')) + '</b><a class="wa-btn" href="' + buildWaLink(a) + '" target="_blank">📣</a></div></div>';
     h += '<div class="chip-grid">';
     cols.forEach(function(c) {
-      var v = c.valFor(apt.id); if (v <= 0) return;
-      var isTicked = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][apt.id]);
-      h += '<button class="chip' + (isTicked ? ' ticked' : '') + '" onclick="toggleCollectorTick(\'' + c.id + '\',\'' + apt.id + '\')">'
-        + esc(ar ? (c.ar || c.en) : c.en) + ' <span dir="ltr">' + fmt(v, c.cur) + '</span></button>';
+      var v = c.valFor(a.id); if (v <= 0) return;
+      var pd = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][a.id]);
+      h += '<button class="chip' + (pd ? ' ticked' : '') + '" onclick="toggleTick(\'' + c.id + '\',\'' + a.id + '\')">' + esc(c.en) + ' <span dir="ltr">' + fmt(v, c.cur) + '</span></button>';
     });
     h += '</div></div>';
   });
   h += '</div>';
-  document.getElementById('app-view').innerHTML = h;
+  document.getElementById('app-body').innerHTML = h;
 }
 
-/* ---- 3. MONTH CYCLES MANAGER ---- */
-function renderMonthsView() {
-  var h = '<div class="card"><h2>Billing Months & Mid-Cycle Additions</h2><p class="subtext">Manage active and past billing rounds.</p>';
-  Object.keys(DB.cycles).forEach(function(ck) {
-    var c = DB.cycles[ck];
-    h += '<div class="row-divider" style="display:flex;justify-content:space-between;align-items:center">';
-    h += '<div><b>' + esc(ck) + '</b><div style="font-size:12px;color:var(--mut)">' + (c.published ? '✅ Live for Collector' : '🔒 Draft') + '</div></div>';
-    h += '<button class="pill-btn" onclick="SELECTED_MONTH=\'' + ck + '\';setTab(\'dash\')">View Month</button>';
-    h += '</div>';
-  });
-  h += '<button class="pill-btn" style="width:100%;margin-top:12px;background:var(--soft);color:var(--acc)" onclick="promptNewCycle()">+ Start New Month Cycle</button>';
-  h += '</div>';
-  document.getElementById('app-view').innerHTML = h;
+/* ============================================================================
+   4. ACTIONS, MODALS & ONBOARDING LOGIC
+   ============================================================================ */
+function toggleTick(cId, aId) {
+  var cyc = DB.cycles[SELECTED_MONTH];
+  cyc.paid[cId] = cyc.paid[cId] || {};
+  var on = !cyc.paid[cId][aId];
+  if (on) cyc.paid[cId][aId] = 1; else delete cyc.paid[cId][aId];
+
+  var col = getCycleCols(SELECTED_MONTH).filter(function(c) { return c.id === cId; })[0];
+  var apt = DB.apartments.filter(function(a) { return a.id === aId; })[0];
+  var v = col.valFor(aId);
+  DB.activity.unshift({ desc: apt.en + ' (' + apt.code + ')', sub: col.en, amt: v, cur: col.cur, type: on ? 'in' : 'out', at: 'Just now' });
+  saveDB();
+  showToast((on ? 'Paid: ' : 'Unmarked: ') + apt.en + ' · ' + col.en);
+  render();
 }
 
-function promptNewCycle() {
-  var name = prompt('Enter new month label (e.g. November 2026):');
-  if (!name || DB.cycles[name]) return;
-  // Clone previous cycle configuration
-  var prev = DB.cycles[SELECTED_MONTH] || { fixed: [], dues: [], services: [] };
+function saveCategorizedExpense() {
+  var cat = document.getElementById('ex-cat').value;
+  var desc = document.getElementById('ex-desc').value.trim();
+  var amt = Number(document.getElementById('ex-amt').value) || 0;
+  var cur = document.getElementById('ex-cur').value;
+  if (!desc || amt <= 0) { alert('Enter description and amount'); return; }
+  var cObj = EXP_CATS[cat];
+  DB.expenses.unshift({ id: 'e_' + Date.now(), cat: cat, desc: desc, amt: amt, cur: cur, month: SELECTED_MONTH, at: 'Today' });
+  DB.activity.unshift({ desc: desc, sub: cObj.ico + ' ' + cObj.en, amt: amt, cur: cur, type: 'out', at: 'Just now' });
+  saveDB();
+  closeModal('exp-modal');
+  showToast('Expense recorded: - ' + fmt(amt, cur));
+  render();
+}
+
+var obMode = 'split', obBal = 'zero';
+function openOnboarding() {
+  document.getElementById('ob-bld').value = DB.settings.bldEn;
+  document.getElementById('ob-col').value = DB.settings.collectorEn;
+  openModal('onboard-modal');
+}
+function selectObMode(m) {
+  obMode = m;
+  document.getElementById('ob-mode-split').className = 'choice-card' + (m === 'split' ? ' on' : '');
+  document.getElementById('ob-mode-single').className = 'choice-card' + (m === 'single' ? ' on' : '');
+}
+function selectObBal(b) {
+  obBal = b;
+  document.getElementById('ob-bal-zero').className = 'choice-card' + (b === 'zero' ? ' on' : '');
+  document.getElementById('ob-bal-existing').className = 'choice-card' + (b === 'existing' ? ' on' : '');
+  document.getElementById('ob-bal-inputs').style.display = b === 'existing' ? 'block' : 'none';
+}
+function finishOnboarding() {
+  DB.settings.bldEn = document.getElementById('ob-bld').value.trim() || 'Block C';
+  DB.settings.collectorEn = document.getElementById('ob-col').value.trim() || 'Anas';
+  DB.settings.treasuryMode = obMode;
+  if (obBal === 'zero') {
+    DB.settings.initialUsd = 0; DB.settings.initialLbp = 0;
+  } else {
+    DB.settings.initialUsd = Number(document.getElementById('ob-usd').value) || 0;
+    DB.settings.initialLbp = Number(document.getElementById('ob-lbp').value) || 0;
+  }
+  DB.onboarded = true;
+  saveDB();
+  closeModal('onboard-modal');
+  showToast('Setup saved!');
+  render();
+}
+
+function addScheduledDue() {
+  var title = prompt('Enter split due or bill name (e.g. Water Pump Repair):');
+  if (!title) return;
+  var amt = Number(prompt('Amount per apartment:')) || 0;
+  if (amt <= 0) return;
+  var cur = prompt('Currency (USD or LBP):', 'USD').toUpperCase() === 'LBP' ? 'LBP' : 'USD';
+  var toCurrent = confirm('OK = Add to CURRENT month (' + SELECTED_MONTH + ')\nCancel = Schedule for NEXT month (November 2026)');
+  var target = toCurrent ? SELECTED_MONTH : 'November 2026';
+  if (!DB.cycles[target]) createMonthObj(target);
+  DB.cycles[target].dues.push({ id: 'd_' + Date.now(), en: title, ar: title, amt: amt, cur: cur });
+  saveDB();
+  showToast('Added to ' + target);
+  render();
+}
+
+function createMonthObj(name) {
+  var prev = DB.cycles[SELECTED_MONTH] || { fixed: [], services: [] };
   DB.cycles[name] = {
     published: false,
     fixed: JSON.parse(JSON.stringify(prev.fixed || [])),
@@ -765,152 +904,68 @@ function promptNewCycle() {
     services: JSON.parse(JSON.stringify(prev.services || [])),
     paid: {}
   };
-  SELECTED_MONTH = name;
-  saveDB();
-  render();
-  toast('Started new cycle: ' + name);
+}
+function createNewMonth() {
+  var m = prompt('New month label:', 'November 2026');
+  if (!m) return;
+  if (!DB.cycles[m]) createMonthObj(m);
+  SELECTED_MONTH = m;
+  saveDB(); render();
 }
 
-/* ---- 4. CHARGES SETUP (Fixed Fees, Split Dues, Services) ---- */
-function renderChargesSetupView() {
+function buildWaLink(apt) {
   var cyc = DB.cycles[SELECTED_MONTH];
-  if (!cyc) { document.getElementById('app-view').innerHTML = ''; return; }
-  var h = '';
-
-  // Mid-Month Split Due Adder
-  h += '<div class="card" style="border-top:3px solid var(--warn)">';
-  h += '<h2><span>Emergency / Mid-Month Split Due</span></h2>';
-  h += '<p class="subtext">Water pump fix, emergency repair, or unexpected cost. Choose to add to current month or queue for next month.</p>';
-  h += '<button class="pill-btn" style="width:100%;background:var(--wbg);color:var(--warn)" onclick="promptMidMonthDue()">+ Add Split Due (Current or Next Month)</button>';
-  h += '</div>';
-
-  // Fixed Monthly Charges
-  h += '<div class="card"><h2><span>Fixed Charges (' + esc(SELECTED_MONTH) + ')</span></h2>';
-  cyc.fixed.forEach(function(f, idx) {
-    h += '<div class="row-divider">';
-    h += '<div class="form-row" style="margin-bottom:6px"><input type="text" value="' + esc(f.en) + '" style="flex:2" placeholder="Label EN" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed[' + idx + '].en=this.value;saveDB()"><input type="text" dir="rtl" value="' + esc(f.ar) + '" style="flex:2" placeholder="الاسم بالعربية" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed[' + idx + '].ar=this.value;saveDB()"><button class="btn-sm-del" onclick="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed.splice(' + idx + ',1);saveDB();render()">✕</button></div>';
-    h += '<div class="form-row"><input type="number" style="flex:2" value="' + f.amt + '" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed[' + idx + '].amt=Number(this.value)||0;saveDB();render()"><select style="flex:1" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed[' + idx + '].cur=this.value;saveDB();render()"><option value="USD"' + (f.cur==='USD'?' selected':'') + '>USD</option><option value="LBP"' + (f.cur==='LBP'?' selected':'') + '>LBP</option></select></div>';
-    h += '</div>';
+  var cols = getCycleCols(SELECTED_MONTH);
+  var items = [], u = 0, l = 0;
+  cols.forEach(function(c) {
+    var v = c.valFor(apt.id); if (v <= 0) return;
+    var pd = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][apt.id]);
+    items.push('• ' + c.en + ': ' + fmt(v, c.cur) + (pd ? ' ✅' : ''));
+    if (!pd) { if (c.cur === 'LBP') l += v; else u += v; }
   });
-  h += '<button class="pill-btn" style="width:100%;margin-top:10px;background:var(--soft);color:var(--acc)" onclick="DB.cycles[\'' + SELECTED_MONTH + '\'].fixed.push({id:\'f_\'+Date.now(),en:\'New Charge\',ar:\'رسم جديد\',amt:0,cur:\'USD\',exc:{}});saveDB();render()">+ Add Fixed Fee</button>';
-  h += '</div>';
-
-  // Per-Apartment Services (Mobile-Friendly Stacked Layout)
-  h += '<div class="card"><h2><span>Per-Apartment Services</span></h2>';
-  cyc.services.forEach(function(sv, sIdx) {
-    h += '<div style="border:1.5px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px">';
-    h += '<div class="form-row" style="margin-bottom:6px"><input type="text" value="' + esc(sv.en) + '" style="flex:2;font-weight:700" placeholder="Service EN" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].services[' + sIdx + '].en=this.value;saveDB()"><select style="flex:1" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].services[' + sIdx + '].cur=this.value;saveDB();render()"><option value="USD"' + (sv.cur==='USD'?' selected':'') + '>USD</option><option value="LBP"' + (sv.cur==='LBP'?' selected':'') + '>LBP</option></select><button class="btn-sm-del" onclick="DB.cycles[\'' + SELECTED_MONTH + '\'].services.splice(' + sIdx + ',1);saveDB();render()">✕</button></div>';
-    h += '<div class="form-row" style="margin-bottom:8px"><input type="text" dir="rtl" value="' + esc(sv.ar) + '" placeholder="الاسم بالعربية" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].services[' + sIdx + '].ar=this.value;saveDB()"></div>';
-
-    DB.apartments.forEach(function(apt) {
-      var val = (sv.map && sv.map[apt.id]) || '';
-      var code = apt.customCode || (apt.floor + apt.letter);
-      h += '<div class="row-divider" style="display:flex;justify-content:space-between;align-items:center;padding:5px 0">';
-      h += '<span style="font-size:13px"><b>' + esc(code) + '</b> <small style="color:var(--mut)">' + esc(apt.en) + '</small></span>';
-      h += '<input type="number" style="width:100px;text-align:right" placeholder="0" value="' + val + '" onchange="DB.cycles[\'' + SELECTED_MONTH + '\'].services[' + sIdx + '].map[\'' + apt.id + '\']=Number(this.value)||0;saveDB()">';
-      h += '</div>';
-    });
-    h += '</div>';
-  });
-  h += '<button class="pill-btn" style="width:100%;background:var(--soft);color:var(--acc)" onclick="DB.cycles[\'' + SELECTED_MONTH + '\'].services.push({id:\'s_\'+Date.now(),en:\'New Service\',ar:\'خدمة جديدة\',cur:\'USD\',map:{}});saveDB();render()">+ Add Service Category</button>';
-  h += '</div>';
-
-  document.getElementById('app-view').innerHTML = h;
+  var due = []; if (u > 0) due.push(fmt(u, 'USD')); if (l > 0) due.push(fmt(l, 'LBP'));
+  var txt = DB.waTemplate.replace('{building}', DB.settings.bldEn).replace('{month}', SELECTED_MONTH)
+    .replace('{name}', apt.en).replace('{unit}', apt.code).replace('{items}', items.join('\n'))
+    .replace('{due}', due.join(' + ') || 'Settled ✅').replace('{collector}', DB.settings.collectorEn);
+  return 'https://wa.me/' + String(apt.ph || '').replace(/\D/g, '') + '?text=' + encodeURIComponent(txt);
 }
 
-function promptMidMonthDue() {
-  var desc = prompt('Enter due title (e.g. Water pump repair):');
-  if (!desc) return;
-  var amt = Number(prompt('Amount per apartment:')) || 0;
-  if (amt <= 0) return;
-  var cur = prompt('Currency (USD or LBP):', 'USD').toUpperCase() === 'LBP' ? 'LBP' : 'USD';
-  var target = confirm('Press OK to add to CURRENT month (' + SELECTED_MONTH + ')\nPress CANCEL to schedule for NEXT month.') ? SELECTED_MONTH : prompt('Enter target month name:', 'November 2026');
-
-  if (!DB.cycles[target]) {
-    DB.cycles[target] = { published: false, fixed: [], dues: [], services: [], paid: {} };
+function openModal(id) {
+  if (id === 'settings-modal') {
+    document.getElementById('st-blden').value = DB.settings.bldEn;
+    document.getElementById('st-bldar').value = DB.settings.bldAr;
+    document.getElementById('st-colen').value = DB.settings.collectorEn;
+    document.getElementById('st-colar').value = DB.settings.collectorAr;
+    document.getElementById('st-rate').value = DB.settings.rate;
+    document.getElementById('st-tmode').value = DB.settings.treasuryMode;
+    document.getElementById('st-wa').value = DB.waTemplate;
   }
-  DB.cycles[target].dues.push({
-    id: 'd_' + Date.now(), en: desc, ar: desc, amt: amt, cur: cur, mode: 'each'
-  });
-  saveDB();
-  toast('Added due to ' + target);
-  render();
+  document.getElementById(id).style.display = 'flex';
 }
-
-/* ---- 5. EXPENSES & INITIAL SETTINGS ---- */
-function renderExpensesView() {
-  var h = '<div class="card"><h2><span>Initial Cash & Rate</span></h2>';
-  h += '<div class="form-row form-group"><div><label>Initial USD Cash</label><input type="number" value="' + DB.settings.initialUsd + '" onchange="DB.settings.initialUsd=Number(this.value)||0;saveDB();render()"></div>';
-  h += '<div><label>Initial LBP Cash</label><input type="number" value="' + DB.settings.initialLbp + '" onchange="DB.settings.initialLbp=Number(this.value)||0;saveDB();render()"></div></div>';
-  h += '<div class="form-group"><label>Exchange Rate (LBP / $1)</label><input type="number" value="' + DB.settings.rate + '" onchange="DB.settings.rate=Number(this.value)||89500;saveDB();render()"></div>';
-  h += '</div>';
-
-  h += '<div class="card"><h2><span>Outflow Expenses History</span><button class="pill-btn" style="background:var(--errbg);color:var(--bad)" onclick="openModal(\'exp-modal\')">+ Add Expense</button></h2>';
-  DB.expenses.forEach(function(e, i) {
-    h += '<div class="row-divider" style="display:flex;justify-content:space-between;align-items:center">';
-    h += '<div><b>' + esc(e.desc) + '</b><div style="font-size:11.5px;color:var(--mut)">' + esc(e.date) + ' · ' + esc(e.by) + '</div></div>';
-    h += '<div dir="ltr" style="font-weight:800;color:var(--bad)">- ' + fmt(e.amt, e.cur) + '</div>';
-    h += '</div>';
-  });
-  h += '</div>';
-  document.getElementById('app-view').innerHTML = h;
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+function showToast(t) {
+  var el = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = t;
+  el.classList.add('pop');
+  setTimeout(function() { el.classList.remove('pop'); }, 3000);
 }
-
-/* ---- 6. WHATSAPP TEMPLATE ENGINE ---- */
-function renderWhatsAppConfigView() {
-  var h = '<div class="card"><h2><span>WhatsApp Message Customizer</span></h2>';
-  h += '<p class="subtext">Use tags: {building}, {month}, {name}, {unit}, {items}, {due}, {collector}.</p>';
-  h += '<textarea style="height:190px;font-family:monospace;font-size:13px" onchange="DB.waTemplate=this.value;saveDB()">' + esc(DB.waTemplate) + '</textarea>';
-  h += '<button class="pill-btn" style="width:100%;margin-top:10px;background:var(--acc);color:#fff" onclick="toast(\'WhatsApp template saved!\')">Save Template</button>';
-  h += '</div>';
-  document.getElementById('app-view').innerHTML = h;
-}
-
-/* ---- 7. UNITS DIRECTORY (Flexible Floor + Letter / Custom Code) ---- */
-function renderUnitsDirectoryView() {
-  var h = '<div class="card"><h2><span>Building Units Directory</span></h2>';
-  h += '<p class="subtext">Floor + Letter, Apartment number, or custom code (e.g. SS2R, 1A, 2B, Ground Left).</p>';
-  DB.apartments.forEach(function(apt, idx) {
-    h += '<div class="row-divider">';
-    h += '<div class="form-row" style="margin-bottom:6px">';
-    h += '<input type="text" style="width:90px;font-weight:800" placeholder="Code (2B)" value="' + esc(apt.customCode || apt.floor + apt.letter) + '" onchange="DB.apartments[' + idx + '].customCode=this.value;saveDB()">';
-    h += '<input type="text" style="flex:2" placeholder="Name EN" value="' + esc(apt.en) + '" onchange="DB.apartments[' + idx + '].en=this.value;saveDB()">';
-    h += '<button class="btn-sm-del" onclick="DB.apartments.splice(' + idx + ',1);saveDB();render()">✕</button>';
-    h += '</div>';
-    h += '<div class="form-row">';
-    h += '<input type="text" dir="rtl" style="flex:2" placeholder="الاسم بالعربية" value="' + esc(apt.ar) + '" onchange="DB.apartments[' + idx + '].ar=this.value;saveDB()">';
-    h += '<input type="text" style="flex:2" placeholder="WhatsApp (961...)" value="' + esc(apt.ph) + '" onchange="DB.apartments[' + idx + '].ph=this.value;saveDB()">';
-    h += '</div>';
-    h += '</div>';
-  });
-  h += '<button class="pill-btn" style="width:100%;margin-top:12px;background:var(--soft);color:var(--acc)" onclick="DB.apartments.push({id:\'U_\'+Date.now(),floor:\'1\',letter:\'A\',customCode:\'1A\',en:\'New Resident\',ar:\'ساكن جديد\',ph:\'961\'});saveDB();render()">+ Add Unit</button>';
-  h += '</div>';
-  document.getElementById('app-view').innerHTML = h;
-}
-
-/* ============================================================================
-   NAVIGATION CONTROLS
-   ============================================================================ */
 function setRole(r) {
   ROLE = r;
-  document.getElementById('btn-mgr').className = r === 'mgr' ? 'on' : '';
-  document.getElementById('btn-col').className = r === 'col' ? 'on' : '';
+  document.getElementById('sim-mgr').className = r === 'mgr' ? 'on' : '';
+  document.getElementById('sim-col').className = r === 'col' ? 'on' : '';
   render();
 }
 function setTab(t) {
   TAB = t;
-  document.querySelectorAll('#mgr-nav button').forEach(function(b) {
+  document.querySelectorAll('#mgr-dock button').forEach(function(b) {
     b.className = b.getAttribute('data-tab') === t ? 'on' : '';
   });
   render();
 }
-function toggleLang() {
-  LANG = LANG === 'ar' ? 'en' : 'ar';
-  render();
-}
+function toggleLang() { LANG = LANG === 'ar' ? 'en' : 'ar'; render(); }
 function toggleTheme() {
-  var r = document.documentElement;
-  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  var root = document.documentElement;
+  root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
 }
 
 render();

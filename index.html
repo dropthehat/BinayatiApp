@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Binayetna · بنايتنا — V8 Smart Building Manager</title>
+<title>Binayetna · بنايتنا — V8.1 Smart Building Manager</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -72,7 +72,7 @@ header.top-bar {
  display: grid; place-items: center; line-height: 1;
 }
 .corner-menu {
- position: absolute; top: 40px; inset-inline-end: 0; min-width: 185px;
+ position: absolute; top: 40px; inset-inline-end: 0; min-width: 195px;
  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
  padding: 6px; box-shadow: 0 14px 35px rgba(0,0,0,0.45); z-index: 120;
 }
@@ -542,17 +542,17 @@ input[type="text"], input[type="number"], input[type="date"], select, textarea {
 /* ============================================================================
  1. BILINGUAL DICTIONARY HELPER & DEFAULT STATE
  ============================================================================ */
-var STORAGE_KEY = 'binayetna_v8_store';
+var STORAGE_KEY = 'binayetna_v81_store';
 var ROLE = 'mgr';
 var TAB = 'dash';
 var LANG = 'en';
 var UNPAID_ONLY = false;
 var REF_CUR = 'USD';
 var SELECTED_MONTH = 'October 2026';
-var CYCLE_DETAIL_MODE = false; // When true, user is focused inside a specific Month or Project without dashboard distractions!
-var CYCLE_MENU_OPEN = false;   // Corner ⋯ popover menu state
-var SELECTED_EXP_CAT = null;   // Filters Expenses when a category is clicked
-var WA_EXPANDED = false;       // Expands WhatsApp template boxes to extra-tall view
+var CYCLE_DETAIL_MODE = false;
+var CYCLE_MENU_OPEN = false;
+var SELECTED_EXP_CAT = null;
+var WA_EXPANDED = false;
 var PREVIEW_LANG = 'both';
 var PREVIEW_APT_ID = 'U_SS2R';
 var PREVIEW_MODE = 'auto';
@@ -899,7 +899,7 @@ function buildWaLink(apt) {
 }
 
 /* ============================================================================
- 4. SCREEN RENDERERS (With Focused Cycle/Project View & Corner Menu)
+ 4. SCREEN RENDERERS
  ============================================================================ */
 function render() {
  document.documentElement.lang = LANG;
@@ -955,7 +955,7 @@ function render() {
  }
 }
 
-/* ---- SCREEN 1A: HIGH-LEVEL OVERVIEW (Treasury + Clickable Cycles/Projects + Reminders + Activity) ---- */
+/* ---- SCREEN 1A: HIGH-LEVEL OVERVIEW ---- */
 function renderOverviewScreen() {
  var tr = getTreasury();
  var h = '';
@@ -974,7 +974,7 @@ function renderOverviewScreen() {
  }
  h += '</div>';
 
- // 2. Active Billing Months & Special Projects List (Tap any card to enter Focused Cycle View!)
+ // 2. Active Billing Months & Special Projects List
  h += '<div class="card">';
  h += '<div class="card-h"><h2>📅 ' + t('Billing Cycles & Projects', 'دورات التحصيل والمشاريع') + '</h2>';
  h += '<button class="btn-edit" style="color:var(--acc);border-color:rgba(56,189,248,.35)" onclick="openNewCycleModal()">+ ' + t('New', 'جديد') + '</button></div>';
@@ -1023,7 +1023,7 @@ function renderOverviewScreen() {
  document.getElementById('app-body').innerHTML = h;
 }
 
-/* ---- SCREEN 1B: FOCUSED MONTH / SPECIAL PROJECT VIEW (Zero Distractions, Corner ⋯ Menu, 2-Line Color-Coded Paid/Owed) ---- */
+/* ---- SCREEN 1B: FOCUSED MONTH / SPECIAL PROJECT VIEW ---- */
 function openCycleDetail(cKey) {
  SELECTED_MONTH = cKey;
  CYCLE_DETAIL_MODE = true;
@@ -1040,7 +1040,6 @@ function renderFocusedCycleView() {
  var pub = !!(cyc && cyc.published);
  var h = '';
 
- // Quick Cycle Switcher Strip at top of Focused View
  h += '<div class="month-pills">';
  Object.keys(DB.cycles).forEach(function(mKey) {
  var p = DB.cycles[mKey] && DB.cycles[mKey].isProject;
@@ -1049,7 +1048,6 @@ function renderFocusedCycleView() {
  });
  h += '</div>';
 
- // Main Focused Cycle / Project Card with Corner ⋯ Action Button
  h += '<div class="card" style="' + (isProj ? 'border-color:rgba(245,158,11,.45)' : '') + '">';
  h += '<div class="card-h"><div style="min-width:0">';
  h += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">';
@@ -1059,7 +1057,6 @@ function renderFocusedCycleView() {
  h += '<h2>' + esc(dispCycleName(SELECTED_MONTH)) + '</h2>';
  h += '<span style="font-size:12px;color:var(--mut);font-weight:600">' + s.settled + ' ' + t('of', 'من') + ' ' + s.total + ' ' + t('units settled', 'شقق مسددة') + '</span></div>';
 
- // Corner ⋯ Button & Popover Dropdown (Clean, unobtrusive!)
  h += '<div class="corner-wrap" onclick="event.stopPropagation()">';
  h += '<button class="dots-btn" onclick="CYCLE_MENU_OPEN=!CYCLE_MENU_OPEN;render()" title="Options">⋯</button>';
  if (CYCLE_MENU_OPEN) {
@@ -1073,7 +1070,6 @@ function renderFocusedCycleView() {
  }
  h += '</div></div>';
 
- // Collection Progress Bar
  h += '<div class="prog-wrap">';
  h += '<div class="prog-top"><b dir="ltr">$' + Math.round(s.eqGotUsd) + ' <small style="font-size:13px;color:var(--mut);font-weight:600">' + t('of', 'من أصل') + ' $' + Math.round(s.eqSumUsd) + ' ' + (isProj ? t('Budget', 'الميزانية') : 'USD eq') + '</small></b>';
  h += '<span style="color:' + (isProj ? 'var(--warn)' : 'var(--acc)') + '">' + s.pct + '% ' + t('Collected', 'محصّل') + '</span></div>';
@@ -1202,7 +1198,7 @@ function renderChargesScreen() {
  document.getElementById('app-body').innerHTML = h;
 }
 
-/* ---- SCREEN 3: EXPENSES & CLICKABLE CATEGORY FILTER (No Accidental Delete Button on Rows!) ---- */
+/* ---- SCREEN 3: EXPENSES & CLICKABLE CATEGORY FILTER ---- */
 function renderExpensesScreen() {
  var rate = Number(DB.settings.rate) || 89500;
  var totalsByCat = {}, grandUsd = 0;
@@ -1231,7 +1227,6 @@ function renderExpensesScreen() {
  });
  h += '</div>';
 
- // Filtered Expense Transactions List (Safe Edit on Tap — No Direct Delete X Button)
  var activeCatObj = SELECTED_EXP_CAT ? EXP_CATS[SELECTED_EXP_CAT] : null;
  h += '<div class="card"><div class="card-h"><h2>' + (activeCatObj ? (activeCatObj.ico + ' ' + esc(LANG==='ar'?activeCatObj.ar:activeCatObj.en)) : t('All Building & Project Expenses', 'سجل مصاريف البناية والمشاريع')) + '</h2>';
  if (activeCatObj) {
@@ -1300,7 +1295,7 @@ function renderNatourPortalScreen() {
  h += '<input type="checkbox" style="width:22px;height:22px" ' + (DB.settings.natourCanShowPhone ? 'checked' : '') + ' onchange="DB.settings.natourCanShowPhone=this.checked;saveDB()"></div>';
  h += '</div>';
 
- // 3. Full-View WhatsApp Message Studio (Tall Auto-Fitting Textareas!)
+ // 3. Full-View WhatsApp Message Studio
  h += '<div class="card"><div class="card-h"><h2>💬 ' + t('WhatsApp Message Studio', 'استوديو رسائل وإيصالات واتساب') + '</h2>';
  h += '<button class="btn-edit" onclick="WA_EXPANDED=!WA_EXPANDED;render()">' + (WA_EXPANDED ? '🔽 ' + t('Compact', 'تصغير') : '🔍 ' + t('Full Height', 'تكبير كامل')) + '</button></div>';
  h += '<p class="subtext">' + t('Full message view: edit the Invoice (📣) or Official Receipt (🧾) templates and preview the complete formatted output below.', 'عرض كامل للرسالة: عدّل قالب المطالبة (📣) أو الإيصال (🧾) وشاهد الرسالة كاملة أدناه.') + '</p>';
@@ -1343,7 +1338,6 @@ function renderNatourPortalScreen() {
  h += '</div>';
 
  document.getElementById('app-body').innerHTML = h;
- // Auto-fit all visible WhatsApp template textareas so the full template is always readable
  document.querySelectorAll('.wa-textarea').forEach(autoFitTa);
 }
 
@@ -1395,13 +1389,12 @@ function renderUnitsScreen() {
  document.getElementById('app-body').innerHTML = h;
 }
 
-/* ---- SCREEN 6: NATOUR COLLECTOR SCREEN (Now Includes Assigned Maintenance Tasks Checklist!) ---- */
+/* ---- SCREEN 6: NATOUR COLLECTOR SCREEN ---- */
 function renderCollectorScreen() {
  var ar = LANG === 'ar';
  var cyc = DB.cycles[SELECTED_MONTH];
  var h = '';
 
- // 1. Assigned Natour Tasks & Maintenance Checklist (Sent by Manager!)
  var natourTasks = [];
  (DB.reminders || []).forEach(function(rm, idx) {
  if (rm.assignNatour) natourTasks.push({ rm: rm, idx: idx });
@@ -1897,7 +1890,7 @@ function deleteCurrentCharge() {
  saveDB(); closeModal('charge-modal'); render();
 }
 
-/* ---- UNIT MODAL ---- */
+/* ---- UNIT MODAL (FIXED SYNTAX) ---- */
 var curUnitIdx = -1;
 function openUnitModal(idx) {
  curUnitIdx = idx;
@@ -1922,7 +1915,7 @@ function saveUnitModal() {
  var u = DB.apartments[curUnitIdx];
  u.code = code; u.en = en; u.ar = ar; u.ph = ph; u.prefLang = prefLang;
  } else {
- DB.apartments.push({ id: 'U_' + Date.now(), code: code, en: en, ar: ar, ph: ph, prefLang = prefLang });
+ DB.apartments.push({ id: 'U_' + Date.now(), code: code, en: en, ar: ar, ph: ph, prefLang: prefLang });
  }
  saveDB(); closeModal('unit-modal'); showToast(t('Directory updated', 'تم تحديث الشقق')); render();
 }
@@ -1932,7 +1925,7 @@ function deleteUnitModal() {
  saveDB(); closeModal('unit-modal'); render();
 }
 
-/* ---- ADD / EDIT EXPENSE MODAL (Safe Delete Inside Modal Only) ---- */
+/* ---- ADD / EDIT EXPENSE MODAL ---- */
 var curExpIdx = -1;
 function openExpenseModal(idx) {
  curExpIdx = (typeof idx === 'number' && idx >= 0) ? idx : -1;
@@ -2033,7 +2026,7 @@ function deleteExpenseFromModal() {
  saveDB(); closeModal('exp-modal'); showToast(t('Expense deleted', 'تم حذف المصروف')); render();
 }
 
-/* ---- FIXED REMINDER MODAL (Custom Name + Yearly/Custom Repeat + Assign to Natour) ---- */
+/* ---- FIXED REMINDER MODAL ---- */
 function openReminderModal() {
  document.getElementById('rm-preset').value = 'custom';
  document.getElementById('rm-en').value = '';

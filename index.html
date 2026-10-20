@@ -1,111 +1,141 @@
 <!doctype html>
-<html lang="en" dir="ltr" data-theme="dark">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Binayati · بنايتي — V11 Smart Building & Collector Manager</title>
+<title>Binayati · بنايتي — V12 Smart Building Manager</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
- --bg: #f2f5f9; --card: #ffffff; --card2: #f8fafc; --ink: #0f172a; --mut: #64748b;
- --line: #e2e8f0; --soft: #e0edff; --acc: #0b6cf0; --ok: #10b981; --okbg: rgba(16,185,129,.12);
- --warn: #f59e0b; --wbg: rgba(245,158,11,.12); --bad: #ef4444; --errbg: rgba(239,68,68,.12);
- --purp: #8b5cf6; --purpbg: rgba(139,92,246,.14);
- --dock: rgba(255,255,255,0.94); --shadow: 0 8px 30px rgba(15,23,42,0.06);
-}
-:root[data-theme="dark"] {
- --bg: #070b12; --card: #111823; --card2: #17202f; --ink: #f8fafc; --mut: #8b9bb4;
- --line: #1e293b; --soft: #172554; --acc: #38bdf8; --ok: #34d399; --okbg: rgba(52,211,153,.14);
- --warn: #fbbf24; --wbg: rgba(251,191,36,.14); --bad: #f87171; --errbg: rgba(248,113,113,.15);
- --purp: #a78bfa; --purpbg: rgba(167,139,250,.18);
- --dock: rgba(17,24,35,0.92); --shadow: 0 12px 35px rgba(0,0,0,0.45);
+ --bg: #f4f5fb;
+ --card: #ffffff;
+ --card2: #f8f9fe;
+ --ink: #14172c;
+ --mut: #6e7491;
+ --line: #e6e8f4;
+ --soft: #eeebff;
+ --acc: #5b4cf5;
+ --acc2: #7c6ff9;
+ --hero: linear-gradient(145deg, #5444f2 0%, #6e5ef7 55%, #8273fa 100%);
+ --ok: #10b981;
+ --okbg: rgba(16, 185, 129, 0.12);
+ --warn: #f59e0b;
+ --wbg: rgba(245, 158, 11, 0.12);
+ --bad: #ef4444;
+ --errbg: rgba(239, 68, 68, 0.11);
+ --purp: #7c3aed;
+ --purpbg: rgba(124, 58, 237, 0.11);
+ --shadow: 0 10px 30px rgba(30, 26, 82, 0.06);
+ --shadow-lg: 0 18px 45px rgba(91, 76, 245, 0.22);
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
  margin: 0; background: var(--bg); color: var(--ink);
  font: 14.5px/1.45 "Plus Jakarta Sans", "IBM Plex Sans Arabic", system-ui, sans-serif;
- font-variant-numeric: tabular-nums; padding-bottom: 120px; overflow-x: hidden;
+ font-variant-numeric: tabular-nums; padding-bottom: 115px; overflow-x: hidden;
 }
 button, input, select, textarea { font: inherit; color: inherit; }
-button { cursor: pointer; border: 0; border-radius: 12px; font-weight: 700; transition: all .15s ease; }
-button:active { transform: scale(0.97); }
+button { cursor: pointer; border: 0; border-radius: 14px; font-weight: 700; transition: all .16s ease; }
+button:active { transform: scale(0.96); }
 
 /* Simulator Top Bar */
 .sim-strip {
- background: #030712; color: #f8fafc; padding: 6px 12px; font-size: 12px;
+ background: #14172c; color: #ffffff; padding: 6px 12px; font-size: 12px;
  display: flex; align-items: center; justify-content: space-between; gap: 6px;
- position: relative; z-index: 100; border-bottom: 1px solid #1e293b;
+ position: relative; z-index: 100;
 }
-.sim-pills { display: flex; background: #111827; border-radius: 999px; padding: 2px; }
-.sim-pills button { background: transparent; color: #9ca3af; border-radius: 999px; padding: 4px 10px; font-size: 11px; }
-.sim-pills button.on { background: #2563eb; color: #fff; }
-.sim-right { display: flex; gap: 5px; }
-.sim-right button { background: #1f2937; color: #e5e7eb; border-radius: 8px; padding: 4px 8px; font-size: 11px; }
+.sim-pills { display: flex; background: rgba(255,255,255,0.1); border-radius: 999px; padding: 2px; }
+.sim-pills button { background: transparent; color: #cbd5e1; border-radius: 999px; padding: 4px 10px; font-size: 11px; }
+.sim-pills button.on { background: var(--acc); color: #fff; }
+.sim-right { display: flex; gap: 6px; }
+.sim-right button { background: rgba(255,255,255,0.14); color: #fff; border-radius: 999px; padding: 4px 10px; font-size: 11px; }
 
-.shell { max-width: 480px; margin: 0 auto; padding-top: 6px; overflow-x: hidden; }
+.shell { max-width: 480px; margin: 0 auto; overflow-x: hidden; }
 
-/* In-Flow Clean Navigation Header */
+/* Royal Indigo Hero Wrapper */
+.indigo-hero {
+ background: var(--hero); color: #ffffff;
+ padding: 16px 18px 26px; border-radius: 0 0 32px 32px;
+ box-shadow: var(--shadow-lg); margin-bottom: 14px; position: relative;
+}
+.hero-top {
+ display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px;
+}
+.hero-pill {
+ background: rgba(255,255,255,0.18); backdrop-filter: blur(8px);
+ color: #fff; padding: 6px 13px; border-radius: 999px; font-size: 12px; font-weight: 700;
+ display: inline-flex; align-items: center; gap: 6px;
+}
+.hero-center { text-align: center; margin: 6px 0 16px; }
+.hero-center .lbl { font-size: 12.5px; opacity: 0.85; font-weight: 600; }
+.hero-center .big-num { font-size: 38px; font-weight: 800; letter-spacing: -0.02em; margin: 2px 0 4px; }
+.hero-center .sub-lbl { font-size: 12px; opacity: 0.82; font-weight: 600; }
+
+.hero-cur-toggle {
+ display: inline-flex; background: rgba(0,0,0,0.18); padding: 3px; border-radius: 999px; gap: 2px;
+}
+.hero-cur-toggle button {
+ background: transparent; color: rgba(255,255,255,0.75); padding: 4px 11px; font-size: 11px; border-radius: 999px;
+}
+.hero-cur-toggle button.on { background: #ffffff; color: var(--acc); }
+
+.hero-stats-grid {
+ display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+ background: rgba(255,255,255,0.13); border: 1px solid rgba(255,255,255,0.2);
+ border-radius: 20px; padding: 12px 10px; text-align: center; backdrop-filter: blur(8px);
+}
+.hero-stats-grid div span { display: block; font-size: 10.5px; opacity: 0.82; font-weight: 600; }
+.hero-stats-grid div b { display: block; font-size: 15px; font-weight: 800; margin-top: 2px; }
+.hero-stats-grid div small { display: block; font-size: 10px; opacity: 0.78; margin-top: 1px; }
+
+/* Standard Page Header (For Non-Home Tabs) */
 header.top-bar {
- padding: 8px 16px 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+ padding: 12px 18px 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
 }
 .header-lead { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
 .btn-back-lead {
- width: 36px; height: 36px; border-radius: 12px; background: var(--card); border: 1px solid var(--line);
+ width: 36px; height: 36px; border-radius: 50%; background: var(--card); border: 1px solid var(--line);
  display: grid; place-items: center; font-size: 20px; line-height: 1; color: var(--acc); flex: none;
  box-shadow: var(--shadow);
 }
 .top-brand { font-size: 11px; font-weight: 800; color: var(--acc); letter-spacing: .06em; text-transform: uppercase; }
 .top-title { font-size: 20px; font-weight: 800; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .role-badge {
- background: var(--card); border: 1px solid var(--line); color: var(--mut);
- padding: 5px 11px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; flex: none;
+ background: var(--soft); color: var(--acc);
+ padding: 6px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 800; white-space: nowrap; flex: none;
 }
 
-/* Cards */
+/* White Rounded Cards */
 .card {
  background: var(--card); border: 1px solid var(--line); border-radius: 24px;
- padding: 18px; margin: 10px 16px; box-shadow: var(--shadow); position: relative; max-width: 100%;
+ padding: 18px; margin: 12px 16px; box-shadow: var(--shadow); position: relative; max-width: 100%;
 }
 .card-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
-.card-h h2 { margin: 0; font-size: 16px; font-weight: 800; }
+.card-h h2 { margin: 0; font-size: 16px; font-weight: 800; color: var(--ink); }
 .subtext { color: var(--mut); font-size: 12.5px; margin: 0 0 12px; line-height: 1.45; }
-
-/* Currency Switcher & Balances */
-.cur-switch {
- display: inline-flex; align-items: center; background: var(--card2);
- border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px;
-}
-.cur-switch button {
- padding: 4px 11px; border-radius: 999px; background: transparent;
- color: var(--mut); font-size: 11.5px; font-weight: 800;
-}
-.cur-switch button.on { background: var(--acc); color: #070b12; }
-
-.big-balance { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; margin: 4px 0 14px; }
-.big-balance small { font-size: 13px; color: var(--mut); font-weight: 600; }
 
 .drawer-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .drawer-box {
- background: var(--card2); border: 1px solid var(--line); border-radius: 16px; padding: 11px 13px; min-width: 0;
+ background: var(--card2); border: 1px solid var(--line); border-radius: 18px; padding: 12px 14px; min-width: 0;
 }
-.drawer-box span { display: block; font-size: 10.5px; font-weight: 700; color: var(--mut); text-transform: uppercase; }
-.drawer-box b { display: block; font-size: 15.5px; font-weight: 800; margin-top: 3px; }
+.drawer-box span { display: block; font-size: 11px; font-weight: 700; color: var(--mut); }
+.drawer-box b { display: block; font-size: 16px; font-weight: 800; margin-top: 3px; color: var(--ink); }
 .drawer-box small { display: block; font-size: 11px; color: var(--mut); font-weight: 600; margin-top: 2px; }
 
-/* Month / Cycle Pill Strip */
+/* Month / Project Pill Strip */
 .month-pills {
- display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 4px 16px 8px;
+ display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; padding: 4px 16px 8px;
 }
 .month-pills::-webkit-scrollbar { display: none; }
 .mpill {
  background: var(--card); border: 1px solid var(--line); color: var(--mut);
  padding: 7px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 700; white-space: nowrap;
- display: inline-flex; align-items: center; gap: 5px;
+ display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);
 }
-.mpill.on { background: var(--acc); color: #070b12; border-color: var(--acc); }
+.mpill.on { background: var(--acc); color: #ffffff; border-color: var(--acc); }
 .mpill.proj { border-color: rgba(245,158,11,.45); }
-.mpill.proj.on { background: var(--warn); color: #070b12; border-color: var(--warn); }
+.mpill.proj.on { background: var(--warn); color: #ffffff; border-color: var(--warn); }
 
 /* Segmented 3-Button Bar */
 .seg-bar {
@@ -113,19 +143,19 @@ header.top-bar {
  background: var(--card2); padding: 4px; border-radius: 14px; border: 1px solid var(--line); margin-bottom: 12px;
 }
 .seg-bar button {
- background: transparent; color: var(--mut); padding: 7px 4px; font-size: 11.5px;
+ background: transparent; color: var(--mut); padding: 8px 4px; font-size: 12px;
  border-radius: 10px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.seg-bar button.on { background: var(--acc); color: #070b12; }
+.seg-bar button.on { background: var(--card); color: var(--acc); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 
 /* Horizontal Progress Bar */
 .prog-wrap { margin: 8px 0 14px; }
 .prog-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 7px; gap: 8px; flex-wrap: wrap; }
 .prog-top b { font-size: 19px; font-weight: 800; }
-.prog-top span { font-size: 12.5px; font-weight: 700; color: var(--acc); }
+.prog-top span { font-size: 12.5px; font-weight: 800; color: var(--acc); }
 .prog-track {
- height: 12px; width: 100%; background: var(--card2); border: 1px solid var(--line);
- border-radius: 999px; overflow: hidden; padding: 2px;
+ height: 11px; width: 100%; background: var(--card2); border: 1px solid var(--line);
+ border-radius: 999px; overflow: hidden;
 }
 .prog-fill {
  height: 100%; border-radius: 999px;
@@ -134,14 +164,14 @@ header.top-bar {
 }
 .prog-fill.proj { background: linear-gradient(90deg, var(--warn), var(--ok)); }
 
-/* Cycle Ledger Mini Summary Strip */
+/* Cycle Summary Strip */
 .ledger-strip {
  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
- margin-top: 10px; padding: 10px; background: var(--card2);
+ margin-top: 10px; padding: 11px; background: var(--card2);
  border: 1px solid var(--line); border-radius: 16px; text-align: center;
 }
-.ledger-strip div span { display: block; font-size: 10px; font-weight: 700; color: var(--mut); text-transform: uppercase; }
-.ledger-strip div b { font-size: 13.5px; font-weight: 800; margin-top: 2px; display: block; }
+.ledger-strip div span { display: block; font-size: 10.5px; font-weight: 700; color: var(--mut); }
+.ledger-strip div b { font-size: 14px; font-weight: 800; margin-top: 2px; display: block; }
 
 /* Donut Chart Container */
 .chart-wrap {
@@ -164,8 +194,8 @@ header.top-bar {
 }
 .corner-menu {
  position: absolute; top: 40px; inset-inline-end: 0; min-width: 215px;
- background: var(--card); border: 1px solid var(--line); border-radius: 16px;
- padding: 6px; box-shadow: 0 14px 35px rgba(0,0,0,0.5); z-index: 120;
+ background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+ padding: 6px; box-shadow: 0 14px 35px rgba(20,23,44,0.16); z-index: 120;
 }
 .corner-menu button {
  width: 100%; background: transparent; color: var(--ink); padding: 9px 12px;
@@ -182,7 +212,7 @@ header.top-bar {
 }
 .list-row:first-of-type { border-top: 0; }
 .list-row.clickable { cursor: pointer; border-radius: 12px; padding-inline: 6px; margin-inline: -6px; transition: background .15s; }
-.list-row.clickable:hover, .list-row.selected-cat { background: var(--card2); }
+.list-row.clickable:hover, .list-row.selected-cat { background: var(--soft); }
 .list-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
 .single-line-name {
  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -203,7 +233,7 @@ header.top-bar {
 }
 
 .badge-code {
- background: var(--card2); border: 1px solid var(--line); color: var(--acc);
+ background: var(--soft); color: var(--acc);
  font-weight: 800; font-size: 12px; padding: 5px 9px; border-radius: 10px; flex: none;
 }
 .badge-lang {
@@ -218,7 +248,7 @@ header.top-bar {
 
 .btn-edit {
  background: var(--card2); border: 1px solid var(--line); color: var(--ink);
- padding: 6px 11px; border-radius: 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; flex: none;
+ padding: 6px 12px; border-radius: 11px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; flex: none;
 }
 
 /* Expense Category Rows */
@@ -230,7 +260,7 @@ header.top-bar {
 .cat-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
 .cat-top b { font-size: 14px; font-weight: 700; }
 .cat-top span { font-size: 13.5px; font-weight: 800; }
-.cat-bar { height: 5px; background: var(--card2); border-radius: 999px; overflow: hidden; }
+.cat-bar { height: 6px; background: var(--card2); border-radius: 999px; overflow: hidden; }
 .cat-bar i { display: block; height: 100%; border-radius: 999px; }
 
 /* WhatsApp Full-Size Template Editor & Live Preview */
@@ -241,56 +271,58 @@ header.top-bar {
 }
 .wa-textarea.expanded { min-height: 240px; }
 .wa-preview-box {
- background: #0b141a; border: 1px solid #1f2c34; border-radius: 18px; padding: 12px; margin-top: 10px;
+ background: #e5ddd5; border: 1px solid #d4ccc3; border-radius: 18px; padding: 12px; margin-top: 10px;
  max-width: 100%; overflow: hidden;
 }
 .wa-bubble {
- background: #005c4b; color: #e9edef; border-radius: 14px 14px 4px 14px;
+ background: #dcf8c6; color: #111b21; border-radius: 14px 14px 4px 14px;
  padding: 12px 14px; font-size: 13px; line-height: 1.5; white-space: pre-wrap;
  overflow-wrap: break-word; word-break: break-word; max-width: 100%;
- box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+ box-shadow: 0 2px 5px rgba(0,0,0,0.08);
 }
-.wa-bubble strong { font-weight: 800; color: #ffffff; }
+.wa-bubble strong { font-weight: 800; color: #000000; }
 
-/* Floating Bottom Dock */
+/* Docked Bottom Navigation with Centered Indigo + Button */
 nav.bottom-dock {
- position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
- width: calc(100% - 24px); max-width: 440px; background: var(--dock);
+ position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+ width: 100%; max-width: 480px; background: rgba(255,255,255,0.96);
  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
- border: 1px solid var(--line); border-radius: 999px; padding: 5px;
+ border-top: 1px solid var(--line); padding: 6px 10px 14px;
  display: flex; justify-content: space-around; align-items: center;
- z-index: 90; box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+ z-index: 90; box-shadow: 0 -8px 28px rgba(20,23,44,0.06);
 }
-nav.bottom-dock button {
- flex: 1; background: transparent; color: var(--mut); border-radius: 999px;
- padding: 7px 4px; display: flex; flex-direction: column; align-items: center; gap: 2px;
+nav.bottom-dock button.nav-tab {
+ flex: 1; background: transparent; color: var(--mut); border-radius: 14px;
+ padding: 6px 4px; display: flex; flex-direction: column; align-items: center; gap: 3px;
  font-size: 10.5px; font-weight: 700;
 }
-nav.bottom-dock button .ico { font-size: 17px; line-height: 1.1; }
-nav.bottom-dock button.on { background: rgba(56, 189, 248, 0.15); color: var(--acc); }
+nav.bottom-dock button.nav-tab .ico { font-size: 18px; line-height: 1.1; }
+nav.bottom-dock button.nav-tab.on { color: var(--acc); font-weight: 800; }
 
-/* Multi-Action Floating + Button & Speed-Dial Menu */
-.fab {
- position: fixed; bottom: 82px; inset-inline-end: max(20px, calc(50% - 220px));
- width: 52px; height: 52px; border-radius: 50%; background: var(--acc);
- color: #070b12; font-size: 26px; font-weight: 800; display: grid; place-items: center;
- box-shadow: 0 8px 25px rgba(56,189,248,0.45); z-index: 135; transition: transform .2s ease;
+.dock-plus-wrap {
+ position: relative; top: -18px; flex: none; padding: 0 6px;
 }
-.fab.open { transform: rotate(45deg); background: var(--bad); color: #fff; }
+.fab {
+ width: 54px; height: 54px; border-radius: 50%; background: var(--hero);
+ color: #ffffff; font-size: 28px; font-weight: 700; display: grid; place-items: center;
+ box-shadow: 0 10px 24px rgba(91, 76, 245, 0.42); border: 4px solid var(--bg);
+ transition: transform .2s ease;
+}
+.fab.open { transform: rotate(45deg); background: var(--bad); }
 
 .fab-menu {
- position: fixed; bottom: 144px; inset-inline-end: max(18px, calc(50% - 220px));
- width: 265px; background: var(--card); border: 1px solid var(--line);
- border-radius: 22px; padding: 8px; box-shadow: 0 18px 45px rgba(0,0,0,0.55);
- z-index: 134; display: none; flex-direction: column; gap: 5px;
+ position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%);
+ width: calc(100% - 32px); max-width: 380px; background: var(--card); border: 1px solid var(--line);
+ border-radius: 24px; padding: 10px; box-shadow: 0 20px 50px rgba(20,23,44,0.22);
+ z-index: 134; display: none; flex-direction: column; gap: 6px;
 }
 .fab-menu.open { display: flex; }
 .fab-menu button {
- width: 100%; background: var(--card2); color: var(--ink); padding: 11px 13px;
- border-radius: 14px; font-size: 13px; font-weight: 700; text-align: start;
- display: flex; align-items: center; gap: 10px; border: 1px solid var(--line);
+ width: 100%; background: var(--card2); color: var(--ink); padding: 11px 14px;
+ border-radius: 16px; font-size: 13px; font-weight: 700; text-align: start;
+ display: flex; align-items: center; gap: 11px; border: 1px solid var(--line);
 }
-.fab-menu button:hover { border-color: var(--acc); }
+.fab-menu button:hover { border-color: var(--acc); background: var(--soft); }
 
 /* Natour Collector Apartment Cards */
 .apt-card { padding: 14px 15px; background: var(--card); border-bottom: 1px solid var(--line); }
@@ -321,10 +353,10 @@ nav.bottom-dock button.on { background: rgba(56, 189, 248, 0.15); color: var(--a
 }
 .chip.mgr-paid::before { content: "✓"; font-weight: 900; }
 .chip.pass-through {
- border-style: dashed; border-color: rgba(245,158,11,.55);
+ border-style: dashed; border-color: rgba(245,158,11,.6);
 }
 .chip.pass-through.ticked {
- background: var(--wbg); border-style: solid; border-color: var(--warn); color: var(--warn);
+ background: var(--wbg); border-style: solid; border-color: var(--warn); color: #b45309;
 }
 .wa-btn {
  height: 32px; padding: 0 10px; border-radius: 10px; background: var(--card2);
@@ -333,11 +365,12 @@ nav.bottom-dock button.on { background: rgba(56, 189, 248, 0.15); color: var(--a
 }
 .wa-btn.receipt { background: var(--okbg); border-color: var(--ok); color: var(--ok); }
 
-/* Forms & Modals (Zero Horizontal Overflow!) */
+/* Forms & Modals */
 input[type="text"], input[type="number"], input[type="date"], select, textarea {
  width: 100%; max-width: 100%; min-width: 0; background: var(--card2); border: 1.5px solid var(--line);
- border-radius: 12px; padding: 9px 11px; font-size: 13.5px; font-weight: 600;
+ border-radius: 13px; padding: 10px 12px; font-size: 13.5px; font-weight: 600; color: var(--ink);
 }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--acc); background: #fff; }
 .form-row { display: flex; gap: 8px; align-items: center; width: 100%; }
 .form-row > * { min-width: 0; }
 .amt-cur-grid {
@@ -351,65 +384,108 @@ input[type="text"], input[type="number"], input[type="date"], select, textarea {
 .btn-del { background: var(--errbg); color: var(--bad); padding: 7px 11px; border-radius: 10px; flex: none; }
 
 .modal-bg {
- position: fixed; inset: 0; background: rgba(0,0,0,0.74); backdrop-filter: blur(5px);
+ position: fixed; inset: 0; background: rgba(20, 23, 44, 0.55); backdrop-filter: blur(5px);
  z-index: 200; display: none; align-items: center; justify-content: center; padding: 14px;
 }
 .modal-card {
- background: var(--card); border: 1px solid var(--line); border-radius: 26px;
- width: 100%; max-width: 440px; max-height: 88vh; overflow-y: auto; overflow-x: hidden; padding: 20px;
- box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+ background: var(--card); border: 1px solid var(--line); border-radius: 28px;
+ width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; overflow-x: hidden; padding: 22px;
+ box-shadow: 0 24px 60px rgba(20, 23, 44, 0.25);
 }
-.modal-card h3 { margin: 0 0 6px; font-size: 18px; font-weight: 800; }
+.modal-card h3 { margin: 0 0 6px; font-size: 19px; font-weight: 800; }
 
+/* Illustrated Onboarding Styles */
+.ob-hero-title {
+ font-size: 25px; font-weight: 800; line-height: 1.22; text-align: center; margin: 4px 0 6px; color: var(--ink);
+}
+.ob-hero-title span { color: var(--acc); display: block; }
+.ob-illus-box {
+ height: 155px; display: flex; align-items: center; justify-content: center; margin: 8px 0 14px;
+ background: radial-gradient(circle, var(--soft) 0%, rgba(255,255,255,0) 72%);
+ animation: floatY 3.2s ease-in-out infinite;
+}
+@keyframes floatY {
+ 0%, 100% { transform: translateY(0px); }
+ 50% { transform: translateY(-6px); }
+}
+.ob-pill-btn {
+ width: 100%; padding: 14px 20px; border-radius: 999px; background: var(--acc);
+ color: #ffffff; font-size: 15px; font-weight: 800; box-shadow: 0 8px 22px rgba(91, 76, 245, 0.32);
+}
 .choice-card {
- border: 1.5px solid var(--line); background: var(--card2); border-radius: 16px;
+ border: 1.5px solid var(--line); background: var(--card2); border-radius: 18px;
  padding: 12px 14px; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; gap: 12px;
+ transition: all .15s ease;
 }
-.choice-card.on { border-color: var(--acc); background: rgba(56,189,248,0.1); }
+.choice-card.on { border-color: var(--acc); background: var(--soft); }
 
-.step-dots { display: flex; gap: 6px; margin-bottom: 14px; }
-.step-dot { height: 6px; flex: 1; border-radius: 999px; background: var(--line); }
+.step-dots { display: flex; gap: 5px; margin-bottom: 14px; }
+.step-dot { height: 6px; flex: 1; border-radius: 999px; background: var(--line); transition: background .25s; }
 .step-dot.on { background: var(--acc); }
+
+/* Mini Phone Mockup inside Onboarding Step 7 */
+.mini-phone {
+ border: 3px solid #1e293b; border-radius: 22px; background: #f8fafc;
+ padding: 10px 12px; margin: 10px 0 14px; box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+}
+.mini-phone-notch {
+ width: 60px; height: 5px; background: #cbd5e1; border-radius: 999px; margin: 0 auto 8px;
+}
+
+/* Monthly Report / Shareable Sheet Styles */
+.report-sheet {
+ background: #ffffff; border: 2px solid var(--line); border-radius: 20px; padding: 16px; margin: 10px 0 14px;
+}
+.report-hdr {
+ background: var(--hero); color: #fff; border-radius: 14px; padding: 14px; margin-bottom: 12px;
+ display: flex; justify-content: space-between; align-items: center;
+}
 
 .pin-box {
  font-family: ui-monospace, monospace; font-size: 19px; font-weight: 800;
- letter-spacing: 3px; color: var(--acc); background: var(--card2);
+ letter-spacing: 3px; color: var(--acc); background: var(--soft);
  padding: 6px 10px; border-radius: 10px; border: 1px dashed var(--acc); text-align: center;
 }
 
 #toast {
  position: fixed; top: 46px; left: 50%; transform: translateX(-50%) translateY(-20px);
- background: #0f172a; color: #fff; padding: 10px 16px; border-radius: 999px;
+ background: #14172c; color: #fff; padding: 10px 18px; border-radius: 999px;
  font-size: 13px; font-weight: 700; z-index: 300; opacity: 0; pointer-events: none;
- transition: all .25s ease; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,.4);
+ transition: all .25s ease; box-shadow: 0 10px 25px rgba(20,23,44,.25);
 }
 #toast.pop { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media print {
+ .sim-strip, nav.bottom-dock, .fab-menu, .no-print { display: none !important; }
+ body { background: #fff; padding: 0; }
+ .modal-bg { position: static; background: #fff; padding: 0; display: block !important; }
+ .modal-card { max-width: 100%; max-height: none; box-shadow: none; border: 0; padding: 0; }
+}
 </style>
 </head>
 <body onclick="closeAllPopovers()">
 
-<!-- TOP DEV SIMULATOR BAR -->
+<!-- TOP SIMULATOR BAR -->
 <div class="sim-strip">
  <div class="sim-pills">
  <button id="sim-mgr" class="on" onclick="setRole('mgr')">👨‍💼 Manager</button>
  <button id="sim-col" onclick="setRole('col')">👷‍♂️ Natour</button>
  </div>
  <div class="sim-right">
- <button onclick="openOnboarding(1)" id="btn-ob-sim">✨ First-Time UX</button>
+ <button onclick="openOnboarding(1)" id="btn-ob-sim" style="background:var(--acc)">✨ Setup Guide</button>
  <button id="btn-lang" onclick="toggleLang()">العربية</button>
- <button onclick="toggleTheme()">◐</button>
  </div>
 </div>
 
 <div id="toast">🔔 <span id="toast-msg"></span></div>
 
 <div class="shell">
- <header class="top-bar">
+ <header class="top-bar" id="std-top-bar" style="display:none">
  <div class="header-lead">
  <button class="btn-back-lead" id="hdr-back-btn" style="display:none" onclick="goBackLead()">‹</button>
  <div style="min-width:0">
  <div class="top-brand" id="hdr-brand">💧 BINAYATI · بنايتي</div>
- <h1 class="top-title" id="hdr-title">Overview</h1>
+ <h1 class="top-title" id="hdr-title">Home</h1>
  </div>
  </div>
  <div id="hdr-right"></div>
@@ -421,40 +497,42 @@ input[type="text"], input[type="number"], input[type="date"], select, textarea {
 <!-- MULTI-ACTION FLOATING + SPEED DIAL MENU (Manager Only) -->
 <div class="fab-menu" id="fab-menu" onclick="event.stopPropagation()">
  <button onclick="closeAllPopovers();openDirectPayModal()">
- <span style="font-size:18px">💵</span>
- <div><b id="fm-pay">Register Direct Payment</b><div style="font-size:11px;color:var(--mut)" id="fm-pay-sub">Cash to Manager, Whish, OMT or Bank</div></div>
+ <span style="font-size:20px">💵</span>
+ <div><b id="fm-pay">Record Resident Payment</b><div style="font-size:11px;color:var(--mut)" id="fm-pay-sub">Cash to Manager, Whish, OMT or Bank</div></div>
  </button>
  <button onclick="closeAllPopovers();openExpenseModal(-1)">
- <span style="font-size:18px">🧾</span>
- <div><b id="fm-exp">Add Expense / Bill</b><div style="font-size:11px;color:var(--mut)" id="fm-exp-sub">Paid by Manager OR assign to Natour cash</div></div>
+ <span style="font-size:20px">🧾</span>
+ <div><b id="fm-exp">Add Building Bill / Expense</b><div style="font-size:11px;color:var(--mut)" id="fm-exp-sub">Paid by Manager OR paid by Natour</div></div>
  </button>
  <button onclick="closeAllPopovers();openNewCycleModal('month')">
- <span style="font-size:18px">📅</span>
- <div><b id="fm-mon">New Monthly Cycle</b><div style="font-size:11px;color:var(--mut)" id="fm-mon-sub">Pick Month & Year from dropdown</div></div>
+ <span style="font-size:20px">📅</span>
+ <div><b id="fm-mon">Start New Month</b><div style="font-size:11px;color:var(--mut)" id="fm-mon-sub">Pick Month & Year from dropdown</div></div>
  </button>
  <button onclick="closeAllPopovers();openNewCycleModal('project')">
- <span style="font-size:18px">🛠️</span>
- <div><b id="fm-prj">New Special Project</b><div style="font-size:11px;color:var(--mut)" id="fm-prj-sub">Budget goal, down payment & installments</div></div>
+ <span style="font-size:20px">🛠️</span>
+ <div><b id="fm-prj">Start Special Project</b><div style="font-size:11px;color:var(--mut)" id="fm-prj-sub">Solar, Elevator, Paint with installments</div></div>
  </button>
  <button onclick="closeAllPopovers();openReminderModal()">
- <span style="font-size:18px">🔔</span>
- <div><b id="fm-tsk">New Maintenance Task</b><div style="font-size:11px;color:var(--mut)" id="fm-tsk-sub">Schedule & assign to Natour checklist</div></div>
+ <span style="font-size:20px">🔔</span>
+ <div><b id="fm-tsk">Add Maintenance Reminder</b><div style="font-size:11px;color:var(--mut)" id="fm-tsk-sub">For Building or Natour checklist</div></div>
  </button>
 </div>
-<button class="fab" id="fab-add" onclick="event.stopPropagation();toggleFabMenu()" title="Quick Actions">+</button>
 
-<!-- FLOATING BOTTOM NAVIGATION DOCK (4 Clean Bilingual Tabs) -->
+<!-- DOCKED BOTTOM BAR WITH CENTERED INDIGO + BUTTON -->
 <nav class="bottom-dock" id="mgr-dock">
- <button data-tab="dash" class="on" onclick="CYCLE_DETAIL_MODE=false;setTab('dash')">
- <span class="ico">📊</span><span id="nav-dash">Overview</span>
+ <button class="nav-tab on" data-tab="dash" onclick="CYCLE_DETAIL_MODE=false;setTab('dash')">
+ <span class="ico">🏠</span><span id="nav-dash">Home</span>
  </button>
- <button data-tab="expenses" onclick="setTab('expenses')">
- <span class="ico">🍩</span><span id="nav-exp">Expenses</span>
+ <button class="nav-tab" data-tab="expenses" onclick="setTab('expenses')">
+ <span class="ico">📊</span><span id="nav-exp">Expenses</span>
  </button>
- <button data-tab="natour" onclick="setTab('natour')">
+ <div class="dock-plus-wrap">
+ <button class="fab" id="fab-add" onclick="event.stopPropagation();toggleFabMenu()" title="Quick Actions">+</button>
+ </div>
+ <button class="nav-tab" data-tab="natour" onclick="setTab('natour')">
  <span class="ico">👷‍♂️</span><span id="nav-nat">Natour</span>
  </button>
- <button data-tab="dir" onclick="setTab('dir')">
+ <button class="nav-tab" data-tab="dir" onclick="setTab('dir')">
  <span class="ico">🏢</span><span id="nav-dir">Units</span>
  </button>
 </nav>
@@ -463,6 +541,7 @@ input[type="text"], input[type="number"], input[type="date"], select, textarea {
  MODALS
  ========================================================================== -->
 <div class="modal-bg" id="onboard-modal"><div class="modal-card" id="onboard-content"></div></div>
+<div class="modal-bg" id="report-modal"><div class="modal-card" id="report-content"></div></div>
 <div class="modal-bg" id="new-cycle-modal"><div class="modal-card" id="new-cycle-content"></div></div>
 <div class="modal-bg" id="direct-pay-modal"><div class="modal-card" id="direct-pay-content"></div></div>
 <div class="modal-bg" id="supplier-modal"><div class="modal-card" id="supplier-content"></div></div>
@@ -477,17 +556,17 @@ input[type="text"], input[type="number"], input[type="date"], select, textarea {
  <select id="cm-preset" style="margin-top:4px" onchange="applyChargePreset(this.value)"></select>
  </div>
  <div class="two-col-grid" style="margin-bottom:10px">
- <div><label style="font-size:12px;color:var(--mut)">English Label</label><input type="text" id="cm-en" style="margin-top:4px"></div>
+ <div><label style="font-size:12px;color:var(--mut)">English Name</label><input type="text" id="cm-en" style="margin-top:4px"></div>
  <div><label style="font-size:12px;color:var(--mut)">الاسم بالعربية</label><input type="text" dir="rtl" id="cm-ar" style="margin-top:4px"></div>
  </div>
  <div class="amt-cur-grid" style="margin-bottom:12px" id="cm-amt-row">
- <div><label style="font-size:12px;color:var(--mut)">Amount per Unit</label><input type="number" id="cm-amt" style="margin-top:4px"></div>
+ <div><label style="font-size:12px;color:var(--mut)">Amount per Apartment</label><input type="number" id="cm-amt" style="margin-top:4px"></div>
  <div><label style="font-size:12px;color:var(--mut)">Currency</label><select id="cm-cur" style="margin-top:4px"><option value="USD">USD ($)</option><option value="LBP">LBP (ل.ل.)</option></select></div>
  </div>
  <div id="cm-apts-box" style="display:none;margin-bottom:12px;max-height:220px;overflow-y:auto;padding:10px;background:var(--card2);border-radius:14px"></div>
  <div class="form-row">
  <button id="cm-del-btn" class="btn-del" style="display:none" onclick="deleteCurrentCharge()">Delete</button>
- <button style="flex:1;padding:12px;background:var(--acc);color:#070b12" onclick="saveChargeModal()">Save Charge</button>
+ <button style="flex:1;padding:12px;background:var(--acc);color:#fff" onclick="saveChargeModal()">Save</button>
  </div>
  </div>
 </div>
@@ -495,9 +574,9 @@ input[type="text"], input[type="number"], input[type="date"], select, textarea {
 <!-- MODAL: ADD / EDIT UNIT -->
 <div class="modal-bg" id="unit-modal">
  <div class="modal-card">
- <div class="card-h"><h3 id="um-title">Edit Unit</h3><button class="btn-del" onclick="closeModal('unit-modal')">✕</button></div>
+ <div class="card-h"><h3 id="um-title">Edit Apartment</h3><button class="btn-del" onclick="closeModal('unit-modal')">✕</button></div>
  <div class="amt-cur-grid" style="grid-template-columns:110px 1fr;margin-bottom:10px">
- <div><label style="font-size:12px;color:var(--mut)">Unit / Floor</label><input type="text" id="um-code" placeholder="e.g. 2B" style="margin-top:4px;font-weight:800"></div>
+ <div><label style="font-size:12px;color:var(--mut)">Apt / Floor</label><input type="text" id="um-code" placeholder="e.g. 2B" style="margin-top:4px;font-weight:800"></div>
  <div><label style="font-size:12px;color:var(--mut)">WhatsApp Phone</label><input type="text" id="um-ph" placeholder="9613..." style="margin-top:4px"></div>
  </div>
  <div class="two-col-grid" style="margin-bottom:10px">
@@ -505,7 +584,7 @@ input[type="text"], input[type="number"], input[type="date"], select, textarea {
  <div><label style="font-size:12px;color:var(--mut)">الاسم بالعربية</label><input type="text" dir="rtl" id="um-ar" style="margin-top:4px"></div>
  </div>
  <div style="margin-bottom:16px">
- <label style="font-size:12px;color:var(--mut)">WhatsApp Message Language</label>
+ <label style="font-size:12px;color:var(--mut)">WhatsApp Language for this Resident</label>
  <select id="um-lang" style="margin-top:4px">
  <option value="both">🌐 Bilingual (Arabic + English)</option>
  <option value="ar">🇱🇧 Arabic Only (العربية فقط)</option>
@@ -514,23 +593,23 @@ input[type="text"], input[type="number"], input[type="date"], select, textarea {
  </div>
  <div class="form-row">
  <button id="um-del-btn" class="btn-del" style="display:none" onclick="deleteUnitModal()">Delete</button>
- <button style="flex:1;padding:12px;background:var(--acc);color:#070b12" onclick="saveUnitModal()">Save Unit</button>
+ <button style="flex:1;padding:12px;background:var(--acc);color:#fff" onclick="saveUnitModal()">Save Apartment</button>
  </div>
  </div>
 </div>
 
-<!-- MODAL: UPGRADED EXPENSE LOGGER (Paid by Manager vs. Assigned to Natour to Pay from Cash!) -->
+<!-- MODAL: EXPENSE LOGGER -->
 <div class="modal-bg" id="exp-modal">
  <div class="modal-card">
- <div class="card-h"><h3 id="ex-modal-title">Record Expense / Bill</h3><button class="btn-del" onclick="closeModal('exp-modal')">✕</button></div>
+ <div class="card-h"><h3 id="ex-modal-title">Add Building Bill / Expense</h3><button class="btn-del" onclick="closeModal('exp-modal')">✕</button></div>
 
  <div class="two-col-grid" style="margin-bottom:10px">
  <div>
- <label style="font-size:11.5px;color:var(--mut)">Expense Date</label>
+ <label style="font-size:11.5px;color:var(--mut)">Date</label>
  <input type="date" id="ex-date" value="2026-10-20" style="margin-top:4px">
  </div>
  <div>
- <label style="font-size:11.5px;color:var(--mut)">Cycle / Project</label>
+ <label style="font-size:11.5px;color:var(--mut)">Month / Project</label>
  <select id="ex-cycle" style="margin-top:4px" onchange="populateExpensePresets()"></select>
  </div>
  </div>
@@ -538,9 +617,9 @@ input[type="text"], input[type="number"], input[type="date"], select, textarea {
  <div style="margin-bottom:10px">
  <label style="font-size:11.5px;color:var(--mut)">Who pays this bill?</label>
  <select id="ex-payer" style="margin-top:4px">
- <option value="mgr">👨‍💼 Paid Directly by Manager (From Building Treasury)</option>
- <option value="natour_pending">👷‍♂️ Assign to Natour to Pay from Collected Cash (فواتير يدفعها الناطور)</option>
- <option value="natour_paid">✓ Already Paid by Natour from Collected Cash (دفعها الناطور من الصندوق)</option>
+ <option value="mgr">👨‍💼 Paid by Manager (From Building Safe)</option>
+ <option value="natour_pending">👷‍♂️ Send to Natour to Pay from His Cash (فواتير يدفعها الناطور)</option>
+ <option value="natour_paid">✓ Already Paid by Natour from His Cash (دفعها الناطور)</option>
  </select>
  </div>
 
@@ -551,10 +630,10 @@ input[type="text"], input[type="number"], input[type="date"], select, textarea {
  <option value="gen">⚡ Generator & Fuel</option>
  <option value="elev">🛗 Elevator</option>
  <option value="water">💧 Water Bill</option>
- <option value="clean">🧹 Cleaning & Supplies</option>
- <option value="light">💡 Lighting & Bulbs</option>
- <option value="repair">🔧 Repairs & Labor</option>
- <option value="solar">☀️ Solar & Project</option>
+ <option value="clean">🧹 Cleaning</option>
+ <option value="light">💡 Lighting</option>
+ <option value="repair">🔧 Repairs</option>
+ <option value="solar">☀️ Solar / Project</option>
  </select>
  </div>
  <div>
@@ -564,7 +643,7 @@ input[type="text"], input[type="number"], input[type="date"], select, textarea {
  </div>
 
  <div style="margin-bottom:10px">
- <label style="font-size:11.5px;color:var(--mut)">Description (EN / AR)</label>
+ <label style="font-size:11.5px;color:var(--mut)">Bill Description</label>
  <input type="text" id="ex-desc" placeholder="e.g. Water Collector Bill · فاتورة جابي المياه" style="margin-top:4px">
  </div>
 
@@ -584,18 +663,18 @@ input[type="text"], input[type="number"], input[type="date"], select, textarea {
 
  <div class="two-col-grid" style="margin-bottom:14px">
  <div>
- <label style="font-size:11.5px;color:var(--mut)">Invoice / Receipt #</label>
+ <label style="font-size:11.5px;color:var(--mut)">Invoice # (Optional)</label>
  <input type="text" id="ex-ref" placeholder="e.g. INV-402" style="margin-top:4px">
  </div>
  <div>
- <label style="font-size:11.5px;color:var(--mut)">Extra Notes (Optional)</label>
- <input type="text" id="ex-notes" placeholder="Vendor, warranty..." style="margin-top:4px">
+ <label style="font-size:11.5px;color:var(--mut)">Extra Note (Optional)</label>
+ <input type="text" id="ex-notes" placeholder="Vendor, details..." style="margin-top:4px">
  </div>
  </div>
 
  <div class="form-row">
  <button id="ex-del-btn" class="btn-del" style="display:none" onclick="deleteExpenseFromModal()">🗑️ Delete</button>
- <button style="flex:1;padding:12px;background:var(--bad);color:#fff" id="ex-save-btn" onclick="saveCategorizedExpense()">Save Expense / Bill</button>
+ <button style="flex:1;padding:13px;background:var(--acc);color:#fff" id="ex-save-btn" onclick="saveCategorizedExpense()">Save Bill / Expense</button>
  </div>
  </div>
 </div>
@@ -603,64 +682,64 @@ input[type="text"], input[type="number"], input[type="date"], select, textarea {
 <!-- MODAL: ADD MAINTENANCE REMINDER -->
 <div class="modal-bg" id="rem-modal">
  <div class="modal-card">
- <div class="card-h"><h3>🔔 Schedule Maintenance & Tasks</h3><button class="btn-del" onclick="closeModal('rem-modal')">✕</button></div>
+ <div class="card-h"><h3>🔔 Add Maintenance Reminder</h3><button class="btn-del" onclick="closeModal('rem-modal')">✕</button></div>
  <div style="margin-bottom:10px">
- <label style="font-size:12px;color:var(--mut)">Task Preset or Custom</label>
+ <label style="font-size:12px;color:var(--mut)">Choose a Common Task or Type Custom</label>
  <select id="rm-preset" onchange="applyReminderPreset(this.value)" style="margin-top:4px">
- <option value="custom">✍️ Custom Task (Type name below) · مهمة مخصصة</option>
- <option value="Elevator Safety Inspection|فحص وصيانة المصعد">🛗 Elevator Safety Inspection · فحص المصعد</option>
- <option value="Generator Oil & Filter Change|تغيير زيت وفلتر المولد">⚡ Generator Oil & Filter Change · غيار زيت المولد</option>
- <option value="Solar Panels Dust Cleaning|تنظيف ألواح الطاقة الشمسية">☀️ Solar Panels Dust Cleaning · تنظيف ألواح الطاقة</option>
- <option value="Water Tank Cleaning|تنظيف خزانات المياه">💧 Water Tank Cleaning · تنظيف خزانات المياه</option>
- <option value="Fire Extinguisher Inspection|فحص طفايات الحريق السنوي">🧯 Fire Extinguisher Inspection · فحص طفايات الحريق</option>
+ <option value="custom">✍️ Custom Reminder (Type below) · تذكير مخصص</option>
+ <optgroup label="🏢 Building Reminders (For Manager)">
+ <option value="mgr|Pest Control & Fumigation|رش مبيدات وحشرات للبناية|Every 6 Months">🐜 Pest Control & Fumigation · رش مبيدات وحشرات</option>
+ <option value="mgr|Elevator Safety Inspection|فحص وصيانة المصعد الشهرية|Monthly">🛗 Elevator Safety Inspection · فحص المصعد</option>
+ <option value="mgr|Generator Oil & Filter Change|تغيير زيت وفلتر المولد|Monthly">⚡ Generator Oil & Filter Change · غيار زيت المولد</option>
+ <option value="mgr|Roof Water Tank Cleaning|تنظيف خزانات المياه|Every 6 Months">💧 Roof Water Tank Cleaning · تنظيف خزانات المياه</option>
+ <option value="mgr|Fire Extinguisher Annual Check|فحص طفايات الحريق السنوي|Yearly">🧯 Fire Extinguisher Annual Check · فحص طفايات الحريق</option>
+ </optgroup>
+ <optgroup label="👷‍♂️ Natour Tasks (Sent to Natour Phone)">
+ <option value="nat|Wash & Sanitize Trash Bins|غسيل مستوعبات النفايات والمدخل|Weekly">🗑️ Wash & Sanitize Trash Bins · غسيل مستوعبات النفايات</option>
+ <option value="nat|Wipe Dust off Solar Panels|تنظيف ألواح الطاقة الشمسية|Monthly">☀️ Wipe Dust off Solar Panels · تنظيف ألواح الطاقة</option>
+ <option value="nat|Clear Roof & Balcony Drains|تنظيف مصارف مياه الأمطار|Every 6 Months">🌧️ Clear Roof & Balcony Drains · تنظيف مصارف الأمطار</option>
+ <option value="nat|Check Generator Diesel Level|فحص مستوى مازوت المولد|Weekly">⛽ Check Generator Diesel Level · فحص مستوى المازوت</option>
+ </optgroup>
  </select>
  </div>
  <div class="two-col-grid" style="margin-bottom:10px">
- <div><label style="font-size:12px;color:var(--mut)">Task Name (EN)</label><input type="text" id="rm-en" placeholder="e.g. Check Roof Drain" style="margin-top:4px"></div>
- <div><label style="font-size:12px;color:var(--mut)">المهمة (AR)</label><input type="text" dir="rtl" id="rm-ar" placeholder="فحص مصارف السطح" style="margin-top:4px"></div>
+ <div><label style="font-size:12px;color:var(--mut)">Task Name (EN)</label><input type="text" id="rm-en" placeholder="e.g. Pest Control" style="margin-top:4px"></div>
+ <div><label style="font-size:12px;color:var(--mut)">المهمة (AR)</label><input type="text" dir="rtl" id="rm-ar" placeholder="رش مبيدات" style="margin-top:4px"></div>
  </div>
  <div class="two-col-grid" style="margin-bottom:10px">
  <div><label style="font-size:12px;color:var(--mut)">Due Date</label><input type="date" id="rm-date" value="2026-10-25" style="margin-top:4px"></div>
- <div><label style="font-size:12px;color:var(--mut)">Repeat Cycle</label>
+ <div><label style="font-size:12px;color:var(--mut)">How Often?</label>
  <select id="rm-freq" style="margin-top:4px" onchange="document.getElementById('rm-custom-freq-box').style.display=(this.value==='custom'?'block':'none')">
- <option value="Monthly">Monthly · شهري</option>
+ <option value="Weekly">Weekly · أسبوعي</option>
+ <option value="Monthly" selected>Monthly · شهري</option>
  <option value="Every 3 Months">Every 3 Months · كل 3 أشهر</option>
  <option value="Every 6 Months">Every 6 Months · كل 6 أشهر</option>
  <option value="Yearly">Yearly · سنوي</option>
  <option value="Once">One-Time · مرة واحدة</option>
- <option value="custom">✍️ Custom Repeat... · تكرار مخصص</option>
+ <option value="custom">✍️ Custom... · مخصص</option>
  </select>
  </div>
  </div>
  <div id="rm-custom-freq-box" style="display:none;margin-bottom:10px">
- <label style="font-size:12px;color:var(--mut)">Custom Repeat Interval</label>
- <input type="text" id="rm-freq-custom" placeholder="e.g. Every 2 Years · كل سنتين" style="margin-top:4px">
+ <label style="font-size:12px;color:var(--mut)">Custom Repeat</label>
+ <input type="text" id="rm-freq-custom" placeholder="e.g. Every 2 Weeks" style="margin-top:4px">
  </div>
- <div style="margin-bottom:10px">
- <label style="font-size:12px;color:var(--mut)">When does it appear on Natour's phone?</label>
- <select id="rm-window" style="margin-top:4px">
- <option value="2">2 Days Before Due Date · قبل يومين من الموعد</option>
- <option value="7">1 Week Before Due Date · قبل أسبوع</option>
- <option value="0">On Due Date Only · في يوم الموعد فقط</option>
- <option value="999">Immediately · فوراً</option>
- </select>
- </div>
- <label style="display:flex;align-items:center;gap:10px;padding:11px 12px;background:var(--card2);border:1px solid var(--line);border-radius:14px;margin:10px 0 16px;cursor:pointer">
+ <label style="display:flex;align-items:center;gap:10px;padding:11px 12px;background:var(--soft);border:1px solid var(--acc);border-radius:14px;margin:10px 0 16px;cursor:pointer">
  <input type="checkbox" id="rm-natour" checked style="width:20px;height:20px">
  <div>
- <b style="font-size:13px;display:block">👷‍♂️ Assign to Natour Checklist</b>
- <span style="font-size:11.5px;color:var(--mut)">Send to Natour's phone so he can check & tick when done</span>
+ <b style="font-size:13px;display:block;color:var(--acc)">👷‍♂️ Send to Natour's Checklist</b>
+ <span style="font-size:11.5px;color:var(--mut)">Shows on the Natour's phone so he can tick it when done</span>
  </div>
  </label>
- <button style="width:100%;padding:12px;background:var(--acc);color:#070b12" onclick="saveReminderModal()">Save Task / Reminder</button>
+ <button style="width:100%;padding:13px;background:var(--acc);color:#fff" onclick="saveReminderModal()">Save Reminder</button>
  </div>
 </div>
 
 <script>
 /* ============================================================================
- 1. BILINGUAL DICTIONARY & DEFAULT STATE (BINAYATI · بنايتي V11)
+ 1. BILINGUAL DICTIONARY & STATE (BINAYATI · بنايتي V12)
  ============================================================================ */
-var STORAGE_KEY = 'binayati_v11_store';
+var STORAGE_KEY = 'binayati_v12_store';
 var ROLE = 'mgr';
 var TAB = 'dash'; // 'dash', 'setup', 'expenses', 'natour', 'dir', 'ledger', 'task_history'
 var LANG = 'en';
@@ -676,14 +755,15 @@ var WA_EXPANDED = false;
 var PREVIEW_LANG = 'both';
 var PREVIEW_APT_ID = 'U_SS2R';
 var PREVIEW_MODE = 'auto';
+var REPORT_HIDE_NAMES = false;
 
 function t(en, ar) { return LANG === 'ar' ? ar : en; }
 function todayIso() { return '2026-10-20'; }
 
 var CHARGE_PRESETS = {
  fixed: [
- { en: 'Maintenance', ar: 'صيانة المبنى', amt: 20, cur: 'USD' },
- { en: 'Collector Fee', ar: 'أتعاب الناطور', amt: 15, cur: 'USD' },
+ { en: 'Building Maintenance', ar: 'صيانة المبنى', amt: 20, cur: 'USD' },
+ { en: 'Natour Monthly Fee', ar: 'أتعاب الناطور', amt: 15, cur: 'USD' },
  { en: 'Staircase Cleaning', ar: 'تنظيف الدرج والمبنى', amt: 10, cur: 'USD' },
  { en: 'Security / Guard Fee', ar: 'أتعاب الحراسة', amt: 15, cur: 'USD' }
  ],
@@ -703,7 +783,7 @@ var CHARGE_PRESETS = {
 
 var EXP_CATS = {
  gen: { id: 'gen', en: 'Generator & Fuel', ar: 'المولد والمازوت', ico: '⚡', color: '#f59e0b' },
- elev: { id: 'elev', en: 'Elevator', ar: 'المصعد', ico: '🛗', color: '#38bdf8' },
+ elev: { id: 'elev', en: 'Elevator', ar: 'المصعد', ico: '🛗', color: '#5b4cf5' },
  water: { id: 'water', en: 'Water Bill', ar: 'فاتورة المياه', ico: '💧', color: '#06b6d4' },
  clean: { id: 'clean', en: 'Cleaning & Supplies', ar: 'مواد تنظيف', ico: '🧹', color: '#10b981' },
  light: { id: 'light', en: 'Lighting & Bulbs', ar: 'إنارة ولمبات', ico: '💡', color: '#a855f7' },
@@ -714,6 +794,7 @@ var EXP_CATS = {
 var DEFAULT_DB = {
  settings: {
  bldEn: 'Block C', bldAr: 'البلوك C',
+ hasNatour: true,
  collectorEn: 'Anas', collectorAr: 'أنس',
  collectorPhone: '96170123456',
  collectorPin: '482910',
@@ -730,20 +811,18 @@ var DEFAULT_DB = {
  arLabel: 'تشرين الأول 2026',
  published: true,
  fixed: [
- { id: 'f_maint', en: 'Maintenance', ar: 'صيانة المبنى', amt: 20, cur: 'USD', exc: { 'U_1A': 15 } },
- { id: 'f_natour', en: 'Collector Fee', ar: 'أتعاب الناطور', amt: 15, cur: 'USD', exc: {} }
+ { id: 'f_maint', en: 'Building Maintenance', ar: 'صيانة المبنى', amt: 20, cur: 'USD', exc: { 'U_1A': 15 } },
+ { id: 'f_natour', en: 'Natour Monthly Fee', ar: 'أتعاب الناطور', amt: 15, cur: 'USD', exc: {} }
  ],
  dues: [
  { id: 'd_water', en: 'Water Bill', ar: 'فاتورة المياه', amt: 1250000, cur: 'LBP' },
  { id: 'sp_sol_m1', en: '☀️ Solar Inst. 1/5', ar: '☀️ قسط طاقة شمسية 1/5', amt: 108, cur: 'USD', linkedProject: 'Solar 6kW Install', linkedColId: 'sp_m1' }
  ],
- // Pass-Through Supplier Services (Moteur, Internet, Dish) — Handled by Natour & excluded from Building Balance!
  services: [
  { id: 's_gen', en: 'Private Generator', ar: 'المولد الخاص (موتور)', cur: 'USD', passThrough: true, map: { 'U_SS2R': 45, 'U_2A': 50 } },
  { id: 's_net', en: 'Internet', ar: 'اشتراك الإنترنت', cur: 'USD', passThrough: true, map: { 'U_SS2R': 20, 'U_1A': 20, 'U_2B': 25 } },
  { id: 's_dish', en: 'Satellite / Dish', ar: 'اشتراك الدش', cur: 'USD', passThrough: true, map: { 'U_SS1R': 10, 'U_2B': 10 } }
  ],
- // Value 1 = Collected by Natour (in Natour Cash Pocket). Value 2 = Paid directly to Manager (Cash/Whish/OMT - NOT in Natour Pocket)
  paid: {
  'f_maint': { 'U_SS2R': 1, 'U_2B': 2 },
  'f_natour': { 'U_SS2R': 1, 'U_2B': 2 },
@@ -777,26 +856,6 @@ var DEFAULT_DB = {
  'sp_down': { 'U_SS2R': 1, 'U_SS1R': 1, 'U_1A': 1, 'U_2A': 1, 'U_2B': 2 },
  'sp_m1': { 'U_2B': 2 }
  }
- },
- 'September 2026': {
- isProject: false,
- arLabel: 'أيلول 2026',
- published: true,
- fixed: [
- { id: 'f_maint', en: 'Maintenance', ar: 'صيانة المبنى', amt: 20, cur: 'USD', exc: { 'U_1A': 15 } },
- { id: 'f_natour', en: 'Collector Fee', ar: 'أتعاب الناطور', amt: 15, cur: 'USD', exc: {} }
- ],
- dues: [
- { id: 'd_water', en: 'Water Bill', ar: 'فاتورة المياه', amt: 1100000, cur: 'LBP' }
- ],
- services: [
- { id: 's_net', en: 'Internet', ar: 'اشتراك الإنترنت', cur: 'USD', passThrough: true, map: { 'U_SS2R': 20, 'U_2B': 25 } }
- ],
- paid: {
- 'f_maint': { 'U_SS2R': 1, 'U_SS1R': 1, 'U_1A': 1, 'U_2B': 1 },
- 'f_natour': { 'U_SS2R': 1, 'U_SS1R': 1, 'U_1A': 1, 'U_2B': 1 },
- 'd_water': { 'U_SS2R': 1, 'U_SS1R': 1, 'U_1A': 1, 'U_2A': 1, 'U_2B': 1 }
- }
  }
  },
  apartments: [
@@ -807,27 +866,26 @@ var DEFAULT_DB = {
  { id: 'U_2B', code: '2B', en: 'Ziad Nader', ar: 'زياد نادر', ph: '9613900100', prefLang: 'ar' }
  ],
  reminders: [
- { id: 'r1', en: 'Check Generator Oil & Diesel Level', ar: 'فحص زيت ومازوت المولد', date: '2026-10-21', freq: 'Monthly', assignNatour: true, windowDays: 2 },
- { id: 'r2', en: 'Solar Panels Dust Cleaning', ar: 'تنظيف ألواح الطاقة الشمسية', date: '2026-10-25', freq: 'Every 3 Months', assignNatour: true, windowDays: 7 }
+ { id: 'r1', en: 'Wash & Sanitize Trash Bins', ar: 'غسيل مستوعبات النفايات والمدخل', date: '2026-10-22', freq: 'Weekly', assignNatour: true },
+ { id: 'r2', en: 'Wipe Dust off Solar Panels', ar: 'تنظيف ألواح الطاقة الشمسية', date: '2026-10-25', freq: 'Monthly', assignNatour: true },
+ { id: 'r3', en: 'Building Pest Control & Fumigation', ar: 'رش مبيدات وحشرات للبناية', date: '2026-11-10', freq: 'Every 6 Months', assignNatour: false }
  ],
  completedTasks: [
  { id: 'ct1', en: 'Fire Extinguisher Safety Check', ar: 'فحص طفايات الحريق', completedAt: '2026-10-14', by: '👨‍💼 Manager' },
  { id: 'ct2', en: 'Basement Water Pump Greasing', ar: 'تشحيم مضخة المياه', completedAt: '2026-10-05', by: '👷‍♂️ Anas (Natour)' }
  ],
- // Expenses now support payer: 'mgr' (Paid by Manager), 'natour_pending' (Assigned to Natour to pay from cash), 'natour_paid' (Paid by Natour from cash)
  expenses: [
- { id: 'e_nat1', cat: 'clean', desc: 'Staircase Bleach, Soap & Mop · مواد تنظيف للدرج', amt: 15, cur: 'USD', month: 'October 2026', date: '2026-10-18', ref: 'NAT-01', notes: 'Natour buys from local market', payer: 'natour_pending' },
- { id: 'e_nat2', cat: 'water', desc: 'Water Collector Bill · فاتورة جابي المياه', amt: 1250000, cur: 'LBP', month: 'October 2026', date: '2026-10-16', ref: 'WTR-88', notes: 'Paid cash by Anas to collector', payer: 'natour_paid' },
- { id: 'e_sol1', cat: 'solar', desc: 'Felicity 6kW Hybrid Inverter · انفرتر طاقة', amt: 520, cur: 'USD', month: 'Solar 6kW Install', date: '2026-10-12', ref: 'INV-901', notes: '2-year warranty included', payer: 'mgr' },
- { id: 'e_sol2', cat: 'repair', desc: 'Steel Mounting Frame & Cables · حديد وكابلات', amt: 100, cur: 'USD', month: 'Solar 6kW Install', date: '2026-10-11', ref: 'INV-884', notes: 'Roof sub-window mount', payer: 'mgr' },
- { id: 'e1', cat: 'gen', desc: 'Shared Generator Fuel & Service', amt: 110, cur: 'USD', month: 'October 2026', date: '2026-10-10', ref: 'FUEL-102', notes: '200L diesel delivery', payer: 'mgr' },
- { id: 'e2', cat: 'elev', desc: 'Elevator Monthly Maintenance', amt: 65, cur: 'USD', month: 'October 2026', date: '2026-10-08', ref: 'ELV-10', notes: 'Monthly contract', payer: 'mgr' }
+ { id: 'e_nat1', cat: 'clean', desc: 'Staircase Bleach, Soap & Mop · مواد تنظيف للدرج', amt: 15, cur: 'USD', month: 'October 2026', date: '2026-10-18', ref: 'NAT-01', notes: 'Natour buys from market', payer: 'natour_pending' },
+ { id: 'e_nat2', cat: 'water', desc: 'Water Collector Bill · فاتورة جابي المياه', amt: 1250000, cur: 'LBP', month: 'October 2026', date: '2026-10-16', ref: 'WTR-88', notes: 'Paid cash by Anas', payer: 'natour_paid' },
+ { id: 'e_sol1', cat: 'solar', desc: 'Felicity 6kW Hybrid Inverter · انفرتر طاقة', amt: 520, cur: 'USD', month: 'Solar 6kW Install', date: '2026-10-12', ref: 'INV-901', notes: '2-year warranty', payer: 'mgr' },
+ { id: 'e1', cat: 'gen', desc: 'Shared Generator Fuel & Service', amt: 110, cur: 'USD', month: 'October 2026', date: '2026-10-10', ref: 'FUEL-102', notes: '200L diesel', payer: 'mgr' },
+ { id: 'e2', cat: 'elev', desc: 'Elevator Monthly Maintenance', amt: 65, cur: 'USD', month: 'October 2026', date: '2026-10-08', ref: 'ELV-10', notes: 'Monthly service', payer: 'mgr' }
  ],
  ledger: [
  { id: 'l0', desc: 'Water Collector Bill · فاتورة جابي المياه', sub: 'October 2026', channel: 'Paid by Natour Cash', amt: 1250000, cur: 'LBP', type: 'out', at: '2026-10-16', ref: 'WTR-88' },
- { id: 'l1', desc: 'Felicity 6kW Hybrid Inverter', sub: '☀️ Solar 6kW Install', channel: 'Manager Box', amt: 520, cur: 'USD', type: 'out', at: '2026-10-12', ref: 'INV-901' },
+ { id: 'l1', desc: 'Felicity 6kW Hybrid Inverter', sub: '☀️ Solar 6kW Install', channel: 'Building Safe', amt: 520, cur: 'USD', type: 'out', at: '2026-10-12', ref: 'INV-901' },
  { id: 'l2', desc: 'Ziad Nader (2B) · Oct Dues + Solar 1/5', sub: 'Paid to Manager (Whish)', channel: 'Whish Money', amt: 143, cur: 'USD', type: 'in', at: '2026-10-11', ref: 'WH-89021' },
- { id: 'l3', desc: 'Shared Generator Fuel & Service', sub: '⚡ Generator & Fuel', channel: 'Manager Box', amt: 110, cur: 'USD', type: 'out', at: '2026-10-10', ref: 'FUEL-102' },
+ { id: 'l3', desc: 'Shared Generator Fuel & Service', sub: '⚡ Generator & Fuel', channel: 'Building Safe', amt: 110, cur: 'USD', type: 'out', at: '2026-10-10', ref: 'FUEL-102' },
  { id: 'l4', desc: 'Ahmad El-Khatib (SS2R) · Oct Dues', sub: 'Collected by Natour', channel: 'Natour Cash', amt: 35, cur: 'USD', type: 'in', at: '2026-10-09', ref: 'NATOUR' }
  ],
  waTemplateAr: '💧 *{building}* · *{month}*\n\nتحية طيبة *{name}* ({unit})، 👋\n{items}\n\n👉 *المبلغ المطلوب تسليمه إلى {collector}:*\n*{due}*\n\nنشكر حسن تعاونكم! 🙏✨',
@@ -846,7 +904,7 @@ function saveDB() {
 }
 
 /* ============================================================================
- 2. HELPERS, TRANSLATION & 3-STREAM ACCOUNTING ENGINE
+ 2. HELPERS, TRANSLATION & ACCOUNTING
  ============================================================================ */
 function esc(s) {
  return String(s == null ? '' : s).replace(/[&<>"]/g, function(c) {
@@ -876,7 +934,6 @@ function formatWaHtml(rawText) {
  return safe.replace(/\*([^*\n]+)\*/g, '<strong>$1</strong>');
 }
 
-// Returns columns for a cycle. By default includes all; pass onlyBuilding=true to exclude pass-through supplier bills (Moteur/Internet/Dish)
 function getCycleCols(cKey, onlyBuilding) {
  var cyc = DB.cycles[cKey] || { fixed: [], dues: [], services: [] };
  var cols = [];
@@ -894,13 +951,6 @@ function getCycleCols(cKey, onlyBuilding) {
  return cols;
 }
 
-/*
- * Smart Cycle Stats:
- * - Building Progress & Treasury ONLY count non-passThrough building dues!
- * - Separates Natour Cash Collected (paid === 1) vs Manager Direct Collected (paid === 2)
- * - Tracks Natour Bills Paid out of pocket so Natour knows exact Net Cash to hand over
- * - Tracks Supplier Pass-Through Cash (Moteur, Internet, Dish) separately for Natour
- */
 function getCycleStats(cKey) {
  var cyc = DB.cycles[cKey];
  if (!cyc) return {
@@ -911,8 +961,7 @@ function getCycleStats(cKey) {
  eqGotUsd:0, eqSumUsd:0, expUsd:0, netCycleUsd:0, settled:0, total:DB.apartments.length, pct:0
  };
 
- var bldCols = getCycleCols(cKey, true);  // Building dues only
- var allCols = getCycleCols(cKey, false); // Building + Supplier pass-through
+ var allCols = getCycleCols(cKey, false);
  var usdGot = 0, usdSum = 0, lbpGot = 0, lbpSum = 0;
  var natUsdGot = 0, natLbpGot = 0, mgrUsdGot = 0, mgrLbpGot = 0;
  var supGotUsd = 0, supSumUsd = 0;
@@ -923,7 +972,7 @@ function getCycleStats(cKey) {
  var allPd = true, hasAnyBld = false;
  allCols.forEach(function(c) {
  var v = c.valFor(a.id); if (v <= 0) return;
- var pState = (cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][a.id]) || 0; // 0=unpaid, 1=Natour Cash, 2=Manager Direct
+ var pState = (cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][a.id]) || 0;
  var pd = pState > 0;
 
  if (c.passThrough) {
@@ -982,15 +1031,15 @@ function getCycleStats(cKey) {
  };
 }
 
-function getTreasury() {
+function getSafeBalance() {
  var rate = Number(DB.settings.rate) || 89500;
  var inUsd = 0, inLbp = 0, outUsd = 0, outLbp = 0;
  Object.keys(DB.cycles).forEach(function(ck) {
  var cyc = DB.cycles[ck];
- var bldCols = getCycleCols(ck, true); // Strictly exclude pass-through supplier services!
+ var bldCols = getCycleCols(ck, true);
  DB.apartments.forEach(function(a) {
  bldCols.forEach(function(c) {
- if (c.linkedProject) return; // Counted inside the project itself
+ if (c.linkedProject) return;
  var v = c.valFor(a.id); if (v <= 0) return;
  var pd = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][a.id]);
  if (pd) {
@@ -1000,7 +1049,7 @@ function getTreasury() {
  });
  });
  DB.expenses.forEach(function(e) {
- if (e.payer === 'natour_pending') return; // Not paid yet
+ if (e.payer === 'natour_pending') return;
  if (e.cur === 'LBP') outLbp += Number(e.amt) || 0;
  else outUsd += Number(e.amt) || 0;
  });
@@ -1026,7 +1075,7 @@ function buildDonutSvg(segments, totalUsdStr, subLabel) {
 }
 
 /* ============================================================================
- 3. ADAPTIVE WHATSAPP GENERATOR (Invoice 📣 vs Receipt 🧾)
+ 3. WHATSAPP GENERATOR & SHAREABLE MONTHLY REPORT (IMAGE / PDF / WHATSAPP)
  ============================================================================ */
 function isAptSettled(apt, cKey) {
  var cyc = DB.cycles[cKey];
@@ -1094,6 +1143,205 @@ function buildWaLink(apt) {
  return 'https://wa.me/' + String(apt.ph || '').replace(/\D/g, '') + '?text=' + encodeURIComponent(txt);
 }
 
+/* ---- MONTHLY BUILDING REPORT MODAL ---- */
+function openMonthlyReportModal() {
+ renderMonthlyReportContent();
+ openModal('report-modal');
+}
+
+function renderMonthlyReportContent() {
+ var s = getCycleStats(SELECTED_MONTH);
+ var sf = getSafeBalance();
+ var cyc = DB.cycles[SELECTED_MONTH];
+ var bldCols = getCycleCols(SELECTED_MONTH, true);
+ var rate = Number(DB.settings.rate) || 89500;
+ var cycExps = DB.expenses.filter(function(e) { return e.month === SELECTED_MONTH && e.payer !== 'natour_pending'; });
+
+ var h = '<div class="card-h no-print"><h3>📊 ' + t('Monthly Building Report', 'التقرير المالي الشهري للبناية') + '</h3><button class="btn-del" onclick="closeModal(\'report-modal\')">✕</button></div>';
+ h += '<p class="subtext no-print">' + t('Share this transparent summary with your neighbors in the Building WhatsApp Group as an Image, PDF, or text.', 'شارك هذا الملخص الشفاف مع الجيران في مجموعة واتساب البناية كصورة أو ملف PDF أو نص.') + '</p>';
+
+ h += '<label class="no-print" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:var(--soft);border-radius:14px;margin-bottom:12px;cursor:pointer;font-size:12.5px;font-weight:700;color:var(--acc)">';
+ h += '<span>🕵️ ' + t('Hide Resident Names (Show Apt Codes Only)', 'إخفاء أسماء السكان (إظهار رقم الشقة فقط)') + '</span>';
+ h += '<input type="checkbox" style="width:19px;height:19px" ' + (REPORT_HIDE_NAMES ? 'checked' : '') + ' onchange="REPORT_HIDE_NAMES=this.checked;renderMonthlyReportContent()"></label>';
+
+ h += '<div class="report-sheet">';
+ h += '<div class="report-hdr">';
+ h += '<div><div style="font-size:10px;font-weight:800;opacity:.85;text-transform:uppercase">BINAYATI · بنايتي — OFFICIAL STATEMENT</div>';
+ h += '<b style="font-size:18px">' + esc(DB.settings.bldEn) + ' · ' + esc(DB.settings.bldAr) + '</b>';
+ h += '<div style="font-size:12.5px;opacity:.9">' + esc(dispCycleName(SELECTED_MONTH)) + '</div></div>';
+ h += '<div style="text-align:end"><span style="font-size:10.5px;opacity:.85">' + t('Total Safe Balance', 'رصيد الصندوق العام') + '</span><b dir="ltr" style="display:block;font-size:20px">$' + Math.round(sf.netUsd + (sf.netLbp / rate)).toLocaleString() + '</b></div>';
+ h += '</div>';
+
+ h += '<div class="ledger-strip" style="margin-top:0;margin-bottom:12px">';
+ h += '<div><span>' + t('Collected', 'المحصّل') + '</span><b dir="ltr" style="color:var(--ok)">+$' + Math.round(s.eqGotUsd) + '</b></div>';
+ h += '<div><span>' + t('Bills Paid', 'المصاريف') + '</span><b dir="ltr" style="color:var(--bad)">-$' + Math.round(s.expUsd) + '</b></div>';
+ h += '<div><span>' + t('Period Net', 'صافي الشهر') + '</span><b dir="ltr" style="color:var(--acc)">' + (s.netCycleUsd>=0?'+':'-') + '$' + Math.abs(Math.round(s.netCycleUsd)) + '</b></div>';
+ h += '</div>';
+
+ h += '<div style="font-size:11.5px;font-weight:800;color:var(--mut);text-transform:uppercase;margin-bottom:6px">🧾 ' + t('Bills & Expenses Paid (' + cycExps.length + ')', 'الفواتير والمصاريف المدفوعة (' + cycExps.length + ')') + '</div>';
+ if (!cycExps.length) {
+ h += '<div style="font-size:12px;color:var(--mut);margin-bottom:10px">' + t('No expenses recorded in this period.', 'لا توجد مصاريف مسجلة في هذه الفترة.') + '</div>';
+ } else {
+ cycExps.forEach(function(e) {
+ h += '<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-bottom:1px dashed var(--line)">';
+ h += '<span>' + esc(e.desc) + ' <small style="color:var(--mut)">(' + esc(e.date || 'Oct') + ')</small></span>';
+ h += '<b dir="ltr" style="color:var(--bad)">-' + fmt(e.amt, e.cur, 'en') + '</b></div>';
+ });
+ }
+
+ h += '<div style="font-size:11.5px;font-weight:800;color:var(--mut);text-transform:uppercase;margin:12px 0 6px">🏢 ' + t('Apartments Collection (' + s.settled + '/' + s.total + ' Paid)', 'تحصيل الشقق (' + s.settled + '/' + s.total + ' مسدد)') + '</div>';
+ DB.apartments.forEach(function(a) {
+ var uGot = 0, lGot = 0, uDue = 0, lDue = 0;
+ bldCols.forEach(function(c) {
+ var v = c.valFor(a.id); if (v <= 0) return;
+ var pd = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][a.id]);
+ if (c.cur === 'LBP') { if (pd) lGot += v; else lDue += v; }
+ else { if (pd) uGot += v; else uDue += v; }
+ });
+ var eqPaid = Math.round(uGot + (lGot / rate));
+ var eqOwed = Math.round(uDue + (lDue / rate));
+ var label = REPORT_HIDE_NAMES ? ('Unit ' + a.code + ' · شقة ' + a.code) : (a.code + ' · ' + (LANG==='ar'?(a.ar||a.en):a.en));
+ h += '<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--line)">';
+ h += '<b>' + esc(label) + '</b>';
+ h += '<span dir="ltr" style="font-weight:800;color:' + (eqOwed === 0 ? 'var(--ok)' : 'var(--bad)') + '">' + (eqOwed === 0 ? ('✓ Paid $' + eqPaid) : ('Owes $' + eqOwed)) + '</span></div>';
+ });
+ h += '</div>';
+
+ h += '<div class="two-col-grid no-print" style="margin-bottom:8px">';
+ h += '<button style="padding:12px;background:var(--acc);color:#fff" onclick="downloadReportImage()">📸 ' + t('Save as Image (PNG)', 'حفظ كصورة (PNG)') + '</button>';
+ h += '<button style="padding:12px;background:var(--card2);border:1px solid var(--line)" onclick="window.print()">🖨️ ' + t('Save PDF / Print', 'حفظ PDF / طباعة') + '</button>';
+ h += '</div>';
+ h += '<button class="no-print" style="width:100%;padding:12px;background:var(--okbg);color:var(--ok);border:1px solid var(--ok)" onclick="shareReportToWhatsAppGroup()">💬 ' + t('Share Summary to Building WhatsApp Group', 'مشاركة التقرير في مجموعة واتساب البناية') + '</button>';
+
+ document.getElementById('report-content').innerHTML = h;
+}
+
+function downloadReportImage() {
+ var s = getCycleStats(SELECTED_MONTH);
+ var sf = getSafeBalance();
+ var cyc = DB.cycles[SELECTED_MONTH];
+ var bldCols = getCycleCols(SELECTED_MONTH, true);
+ var rate = Number(DB.settings.rate) || 89500;
+ var cycExps = DB.expenses.filter(function(e) { return e.month === SELECTED_MONTH && e.payer !== 'natour_pending'; });
+
+ var canvas = document.createElement('canvas');
+ var w = 800;
+ var h = 460 + (cycExps.length * 42) + (DB.apartments.length * 42);
+ canvas.width = w;
+ canvas.height = h;
+ var ctx = canvas.getContext('2d');
+
+ ctx.fillStyle = '#f4f5fb';
+ ctx.fillRect(0, 0, w, h);
+
+ var grad = ctx.createLinearGradient(0, 0, w, 160);
+ grad.addColorStop(0, '#5444f2');
+ grad.addColorStop(1, '#7c6ff9');
+ ctx.fillStyle = grad;
+ ctx.fillRect(0, 0, w, 155);
+
+ ctx.fillStyle = '#ffffff';
+ ctx.font = 'bold 16px sans-serif';
+ ctx.fillText('BINAYATI · بنايتي — MONTHLY BUILDING REPORT', 40, 48);
+ ctx.font = 'bold 32px sans-serif';
+ ctx.fillText(DB.settings.bldEn + '  ·  ' + SELECTED_MONTH, 40, 92);
+ ctx.font = '600 18px sans-serif';
+ ctx.fillText('Total Building Safe: $' + Math.round(sf.netUsd + (sf.netLbp / rate)).toLocaleString() + ' USD', 40, 128);
+
+ var y = 185;
+ ctx.fillStyle = '#ffffff';
+ ctx.fillRect(40, y, 720, 85);
+ ctx.fillStyle = '#10b981';
+ ctx.font = 'bold 22px sans-serif';
+ ctx.fillText('Collected: +$' + Math.round(s.eqGotUsd), 65, y + 50);
+ ctx.fillStyle = '#ef4444';
+ ctx.fillText('Bills Paid: -$' + Math.round(s.expUsd), 310, y + 50);
+ ctx.fillStyle = '#5b4cf5';
+ ctx.fillText('Net: ' + (s.netCycleUsd>=0?'+':'-') + '$' + Math.abs(Math.round(s.netCycleUsd)), 565, y + 50);
+
+ y += 120;
+ ctx.fillStyle = '#14172c';
+ ctx.font = 'bold 20px sans-serif';
+ ctx.fillText('Bills & Expenses Paid (' + cycExps.length + ')', 40, y);
+ y += 18;
+ cycExps.forEach(function(e) {
+ y += 36;
+ ctx.fillStyle = '#334155';
+ ctx.font = '600 17px sans-serif';
+ ctx.fillText('• ' + e.desc.substring(0, 46), 50, y);
+ ctx.fillStyle = '#ef4444';
+ ctx.fillText('-' + fmt(e.amt, e.cur, 'en'), 630, y);
+ });
+
+ y += 52;
+ ctx.fillStyle = '#14172c';
+ ctx.font = 'bold 20px sans-serif';
+ ctx.fillText('Apartments Status (' + s.settled + '/' + s.total + ' Settled)', 40, y);
+ y += 18;
+ DB.apartments.forEach(function(a) {
+ y += 38;
+ var uGot = 0, lGot = 0, uDue = 0, lDue = 0;
+ bldCols.forEach(function(c) {
+ var v = c.valFor(a.id); if (v <= 0) return;
+ var pd = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][a.id]);
+ if (c.cur === 'LBP') { if (pd) lGot += v; else lDue += v; }
+ else { if (pd) uGot += v; else uDue += v; }
+ });
+ var eqPaid = Math.round(uGot + (lGot / rate));
+ var eqOwed = Math.round(uDue + (lDue / rate));
+ var uLabel = REPORT_HIDE_NAMES ? ('Unit ' + a.code) : (a.code + ' - ' + a.en);
+
+ ctx.fillStyle = '#14172c';
+ ctx.font = 'bold 17px sans-serif';
+ ctx.fillText(uLabel, 50, y);
+ ctx.fillStyle = eqOwed === 0 ? '#10b981' : '#ef4444';
+ ctx.fillText(eqOwed === 0 ? ('✓ Paid $' + eqPaid) : ('Owes $' + eqOwed), 620, y);
+ });
+
+ var link = document.createElement('a');
+ link.download = 'Binayati-Report-' + SELECTED_MONTH.replace(/\s+/g, '-') + '.png';
+ link.href = canvas.toDataURL('image/png');
+ link.click();
+ showToast(t('Report image saved!', 'تم حفظ صورة التقرير!'));
+}
+
+function shareReportToWhatsAppGroup() {
+ var s = getCycleStats(SELECTED_MONTH);
+ var sf = getSafeBalance();
+ var cyc = DB.cycles[SELECTED_MONTH];
+ var bldCols = getCycleCols(SELECTED_MONTH, true);
+ var rate = Number(DB.settings.rate) || 89500;
+ var cycExps = DB.expenses.filter(function(e) { return e.month === SELECTED_MONTH && e.payer !== 'natour_pending'; });
+
+ var lines = [];
+ lines.push('📊 *' + DB.settings.bldEn + ' · ' + DB.settings.bldAr + '*');
+ lines.push('📅 *' + SELECTED_MONTH + ' — Monthly Report*');
+ lines.push('────────────────────');
+ lines.push('➕ *Collected:* +$' + Math.round(s.eqGotUsd));
+ lines.push('➖ *Bills Paid:* -$' + Math.round(s.expUsd));
+ lines.push('🏛️ *Total in Building Safe:* $' + Math.round(sf.netUsd + (sf.netLbp / rate)));
+ lines.push('');
+ lines.push('🧾 *Bills Paid This Month:*');
+ if (!cycExps.length) lines.push('• None');
+ cycExps.forEach(function(e) { lines.push('• ' + e.desc + ': -' + fmt(e.amt, e.cur, 'en')); });
+ lines.push('');
+ lines.push('🏢 *Apartments (' + s.settled + '/' + s.total + ' Settled):*');
+ DB.apartments.forEach(function(a) {
+ var uDue = 0, lDue = 0;
+ bldCols.forEach(function(c) {
+ var v = c.valFor(a.id); if (v <= 0) return;
+ var pd = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][a.id]);
+ if (!pd) { if (c.cur === 'LBP') lDue += v; else uDue += v; }
+ });
+ var eqOwed = Math.round(uDue + (lDue / rate));
+ var nm = REPORT_HIDE_NAMES ? a.code : (a.code + ' (' + a.en + ')');
+ lines.push('• ' + nm + ': ' + (eqOwed === 0 ? '✅ Paid' : ('⏳ Owes $' + eqOwed)));
+ });
+
+ var url = 'https://wa.me/?text=' + encodeURIComponent(lines.join('\n'));
+ window.open(url, '_blank');
+}
+
 /* ============================================================================
  4. ROUTER & SCREEN RENDERERS
  ============================================================================ */
@@ -1126,38 +1374,41 @@ function render() {
  document.getElementById('btn-lang').textContent = LANG === 'ar' ? 'English' : 'العربية';
  document.getElementById('sim-mgr').textContent = t('👨‍💼 Manager', '👨‍💼 المدير');
  document.getElementById('sim-col').textContent = t('👷‍♂️ Natour', '👷‍♂️ الناطور');
- document.getElementById('btn-ob-sim').textContent = t('✨ First-Time UX', '✨ تجربة البدء');
+ document.getElementById('btn-ob-sim').textContent = t('✨ Setup Guide', '✨ دليل الإعداد');
 
  // Translate Speed-Dial FAB Menu
- document.getElementById('fm-pay').textContent = t('Register Direct Payment', 'تسجيل دفعة مباشرة للمدير');
+ document.getElementById('fm-pay').textContent = t('Record Resident Payment', 'تسجيل دفعة من ساكن للمدير');
  document.getElementById('fm-pay-sub').textContent = t('Cash to Manager, Whish, OMT or Bank', 'كاش للمدير، Whish، OMT أو تحويل');
- document.getElementById('fm-exp').textContent = t('Add Expense / Bill', 'تسجيل مصروف أو فاتورة');
- document.getElementById('fm-exp-sub').textContent = t('Paid by Manager OR assign to Natour cash', 'دفع من المدير أو تكليف الناطور بدفعها');
- document.getElementById('fm-mon').textContent = t('New Monthly Cycle', 'إضافة شهر تحصيل جديد');
+ document.getElementById('fm-exp').textContent = t('Add Building Bill / Expense', 'تسجيل فاتورة أو مصروف');
+ document.getElementById('fm-exp-sub').textContent = t('Paid by Manager OR paid by Natour', 'دفع من المدير أو تكليف الناطور بدفعها');
+ document.getElementById('fm-mon').textContent = t('Start New Month', 'فتح شهر تحصيل جديد');
  document.getElementById('fm-mon-sub').textContent = t('Pick Month & Year from dropdown', 'اختر الشهر والسنة من القائمة');
- document.getElementById('fm-prj').textContent = t('New Special Project', 'إنشاء مشروع خاص بالتقسيط');
- document.getElementById('fm-prj-sub').textContent = t('Budget goal, down payment & installments', 'الميزانية، الدفعة الأولى والأقساط');
- document.getElementById('fm-tsk').textContent = t('New Maintenance Task', 'جدولة مهمة صيانة');
- document.getElementById('fm-tsk-sub').textContent = t('Schedule & assign to Natour checklist', 'تذكير دوري أو مهمة للناطور');
+ document.getElementById('fm-prj').textContent = t('Start Special Project', 'إنشاء مشروع خاص بالتقسيط');
+ document.getElementById('fm-prj-sub').textContent = t('Solar, Elevator, Paint with installments', 'طاقة شمسية، مصعد، دهان بالتقسيط');
+ document.getElementById('fm-tsk').textContent = t('Add Maintenance Reminder', 'إضافة تذكير صيانة');
+ document.getElementById('fm-tsk-sub').textContent = t('For Building or Natour checklist', 'للبناية أو لقائمة مهام الناطور');
 
  // Translate Bottom Dock
- document.getElementById('nav-dash').textContent = t('Overview', 'نظرة عامة');
+ document.getElementById('nav-dash').textContent = t('Home', 'الرئيسية');
  document.getElementById('nav-exp').textContent = t('Expenses', 'المصاريف');
  document.getElementById('nav-nat').textContent = t('Natour', 'الناطور');
  document.getElementById('nav-dir').textContent = t('Units', 'الشقق');
+
+ var isHomeHero = (ROLE === 'mgr' && TAB === 'dash' && !CYCLE_DETAIL_MODE);
+ document.getElementById('std-top-bar').style.display = isHomeHero ? 'none' : 'flex';
 
  var showBack = (ROLE === 'mgr' && (TAB === 'setup' || TAB === 'ledger' || TAB === 'task_history' || (TAB === 'dash' && CYCLE_DETAIL_MODE)));
  document.getElementById('hdr-back-btn').style.display = showBack ? 'grid' : 'none';
  document.getElementById('hdr-back-btn').textContent = LANG === 'ar' ? '›' : '‹';
 
  var titles = {
- dash: CYCLE_DETAIL_MODE ? dispCycleName(SELECTED_MONTH) : t('Overview', 'نظرة عامة'),
- setup: t('Configure Building Dues', 'إعداد رسوم البناية'),
- expenses: t('Expenses & Categories', 'المصاريف والفئات'),
+ dash: CYCLE_DETAIL_MODE ? dispCycleName(SELECTED_MONTH) : t('Home', 'الرئيسية'),
+ setup: t('Edit Monthly Dues', 'تعديل الرسوم الشهرية'),
+ expenses: t('Bills & Expenses', 'المصاريف والفواتير'),
  natour: t('Natour & WhatsApp', 'الناطور والواتساب'),
- dir: t('Units & Settings', 'الشقق والإعدادات'),
- ledger: t('Full Building Ledger', 'سجل حركات البناية العام'),
- task_history: t('Completed Tasks Log', 'أرشيف المهام المنجزة')
+ dir: t('Apartments & Setup', 'الشقق والإعدادات'),
+ ledger: t('All Money History', 'سجل جميع الدفعات والمصاريف'),
+ task_history: t('Completed Tasks', 'سجل المهام المنجزة')
  };
 
  if (ROLE === 'col') {
@@ -1165,13 +1416,12 @@ function render() {
  ? (DB.settings.bldAr + ' · تحصيل ' + DB.settings.collectorAr)
  : (DB.settings.bldEn + ' · ' + DB.settings.collectorEn);
  document.getElementById('hdr-right').innerHTML = '<span class="role-badge">👷‍♂️ ' + esc(LANG==='ar'?DB.settings.collectorAr:DB.settings.collectorEn) + '</span>';
- } else {
- document.getElementById('hdr-title').textContent = titles[TAB] || t('Overview', 'نظرة عامة');
+ } else if (!isHomeHero) {
+ document.getElementById('hdr-title').textContent = titles[TAB] || t('Home', 'الرئيسية');
  document.getElementById('hdr-right').innerHTML = '<span class="role-badge">🏢 ' + esc(LANG==='ar'?DB.settings.bldAr:DB.settings.bldEn) + '</span>';
  }
 
  document.getElementById('mgr-dock').style.display = ROLE === 'mgr' ? 'flex' : 'none';
- document.getElementById('fab-add').style.display = ROLE === 'mgr' ? 'grid' : 'none';
 
  if (ROLE === 'col') {
  renderCollectorScreen();
@@ -1189,62 +1439,64 @@ function render() {
  }
 }
 
-/* ---- SCREEN 1A: STREAMLINED OVERVIEW (Pure Building Treasury + Cycles/Projects + Tasks) ---- */
+/* ---- SCREEN 1A: ROYAL INDIGO HOME SCREEN ---- */
 function renderOverviewScreen() {
- var tr = getTreasury();
+ var sf = getSafeBalance();
+ var s = getCycleStats(SELECTED_MONTH);
  var h = '';
 
- // 1. Pure Building Treasury Card (Excludes Pass-Through Moteur/Internet/Dish!)
- h += '<div class="card">';
- h += '<div class="card-h"><div><h2>🏛️ ' + t('Building Treasury', 'صندوق البناية الصافي') + '</h2><small style="font-size:11px;color:var(--mut)">' + t('Pure building funds (excludes private Moteur/Internet)', 'أموال البناية فقط (بدون المولد والإنترنت الخاص)') + '</small></div>';
- h += '<div class="cur-switch"><button class="' + (REF_CUR==='USD'?'on':'') + '" onclick="REF_CUR=\'USD\';render()">USD $</button><button class="' + (REF_CUR==='LBP'?'on':'') + '" onclick="REF_CUR=\'LBP\';render()">LBP ل.ل</button></div></div>';
- h += '<div class="big-balance" dir="ltr">' + fmt(tr.refVal, REF_CUR, 'en') + ' <small>' + t('Net Box Balance', 'الرصيد الصافي') + '</small></div>';
-
+ h += '<div class="indigo-hero">';
+ h += '<div class="hero-top">';
+ h += '<span class="hero-pill">🏢 ' + esc(LANG==='ar'?DB.settings.bldAr:DB.settings.bldEn) + '</span>';
  if (DB.settings.treasuryMode === 'split') {
- h += '<div class="drawer-row">';
- h += '<div class="drawer-box"><span>' + t('Building USD Drawer', 'صندوق البناية (دولار)') + '</span><b dir="ltr"><bdi>' + fmt(tr.netUsd, 'USD', 'en') + '</bdi></b></div>';
- h += '<div class="drawer-box"><span>' + t('Building LBP Drawer', 'صندوق البناية (ليرة)') + '</span><b dir="ltr"><bdi>' + fmt(tr.netLbp, 'LBP', 'en') + '</bdi></b></div>';
- h += '</div>';
+ h += '<div class="hero-cur-toggle"><button class="' + (REF_CUR==='USD'?'on':'') + '" onclick="REF_CUR=\'USD\';render()">USD $</button><button class="' + (REF_CUR==='LBP'?'on':'') + '" onclick="REF_CUR=\'LBP\';render()">LBP ل.ل</button></div>';
+ } else {
+ h += '<span class="hero-pill" style="cursor:pointer" onclick="openSettingsModal()">⚙️ ' + t('Setup', 'الإعدادات') + '</span>';
  }
+ h += '</div>';
 
- // 2 Clean Non-Redundant Action Pills Inside Treasury Card
- h += '<div class="two-col-grid" style="margin-top:12px">';
- h += '<button class="btn-edit" style="justify-content:center;padding:9px;color:var(--purp);border-color:rgba(167,139,250,.4)" onclick="openDirectPayModal()">💵 ' + t('Register Direct Pay', 'تسجيل دفعة للمدير') + '</button>';
- h += '<button class="btn-edit" style="justify-content:center;padding:9px" onclick="setTab(\'ledger\')">📜 ' + t('Full Ledger Log', 'سجل الحركات الكامل') + '</button>';
+ h += '<div class="hero-center">';
+ h += '<div class="lbl">' + t('Total Money in Building Safe', 'إجمالي المبلغ في صندوق البناية') + '</div>';
+ h += '<div class="big-num" dir="ltr">' + fmt(sf.refVal, DB.settings.treasuryMode === 'single' ? 'USD' : REF_CUR, 'en') + '</div>';
+ h += '<div class="sub-lbl">' + escapeForHeroSub(sf) + '</div>';
+ h += '</div>';
+
+ h += '<div class="hero-stats-grid">';
+ h += '<div onclick="openCycleDetail(\'' + esc(SELECTED_MONTH) + '\')" style="cursor:pointer"><span>' + t('Active Month', 'الشهر الحالي') + '</span><b>' + s.pct + '%</b><small>' + s.settled + '/' + s.total + ' ' + t('paid', 'سددوا') + '</small></div>';
+ h += '<div onclick="openDirectPayModal()" style="cursor:pointer"><span>' + t('Record Payment', 'تسجيل دفعة') + '</span><b>+ ' + t('Pay', 'قبض') + '</b><small>' + t('Cash / Whish', 'كاش / ويش') + '</small></div>';
+ h += '<div onclick="setTab(\'ledger\')" style="cursor:pointer"><span>' + t('Money Log', 'سجل الأموال') + '</span><b>📜 ' + t('View', 'عرض') + '</b><small>' + t('All history', 'كل الحركات') + '</small></div>';
  h += '</div></div>';
 
- // 2. Active Billing Months & Special Projects List
  h += '<div class="card">';
- h += '<div class="card-h"><h2>📅 ' + t('Billing Cycles & Projects', 'دورات التحصيل والمشاريع') + '</h2>';
+ h += '<div class="card-h"><h2>📅 ' + t('Months & Special Projects', 'الأشهر والمشاريع الخاصة') + '</h2>';
  h += '<div style="display:flex;gap:6px"><button class="btn-edit" style="color:var(--acc)" onclick="openNewCycleModal(\'month\')">+ ' + t('Month', 'شهر') + '</button>';
  h += '<button class="btn-edit" style="color:var(--warn)" onclick="openNewCycleModal(\'project\')">+ ' + t('Project', 'مشروع') + '</button></div></div>';
- h += '<p class="subtext">' + t('Tap any month or project to inspect unit payments, Natour cash vs. Manager direct, and cycle bills.', 'اضغط على أي شهر أو مشروع لمعاينة دفعات الشقق، كاش الناطور مقابل قبض المدير، ومصاريف الدورة.') + '</p>';
+ h += '<p class="subtext">' + t('Tap any month or project to see who paid, expenses, and share the Monthly Report.', 'اضغط على أي شهر أو مشروع لمعاينة الدفعات والمصاريف ومشاركة التقرير الشهري.') + '</p>';
 
  Object.keys(DB.cycles).forEach(function(mKey) {
  var cyc = DB.cycles[mKey];
  var st = getCycleStats(mKey);
  var isP = !!cyc.isProject;
- h += '<div style="padding:13px 14px;background:var(--card2);border:1.5px solid ' + (isP?'rgba(245,158,11,.35)':'var(--line)') + ';border-radius:18px;margin-bottom:10px;cursor:pointer" onclick="openCycleDetail(\'' + esc(mKey) + '\')">';
+ h += '<div style="padding:14px;background:var(--card2);border:1.5px solid ' + (isP?'rgba(245,158,11,.4)':'var(--line)') + ';border-radius:18px;margin-bottom:10px;cursor:pointer" onclick="openCycleDetail(\'' + esc(mKey) + '\')">';
  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
  h += '<div style="display:flex;align-items:center;gap:7px"><span>' + (isP ? '🛠️' : '📅') + '</span><b>' + esc(dispCycleName(mKey)) + '</b></div>';
  h += '<span style="font-size:12px;font-weight:800;color:' + (isP ? 'var(--warn)' : 'var(--acc)') + '">' + st.pct + '% · ' + t('Open →', 'فتح ←') + '</span></div>';
- h += '<div class="prog-track" style="height:9px"><div class="prog-fill' + (isP ? ' proj' : '') + '" style="width:' + st.pct + '%"></div></div>';
+ h += '<div class="prog-track"><div class="prog-fill' + (isP ? ' proj' : '') + '" style="width:' + st.pct + '%"></div></div>';
  h += '<div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);margin-top:6px;font-weight:600">';
- h += '<span>' + st.settled + '/' + st.total + ' ' + t('units settled', 'شقق مسددة') + '</span>';
+ h += '<span>' + st.settled + ' ' + t('of', 'من') + ' ' + st.total + ' ' + t('apartments paid', 'شقق سددت') + '</span>';
  h += '<span dir="ltr">$' + Math.round(st.eqGotUsd) + ' / $' + Math.round(st.eqSumUsd) + '</span></div></div>';
  });
  h += '</div>';
 
- // 3. Scheduled Maintenance & Natour Tasks Card
- h += '<div class="card"><div class="card-h"><h2>🔔 ' + t('Maintenance & Natour Tasks', 'الصيانة ومهام الناطور') + '</h2>';
- h += '<div style="display:flex;gap:6px"><button class="btn-edit" onclick="setTab(\'task_history\')">✅ ' + t('History', 'الأرشيف') + '</button><button class="btn-edit" style="color:var(--acc)" onclick="openReminderModal()">+ ' + t('Task', 'مهمة') + '</button></div></div>';
+ h += '<div class="card"><div class="card-h"><h2>🔔 ' + t('Maintenance & Natour Tasks', 'تذكيرات الصيانة ومهام الناطور') + '</h2>';
+ h += '<div style="display:flex;gap:6px"><button class="btn-edit" onclick="setTab(\'task_history\')">✅ ' + t('Done Log', 'المنجزة') + '</button><button class="btn-edit" style="color:var(--acc)" onclick="openReminderModal()">+ ' + t('Add', 'إضافة') + '</button></div></div>';
  if (!DB.reminders || !DB.reminders.length) {
  h += '<div class="subtext">' + t('No upcoming maintenance reminders.', 'لا توجد تذكيرات صيانة قادمة.') + '</div>';
  } else {
  DB.reminders.forEach(function(rm, idx) {
  h += '<div class="list-row">';
- h += '<div class="list-left"><span style="font-size:18px">' + (rm.assignNatour ? '👷‍♂️' : '🛠️') + '</span><div style="min-width:0"><b class="single-line-name">' + esc(LANG==='ar'?(rm.ar||rm.en):rm.en) + '</b>';
- h += '<div style="font-size:11.5px;color:var(--mut)">' + esc(rm.date) + ' · ' + esc(rm.freq) + (rm.assignNatour ? (' · <span style="color:var(--acc);font-weight:700">' + t('On Natour Checklist', 'مرسل للناطور') + '</span>') : '') + '</div></div></div>';
+ h += '<div class="list-left"><span style="font-size:18px">' + (rm.assignNatour ? '👷‍♂️' : '🏢') + '</span><div style="min-width:0"><b class="single-line-name">' + esc(LANG==='ar'?(rm.ar||rm.en):rm.en) + '</b>';
+ h += '<div style="font-size:11.5px;color:var(--mut)">' + esc(rm.date) + ' · ' + esc(rm.freq) + (rm.assignNatour ? (' · <span style="color:var(--acc);font-weight:700">' + t('On Natour Phone', 'على هاتف الناطور') + '</span>') : (' · <span>' + t('Building Reminder', 'تذكير للبناية') + '</span>')) + '</div></div></div>';
  h += '<button class="btn-edit" style="color:var(--ok);border-color:var(--ok)" onclick="completeReminder(' + idx + ')">✓ ' + t('Done', 'تم') + '</button></div>';
  });
  }
@@ -1253,7 +1505,14 @@ function renderOverviewScreen() {
  document.getElementById('app-body').innerHTML = h;
 }
 
-/* ---- SCREEN 1B: FOCUSED MONTH / SPECIAL PROJECT VIEW (Shows Manager Direct vs Natour Net Cash!) ---- */
+function escapeForHeroSub(sf) {
+ if (DB.settings.treasuryMode === 'single') {
+ return t('Pure building money (excludes private Moteur/Internet)', 'أموال البناية الصافية (بدون المولد والإنترنت الخاص)');
+ }
+ return '💵 ' + fmt(sf.netUsd, 'USD', 'en') + '   +   🇱🇧 ' + fmt(sf.netLbp, 'LBP', 'en');
+}
+
+/* ---- SCREEN 1B: FOCUSED MONTH / PROJECT VIEW + 1-TAP SHARE MONTHLY REPORT ---- */
 function openCycleDetail(cKey) {
  SELECTED_MONTH = cKey;
  CYCLE_DETAIL_MODE = true;
@@ -1283,51 +1542,51 @@ function renderFocusedCycleView() {
  h += '<div class="card" style="' + (isProj ? 'border-color:rgba(245,158,11,.45)' : '') + '">';
  h += '<div class="card-h"><div style="min-width:0">';
  h += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">';
- h += '<span style="font-size:10.5px;font-weight:800;color:' + (isProj ? 'var(--warn)' : 'var(--acc)') + ';text-transform:uppercase">' + (isProj ? t('🛠️ SPECIAL PROJECT', '🛠️ مشروع خاص') : t('📅 MONTHLY CYCLE', '📅 دورة شهرية')) + '</span>';
- h += '<span style="font-size:10.5px;padding:2px 7px;border-radius:999px;font-weight:800;background:' + (pub ? 'var(--okbg);color:var(--ok)' : 'var(--wbg);color:var(--warn)') + '">' + (pub ? t('● Live', '● منشور') : t('○ Draft', '○ مسودة')) + '</span>';
+ h += '<span style="font-size:10.5px;font-weight:800;color:' + (isProj ? 'var(--warn)' : 'var(--acc)') + ';text-transform:uppercase">' + (isProj ? t('🛠️ SPECIAL PROJECT', '🛠️ مشروع خاص') : t('📅 MONTHLY COLLECTION', '📅 تحصيل شهري')) + '</span>';
+ h += '<span style="font-size:10.5px;padding:2px 7px;border-radius:999px;font-weight:800;background:' + (pub ? 'var(--okbg);color:var(--ok)' : 'var(--wbg);color:var(--warn)') + '">' + (pub ? t('● Live on Natour Phone', '● منشور للناطور') : t('○ Draft', '○ مسودة')) + '</span>';
  h += '</div>';
  h += '<h2>' + esc(dispCycleName(SELECTED_MONTH)) + '</h2>';
- h += '<span style="font-size:12px;color:var(--mut);font-weight:600">' + s.settled + ' ' + t('of', 'من') + ' ' + s.total + ' ' + t('units settled building dues', 'شقق سددت مستحقات البناية') + '</span></div>';
+ h += '<span style="font-size:12px;color:var(--mut);font-weight:600">' + s.settled + ' ' + t('of', 'من') + ' ' + s.total + ' ' + t('apartments paid', 'شقق سددت') + '</span></div>';
 
+ h += '<div style="display:flex;gap:6px;align-items:center">';
+ h += '<button class="btn-edit" style="background:var(--soft);color:var(--acc);border-color:transparent;font-weight:800" onclick="openMonthlyReportModal()">📊 ' + t('Share Report', 'مشاركة التقرير') + '</button>';
  h += '<div class="corner-wrap" onclick="event.stopPropagation()">';
  h += '<button class="dots-btn" onclick="CYCLE_MENU_OPEN=!CYCLE_MENU_OPEN;render()" title="Options">⋯</button>';
  if (CYCLE_MENU_OPEN) {
  h += '<div class="corner-menu">';
- h += '<button onclick="CYCLE_MENU_OPEN=false;setTab(\'setup\')">🏷️ ' + t('Edit Building Dues', 'تعديل رسوم البناية') + '</button>';
- h += '<button onclick="CYCLE_MENU_OPEN=false;openDirectPayModal()">💵 ' + t('Register Direct Payment', 'تسجيل دفعة مباشرة للمدير') + '</button>';
- h += '<button onclick="DB.cycles[\'' + esc(SELECTED_MONTH) + '\'].published=!DB.cycles[\'' + esc(SELECTED_MONTH) + '\'].published;CYCLE_MENU_OPEN=false;saveDB();render()">' + (pub ? '🙈 ' + t('Unpublish from Natour', 'إخفاء عن الناطور') : '🚀 ' + t('Publish to Natour', 'نشر للناطور')) + '</button>';
+ h += '<button onclick="CYCLE_MENU_OPEN=false;setTab(\'setup\')">🏷️ ' + t('Edit Monthly Dues', 'تعديل الرسوم والأقساط') + '</button>';
+ h += '<button onclick="CYCLE_MENU_OPEN=false;openDirectPayModal()">💵 ' + t('Record Resident Payment', 'تسجيل دفعة للمدير') + '</button>';
+ h += '<button onclick="DB.cycles[\'' + esc(SELECTED_MONTH) + '\'].published=!DB.cycles[\'' + esc(SELECTED_MONTH) + '\'].published;CYCLE_MENU_OPEN=false;saveDB();render()">' + (pub ? '🙈 ' + t('Hide from Natour', 'إخفاء عن الناطور') : '🚀 ' + t('Publish to Natour', 'نشر للناطور')) + '</button>';
  if (Object.keys(DB.cycles).length > 1) {
- h += '<button class="danger" onclick="CYCLE_MENU_OPEN=false;deleteSelectedCycle()">🗑️ ' + t('Delete This Cycle', 'حذف هذه الدورة') + '</button>';
+ h += '<button class="danger" onclick="CYCLE_MENU_OPEN=false;deleteSelectedCycle()">🗑️ ' + t('Delete This Month', 'حذف هذا الشهر') + '</button>';
  }
  h += '</div>';
  }
- h += '</div></div>';
+ h += '</div></div></div>';
 
  h += '<div class="prog-wrap">';
- h += '<div class="prog-top"><b dir="ltr">$' + Math.round(s.eqGotUsd) + ' <small style="font-size:13px;color:var(--mut);font-weight:600">' + t('of', 'من أصل') + ' $' + Math.round(s.eqSumUsd) + ' ' + (isProj ? t('Budget', 'الميزانية') : 'USD eq') + '</small></b>';
+ h += '<div class="prog-top"><b dir="ltr">$' + Math.round(s.eqGotUsd) + ' <small style="font-size:13px;color:var(--mut);font-weight:600">' + t('of', 'من أصل') + ' $' + Math.round(s.eqSumUsd) + '</small></b>';
  h += '<span style="color:' + (isProj ? 'var(--warn)' : 'var(--acc)') + '">' + s.pct + '% ' + t('Collected', 'محصّل') + '</span></div>';
  h += '<div class="prog-track"><div class="prog-fill' + (isProj ? ' proj' : '') + '" style="width:' + s.pct + '%"></div></div>';
  h += '</div>';
 
- // Clear Split: Manager Direct (Cash/Whish/OMT) vs. Natour Cash in Hand (after bills paid by Natour)
  var mgrEqUsd = Math.round(s.mgrUsdGot + (s.mgrLbpGot / rate));
  var natNetEqUsd = Math.round(s.natNetUsd + (s.natNetLbp / rate));
 
  h += '<div class="drawer-row">';
- h += '<div class="drawer-box"><span>👨‍💼 ' + t('Received by Manager', 'مقبوض مباشر للمدير') + '</span><b dir="ltr" style="color:var(--purp)">$' + mgrEqUsd + ' <small style="font-size:11px;color:var(--mut)">USD eq</small></b><small>' + t('Cash / Whish / OMT', 'كاش / ويش / تحويل') + '</small></div>';
- h += '<div class="drawer-box"><span>👷‍♂️ ' + t('Net Cash with Natour', 'الصافي النقدي مع الناطور') + '</span><b dir="ltr" style="color:var(--ok)">$' + natNetEqUsd + ' <small style="font-size:11px;color:var(--mut)">USD eq</small></b><small>' + t('After bills paid by Natour', 'بعد حسم الفواتير المدفوعة منه') + '</small></div>';
+ h += '<div class="drawer-box"><span>👨‍💼 ' + t('Paid to Manager', 'مقبوض لدى المدير') + '</span><b dir="ltr" style="color:var(--purp)">$' + mgrEqUsd + '</b><small>' + t('Cash / Whish / OMT', 'كاش / ويش / تحويل') + '</small></div>';
+ h += '<div class="drawer-box"><span>👷‍♂️ ' + t('Cash with Natour', 'الصافي النقدي مع الناطور') + '</span><b dir="ltr" style="color:var(--ok)">$' + natNetEqUsd + '</b><small>' + t('After bills paid by him', 'بعد حسم الفواتير المدفوعة منه') + '</small></div>';
  h += '</div>';
 
  h += '<div class="ledger-strip">';
- h += '<div><span>' + t('Total Inflow', 'إجمالي الوارد') + '</span><b dir="ltr" style="color:var(--ok)">+$' + Math.round(s.eqGotUsd) + '</b></div>';
- h += '<div><span>' + t('Cycle Expenses', 'مصاريف الدورة') + '</span><b dir="ltr" style="color:var(--bad)">-$' + Math.round(s.expUsd) + '</b></div>';
- h += '<div><span>' + t('Net Balance', 'صافي الدورة') + '</span><b dir="ltr" style="color:' + (s.netCycleUsd >= 0 ? 'var(--acc)' : 'var(--bad)') + '">' + (s.netCycleUsd >= 0 ? '+' : '-') + '$' + Math.abs(Math.round(s.netCycleUsd)) + '</b></div>';
+ h += '<div><span>' + t('Total Collected', 'إجمالي المحصّل') + '</span><b dir="ltr" style="color:var(--ok)">+$' + Math.round(s.eqGotUsd) + '</b></div>';
+ h += '<div><span>' + t('Bills Paid', 'المصاريف') + '</span><b dir="ltr" style="color:var(--bad)">-$' + Math.round(s.expUsd) + '</b></div>';
+ h += '<div><span>' + t('Month Net', 'صافي الشهر') + '</span><b dir="ltr" style="color:' + (s.netCycleUsd >= 0 ? 'var(--acc)' : 'var(--bad)') + '">' + (s.netCycleUsd >= 0 ? '+' : '-') + '$' + Math.abs(Math.round(s.netCycleUsd)) + '</b></div>';
  h += '</div></div>';
 
- // 2. Apartment Building Dues Status Card (Tap to expand USD/LBP split + Who collected it!)
  h += '<div class="card">';
- h += '<div class="card-h"><h2>🏢 ' + t('Building Dues per Apartment', 'مستحقات البناية حسب الشقة') + '</h2>';
- h += '<button class="btn-edit" style="color:var(--purp)" onclick="openDirectPayModal()">+ ' + t('Direct Pay', 'دفعة للمدير') + '</button></div>';
+ h += '<div class="card-h"><h2>🏢 ' + t('Apartments Payment Status', 'حالة الدفع حسب الشقة') + '</h2>';
+ h += '<button class="btn-edit" style="color:var(--purp)" onclick="openDirectPayModal()">+ ' + t('Record Pay', 'تسجيل دفعة') + '</button></div>';
 
  DB.apartments.forEach(function(a) {
  var uDue = 0, lDue = 0, uGot = 0, lGot = 0, paidViaMgr = false;
@@ -1365,21 +1624,20 @@ function renderFocusedCycleView() {
  });
  h += '</div>';
 
- // 3. Contained Expenses & Bills Assigned to Natour for This Cycle
  var cycExps = [];
  DB.expenses.forEach(function(e, fullIdx) {
  if (e.month === SELECTED_MONTH) cycExps.push({ item: e, idx: fullIdx });
  });
  h += '<div class="card">';
- h += '<div class="card-h"><h2>🧾 ' + t('Cycle Bills & Expenses', 'فواتير ومصاريف الدورة') + ' (' + cycExps.length + ')</h2>';
+ h += '<div class="card-h"><h2>🧾 ' + t('Bills & Expenses (' + cycExps.length + ')', 'الفواتير والمصاريف (' + cycExps.length + ')') + '</h2>';
  h += '<button class="btn-edit" style="color:var(--bad)" onclick="openExpenseModal(-1)">+ ' + t('Add Bill', 'إضافة فاتورة') + '</button></div>';
  if (!cycExps.length) {
- h += '<div class="subtext">' + t('No expenses recorded for this cycle yet.', 'لا توجد مصاريف مسجلة لهذه الدورة بعد.') + '</div>';
+ h += '<div class="subtext">' + t('No expenses recorded for this month yet.', 'لا توجد مصاريف مسجلة لهذا الشهر بعد.') + '</div>';
  } else {
  cycExps.forEach(function(entry) {
  var pe = entry.item, c = EXP_CATS[pe.cat] || EXP_CATS.solar;
  var payerBadge = pe.payer === 'natour_pending'
- ? '<span class="badge-pay" style="background:var(--wbg);color:var(--warn)">⏳ ' + t('Natour to Pay', 'بانتظار دفع الناطور') + '</span>'
+ ? '<span class="badge-pay" style="background:var(--wbg);color:var(--warn)">⏳ ' + t('Natour to Pay', 'يدفعها الناطور') + '</span>'
  : (pe.payer === 'natour_paid'
  ? '<span class="badge-pay cash">👷‍♂️ ' + t('Paid by Natour', 'دفعها الناطور') + '</span>'
  : '<span class="badge-pay mgr">👨‍💼 ' + t('Paid by Manager', 'دفعها المدير') + '</span>');
@@ -1395,48 +1653,375 @@ function renderFocusedCycleView() {
  document.getElementById('app-body').innerHTML = h;
 }
 
-/* ---- SCREEN 2: CONFIGURE BUILDING DUES (Clean — Pass-Through Supplier Bills Moved to Natour!) ---- */
+/* ============================================================================
+ 5. ILLUSTRATED 7-STEP ONBOARDING WIZARD
+ ============================================================================ */
+var OB = {
+ step: 1,
+ role: 'mgr',
+ bldEn: 'Block C',
+ bldAr: 'البلوك C',
+ unitCount: 5,
+ curMode: 'single',
+ rate: 89500,
+ balMode: 'zero',
+ initUsd: 450,
+ initLbp: 18000000,
+ useMaint: true, maintAmt: 20,
+ useNatFee: true, natFeeAmt: 15,
+ useWater: true,
+ useSuppliers: true,
+ remPest: true, remElev: true, remTrash: true, remSolar: true,
+ startMon: 'October', startYr: '2026',
+ natNameEn: 'Anas', natNameAr: 'أنس', natPhone: '96170123456'
+};
+
+function openOnboarding(startStep) {
+ OB.step = startStep || 1;
+ OB.bldEn = DB.settings.bldEn || 'Block C';
+ OB.bldAr = DB.settings.bldAr || 'البلوك C';
+ OB.curMode = DB.settings.treasuryMode || 'single';
+ OB.rate = DB.settings.rate || 89500;
+ OB.natNameEn = DB.settings.collectorEn || 'Anas';
+ OB.natNameAr = DB.settings.collectorAr || 'أنس';
+ OB.natPhone = DB.settings.collectorPhone || '96170123456';
+ renderOnboardingModalContent();
+ openModal('onboard-modal');
+}
+
+function getObSvgIllustration(step) {
+ if (step === 1) {
+ return '<div class="ob-illus-box"><svg width="160" height="140" viewBox="0 0 160 140" fill="none">'
+ + '<circle cx="80" cy="70" r="58" fill="#eeebff"/>'
+ + '<rect x="44" y="24" width="52" height="92" rx="10" fill="#5b4cf5"/>'
+ + '<rect x="52" y="34" width="14" height="12" rx="3" fill="#ffd166"/><rect x="74" y="34" width="14" height="12" rx="3" fill="#ffffff"/>'
+ + '<rect x="52" y="52" width="14" height="12" rx="3" fill="#ffffff"/><rect x="74" y="52" width="14" height="12" rx="3" fill="#ffd166"/>'
+ + '<rect x="52" y="70" width="14" height="12" rx="3" fill="#34d399"/><rect x="74" y="70" width="14" height="12" rx="3" fill="#ffffff"/>'
+ + '<rect x="86" y="48" width="42" height="72" rx="9" fill="#14172c" stroke="#fff" stroke-width="3"/>'
+ + '<circle cx="107" cy="82" r="13" fill="#10b981"/><path d="M101 82l4 4 8-8" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'
+ + '</svg></div>';
+ }
+ if (step === 2) {
+ var litCount = Math.min(9, OB.unitCount);
+ var wins = '';
+ for (var i = 0; i < 9; i++) {
+ var wx = 55 + (i % 3) * 19, wy = 36 + Math.floor(i / 3) * 20;
+ wins += '<rect x="' + wx + '" y="' + wy + '" width="13" height="13" rx="3" fill="' + (i < litCount ? '#ffd166' : 'rgba(255,255,255,0.25)') + '"/>';
+ }
+ return '<div class="ob-illus-box"><svg width="160" height="140" viewBox="0 0 160 140" fill="none">'
+ + '<circle cx="80" cy="72" r="56" fill="#eeebff"/>'
+ + '<rect x="45" y="22" width="70" height="96" rx="12" fill="#5b4cf5"/>' + wins
+ + '<rect x="71" y="98" width="18" height="20" rx="4" fill="#14172c"/>'
+ + '</svg></div>';
+ }
+ if (step === 3 || step === 4) {
+ return '<div class="ob-illus-box"><svg width="160" height="140" viewBox="0 0 160 140" fill="none">'
+ + '<circle cx="80" cy="70" r="56" fill="#eeebff"/>'
+ + '<rect x="38" y="32" width="84" height="76" rx="16" fill="#5b4cf5"/>'
+ + '<rect x="46" y="40" width="68" height="60" rx="11" fill="#7c6ff9"/>'
+ + '<circle cx="80" cy="70" r="18" fill="#ffd166" stroke="#14172c" stroke-width="3"/>'
+ + '<text x="80" y="76" text-anchor="middle" fill="#14172c" font-size="18" font-weight="900">$</text>'
+ + '</svg></div>';
+ }
+ return '';
+}
+
+function renderOnboardingModalContent() {
+ var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+ h += '<span class="top-brand">💧 BINAYATI · بنايتي</span>';
+ h += '<div style="display:flex;gap:6px"><button class="btn-edit" style="padding:4px 10px" onclick="toggleLang();renderOnboardingModalContent()">' + (LANG==='ar'?'English':'العربية') + '</button>';
+ h += '<button class="btn-del" style="padding:4px 9px" onclick="closeModal(\'onboard-modal\')">✕</button></div></div>';
+
+ h += '<div class="step-dots">';
+ [1,2,3,4,5,6,7].forEach(function(n) { h += '<div class="step-dot' + (n <= OB.step ? ' on' : '') + '"></div>'; });
+ h += '</div>';
+
+ if (OB.step === 1) {
+ h += '<div class="ob-hero-title">' + t('Manage your building,', 'أدر بنايتك بكل سهولة') + '<span>' + t('Effortlessly', 'وبكل شفافية') + '</span></div>';
+ h += '<p class="subtext" style="text-align:center">' + t('Simple building safe tracking, monthly apartment bills, and 1-tap WhatsApp receipts.', 'متابعة واضحة لصندوق البناية، الفواتير الشهرية، وإيصالات واتساب بضغطة زر.') + '</p>';
+ h += getObSvgIllustration(1);
+
+ h += '<div class="choice-card' + (OB.role==='mgr'?' on':'') + '" onclick="OB.role=\'mgr\';renderOnboardingModalContent()">';
+ h += '<span style="font-size:24px">👨‍💼</span><div><b>' + t('I Manage the Building (Syndic)', 'أنا مدير البناية (Syndic)') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Set up my building, safe, and monthly bills.', 'إعداد البناية وصندوق الأموال والفواتير الشهرية.') + '</div></div></div>';
+
+ h += '<div class="choice-card' + (OB.role==='col'?' on':'') + '" onclick="OB.role=\'col\';renderOnboardingModalContent()">';
+ h += '<span style="font-size:24px">👷‍♂️</span><div><b>' + t('I Collect Payments (Natour)', 'أنا الناطور / المحصّل') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Log in with my phone number & 6-digit PIN.', 'الدخول عبر رقم الهاتف والرمز السري.') + '</div></div></div>';
+
+ h += '<button class="ob-pill-btn" style="margin-top:10px" onclick="OB.step=2;renderOnboardingModalContent()">' + t('Get Started →', 'ابدأ الآن ←') + '</button>';
+ }
+ else if (OB.step === 2 && OB.role === 'col') {
+ h += '<h3>🔐 ' + t('Natour Secure Login', 'دخول الناطور الآمن') + '</h3>';
+ h += '<p class="subtext">' + t('Enter your WhatsApp phone number and the 6-digit PIN shared by your Building Manager.', 'أدخل رقم هاتفك والرمز السري المكون من 6 أرقام المرسل من مدير البناية.') + '</p>';
+ h += '<div style="margin-bottom:10px"><label style="font-size:12px;color:var(--mut)">' + t('Your WhatsApp Phone', 'رقم هاتفك (واتساب)') + '</label><input type="text" id="ob-login-ph" dir="ltr" value="' + esc(DB.settings.collectorPhone || '96170123456') + '" style="margin-top:4px"></div>';
+ h += '<div style="margin-bottom:16px"><label style="font-size:12px;color:var(--mut)">' + t('6-Digit Security PIN', 'رمز الأمان (6 أرقام)') + '</label><input type="text" id="ob-login-pin" dir="ltr" value="' + esc(DB.settings.collectorPin || '482910') + '" style="margin-top:4px;font-size:18px;letter-spacing:3px;font-weight:800;color:var(--acc)"></div>';
+ h += '<div class="form-row"><button class="btn-edit" style="padding:12px 16px" onclick="OB.step=1;renderOnboardingModalContent()">' + t('← Back', '→ رجوع') + '</button>';
+ h += '<button class="ob-pill-btn" style="flex:1" onclick="verifyNatourPinLogin()">' + t('Open My Checklist →', 'فتح قائمة التحصيل ←') + '</button></div>';
+ }
+ else if (OB.step === 2) {
+ h += '<div class="ob-hero-title">' + t('About your', 'معلومات') + '<span>' + t('Building', 'البناية والشقق') + '</span></div>';
+ h += getObSvgIllustration(2);
+
+ h += '<div class="two-col-grid" style="margin-bottom:12px">';
+ h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Building Name (EN)', 'اسم البناية (EN)') + '</label><input type="text" value="' + esc(OB.bldEn) + '" oninput="OB.bldEn=this.value"></div>';
+ h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Building Name (AR)', 'اسم البناية (AR)') + '</label><input type="text" dir="rtl" value="' + esc(OB.bldAr) + '" oninput="OB.bldAr=this.value"></div>';
+ h += '</div>';
+
+ h += '<div style="padding:12px 14px;background:var(--card2);border:1px solid var(--line);border-radius:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">';
+ h += '<div><b>🏢 ' + t('Number of Apartments', 'عدد الشقق في البناية') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('You can edit names & codes anytime', 'يمكنك تعديل الأسماء والأرقام لاحقاً') + '</div></div>';
+ h += '<div style="display:flex;align-items:center;gap:10px"><button class="btn-edit" style="width:34px;height:34px;justify-content:center;font-size:18px" onclick="OB.unitCount=Math.max(1,OB.unitCount-1);renderOnboardingModalContent()">−</button>';
+ h += '<b style="font-size:18px;min-width:22px;text-align:center">' + OB.unitCount + '</b>';
+ h += '<button class="btn-edit" style="width:34px;height:34px;justify-content:center;font-size:18px" onclick="OB.unitCount=Math.min(40,OB.unitCount+1);renderOnboardingModalContent()">+</button></div></div>';
+
+ h += '<div class="form-row"><button class="btn-edit" style="padding:12px 16px" onclick="OB.step=1;renderOnboardingModalContent()">' + t('← Back', '→ رجوع') + '</button>';
+ h += '<button class="ob-pill-btn" style="flex:1" onclick="OB.step=3;renderOnboardingModalContent()">' + t('Next →', 'التالي ←') + '</button></div>';
+ }
+ else if (OB.step === 3) {
+ h += '<div class="ob-hero-title">' + t('Building Safe', 'عملة صندوق') + '<span>' + t('Currency', 'البناية') + '</span></div>';
+ h += '<p class="subtext" style="text-align:center">' + t('How do you keep your building\'s collected money?', 'كيف تحتفظ بالأموال المجموعة في صندوق البناية؟') + '</p>';
+ h += getObSvgIllustration(3);
+
+ h += '<div class="choice-card' + (OB.curMode==='single'?' on':'') + '" onclick="OB.curMode=\'single\';renderOnboardingModalContent()">';
+ h += '<span style="font-size:24px">💵</span><div><b>' + t('USD Only ($) — Recommended', 'بالدولار فقط ($) — الأسهل') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Keep one simple USD balance. Any LBP bill is automatically converted.', 'رصيد واحد واضح بالدولار، وأي فاتورة بالليرة تُحوّل تلقائياً.') + '</div></div></div>';
+
+ h += '<div class="choice-card' + (OB.curMode==='split'?' on':'') + '" onclick="OB.curMode=\'split\';renderOnboardingModalContent()">';
+ h += '<span style="font-size:24px">🇱🇧</span><div><b>' + t('Both USD ($) & Lebanese Lira (ل.ل.)', 'دولار ($) وليرة لبنانية (ل.ل.) معاً') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Track physical USD cash and LBP cash separately.', 'متابعة الكاش بالدولار والكاش بالليرة كلٌ على حدة.') + '</div></div></div>';
+
+ h += '<div style="margin:10px 0 14px"><label style="font-size:11.5px;color:var(--mut)">' + t('Exchange Rate for LBP Bills (LBP per $1)', 'سعر صرف الدولار للفواتير بالليرة') + '</label>';
+ h += '<input type="number" dir="ltr" value="' + OB.rate + '" oninput="OB.rate=Number(this.value)||89500" style="margin-top:4px"></div>';
+
+ h += '<div class="form-row"><button class="btn-edit" style="padding:12px 16px" onclick="OB.step=2;renderOnboardingModalContent()">' + t('← Back', '→ رجوع') + '</button>';
+ h += '<button class="ob-pill-btn" style="flex:1" onclick="OB.step=4;renderOnboardingModalContent()">' + t('Next →', 'التالي ←') + '</button></div>';
+ }
+ else if (OB.step === 4) {
+ h += '<div class="ob-hero-title">' + t('Money in the Safe', 'المبلغ الموجود في') + '<span>' + t('Today', 'الصندوق اليوم') + '</span></div>';
+ h += '<p class="subtext" style="text-align:center">' + t('Do you already have building money saved from previous months?', 'هل يوجد حالياً مبلغ سابق محفوظ في صندوق البناية؟') + '</p>';
+
+ h += '<div class="choice-card' + (OB.balMode==='zero'?' on':'') + '" onclick="OB.balMode=\'zero\';renderOnboardingModalContent()">';
+ h += '<span style="font-size:22px">✨</span><div><b>' + t('Start Fresh from $0', 'البدء من الصفر ($0)') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Begin tracking with a clean slate starting this month.', 'بدء الحسابات من الصفر اعتباراً من هذا الشهر.') + '</div></div></div>';
+
+ h += '<div class="choice-card' + (OB.balMode==='existing'?' on':'') + '" onclick="OB.balMode=\'existing\';renderOnboardingModalContent()">';
+ h += '<span style="font-size:22px">💼</span><div><b>' + t('We Already Have Money in the Safe', 'يوجد مبلغ حالي في الصندوق') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Enter the starting amount currently in your box.', 'أدخل المبلغ الموجود حالياً في الصندوق.') + '</div></div></div>';
+
+ if (OB.balMode === 'existing') {
+ h += '<div style="margin:10px 0;padding:14px;background:var(--soft);border-radius:16px">';
+ if (OB.curMode === 'single') {
+ h += '<label style="font-size:12px;font-weight:700;color:var(--acc)">' + t('Current Safe Balance ($ USD)', 'المبلغ الحالي في الصندوق بالدولار ($)') + '</label>';
+ h += '<input type="number" dir="ltr" value="' + OB.initUsd + '" oninput="OB.initUsd=Number(this.value)||0" style="margin-top:6px;background:#fff">';
+ } else {
+ h += '<div class="two-col-grid">';
+ h += '<div><label style="font-size:11.5px;font-weight:700;color:var(--acc)">' + t('USD Cash ($)', 'الكاش بالدولار ($)') + '</label><input type="number" dir="ltr" value="' + OB.initUsd + '" oninput="OB.initUsd=Number(this.value)||0" style="margin-top:4px;background:#fff"></div>';
+ h += '<div><label style="font-size:11.5px;font-weight:700;color:var(--acc)">' + t('LBP Cash (ل.ل.)', 'الكاش بالليرة (ل.ل.)') + '</label><input type="number" dir="ltr" value="' + OB.initLbp + '" oninput="OB.initLbp=Number(this.value)||0" style="margin-top:4px;background:#fff"></div>';
+ h += '</div>';
+ }
+ h += '</div>';
+ }
+
+ h += '<div class="form-row" style="margin-top:16px"><button class="btn-edit" style="padding:12px 16px" onclick="OB.step=3;renderOnboardingModalContent()">' + t('← Back', '→ رجوع') + '</button>';
+ h += '<button class="ob-pill-btn" style="flex:1" onclick="OB.step=5;renderOnboardingModalContent()">' + t('Next →', 'التالي ←') + '</button></div>';
+ }
+ else if (OB.step === 5) {
+ h += '<div class="ob-hero-title">' + t('Monthly Apartment', 'المستحقات الشهرية') + '<span>' + t('Payments', 'على الشقق') + '</span></div>';
+ h += '<p class="subtext" style="text-align:center">' + t('What does your building collect from apartments each month?', 'ما هي الرسوم التي تدفعها الشقق شهرياً في بنايتكم؟') + '</p>';
+
+ h += '<div class="choice-card' + (OB.useMaint?' on':'') + '" style="flex-direction:column;align-items:stretch">';
+ h += '<label style="display:flex;align-items:center;gap:10px;cursor:pointer"><input type="checkbox" style="width:19px;height:19px" ' + (OB.useMaint?'checked':'') + ' onchange="OB.useMaint=this.checked;renderOnboardingModalContent()"><div><b>🛠️ ' + t('Fixed Building Maintenance', 'رسم صيانة المبنى الثابت') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Same monthly fee per apartment for general upkeep', 'مبلغ شهري ثابت لكل شقة للصيانة العامة والمصعد') + '</div></div></label>';
+ if (OB.useMaint) {
+ h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)"><span style="font-size:12px;font-weight:700">' + t('Amount per apartment ($):', 'المبلغ لكل شقة ($):') + '</span><input type="number" value="' + OB.maintAmt + '" oninput="OB.maintAmt=Number(this.value)||0" style="width:95px;text-align:center;background:#fff"></div>';
+ }
+ h += '</div>';
+
+ h += '<div class="choice-card' + (OB.useNatFee?' on':'') + '" style="flex-direction:column;align-items:stretch">';
+ h += '<label style="display:flex;align-items:center;gap:10px;cursor:pointer"><input type="checkbox" style="width:19px;height:19px" ' + (OB.useNatFee?'checked':'') + ' onchange="OB.useNatFee=this.checked;renderOnboardingModalContent()"><div><b>👷‍♂️ ' + t('Monthly Natour / Collector Fee', 'أتعاب الناطور الشهرية') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Fixed monthly fee per apartment for the Natour', 'رسم شهري ثابت لكل شقة لأتعاب الناطور') + '</div></div></label>';
+ if (OB.useNatFee) {
+ h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)"><span style="font-size:12px;font-weight:700">' + t('Amount per apartment ($):', 'المبلغ لكل شقة ($):') + '</span><input type="number" value="' + OB.natFeeAmt + '" oninput="OB.natFeeAmt=Number(this.value)||0" style="width:95px;text-align:center;background:#fff"></div>';
+ }
+ h += '</div>';
+
+ h += '<label class="choice-card' + (OB.useWater?' on':'') + '"><input type="checkbox" style="width:19px;height:19px" ' + (OB.useWater?'checked':'') + ' onchange="OB.useWater=this.checked;renderOnboardingModalContent()"><div><b>💧 ' + t('Shared Water & Building Utilities', 'فواتير المياه والمازوت المشتركة') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Split water bills or tanker fills across apartments.', 'تقسيم فاتورة المياه أو صهاريج المياه على الشقق.') + '</div></div></label>';
+
+ h += '<label class="choice-card' + (OB.useSuppliers?' on':'') + '"><input type="checkbox" style="width:19px;height:19px" ' + (OB.useSuppliers?'checked':'') + ' onchange="OB.useSuppliers=this.checked;renderOnboardingModalContent()"><div><b>🔌 ' + t('Private Moteur, Internet & Dish (Via Natour)', 'الموتور الخاص والإنترنت والدش (عبر الناطور)') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Collected by Natour for outside suppliers — kept separate from your Building Safe!', 'يحصلها الناطور لأصحاب المولد والإنترنت دون أن تختلط بصندوق البناية!') + '</div></div></label>';
+
+ h += '<div class="form-row" style="margin-top:12px"><button class="btn-edit" style="padding:12px 16px" onclick="OB.step=4;renderOnboardingModalContent()">' + t('← Back', '→ رجوع') + '</button>';
+ h += '<button class="ob-pill-btn" style="flex:1" onclick="OB.step=6;renderOnboardingModalContent()">' + t('Next: Reminders →', 'التالي: التذكيرات ←') + '</button></div>';
+ }
+ else if (OB.step === 6) {
+ h += '<div class="ob-hero-title">' + t('Smart Maintenance', 'تذكيرات الصيانة') + '<span>' + t('Reminders', 'ومهام الناطور') + '</span></div>';
+ h += '<p class="subtext" style="text-align:center">' + t('Pick the reminders you want active. Natour tasks appear directly on his phone to tick off!', 'اختر التذكيرات المناسبة لبنايتك. مهام الناطور تظهر مباشرة على هاتفه ليؤكد إنجازها!') + '</p>';
+
+ h += '<div style="font-size:11.5px;font-weight:800;color:var(--acc);text-transform:uppercase;margin:8px 0 6px">🏢 ' + t('Building Reminders (For Manager)', 'تذكيرات عامة للبناية (للمدير)') + '</div>';
+ h += '<label class="choice-card' + (OB.remPest?' on':'') + '"><input type="checkbox" style="width:19px;height:19px" ' + (OB.remPest?'checked':'') + ' onchange="OB.remPest=this.checked;renderOnboardingModalContent()"><div><b>🐜 ' + t('Pest Control & Fumigation', 'رش مبيدات وحشرات للبناية') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Every 6 Months · Building common areas', 'كل 6 أشهر · مداخل ومناور البناية') + '</div></div></label>';
+ h += '<label class="choice-card' + (OB.remElev?' on':'') + '"><input type="checkbox" style="width:19px;height:19px" ' + (OB.remElev?'checked':'') + ' onchange="OB.remElev=this.checked;renderOnboardingModalContent()"><div><b>🛗 ' + t('Elevator & Generator Service Check', 'فحص وصيانة المصعد وغيار زيت المولد') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Monthly safety & oil check reminder', 'تذكير شهري للصيانة الدورية') + '</div></div></label>';
+
+ h += '<div style="font-size:11.5px;font-weight:800;color:var(--ok);text-transform:uppercase;margin:12px 0 6px">👷‍♂️ ' + t('Natour Checklist Tasks (Sent to His Phone)', 'مهام دورية للناطور (تظهر على هاتفه)') + '</div>';
+ h += '<label class="choice-card' + (OB.remTrash?' on':'') + '"><input type="checkbox" style="width:19px;height:19px" ' + (OB.remTrash?'checked':'') + ' onchange="OB.remTrash=this.checked;renderOnboardingModalContent()"><div><b>🗑️ ' + t('Wash Trash Bins & Building Entrance', 'غسيل مستوعبات النفايات ومدخل البناية') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Weekly task for Natour to tick when done', 'مهمة أسبوعية يؤشر عليها الناطور عند إنجازها') + '</div></div></label>';
+ h += '<label class="choice-card' + (OB.remSolar?' on':'') + '"><input type="checkbox" style="width:19px;height:19px" ' + (OB.remSolar?'checked':'') + ' onchange="OB.remSolar=this.checked;renderOnboardingModalContent()"><div><b>☀️ ' + t('Wipe Dust off Solar Panels & Clear Drains', 'تنظيف ألواح الطاقة ومصارف المطر') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Monthly task on Natour\'s phone', 'مهمة شهرية على هاتف الناطور') + '</div></div></label>';
+
+ h += '<div style="margin:12px 0"><label style="font-size:12px;font-weight:700;color:var(--mut)">📅 ' + t('Which month are we starting with?', 'بأي شهر تحصيل نبدأ الآن؟') + '</label>';
+ h += '<div class="two-col-grid" style="grid-template-columns:2fr 1fr;margin-top:4px">';
+ h += '<select onchange="OB.startMon=this.value"><option value="October" selected>October · تشرين الأول</option><option value="November">November · تشرين الثاني</option><option value="December">December · كانون الأول</option><option value="January">January · كانون الثاني</option></select>';
+ h += '<select onchange="OB.startYr=this.value"><option value="2026" selected>2026</option><option value="2027">2027</option></select>';
+ h += '</div></div>';
+
+ h += '<div class="form-row"><button class="btn-edit" style="padding:12px 16px" onclick="OB.step=5;renderOnboardingModalContent()">' + t('← Back', '→ رجوع') + '</button>';
+ h += '<button class="ob-pill-btn" style="flex:1" onclick="applyOnboardingAndShowCongrats()">🎉 ' + t('Create First Month →', 'إنشاء الشهر الأول ←') + '</button></div>';
+ }
+ else if (OB.step === 7) {
+ var firstM = OB.startMon + ' ' + OB.startYr;
+ h += '<div style="text-align:center;font-size:32px;margin-bottom:2px">🎉</div>';
+ h += '<div class="ob-hero-title">' + t('Congrats! ' + firstM, 'مبروك! تم إنشاء') + '<span>' + t('is Ready!', dispCycleName(firstM, 'ar')) + '</span></div>';
+ h += '<p class="subtext" style="text-align:center">' + t('Now invite your Natour to collect payments. Here is a preview of what his phone screen looks like:', 'الآن يمكنك دعوة الناطور لبدء التحصيل. هكذا ستبدو شاشة التحصيل البسيطة على هاتفه:') + '</p>';
+
+ h += '<div class="mini-phone">';
+ h += '<div class="mini-phone-notch"></div>';
+ h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b style="font-size:12px;color:var(--acc)">👷‍♂️ ' + esc(OB.bldEn) + ' · Natour Screen</b><span style="font-size:10.5px;background:var(--okbg);color:var(--ok);padding:2px 7px;border-radius:999px;font-weight:800">100% Arabic / EN</span></div>';
+ h += '<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:6px">';
+ h += '<div style="display:flex;justify-content:space-between;font-size:12px"><b>SS2R · أحمد الخطيب</b><span style="color:var(--ok);font-weight:800">🧾 إيصال واتساب</span></div>';
+ h += '<div style="display:flex;gap:5px;margin-top:6px"><span style="font-size:10.5px;background:var(--okbg);color:var(--ok);padding:3px 8px;border-radius:999px;font-weight:700">✓ صيانة $' + OB.maintAmt + '</span><span style="font-size:10.5px;background:var(--okbg);color:var(--ok);padding:3px 8px;border-radius:999px;font-weight:700">✓ ناطور $' + OB.natFeeAmt + '</span></div>';
+ h += '</div>';
+ h += '<div style="font-size:11px;color:var(--mut);line-height:1.4">• ' + t('He taps chips to mark cash collected.', 'يضغط على الرسوم لتأكيد قبض الكاش.') + '<br>• ' + t('He taps 📣 to send WhatsApp invoices & 🧾 receipts.', 'يرسل مطالبات وإيصالات واتساب للسكان بضغطة زر.') + '<br>• ' + t('He ticks off his weekly maintenance tasks.', 'يؤشر على مهام التنظيف والصيانة عند إنجازها.') + '</div>';
+ h += '</div>';
+
+ h += '<div class="two-col-grid" style="margin-bottom:8px">';
+ h += '<div><label style="font-size:11px;color:var(--mut)">' + t('Natour Name (EN)', 'اسم الناطور (EN)') + '</label><input type="text" value="' + esc(OB.natNameEn) + '" oninput="OB.natNameEn=this.value"></div>';
+ h += '<div><label style="font-size:11px;color:var(--mut)">' + t('Natour Name (AR)', 'اسم الناطور (AR)') + '</label><input type="text" dir="rtl" value="' + esc(OB.natNameAr) + '" oninput="OB.natNameAr=this.value"></div>';
+ h += '</div>';
+ h += '<div style="margin-bottom:12px"><label style="font-size:11px;color:var(--mut)">' + t('Natour WhatsApp Number (to send him the app & PIN)', 'رقم واتساب الناطور (لإرسال رابط التطبيق والرمز)') + '</label>';
+ h += '<input type="text" dir="ltr" value="' + esc(OB.natPhone) + '" oninput="OB.natPhone=this.value" placeholder="96170123456" style="margin-top:4px"></div>';
+
+ h += '<button class="ob-pill-btn" style="background:var(--ok);margin-bottom:8px" onclick="finishOnboardingAndShareWa()">📲 ' + t('Share App & PIN with Natour via WhatsApp', 'إرسال رابط التطبيق للناطور عبر واتساب') + '</button>';
+ h += '<button style="width:100%;padding:10px;background:transparent;color:var(--mut);font-size:12.5px" onclick="finishOnboardingSkipWa()">' + t('Skip for now — Open my building dashboard →', 'تخطي الآن — فتح لوحة تحكم البناية ←') + '</button>';
+ }
+
+ document.getElementById('onboard-content').innerHTML = h;
+}
+
+function applyOnboardingAndShowCongrats() {
+ DB.settings.bldEn = OB.bldEn.trim() || 'Block C';
+ DB.settings.bldAr = OB.bldAr.trim() || 'البلوك C';
+ DB.settings.treasuryMode = OB.curMode;
+ DB.settings.rate = Number(OB.rate) || 89500;
+ if (OB.balMode === 'zero') {
+ DB.settings.initialUsd = 0;
+ DB.settings.initialLbp = 0;
+ } else {
+ DB.settings.initialUsd = Number(OB.initUsd) || 0;
+ DB.settings.initialLbp = OB.curMode === 'split' ? (Number(OB.initLbp) || 0) : 0;
+ }
+
+ while (DB.apartments.length < OB.unitCount) {
+ var n = DB.apartments.length + 1;
+ DB.apartments.push({ id: 'U_NEW_' + n, code: n + 'A', en: 'Resident ' + n + 'A', ar: 'ساكن ' + n + 'A', ph: '9613000000', prefLang: 'both' });
+ }
+
+ var mName = OB.startMon + ' ' + OB.startYr;
+ var fixedArr = [];
+ if (OB.useMaint) fixedArr.push({ id: 'f_maint', en: 'Building Maintenance', ar: 'صيانة المبنى', amt: Number(OB.maintAmt) || 20, cur: 'USD', exc: {} });
+ if (OB.useNatFee) fixedArr.push({ id: 'f_natour', en: 'Natour Monthly Fee', ar: 'أتعاب الناطور', amt: Number(OB.natFeeAmt) || 15, cur: 'USD', exc: {} });
+
+ if (!DB.cycles[mName]) {
+ DB.cycles[mName] = {
+ isProject: false,
+ arLabel: dispCycleName(mName, 'ar'),
+ published: true,
+ fixed: fixedArr,
+ dues: OB.useWater ? [{ id: 'd_water', en: 'Water Bill', ar: 'فاتورة المياه', amt: 1250000, cur: 'LBP' }] : [],
+ services: OB.useSuppliers ? [
+ { id: 's_gen', en: 'Private Generator', ar: 'المولد الخاص (موتور)', cur: 'USD', passThrough: true, map: {} },
+ { id: 's_net', en: 'Internet', ar: 'اشتراك الإنترنت', cur: 'USD', passThrough: true, map: {} }
+ ] : [],
+ paid: {}
+ };
+ }
+ SELECTED_MONTH = mName;
+
+ var rems = [];
+ if (OB.remTrash) rems.push({ id: 'rm_tr', en: 'Wash Trash Bins & Entrance', ar: 'غسيل مستوعبات النفايات والمدخل', date: '2026-10-24', freq: 'Weekly', assignNatour: true });
+ if (OB.remSolar) rems.push({ id: 'rm_sl', en: 'Wipe Dust off Solar Panels & Drains', ar: 'تنظيف ألواح الطاقة ومصارف المطر', date: '2026-10-28', freq: 'Monthly', assignNatour: true });
+ if (OB.remPest) rems.push({ id: 'rm_ps', en: 'Building Pest Control & Fumigation', ar: 'رش مبيدات وحشرات للبناية', date: '2026-11-15', freq: 'Every 6 Months', assignNatour: false });
+ if (OB.remElev) rems.push({ id: 'rm_el', en: 'Elevator & Generator Service Check', ar: 'فحص المصعد وغيار زيت المولد', date: '2026-11-01', freq: 'Monthly', assignNatour: false });
+ DB.reminders = rems;
+
+ saveDB();
+ OB.step = 7;
+ renderOnboardingModalContent();
+}
+
+function finishOnboardingAndShareWa() {
+ DB.settings.collectorEn = OB.natNameEn.trim() || 'Anas';
+ DB.settings.collectorAr = OB.natNameAr.trim() || 'أنس';
+ DB.settings.collectorPhone = OB.natPhone.trim() || '96170123456';
+ saveDB();
+ var magicUrl = 'https://binayati.app/c/' + (DB.settings.collectorToken || 'bny-9f4a-882c');
+ var msg = '👷‍♂️ مرحباً ' + DB.settings.collectorAr + '، تم تجهيز شهر ' + dispCycleName(SELECTED_MONTH, 'ar') + ' لبناية ' + DB.settings.bldAr + ' على تطبيق بنايتي:\n' + magicUrl + '\n\nرمز الدخول السري (PIN): *' + DB.settings.collectorPin + '*';
+ window.open('https://wa.me/' + String(DB.settings.collectorPhone).replace(/\D/g, '') + '?text=' + encodeURIComponent(msg), '_blank');
+ closeModal('onboard-modal');
+ setRole('mgr');
+ render();
+}
+
+function finishOnboardingSkipWa() {
+ DB.settings.collectorEn = OB.natNameEn.trim() || 'Anas';
+ DB.settings.collectorAr = OB.natNameAr.trim() || 'أنس';
+ DB.settings.collectorPhone = OB.natPhone.trim() || '96170123456';
+ saveDB();
+ closeModal('onboard-modal');
+ setRole('mgr');
+ showToast(t('Welcome to Binayati!', 'أهلاً بك في بنايتي!'));
+ render();
+}
+
+function verifyNatourPinLogin() {
+ var ph = document.getElementById('ob-login-ph').value.replace(/\D/g, '');
+ var pin = document.getElementById('ob-login-pin').value.trim();
+ var expectedPh = String(DB.settings.collectorPhone || '').replace(/\D/g, '');
+ if (ph !== expectedPh || pin !== String(DB.settings.collectorPin)) {
+ alert(t('Invalid Phone or 6-Digit PIN!', 'رقم الهاتف أو رمز الأمان غير صحيح!'));
+ return;
+ }
+ closeModal('onboard-modal'); setRole('col');
+ showToast(t('Logged in as ' + DB.settings.collectorEn, 'تم الدخول: ' + DB.settings.collectorAr));
+}
+
+/* ============================================================================
+ 6. REMAINING SCREENS (Charges, Expenses, Natour, Units, Collector)
+ ============================================================================ */
 function renderChargesScreen() {
  var cyc = DB.cycles[SELECTED_MONTH];
  var isProj = !!(cyc && cyc.isProject);
  var h = '<div class="card" style="background:var(--soft);border-color:var(--acc);padding:14px 18px">';
- h += '<div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:11px;font-weight:800;color:var(--acc);text-transform:uppercase">' + t('CONFIGURING BUILDING DUES', 'إعداد مستحقات البناية') + '</div><b style="font-size:17px">' + esc(dispCycleName(SELECTED_MONTH)) + '</b></div>';
- h += '<button class="btn-edit" style="background:var(--acc);color:#070b12;border:0" onclick="setTab(\'dash\')">✓ ' + t('Done', 'تم') + '</button></div></div>';
+ h += '<div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:11px;font-weight:800;color:var(--acc);text-transform:uppercase">' + t('EDITING MONTHLY DUES', 'تعديل المستحقات') + '</div><b style="font-size:17px">' + esc(dispCycleName(SELECTED_MONTH)) + '</b></div>';
+ h += '<button class="btn-edit" style="background:var(--acc);color:#fff;border:0" onclick="setTab(\'dash\')">✓ ' + t('Done', 'تم') + '</button></div></div>';
 
  if (!isProj) {
- h += '<div class="card"><div class="card-h"><h2>' + t('Fixed Monthly Building Fees', 'الرسوم الشهرية الثابتة للبناية') + '</h2><button class="btn-edit" style="color:var(--acc)" onclick="openChargeModal(\'fixed\', -1)">+ ' + t('Add Fee', 'إضافة رسم') + '</button></div>';
- if (!cyc.fixed.length) h += '<div class="subtext">' + t('No fixed fees in this cycle.', 'لا توجد رسوم ثابتة.') + '</div>';
+ h += '<div class="card"><div class="card-h"><h2>' + t('Fixed Monthly Fees', 'الرسوم الشهرية الثابتة') + '</h2><button class="btn-edit" style="color:var(--acc)" onclick="openChargeModal(\'fixed\', -1)">+ ' + t('Add Fee', 'إضافة رسم') + '</button></div>';
  cyc.fixed.forEach(function(f, idx) {
- h += '<div class="list-row"><div class="list-left"><div><b>' + esc(f.en) + '</b> <small style="color:var(--mut)">· ' + esc(f.ar) + '</small><div style="font-size:12px;color:var(--acc);font-weight:700" dir="ltr"><bdi>' + fmt(f.amt, f.cur, 'en') + '</bdi> / unit</div></div></div>';
+ h += '<div class="list-row"><div class="list-left"><div><b>' + esc(f.en) + '</b> <small style="color:var(--mut)">· ' + esc(f.ar) + '</small><div style="font-size:12px;color:var(--acc);font-weight:700" dir="ltr"><bdi>' + fmt(f.amt, f.cur, 'en') + '</bdi> / apt</div></div></div>';
  h += '<button class="btn-edit" onclick="openChargeModal(\'fixed\', ' + idx + ')">✏️ ' + t('Edit', 'تعديل') + '</button></div>';
  });
  h += '</div>';
 
- h += '<div class="card"><div class="card-h"><h2>' + t('Shared Building Dues & Project Installments', 'المصاريف المشتركة وأقساط المشاريع') + '</h2><button class="btn-edit" style="color:var(--warn)" onclick="openChargeModal(\'dues\', -1)">+ ' + t('Add Due', 'إضافة مستحق') + '</button></div>';
- if (!cyc.dues.length) h += '<div class="subtext">' + t('No split dues added yet.', 'لا توجد مستحقات إضافية.') + '</div>';
+ h += '<div class="card"><div class="card-h"><h2>' + t('Shared Bills & Project Installments', 'الفواتير المشتركة وأقساط المشاريع') + '</h2><button class="btn-edit" style="color:var(--warn)" onclick="openChargeModal(\'dues\', -1)">+ ' + t('Add Bill', 'إضافة فاتورة') + '</button></div>';
  cyc.dues.forEach(function(d, idx) {
- h += '<div class="list-row"><div class="list-left"><div><b>' + esc(d.en) + '</b> <small style="color:var(--mut)">· ' + esc(d.ar) + '</small><div style="font-size:12px;color:var(--warn);font-weight:700" dir="ltr"><bdi>' + fmt(d.amt, d.cur, 'en') + '</bdi> / unit</div></div></div>';
+ h += '<div class="list-row"><div class="list-left"><div><b>' + esc(d.en) + '</b> <small style="color:var(--mut)">· ' + esc(d.ar) + '</small><div style="font-size:12px;color:var(--warn);font-weight:700" dir="ltr"><bdi>' + fmt(d.amt, d.cur, 'en') + '</bdi> / apt</div></div></div>';
  h += '<button class="btn-edit" onclick="openChargeModal(\'dues\', ' + idx + ')">✏️ ' + t('Edit', 'تعديل') + '</button></div>';
  });
  h += '</div>';
 
- h += '<div class="card" style="border-style:dashed"><div class="card-h"><h2>🔌 ' + t('Pass-Through Supplier Bills (Moteur / Net / Dish)', 'فواتير الموردين (المولد / الإنترنت / الدش)') + '</h2><button class="btn-edit" onclick="openSupplierModal()">⚙️ ' + t('View / Edit', 'معاينة / تعديل') + '</button></div>';
- h += '<p class="subtext" style="margin:0">' + t('Handled directly by the Natour on his phone and excluded from the Building Treasury balance.', 'يديرها الناطور مباشرة من هاتفه لتسليمها لأصحاب المولد والإنترنت، ولا تدخل في رصيد صندوق البناية.') + '</p></div>';
+ h += '<div class="card" style="border-style:dashed"><div class="card-h"><h2>🔌 ' + t('Private Subscriptions (Moteur / Internet / Dish)', 'الاشتراكات الخاصة (المولد / الإنترنت / الدش)') + '</h2><button class="btn-edit" onclick="openSupplierModal()">⚙️ ' + t('Edit', 'تعديل') + '</button></div>';
+ h += '<p class="subtext" style="margin:0">' + t('Collected by the Natour for outside suppliers — never mixed with your Building Safe.', 'يحصّلها الناطور لأصحاب الاشتراكات ولا تختلط بصندوق البناية.') + '</p></div>';
  } else {
  h += '<div class="card"><div class="card-h"><h2>🛠️ ' + t('Project Down Payment & Installments', 'الدفعة الأولى وأقساط المشروع') + '</h2><button class="btn-edit" style="color:var(--acc)" onclick="openChargeModal(\'services\', -1)">+ ' + t('Add Installment', 'إضافة قسط') + '</button></div>';
  cyc.services.forEach(function(sv, idx) {
  var activeKeys = Object.keys(sv.map || {}).filter(function(k) { return Number(sv.map[k]) > 0; });
  var sumVal = activeKeys.reduce(function(acc, k) { return acc + Number(sv.map[k]); }, 0);
- h += '<div class="list-row"><div class="list-left"><div><b>' + esc(LANG==='ar'?(sv.ar||sv.en):sv.en) + '</b><div style="font-size:12px;color:var(--acc);font-weight:700">' + activeKeys.length + ' ' + t('units · Total ', 'شقق · المجموع ') + fmt(sumVal, sv.cur, 'en') + '</div></div></div>';
+ h += '<div class="list-row"><div class="list-left"><div><b>' + esc(LANG==='ar'?(sv.ar||sv.en):sv.en) + '</b><div style="font-size:12px;color:var(--acc);font-weight:700">' + activeKeys.length + ' ' + t('apts · Total ', 'شقق · المجموع ') + fmt(sumVal, sv.cur, 'en') + '</div></div></div>';
  h += '<button class="btn-edit" onclick="openChargeModal(\'services\', ' + idx + ')">✏️ ' + t('Edit', 'تعديل') + '</button></div>';
  });
  h += '</div>';
  }
-
  document.getElementById('app-body').innerHTML = h;
 }
 
-/* ---- SCREEN 3: CATEGORIZED EXPENSE DONUT CHART & INTERACTIVE FILTER ---- */
 function renderExpensesScreen() {
  var rate = Number(DB.settings.rate) || 89500;
  var totalsByCat = {}, grandUsd = 0;
@@ -1453,9 +2038,9 @@ function renderExpensesScreen() {
  return { id: k, en: c.en, ar: c.ar, ico: c.ico, color: c.color, usd: val, pct: grandUsd > 0 ? Math.round((val / grandUsd) * 100) : 0 };
  }).sort(function(a, b) { return b.usd - a.usd; });
 
- var h = '<div class="card"><div class="card-h"><h2>🍩 ' + t('Categorized Expenses Breakdown', 'توزيع المصاريف حسب الفئة') + '</h2><button class="btn-edit" style="color:var(--bad)" onclick="openExpenseModal(-1)">+ ' + t('Add Bill', 'إضافة فاتورة') + '</button></div>';
- h += '<p class="subtext">' + t('Tap any category below to filter and inspect its bills.', 'اضغط على أي فئة أدناه لعرض جميع الفواتير الخاصة بها.') + '</p>';
- h += buildDonutSvg(segments, '$' + Math.round(grandUsd).toLocaleString(), t('Total Paid Outflows', 'مجموع المصاريف المدفوعة'));
+ var h = '<div class="card"><div class="card-h"><h2>📊 ' + t('Expenses by Category', 'المصاريف حسب الفئة') + '</h2><button class="btn-edit" style="color:var(--bad)" onclick="openExpenseModal(-1)">+ ' + t('Add Bill', 'إضافة فاتورة') + '</button></div>';
+ h += '<p class="subtext">' + t('Tap any category below to see all bills in that category.', 'اضغط على أي فئة أدناه لعرض جميع الفواتير الخاصة بها.') + '</p>';
+ h += buildDonutSvg(segments, '$' + Math.round(grandUsd).toLocaleString(), t('Total Bills Paid', 'مجموع المصاريف'));
 
  segments.forEach(function(seg) {
  var isSel = SELECTED_EXP_CAT === seg.id;
@@ -1479,9 +2064,9 @@ function renderExpensesScreen() {
  shownCount++;
  var c = EXP_CATS[e.cat] || EXP_CATS.repair;
  var payerBadge = e.payer === 'natour_pending'
- ? '<span class="badge-pay" style="background:var(--wbg);color:var(--warn)">⏳ ' + t('Assigned to Natour', 'مطلوب دفعها من الناطور') + '</span>'
+ ? '<span class="badge-pay" style="background:var(--wbg);color:var(--warn)">⏳ ' + t('Sent to Natour', 'يدفعها الناطور') + '</span>'
  : (e.payer === 'natour_paid'
- ? '<span class="badge-pay cash">👷‍♂️ ' + t('Paid by Natour Cash', 'دفعها الناطور') + '</span>'
+ ? '<span class="badge-pay cash">👷‍♂️ ' + t('Paid by Natour', 'دفعها الناطور') + '</span>'
  : '<span class="badge-pay mgr">👨‍💼 ' + t('Manager', 'المدير') + '</span>');
 
  h += '<div class="list-row clickable" onclick="openExpenseModal(' + idx + ')">';
@@ -1493,76 +2078,66 @@ function renderExpensesScreen() {
  h += '<div style="display:flex;align-items:center;gap:8px;flex:none"><b dir="ltr" style="color:' + (e.payer==='natour_pending'?'var(--warn)':'var(--bad)') + '"><bdi>- ' + fmt(e.amt, e.cur, 'en') + '</bdi></b><span style="font-size:12px;color:var(--mut)">✏️</span></div></div>';
  });
  if (!shownCount) {
- h += '<div class="subtext">' + t('No transactions in this category.', 'لا توجد عمليات في هذه الفئة.') + '</div>';
+ h += '<div class="subtext">' + t('No bills in this category.', 'لا توجد فواتير في هذه الفئة.') + '</div>';
  }
  h += '</div>';
 
  document.getElementById('app-body').innerHTML = h;
 }
 
-/* ---- SCREEN 4: NATOUR SETTINGS & WHATSAPP MESSAGE STUDIO ---- */
 function renderNatourPortalScreen() {
  var sampleApt = DB.apartments.filter(function(a) { return a.id === PREVIEW_APT_ID; })[0] || DB.apartments[0];
  var h = '';
 
  h += '<div class="card">';
- h += '<div class="card-h"><h2>🔐 ' + t('Natour Login & Security', 'دخول الناطور والأمان') + '</h2>';
- h += '<button class="btn-edit" style="background:var(--acc);color:#070b12;border:0" onclick="setRole(\'col\')">' + t('Preview Natour View →', 'معاينة شاشة الناطور ←') + '</button></div>';
- h += '<p class="subtext">' + t('Natour can open his secret Magic Link on Web/App, or log in using BOTH his registered phone number and 6-digit PIN.', 'يمكن للناطور الدخول عبر الرابط السري المباشر أو عبر رقم هاتفه المسجل مع الرمز السري المكون من 6 أرقام.') + '</p>';
+ h += '<div class="card-h"><h2>🔐 ' + t('Invite Natour & Security PIN', 'دعوة الناطور ورمز الدخول') + '</h2>';
+ h += '<button class="btn-edit" style="background:var(--acc);color:#fff;border:0" onclick="setRole(\'col\')">' + t('Preview Natour Screen →', 'معاينة شاشة الناطور ←') + '</button></div>';
+ h += '<p class="subtext">' + t('Share the link below via WhatsApp so your Natour can open his payment checklist on his phone.', 'أرسل الرابط أدناه عبر واتساب ليتمكن الناطور من فتح قائمة التحصيل على هاتفه.') + '</p>';
 
  h += '<div class="drawer-row" style="margin-bottom:10px">';
- h += '<div class="drawer-box"><span>' + t('Registered Natour Phone', 'هاتف الناطور المسجل') + '</span><b dir="ltr">+' + esc(DB.settings.collectorPhone || '96170123456') + '</b><small>' + esc(LANG==='ar'?DB.settings.collectorAr:DB.settings.collectorEn) + '</small></div>';
- h += '<div class="drawer-box"><span>' + t('6-Digit Security PIN', 'رمز الدخول السري (PIN)') + '</span><div class="pin-box" dir="ltr">' + esc(DB.settings.collectorPin || '482910') + '</div></div>';
+ h += '<div class="drawer-box"><span>' + t('Natour WhatsApp Phone', 'هاتف الناطور') + '</span><b dir="ltr">+' + esc(DB.settings.collectorPhone || '96170123456') + '</b><small>' + esc(LANG==='ar'?DB.settings.collectorAr:DB.settings.collectorEn) + '</small></div>';
+ h += '<div class="drawer-box"><span>' + t('6-Digit PIN', 'رمز الدخول السري') + '</span><div class="pin-box" dir="ltr">' + esc(DB.settings.collectorPin || '482910') + '</div></div>';
  h += '</div>';
 
  var magicUrl = 'https://binayati.app/c/' + (DB.settings.collectorToken || 'bny-9f4a-882c');
  var inviteMsg = t(
- '👷‍♂️ Hello ' + DB.settings.collectorEn + ', tap your private link to open ' + DB.settings.bldEn + ' collection on Binayati:\n' + magicUrl + '\n\nOr log in with your phone (+' + DB.settings.collectorPhone + ') & PIN: *' + DB.settings.collectorPin + '*',
- '👷‍♂️ مرحباً ' + DB.settings.collectorAr + '، اضغط على الرابط الخاص بك لفتح تحصيل ' + DB.settings.bldAr + ' في تطبيق بنايتي:\n' + magicUrl + '\n\nأو سجل الدخول عبر رقم هاتفك (+' + DB.settings.collectorPhone + ') والرمز السري: *' + DB.settings.collectorPin + '*'
+ '👷‍♂️ Hello ' + DB.settings.collectorEn + ', tap your link to open ' + DB.settings.bldEn + ' on Binayati:\n' + magicUrl + '\n\nPhone: +' + DB.settings.collectorPhone + '\nPIN: *' + DB.settings.collectorPin + '*',
+ '👷‍♂️ مرحباً ' + DB.settings.collectorAr + '، اضغط على الرابط لفتح تحصيل ' + DB.settings.bldAr + ' في تطبيق بنايتي:\n' + magicUrl + '\n\nرقم الهاتف: +' + DB.settings.collectorPhone + '\nالرمز السري: *' + DB.settings.collectorPin + '*'
  );
  var waInviteHref = 'https://wa.me/' + String(DB.settings.collectorPhone || '').replace(/\D/g, '') + '?text=' + encodeURIComponent(inviteMsg);
 
  h += '<div class="form-row">';
- h += '<a class="btn-edit" style="flex:1;justify-content:center;padding:10px;background:var(--okbg);border-color:var(--ok);color:var(--ok);text-decoration:none;font-weight:800" href="' + waInviteHref + '" target="_blank">📲 ' + t('Send Access Link via WhatsApp', 'إرسال رابط الدخول عبر واتساب') + '</a>';
- h += '<button class="btn-del" onclick="regenerateNatourPin()">🔄 ' + t('New PIN', 'تغيير الرمز') + '</button>';
+ h += '<a class="btn-edit" style="flex:1;justify-content:center;padding:11px;background:var(--okbg);border-color:var(--ok);color:var(--ok);text-decoration:none;font-weight:800" href="' + waInviteHref + '" target="_blank">📲 ' + t('Send App Link via WhatsApp', 'إرسال رابط التطبيق عبر واتساب') + '</a>';
+ h += '<button class="btn-del" onclick="regenerateNatourPin()">🔄 ' + t('New PIN', 'رمز جديد') + '</button>';
  h += '</div></div>';
 
- h += '<div class="card"><div class="card-h"><h2>👁️ ' + t('Global Natour Rules', 'قواعد صفحة الناطور') + '</h2></div>';
- h += '<div class="list-row"><div><b>' + t('Show Unpaid Earlier Cycles & Projects', 'إظهار الأشهر والمشاريع السابقة غير المسددة') + '</b></div>';
- h += '<input type="checkbox" style="width:22px;height:22px" ' + (DB.settings.natourCanSeeHistory ? 'checked' : '') + ' onchange="DB.settings.natourCanSeeHistory=this.checked;saveDB()"></div>';
-
- h += '<div class="list-row"><div><b>' + t('Adaptive WhatsApp Button (📣 Invoice ⇄ 🧾 Receipt)', 'زر واتساب الذكي (📣 مطالبة ⇄ 🧾 إيصال)') + '</b></div>';
- h += '<input type="checkbox" style="width:22px;height:22px" ' + (DB.settings.natourCanShowPhone ? 'checked' : '') + ' onchange="DB.settings.natourCanShowPhone=this.checked;saveDB()"></div>';
- h += '</div>';
-
- // Full-View WhatsApp Message Studio
- h += '<div class="card"><div class="card-h"><h2>💬 ' + t('WhatsApp Message Studio', 'استوديو رسائل وإيصالات واتساب') + '</h2>';
- h += '<button class="btn-edit" onclick="WA_EXPANDED=!WA_EXPANDED;render()">' + (WA_EXPANDED ? '🔽 ' + t('Compact', 'تصغير') : '🔍 ' + t('Full Height', 'تكبير كامل')) + '</button></div>';
+ h += '<div class="card"><div class="card-h"><h2>💬 ' + t('WhatsApp Messages & Receipts', 'رسائل وإيصالات واتساب للسكان') + '</h2>';
+ h += '<button class="btn-edit" onclick="WA_EXPANDED=!WA_EXPANDED;render()">' + (WA_EXPANDED ? '🔽 ' + t('Compact', 'تصغير') : '🔍 ' + t('Expand', 'تكبير')) + '</button></div>';
 
  h += '<div class="seg-bar">';
  h += '<button class="' + (PREVIEW_MODE==='auto'?'on':'') + '" onclick="PREVIEW_MODE=\'auto\';render()">⚡ ' + t('Auto State', 'تلقائي') + '</button>';
- h += '<button class="' + (PREVIEW_MODE==='due'?'on':'') + '" onclick="PREVIEW_MODE=\'due\';render()">📣 ' + t('Invoice', 'المطالبة') + '</button>';
- h += '<button class="' + (PREVIEW_MODE==='receipt'?'on':'') + '" onclick="PREVIEW_MODE=\'receipt\';render()">🧾 ' + t('Receipt', 'الإيصال') + '</button>';
+ h += '<button class="' + (PREVIEW_MODE==='due'?'on':'') + '" onclick="PREVIEW_MODE=\'due\';render()">📣 ' + t('Payment Due', 'المطالبة') + '</button>';
+ h += '<button class="' + (PREVIEW_MODE==='receipt'?'on':'') + '" onclick="PREVIEW_MODE=\'receipt\';render()">🧾 ' + t('Paid Receipt', 'الإيصال') + '</button>';
  h += '</div>';
 
  var taClass = 'wa-textarea' + (WA_EXPANDED ? ' expanded' : '');
  if (PREVIEW_MODE === 'receipt') {
- h += '<label style="font-size:12px;font-weight:700;color:var(--ok)">' + t('Arabic Receipt Template (قالب إيصال الدفع)', 'قالب إيصال الدفع بالعربية') + '</label>';
+ h += '<label style="font-size:12px;font-weight:700;color:var(--ok)">' + t('Arabic Receipt Message', 'رسالة إيصال الدفع بالعربية') + '</label>';
  h += '<textarea dir="rtl" class="' + taClass + '" style="margin:4px 0 12px" oninput="autoFitTa(this);DB.waReceiptAr=this.value;saveDB();updateWaPreview()">' + esc(DB.waReceiptAr) + '</textarea>';
- h += '<label style="font-size:12px;font-weight:700;color:var(--ok)">' + t('English Receipt Template', 'قالب إيصال الدفع بالإنجليزية') + '</label>';
+ h += '<label style="font-size:12px;font-weight:700;color:var(--ok)">' + t('English Receipt Message', 'رسالة إيصال الدفع بالإنجليزية') + '</label>';
  h += '<textarea dir="ltr" class="' + taClass + '" style="margin:4px 0 14px" oninput="autoFitTa(this);DB.waReceiptEn=this.value;saveDB();updateWaPreview()">' + esc(DB.waReceiptEn) + '</textarea>';
  } else {
- h += '<label style="font-size:12px;font-weight:700;color:var(--mut)">' + t('Arabic Invoice Template (قالب المطالبة)', 'قالب المطالبة بالعربية') + '</label>';
+ h += '<label style="font-size:12px;font-weight:700;color:var(--mut)">' + t('Arabic Payment Request', 'رسالة المطالبة بالعربية') + '</label>';
  h += '<textarea dir="rtl" class="' + taClass + '" style="margin:4px 0 12px" oninput="autoFitTa(this);DB.waTemplateAr=this.value;saveDB();updateWaPreview()">' + esc(DB.waTemplateAr) + '</textarea>';
- h += '<label style="font-size:12px;font-weight:700;color:var(--mut)">' + t('English Invoice Template', 'قالب المطالبة بالإنجليزية') + '</label>';
+ h += '<label style="font-size:12px;font-weight:700;color:var(--mut)">' + t('English Payment Request', 'رسالة المطالبة بالإنجليزية') + '</label>';
  h += '<textarea dir="ltr" class="' + taClass + '" style="margin:4px 0 14px" oninput="autoFitTa(this);DB.waTemplateEn=this.value;saveDB();updateWaPreview()">' + esc(DB.waTemplateEn) + '</textarea>';
  }
 
- h += '<div style="font-size:12px;font-weight:800;color:var(--ok);margin-bottom:6px">● ' + t('Full Formatted WhatsApp Preview', 'معاينة رسالة واتساب الكاملة') + '</div>';
+ h += '<div style="font-size:12px;font-weight:800;color:var(--ok);margin-bottom:6px">● ' + t('Live WhatsApp Preview', 'معاينة رسالة واتساب') + '</div>';
  h += '<div class="two-col-grid" style="grid-template-columns:2fr 1fr">';
  h += '<select style="padding:7px 10px;font-size:12px" onchange="PREVIEW_APT_ID=this.value;render()">';
  DB.apartments.forEach(function(a) {
- var st = isAptSettled(a, SELECTED_MONTH) ? t('🧾 Settled', '🧾 مسدد') : t('📣 Unpaid', '📣 غير مسدد');
+ var st = isAptSettled(a, SELECTED_MONTH) ? t('🧾 Paid', '🧾 مسدد') : t('📣 Unpaid', '📣 غير مسدد');
  h += '<option value="' + a.id + '"' + (a.id === sampleApt.id ? ' selected' : '') + '>' + esc(LANG==='ar'?(a.ar||a.en):a.en) + ' (' + esc(a.code) + ' · ' + st + ')</option>';
  });
  h += '</select>';
@@ -1598,15 +2173,14 @@ function regenerateNatourPin() {
  DB.settings.collectorPin = newPin;
  DB.settings.collectorToken = 'bny-' + randHex + '-' + newPin.substring(0, 4);
  saveDB();
- showToast(t('Old link revoked! New PIN: ' + newPin, 'تم إلغاء الرابط القديم! الرمز الجديد: ' + newPin));
+ showToast(t('New PIN generated: ' + newPin, 'تم إنشاء رمز جديد: ' + newPin));
  render();
 }
 
-/* ---- SCREEN 5: UNITS DIRECTORY + COMPACT SETTINGS BUTTON ---- */
 function renderUnitsScreen() {
  var langLabels = { both: '🌐 AR + EN', ar: '🇱🇧 AR Only', en: '🇬🇧 EN Only' };
- var h = '<div class="card"><div class="card-h"><h2>🏢 ' + t('Building Units', 'شقق البناية') + ' (' + DB.apartments.length + ')</h2><button class="btn-edit" style="color:var(--acc)" onclick="openUnitModal(-1)">+ ' + t('Add Unit', 'إضافة شقة') + '</button></div>';
- h += '<p class="subtext">' + t('Tap Edit on any apartment to change its code, phone, or WhatsApp language.', 'اضغط تعديل على أي شقة لتغيير رمزها أو رقم الهاتف أو لغة رسائل واتساب.') + '</p>';
+ var h = '<div class="card"><div class="card-h"><h2>🏢 ' + t('Building Apartments', 'شقق البناية') + ' (' + DB.apartments.length + ')</h2><button class="btn-edit" style="color:var(--acc)" onclick="openUnitModal(-1)">+ ' + t('Add Apt', 'إضافة شقة') + '</button></div>';
+ h += '<p class="subtext">' + t('Tap Edit on any apartment to update resident name, phone, or WhatsApp language.', 'اضغط تعديل على أي شقة لتحديث اسم الساكن أو رقم الهاتف أو لغة رسائل واتساب.') + '</p>';
 
  DB.apartments.forEach(function(a, idx) {
  h += '<div class="list-row">';
@@ -1617,19 +2191,17 @@ function renderUnitsScreen() {
  });
  h += '</div>';
 
- // Single Compact Settings Bar instead of a giant redundant card
  h += '<div class="card" style="padding:14px 18px;display:flex;justify-content:space-between;align-items:center">';
- h += '<div><b>⚙️ ' + t('Building & Treasury Setup', 'إعدادات البناية والصندوق') + '</b><div style="font-size:11.5px;color:var(--mut)">' + esc(DB.settings.bldEn) + ' · ' + Number(DB.settings.rate).toLocaleString() + ' LBP/$1</div></div>';
- h += '<button class="btn-edit" onclick="openSettingsModal()">✏️ ' + t('Configure', 'تعديل') + '</button></div>';
+ h += '<div><b>⚙️ ' + t('Building & Safe Settings', 'إعدادات البناية والصندوق') + '</b><div style="font-size:11.5px;color:var(--mut)">' + esc(DB.settings.bldEn) + ' · ' + Number(DB.settings.rate).toLocaleString() + ' LBP/$1</div></div>';
+ h += '<button class="btn-edit" onclick="openSettingsModal()">✏️ ' + t('Edit', 'تعديل') + '</button></div>';
 
  document.getElementById('app-body').innerHTML = h;
 }
 
-/* ---- SCREEN 6 & 7: FULL LEDGER & TASK ARCHIVE ---- */
 function renderLedgerScreen() {
- var h = '<div class="card"><div class="card-h"><h2>📜 ' + t('General Transactions Ledger', 'سجل الحركات المالية العام') + '</h2>';
- h += '<button class="btn-edit" style="color:var(--purp)" onclick="openDirectPayModal()">+ ' + t('Direct Pay', 'دفعة للمدير') + '</button></div>';
- h += '<p class="subtext">' + t('Permanent log of all building payments (Natour Cash, Manager Cash, Whish, OMT) and all building expenses.', 'سجل دائم لجميع المقبوضات (كاش الناطور، كاش المدير، Whish، OMT) وجميع مصاريف البناية.') + '</p>';
+ var h = '<div class="card"><div class="card-h"><h2>📜 ' + t('All Money History', 'سجل جميع الدفعات والمصاريف') + '</h2>';
+ h += '<button class="btn-edit" style="color:var(--purp)" onclick="openDirectPayModal()">+ ' + t('Record Pay', 'تسجيل دفعة') + '</button></div>';
+ h += '<p class="subtext">' + t('Every payment collected and every bill paid across your building.', 'جميع الدفعات المقبوضة والفواتير المدفوعة في البناية.') + '</p>';
 
  (DB.ledger || []).forEach(function(l) {
  var isOut = l.type === 'out';
@@ -1645,15 +2217,15 @@ function renderLedgerScreen() {
 }
 
 function renderTaskHistoryScreen() {
- var h = '<div class="card"><div class="card-h"><h2>✅ ' + t('Completed Tasks Archive', 'أرشيف المهام المنجزة') + '</h2>';
- h += '<button class="btn-edit" onclick="openReminderModal()">+ ' + t('New Task', 'مهمة جديدة') + '</button></div>';
+ var h = '<div class="card"><div class="card-h"><h2>✅ ' + t('Completed Tasks Log', 'سجل المهام المنجزة') + '</h2>';
+ h += '<button class="btn-edit" onclick="openReminderModal()">+ ' + t('Add Task', 'إضافة مهمة') + '</button></div>';
  if (!DB.completedTasks || !DB.completedTasks.length) {
- h += '<div class="subtext">' + t('No completed tasks logged yet.', 'لا توجد مهام منجزة بعد.') + '</div>';
+ h += '<div class="subtext">' + t('No completed tasks yet.', 'لا توجد مهام منجزة بعد.') + '</div>';
  } else {
  DB.completedTasks.forEach(function(ct) {
  h += '<div class="list-row"><div class="list-left"><span style="font-size:18px">🛡️</span>';
  h += '<div style="min-width:0"><b class="single-line-name">' + esc(LANG==='ar'?(ct.ar||ct.en):ct.en) + '</b>';
- h += '<div style="font-size:11.5px;color:var(--mut)">' + t('Completed: ', 'أنجزت في: ') + esc(ct.completedAt) + ' · <span style="color:var(--acc);font-weight:700">' + esc(ct.by) + '</span></div></div></div>';
+ h += '<div style="font-size:11.5px;color:var(--mut)">' + t('Done on: ', 'أنجزت في: ') + esc(ct.completedAt) + ' · <span style="color:var(--acc);font-weight:700">' + esc(ct.by) + '</span></div></div></div>';
  h += '<span style="font-size:12px;font-weight:800;color:var(--ok)">✓ ' + t('Done', 'منجز') + '</span></div>';
  });
  }
@@ -1661,38 +2233,31 @@ function renderTaskHistoryScreen() {
  document.getElementById('app-body').innerHTML = h;
 }
 
-/* ============================================================================
- SCREEN 8: UPGRADED NATOUR COLLECTOR SCREEN
- - Shows Natour's Pure Cash in Pocket (Collected − Bills Paid by Natour = Net to Hand to Manager)
- - Shows Bills Assigned to Natour to Pay from Cash (tickable!)
- - Shows Pass-Through Supplier Pocket (Moteur / Internet / Dish) & Button to Edit Supplier Amounts!
- - Locks chips paid directly to Manager (Cash/Whish/OMT) so Natour doesn't collect twice!
- ============================================================================ */
+/* ---- NATOUR COLLECTOR SCREEN (Completed!) ---- */
 function renderCollectorScreen() {
  var ar = LANG === 'ar';
  var cyc = DB.cycles[SELECTED_MONTH];
  var h = '';
 
- // 1. Assigned Maintenance Tasks Checklist
  var natourTasks = [];
  (DB.reminders || []).forEach(function(rm, idx) {
  if (rm.assignNatour) natourTasks.push({ rm: rm, idx: idx });
  });
  if (natourTasks.length) {
- h += '<div class="card" style="border-color:rgba(56,189,248,.45)">';
- h += '<div class="card-h"><h2>🛠️ ' + t('Assigned Tasks (' + natourTasks.length + ')', 'مهام مطلوبة منك (' + natourTasks.length + ')') + '</h2></div>';
+ h += '<div class="card" style="border-color:var(--acc);background:var(--soft)">';
+ h += '<div class="card-h"><h2 style="color:var(--acc)">🛠️ ' + t('Your Tasks (' + natourTasks.length + ')', 'مهام مطلوبة منك (' + natourTasks.length + ')') + '</h2></div>';
  natourTasks.forEach(function(entry) {
  var rm = entry.rm;
  h += '<div class="list-row">';
  h += '<div class="list-left"><span style="font-size:18px">📋</span><div style="min-width:0"><b class="single-line-name">' + esc(ar ? (rm.ar || rm.en) : rm.en) + '</b>';
- h += '<div style="font-size:11.5px;color:var(--mut)">' + t('Due: ', 'الموعد: ') + esc(rm.date) + '</div></div></div>';
- h += '<button class="btn-edit" style="background:var(--okbg);color:var(--ok);border-color:var(--ok)" onclick="completeReminder(' + entry.idx + ')">✓ ' + t('Done', 'تم') + '</button></div>';
+ h += '<div style="font-size:11.5px;color:var(--mut)">' + t('Due: ', 'الموعد: ') + esc(rm.date) + ' · ' + esc(rm.freq) + '</div></div></div>';
+ h += '<button class="btn-edit" style="background:var(--ok);color:#fff;border:0" onclick="completeReminder(' + entry.idx + ')">✓ ' + t('Done', 'تم') + '</button></div>';
  });
  h += '</div>';
  }
 
  if (!cyc || !cyc.published) {
- h += '<div class="card" style="text-align:center;padding:40px"><h3>' + t('⏳ Cycle Not Published Yet', '⏳ لم يتم نشر هذه الدورة بعد') + '</h3></div>';
+ h += '<div class="card" style="text-align:center;padding:40px"><h3>' + t('⏳ Month Not Published Yet', '⏳ لم يتم نشر هذا الشهر بعد') + '</h3></div>';
  document.getElementById('app-body').innerHTML = h;
  return;
  }
@@ -1711,29 +2276,29 @@ function renderCollectorScreen() {
  h += '</div>';
  }
 
- // 2. Natour Cash-in-Pocket Reconciliation Card (Building Cash vs. Supplier Moteur/Net Cash)
  h += '<div class="card">';
- h += '<div class="card-h"><div><h2>💵 ' + t('Your Cash Box · ' + SELECTED_MONTH, 'صندوق الكاش معك · ' + dispCycleName(SELECTED_MONTH, 'ar')) + '</h2>';
+ h += '<div class="card-h"><div><h2>💵 ' + t('Cash in Your Pocket · ' + SELECTED_MONTH, 'الكاش الموجود معك · ' + dispCycleName(SELECTED_MONTH, 'ar')) + '</h2>';
  h += '<small style="color:var(--mut);font-size:11.5px">' + t('Excludes payments sent directly to Manager', 'لا يشمل الدفعات المرسلة مباشرة للمدير') + '</small></div></div>';
 
  h += '<div class="drawer-row">';
- h += '<div class="drawer-box"><span>🏢 ' + t('Net Building Cash (For Manager)', 'صافي كاش البناية (للمدير)') + '</span>';
+ h += '<div class="drawer-box"><span>🏢 ' + t('Building Cash (To Hand to Manager)', 'صافي كاش البناية (للمدير)') + '</span>';
  h += '<b dir="ltr" style="color:var(--ok)"><bdi>' + fmt(s.natNetUsd, 'USD', ar?'ar':'en') + '</bdi></b>';
- h += '<small dir="ltr">+ <bdi>' + fmt(s.natNetLbp, 'LBP', ar?'ar':'en') + '</bdi></small></div>';
+ if (DB.settings.treasuryMode === 'split' || s.natNetLbp !== 0) {
+ h += '<small dir="ltr">+ <bdi>' + fmt(s.natNetLbp, 'LBP', ar?'ar':'en') + '</bdi></small>';
+ }
+ h += '</div>';
 
- h += '<div class="drawer-box" style="border-color:rgba(245,158,11,.4)"><span>🔌 ' + t('Supplier Cash (Moteur / Net)', 'أمانات المولد والإنترنت') + '</span>';
+ h += '<div class="drawer-box" style="border-color:rgba(245,158,11,.45)"><span>🔌 ' + t('Supplier Cash (Moteur / Internet)', 'أمانات المولد والإنترنت') + '</span>';
  h += '<b dir="ltr" style="color:var(--warn)">$' + Math.round(s.supGotUsd) + ' <small style="font-size:11px;color:var(--mut)">/ $' + Math.round(s.supSumUsd) + '</small></b>';
  h += '<small>' + t('To pay suppliers directly', 'لتسليمها لأصحاب الاشتراكات') + '</small></div>';
  h += '</div>';
 
- // Button for Natour to enter/update monthly Moteur, Internet & Dish bills per apartment!
  if (!cyc.isProject) {
- h += '<button class="btn-edit" style="width:100%;justify-content:center;margin-top:10px;padding:9px;border-color:rgba(245,158,11,.45);color:var(--warn)" onclick="openSupplierModal()">🔌 '
+ h += '<button class="btn-edit" style="width:100%;justify-content:center;margin-top:10px;padding:10px;border-color:rgba(245,158,11,.5);color:#b45309;background:var(--wbg)" onclick="openSupplierModal()">🔌 '
  + t('Enter / Edit Monthly Moteur, Internet & Dish Bills', 'إدخال / تعديل فواتير المولد والإنترنت والدش للشقق') + '</button>';
  }
  h += '</div>';
 
- // 3. Bills Natour Pays Directly Out of Collected Cash
  var natourBills = [];
  DB.expenses.forEach(function(e, idx) {
  if (e.month === SELECTED_MONTH && (e.payer === 'natour_pending' || e.payer === 'natour_paid')) {
@@ -1743,7 +2308,6 @@ function renderCollectorScreen() {
  if (natourBills.length) {
  h += '<div class="card">';
  h += '<div class="card-h"><h2>🧾 ' + t('Bills to Pay from Your Cash', 'فواتير تدفعها من الكاش معك') + '</h2></div>';
- h += '<p class="subtext">' + t('Tick when you pay a bill out of collected cash; it automatically deducts from the Net Building Cash you owe the Manager.', 'اضغط عند دفع الفاتورة من الكاش معك ليتم حسمها تلقائياً من الصافي المطلوب تسليمه للمدير.') + '</p>';
  natourBills.forEach(function(nb) {
  var isPd = nb.e.payer === 'natour_paid';
  h += '<div class="list-row">';
@@ -1755,10 +2319,9 @@ function renderCollectorScreen() {
  h += '</div>';
  }
 
- // 4. Apartments Collection Checklist
  h += '<div class="card" style="padding:0;overflow:hidden">';
  h += '<div style="padding:12px 15px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">';
- h += '<button class="mpill' + (UNPAID_ONLY ? ' on' : '') + '" onclick="UNPAID_ONLY=!UNPAID_ONLY;render()">' + (UNPAID_ONLY ? t('Show All Units', 'عرض جميع الشقق') : t('Unpaid Only', 'غير المسددين فقط')) + '</button>';
+ h += '<button class="mpill' + (UNPAID_ONLY ? ' on' : '') + '" onclick="UNPAID_ONLY=!UNPAID_ONLY;render()">' + (UNPAID_ONLY ? t('Show All', 'عرض الكل') : t('Unpaid Only', 'غير المسددين')) + '</button>';
  h += '<small style="color:var(--mut);font-weight:700">' + t('🟣 Paid to Manager · 🔌 Supplier', '🟣 دفع للمدير · 🔌 اشتراكات') + '</small></div>';
 
  DB.apartments.forEach(function(a) {
@@ -1815,10 +2378,8 @@ function toggleNatourBillPaid(expIdx) {
 }
 
 /* ============================================================================
- 5. MODAL CONTROLLERS (Direct Payment, Natour Supplier Bills, New Cycle/Project, Expenses)
+ 7. MODAL CONTROLLERS (Supplier Bills, Direct Pay, New Cycle/Project, Expenses, Charges, Units, Reminders)
  ============================================================================ */
-
-/* ---- NATOUR PASS-THROUGH SUPPLIER BILLS MODAL (Moteur, Internet, Dish) ---- */
 var curSupIdx = 0;
 function openSupplierModal(idx) {
  var cyc = DB.cycles[SELECTED_MONTH];
@@ -1840,7 +2401,7 @@ function renderSupplierModalContent() {
  var sv = svList[curSupIdx] || svList[0];
 
  var h = '<div class="card-h"><h3>🔌 ' + t('Supplier Bills (Pass-Through)', 'فواتير المولد والإنترنت والدش') + '</h3><button class="btn-del" onclick="closeModal(\'supplier-modal\')">✕</button></div>';
- h += '<p class="subtext">' + t('Enter each unit\'s monthly Moteur, Internet, or Dish bill. Collected cash goes into the Supplier Pocket and never affects the Building Treasury.', 'أدخل فاتورة المولد أو الإنترنت أو الدش لكل شقة. تُحفظ هذه المبالغ في جيب أمانات الموردين ولا تؤثر على صندوق البناية.') + '</p>';
+ h += '<p class="subtext">' + t('Enter each unit\'s monthly Moteur, Internet, or Dish bill. Collected cash goes into the Supplier Pocket and never affects the Building Safe.', 'أدخل فاتورة المولد أو الإنترنت أو الدش لكل شقة. تُحفظ هذه المبالغ في جيب أمانات الموردين ولا تؤثر على صندوق البناية.') + '</p>';
 
  h += '<div class="seg-bar">';
  svList.forEach(function(item, i) {
@@ -1857,7 +2418,7 @@ function renderSupplierModalContent() {
  });
  h += '</div>';
 
- h += '<button style="width:100%;padding:12px;background:var(--warn);color:#070b12" onclick="saveCurrentSupplierMap();saveDB();closeModal(\'supplier-modal\');showToast(t(\'Supplier bills updated!\',\'تم حفظ فواتير الاشتراكات!\'));render()">✓ ' + t('Save Supplier Bills', 'حفظ فواتير الاشتراكات') + '</button>';
+ h += '<button style="width:100%;padding:13px;background:var(--acc);color:#fff" onclick="saveCurrentSupplierMap();saveDB();closeModal(\'supplier-modal\');showToast(t(\'Supplier bills updated!\',\'تم حفظ فواتير الاشتراكات!\'));render()">✓ ' + t('Save Supplier Bills', 'حفظ فواتير الاشتراكات') + '</button>';
  document.getElementById('supplier-content').innerHTML = h;
 }
 
@@ -1873,21 +2434,20 @@ function saveCurrentSupplierMap() {
  sv.map = map;
 }
 
-/* ---- MANAGER DIRECT PAYMENT MODAL (Cash to Manager, Whish, OMT, Bank) ---- */
 function openDirectPayModal() {
- var h = '<div class="card-h"><h3 style="color:var(--purp)">💵 ' + t('Register Direct Payment to Manager', 'تسجيل دفعة مستلمة مباشرة للمدير') + '</h3><button class="btn-del" onclick="closeModal(\'direct-pay-modal\')">✕</button></div>';
- h += '<p class="subtext">' + t('Whether the tenant paid you in Cash, Whish, OMT, or Bank Transfer, recording it here marks their building dues as Paid on the Natour\'s phone WITHOUT adding it to the Natour\'s cash pocket.', 'سواء دفع الساكن للمدير كاش أو عبر Whish أو OMT، تسجيل الدفعة هنا يظهرها كمسددة على هاتف الناطور دون إضافتها إلى صندوق الكاش الموجود مع الناطور.') + '</p>';
+ var h = '<div class="card-h"><h3 style="color:var(--purp)">💵 ' + t('Record Resident Payment to Manager', 'تسجيل دفعة مستلمة مباشرة للمدير') + '</h3><button class="btn-del" onclick="closeModal(\'direct-pay-modal\')">✕</button></div>';
+ h += '<p class="subtext">' + t('Whether the resident paid you in Cash, Whish, OMT, or Bank Transfer, recording it here marks their dues as Paid on the Natour\'s phone WITHOUT adding it to the Natour\'s cash pocket.', 'سواء دفع الساكن للمدير كاش أو عبر Whish أو OMT، تسجيل الدفعة هنا يظهرها كمسددة على هاتف الناطور دون إضافتها إلى الكاش الموجود مع الناطور.') + '</p>';
 
  h += '<div class="two-col-grid" style="margin-bottom:10px">';
  h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Apartment', 'الشقة') + '</label><select id="wp-apt" style="margin-top:4px" onchange="populateDirectPayDues()">';
  DB.apartments.forEach(function(a) { h += '<option value="' + a.id + '">' + esc(a.code) + ' · ' + esc(LANG==='ar'?(a.ar||a.en):a.en) + '</option>'; });
  h += '</select></div>';
- h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Cycle / Project', 'الدورة / المشروع') + '</label><select id="wp-cyc" style="margin-top:4px" onchange="populateDirectPayDues()">';
+ h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Month / Project', 'الشهر / المشروع') + '</label><select id="wp-cyc" style="margin-top:4px" onchange="populateDirectPayDues()">';
  Object.keys(DB.cycles).forEach(function(ck) { h += '<option value="' + esc(ck) + '"' + (ck===SELECTED_MONTH?' selected':'') + '>' + esc(dispCycleName(ck)) + '</option>'; });
  h += '</select></div></div>';
 
  h += '<div class="two-col-grid" style="margin-bottom:10px">';
- h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('How did Manager receive it?', 'وسيلة القبض لدى المدير') + '</label><select id="wp-channel" style="margin-top:4px">'
+ h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Payment Method', 'وسيلة الدفع للمدير') + '</label><select id="wp-channel" style="margin-top:4px">'
  + '<option value="Cash to Manager">💵 Cash to Manager · كاش للمدير</option>'
  + '<option value="Whish Money">🟣 Whish Money · ويش موني</option>'
  + '<option value="OMT Pay">🟡 OMT Pay · أو أم تي</option>'
@@ -1900,10 +2460,10 @@ function openDirectPayModal() {
  h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Currency', 'العملة') + '</label><select id="wp-cur" style="margin-top:4px"><option value="USD">USD ($)</option><option value="LBP">LBP (ل.ل.)</option></select></div>';
  h += '</div>';
 
- h += '<div style="margin-bottom:12px"><label style="font-size:11.5px;color:var(--mut)">' + t('Reference / Note (Optional)', 'رقم الإشعار أو ملاحظة') + '</label><input type="text" id="wp-ref" placeholder="e.g. Handed cash at door / WH-9821" style="margin-top:4px"></div>';
- h += '<div id="wp-due-info" style="padding:10px 12px;background:var(--card2);border-radius:12px;font-size:12px;margin-bottom:14px"></div>';
+ h += '<div style="margin-bottom:12px"><label style="font-size:11.5px;color:var(--mut)">' + t('Reference / Note (Optional)', 'رقم الإشعار أو ملاحظة') + '</label><input type="text" id="wp-ref" placeholder="e.g. Paid cash at door / WH-9821" style="margin-top:4px"></div>';
+ h += '<div id="wp-due-info" style="padding:10px 12px;background:var(--soft);color:var(--acc);font-weight:700;border-radius:12px;font-size:12px;margin-bottom:14px"></div>';
 
- h += '<button style="width:100%;padding:12px;background:var(--purp);color:#fff" onclick="saveDirectPayModal()">✓ ' + t('Confirm Manager Payment & Settle Unit', 'تأكيد قبض المدير وتسديد الشقة') + '</button>';
+ h += '<button style="width:100%;padding:13px;background:var(--purp);color:#fff" onclick="saveDirectPayModal()">✓ ' + t('Confirm Payment & Mark Paid', 'تأكيد الدفعة وتسديد الشقة') + '</button>';
  document.getElementById('direct-pay-content').innerHTML = h;
  populateDirectPayDues();
  openModal('direct-pay-modal');
@@ -1923,7 +2483,7 @@ function populateDirectPayDues() {
  });
  document.getElementById('wp-amt').value = Math.round(dueEqUsd) || 50;
  document.getElementById('wp-due-info').innerHTML = t(
- 'Unpaid Building Dues in <b>' + cKey + '</b> for this unit: <b>$' + Math.round(dueEqUsd) + ' USD eq</b>',
+ 'Unpaid Building Dues in <b>' + cKey + '</b> for this apartment: <b>$' + Math.round(dueEqUsd) + ' USD</b>',
  'مستحقات البناية غير المدفوعة في <b>' + dispCycleName(cKey) + '</b> لهذه الشقة: <b>$' + Math.round(dueEqUsd) + '</b>'
  );
 }
@@ -1943,7 +2503,6 @@ function saveDirectPayModal() {
  cyc.mgrPayChannel = cyc.mgrPayChannel || {};
  cyc.mgrPayChannel[aptId] = channel;
 
- // Mark building dues with state 2 (Paid to Manager — excluded from Natour Cash Pocket!)
  getCycleCols(cKey, true).forEach(function(c) {
  if (c.valFor(aptId) > 0) {
  cyc.paid[c.id] = cyc.paid[c.id] || {};
@@ -1970,7 +2529,6 @@ function saveDirectPayModal() {
  render();
 }
 
-/* ---- NEW CYCLE / SPECIAL PROJECT MODAL ---- */
 var ncType = 'month';
 function openNewCycleModal(defaultType) {
  ncType = defaultType || 'month';
@@ -1979,12 +2537,12 @@ function openNewCycleModal(defaultType) {
 }
 
 function renderNewCycleModalContent() {
- var h = '<div class="card-h"><h3>➕ ' + t('Create Cycle or Project', 'إنشاء شهر أو مشروع خاص') + '</h3><button class="btn-del" onclick="closeModal(\'new-cycle-modal\')">✕</button></div>';
+ var h = '<div class="card-h"><h3>➕ ' + t('Start New Month or Project', 'فتح شهر جديد أو مشروع خاص') + '</h3><button class="btn-del" onclick="closeModal(\'new-cycle-modal\')">✕</button></div>';
  h += '<div class="choice-card' + (ncType==='month'?' on':'') + '" onclick="ncType=\'month\';renderNewCycleModalContent()">';
- h += '<span style="font-size:22px">📅</span><div><b>' + t('Monthly Billing Cycle', 'دورة تحصيل شهرية') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Pick Month & Year from ready dropdowns.', 'اختر الشهر والسنة من القائمة الجاهزة.') + '</div></div></div>';
+ h += '<span style="font-size:22px">📅</span><div><b>' + t('Monthly Collection', 'شهر تحصيل عادي') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Pick Month & Year from ready dropdowns.', 'اختر الشهر والسنة من القائمة الجاهزة.') + '</div></div></div>';
 
  h += '<div class="choice-card' + (ncType==='project'?' on':'') + '" onclick="ncType=\'project\';renderNewCycleModalContent()">';
- h += '<span style="font-size:22px">🛠️</span><div><b>' + t('Special Project Budget & Installments', 'مشروع خاص (ميزانية + دفعة أولى + أقساط)') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Solar install, elevator overhaul, facade paint, etc.', 'طاقة شمسية، صيانة مصعد، دهان مبنى مع ميزانية مستقلة.') + '</div></div></div>';
+ h += '<span style="font-size:22px">🛠️</span><div><b>' + t('Special Project (With Installments)', 'مشروع خاص (ميزانية + دفعة أولى + أقساط)') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Solar install, elevator overhaul, facade paint, etc.', 'طاقة شمسية، صيانة مصعد، دهان مبنى مع ميزانية مستقلة.') + '</div></div></div>';
 
  if (ncType === 'month') {
  h += '<div class="two-col-grid" style="grid-template-columns:2fr 1fr;margin:12px 0">';
@@ -1995,7 +2553,7 @@ function renderNewCycleModalContent() {
  + '<option value="October">October · تشرين الأول</option><option value="November" selected>November · تشرين الثاني</option><option value="December">December · كانون الأول</option></select></div>';
  h += '<div><label style="font-size:12px;color:var(--mut)">' + t('Year', 'السنة') + '</label><select id="nc-yr" style="margin-top:4px"><option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option><option value="2028">2028</option></select></div>';
  h += '</div>';
- h += '<label style="display:flex;align-items:center;gap:8px;font-size:12.5px;margin:10px 0 16px;cursor:pointer"><input type="checkbox" id="nc-copy" checked style="width:18px;height:18px"><span>' + t('Copy fixed fees & supplier subscriptions from current month', 'نسخ الرسوم الثابتة والاشتراكات من الشهر الحالي') + '</span></label>';
+ h += '<label style="display:flex;align-items:center;gap:8px;font-size:12.5px;margin:10px 0 16px;cursor:pointer"><input type="checkbox" id="nc-copy" checked style="width:18px;height:18px"><span>' + t('Copy fixed fees & subscriptions from current month', 'نسخ الرسوم الثابتة والاشتراكات من الشهر الحالي') + '</span></label>';
  } else {
  h += '<div style="margin:12px 0;padding:12px;background:var(--card2);border:1px solid var(--line);border-radius:16px">';
  h += '<div class="two-col-grid" style="margin-bottom:10px">';
@@ -2009,7 +2567,7 @@ function renderNewCycleModalContent() {
  h += '<div><label style="font-size:11px;color:var(--mut)">' + t('Months', 'الأشهر') + '</label><input type="number" id="nc-months" value="5" min="1" max="24" oninput="updateProjCalcPreview()" style="margin-top:4px"></div>';
  h += '</div>';
 
- h += '<label style="font-size:11.5px;color:var(--mut);display:block;margin-bottom:6px">' + t('Participating Units:', 'الشقق المشاركة:') + '</label>';
+ h += '<label style="font-size:11.5px;color:var(--mut);display:block;margin-bottom:6px">' + t('Participating Apartments:', 'الشقق المشاركة:') + '</label>';
  h += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px" id="nc-unit-checks">';
  DB.apartments.forEach(function(a) {
  h += '<label style="background:var(--card);border:1px solid var(--line);padding:5px 9px;border-radius:10px;font-size:12px;display:inline-flex;align-items:center;gap:5px;cursor:pointer">'
@@ -2022,7 +2580,7 @@ function renderNewCycleModalContent() {
  h += '</div>';
  }
 
- h += '<button style="width:100%;padding:12px;background:var(--acc);color:#070b12" onclick="saveNewCycleModal()">' + t('Create & Open →', 'إنشاء وفتح ←') + '</button>';
+ h += '<button class="ob-pill-btn" onclick="saveNewCycleModal()">' + t('Create & Open →', 'إنشاء وفتح ←') + '</button>';
  document.getElementById('new-cycle-content').innerHTML = h;
  if (ncType === 'project') updateProjCalcPreview();
 }
@@ -2037,7 +2595,7 @@ function updateProjCalcPreview() {
  var downPerUnit = Math.round((down / checked) * 100) / 100;
  var moPerUnit = Math.round((((Math.max(0, budget - down)) / mos) / checked) * 100) / 100;
  el.innerHTML = t(
- '⚡ Auto-Split (' + checked + ' units): <b>$' + downPerUnit + '/unit</b> Down + <b>$' + moPerUnit + '/unit/mo</b> × ' + mos + ' mos.',
+ '⚡ Auto-Split (' + checked + ' apts): <b>$' + downPerUnit + '/apt</b> Down + <b>$' + moPerUnit + '/apt/mo</b> × ' + mos + ' mos.',
  '⚡ التقسيم التلقائي (' + checked + ' شقق): <b>$' + downPerUnit + ' للشقة</b> دفعة أولى + <b>$' + moPerUnit + ' شهرياً</b> × ' + mos + ' أشهر.'
  );
 }
@@ -2128,17 +2686,16 @@ function saveNewCycleModal() {
 
 function deleteSelectedCycle() {
  if (Object.keys(DB.cycles).length <= 1) {
- alert(t('You must keep at least one active cycle.', 'يجب إبقاء دورة واحدة على الأقل.'));
+ alert(t('You must keep at least one active month.', 'يجب إبقاء دورة واحدة على الأقل.'));
  return;
  }
  if (!confirm(t('Delete "' + SELECTED_MONTH + '" and its records?', 'هل تريد حذف "' + dispCycleName(SELECTED_MONTH) + '"؟'))) return;
  delete DB.cycles[SELECTED_MONTH];
  SELECTED_MONTH = Object.keys(DB.cycles)[0];
  CYCLE_DETAIL_MODE = false;
- saveDB(); showToast(t('Cycle deleted', 'تم الحذف')); render();
+ saveDB(); showToast(t('Deleted', 'تم الحذف')); render();
 }
 
-/* ---- UPGRADED EXPENSE MODAL (Supports Paid by Manager vs. Assigned to Natour Cash!) ---- */
 var curExpIdx = -1;
 function openExpenseModal(idx) {
  curExpIdx = (typeof idx === 'number' && idx >= 0) ? idx : -1;
@@ -2155,7 +2712,7 @@ function openExpenseModal(idx) {
 
  populateExpensePresets();
  if (item) {
- document.getElementById('ex-modal-title').textContent = t('✏️ Edit Expense / Bill', '✏️ تعديل المصروف / الفاتورة');
+ document.getElementById('ex-modal-title').textContent = t('✏️ Edit Bill / Expense', '✏️ تعديل الفاتورة / المصروف');
  document.getElementById('ex-date').value = item.date || todayIso();
  document.getElementById('ex-payer').value = item.payer || 'mgr';
  document.getElementById('ex-cat').value = item.cat || 'gen';
@@ -2227,25 +2784,24 @@ function saveCategorizedExpense() {
  if (curExpIdx >= 0) {
  var ex = DB.expenses[curExpIdx];
  ex.date = dt; ex.month = targetCycle; ex.payer = payer; ex.cat = cat; ex.desc = desc; ex.amt = amt; ex.cur = cur; ex.ref = ref; ex.notes = notes;
- showToast(t('Expense updated!', 'تم تحديث المصروف!'));
+ showToast(t('Bill updated!', 'تم تحديث الفاتورة!'));
  } else {
  DB.expenses.unshift({ id: 'e_' + Date.now(), cat: cat, desc: desc, amt: amt, cur: cur, month: targetCycle, date: dt, ref: ref, notes: notes, payer: payer });
  if (payer !== 'natour_pending') {
- DB.ledger.unshift({ id: 'l_' + Date.now(), desc: desc, sub: cObj.ico + ' ' + targetCycle, channel: payer==='natour_paid'?'Paid by Natour Cash':'Manager Box', amt: amt, cur: cur, type: 'out', at: dt, ref: ref });
+ DB.ledger.unshift({ id: 'l_' + Date.now(), desc: desc, sub: cObj.ico + ' ' + targetCycle, channel: payer==='natour_paid'?'Paid by Natour Cash':'Building Safe', amt: amt, cur: cur, type: 'out', at: dt, ref: ref });
  }
- showToast(payer === 'natour_pending' ? t('Bill sent to Natour to pay from cash!', 'تم إرسال الفاتورة للناطور لدفعها من الكاش!') : t('Expense recorded!', 'تم تسجيل المصروف!'));
+ showToast(payer === 'natour_pending' ? t('Sent to Natour to pay from his cash!', 'تم إرسال الفاتورة للناطور لدفعها!') : t('Expense saved!', 'تم حفظ المصروف!'));
  }
  saveDB(); closeModal('exp-modal'); render();
 }
 
 function deleteExpenseFromModal() {
  if (curExpIdx < 0) return;
- if (!confirm(t('Delete this expense record?', 'هل تريد حذف هذا المصروف؟'))) return;
+ if (!confirm(t('Delete this bill?', 'هل تريد حذف هذه الفاتورة؟'))) return;
  DB.expenses.splice(curExpIdx, 1);
- saveDB(); closeModal('exp-modal'); showToast(t('Expense deleted', 'تم حذف المصروف')); render();
+ saveDB(); closeModal('exp-modal'); showToast(t('Deleted', 'تم الحذف')); render();
 }
 
-/* ---- CHARGE, UNIT & REMINDER MODALS ---- */
 var curChargeKind = 'fixed', curChargeIdx = -1;
 function openChargeModal(kind, idx) {
  curChargeKind = kind; curChargeIdx = idx;
@@ -2253,7 +2809,7 @@ function openChargeModal(kind, idx) {
  var list = cyc[kind];
  var item = idx >= 0 ? list[idx] : null;
 
- document.getElementById('cm-title').textContent = (idx >= 0 ? t('Edit ', 'تعديل ') : t('Add ', 'إضافة ')) + (kind === 'fixed' ? t('Fixed Fee', 'رسم ثابت') : kind === 'dues' ? t('Split Due', 'مستحق مشترك') : t('Installment', 'قسط'));
+ document.getElementById('cm-title').textContent = (idx >= 0 ? t('Edit ', 'تعديل ') : t('Add ', 'إضافة ')) + (kind === 'fixed' ? t('Fixed Fee', 'رسم ثابت') : kind === 'dues' ? t('Shared Bill', 'فاتورة مشتركة') : t('Installment', 'قسط'));
  document.getElementById('cm-del-btn').style.display = idx >= 0 ? 'block' : 'none';
  document.getElementById('cm-amt-row').style.display = kind === 'services' ? 'none' : 'grid';
 
@@ -2270,7 +2826,7 @@ function openChargeModal(kind, idx) {
  var aptBox = document.getElementById('cm-apts-box');
  if (kind === 'services') {
  aptBox.style.display = 'block';
- var ah = '<div style="font-size:12px;font-weight:700;color:var(--mut);margin-bottom:6px">' + t('Amount per Unit (leave 0 if exempt):', 'المبلغ لكل شقة (اتركه 0 للإعفاء):') + '</div>';
+ var ah = '<div style="font-size:12px;font-weight:700;color:var(--mut);margin-bottom:6px">' + t('Amount per Apartment (leave 0 if exempt):', 'المبلغ لكل شقة (اتركه 0 للإعفاء):') + '</div>';
  DB.apartments.forEach(function(a) {
  var v = (item && item.map && item.map[a.id]) || '';
  ah += '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-top:1px solid var(--line)"><span><b>' + esc(a.code) + '</b> · ' + esc(LANG==='ar'?(a.ar||a.en):a.en) + '</span><input type="number" data-apt="' + a.id + '" style="width:95px;text-align:right" placeholder="0" value="' + v + '"></div>';
@@ -2298,7 +2854,7 @@ function saveChargeModal() {
  var ar = document.getElementById('cm-ar').value.trim() || en;
  var amt = Number(document.getElementById('cm-amt').value) || 0;
  var cur = document.getElementById('cm-cur').value;
- if (!en) { alert(t('Please enter a label', 'الرجاء إدخال الاسم')); return; }
+ if (!en) { alert(t('Please enter a name', 'الرجاء إدخال الاسم')); return; }
 
  var cyc = DB.cycles[SELECTED_MONTH];
  if (curChargeKind === 'services') {
@@ -2333,7 +2889,7 @@ var curUnitIdx = -1;
 function openUnitModal(idx) {
  curUnitIdx = idx;
  var a = idx >= 0 ? DB.apartments[idx] : null;
- document.getElementById('um-title').textContent = idx >= 0 ? t('Edit Unit ' + a.code, 'تعديل الشقة ' + a.code) : t('Add New Unit', 'إضافة شقة جديدة');
+ document.getElementById('um-title').textContent = idx >= 0 ? t('Edit Apt ' + a.code, 'تعديل الشقة ' + a.code) : t('Add Apartment', 'إضافة شقة جديدة');
  document.getElementById('um-del-btn').style.display = idx >= 0 ? 'block' : 'none';
  document.getElementById('um-code').value = a ? a.code : '';
  document.getElementById('um-ph').value = a ? a.ph : '961';
@@ -2355,7 +2911,7 @@ function saveUnitModal() {
  } else {
  DB.apartments.push({ id: 'U_' + Date.now(), code: code, en: en, ar: ar, ph: ph, prefLang: prefLang });
  }
- saveDB(); closeModal('unit-modal'); showToast(t('Directory updated', 'تم تحديث الشقق')); render();
+ saveDB(); closeModal('unit-modal'); showToast(t('Saved!', 'تم الحفظ!')); render();
 }
 function deleteUnitModal() {
  if (curUnitIdx < 0) return;
@@ -2378,7 +2934,10 @@ function applyReminderPreset(val) {
  document.getElementById('rm-en').value = ''; document.getElementById('rm-ar').value = ''; document.getElementById('rm-en').focus(); return;
  }
  var p = val.split('|');
- document.getElementById('rm-en').value = p[0] || ''; document.getElementById('rm-ar').value = p[1] || '';
+ document.getElementById('rm-natour').checked = (p[0] === 'nat');
+ document.getElementById('rm-en').value = p[1] || '';
+ document.getElementById('rm-ar').value = p[2] || '';
+ if (p[3]) document.getElementById('rm-freq').value = p[3];
 }
 function saveReminderModal() {
  var en = document.getElementById('rm-en').value.trim();
@@ -2386,12 +2945,11 @@ function saveReminderModal() {
  var dt = document.getElementById('rm-date').value;
  var fqSel = document.getElementById('rm-freq').value;
  var fq = fqSel === 'custom' ? (document.getElementById('rm-freq-custom').value.trim() || 'Custom') : fqSel;
- var winDays = Number(document.getElementById('rm-window').value) || 2;
  var assignNatour = document.getElementById('rm-natour').checked;
  if (!en && !ar) { alert(t('Please enter task name', 'الرجاء إدخال اسم المهمة')); return; }
- DB.reminders.push({ id: 'rm_' + Date.now(), en: en || ar, ar: ar || en, date: dt, freq: fq, windowDays: winDays, assignNatour: assignNatour });
+ DB.reminders.push({ id: 'rm_' + Date.now(), en: en || ar, ar: ar || en, date: dt, freq: fq, assignNatour: assignNatour });
  saveDB(); closeModal('rem-modal');
- showToast(assignNatour ? t('Task scheduled & assigned to Natour!', 'تمت جدولة المهمة وإرسالها للناطور!') : t('Reminder scheduled!', 'تمت جدولة التذكير!'));
+ showToast(assignNatour ? t('Added to Natour checklist!', 'تمت إضافتها لقائمة مهام الناطور!') : t('Building reminder saved!', 'تم حفظ تذكير البناية!'));
  render();
 }
 function completeReminder(idx) {
@@ -2402,20 +2960,18 @@ function completeReminder(idx) {
  id: 'ct_' + Date.now(), en: rm.en, ar: rm.ar || rm.en, completedAt: todayIso(),
  by: ROLE === 'col' ? ('👷‍♂️ ' + DB.settings.collectorEn) : '👨‍💼 Manager'
  });
- showToast(t('Task archived in Task History!', 'تم حفظ المهمة في أرشيف المهام!'));
+ showToast(t('Marked Done!', 'تم الإنجاز!'));
  DB.reminders.splice(idx, 1);
  saveDB(); render();
 }
 
-/* ---- NATOUR CHIP TICKING (Protects Manager-Paid Chips & Separates Supplier Cash!) ---- */
 function toggleTick(cId, aId) {
  var cyc = DB.cycles[SELECTED_MONTH];
  cyc.paid[cId] = cyc.paid[cId] || {};
  var curState = cyc.paid[cId][aId] || 0;
 
- // If paid directly to Manager (state === 2) and user is Natour, prevent accidental unmarking!
  if (curState === 2 && ROLE === 'col') {
- showToast(t('🔒 Settled directly with Manager (Not in your cash box)', '🔒 مسددة مباشرة لدى المدير (لا تدخل في صندوقك)'));
+ showToast(t('🔒 Paid directly to Manager (Not in your cash pocket)', '🔒 دُفعت مباشرة للمدير (لا تدخل في الكاش معك)'));
  return;
  }
 
@@ -2446,94 +3002,12 @@ function toggleTick(cId, aId) {
  render();
 }
 
-/* ---- FIRST-TIME UX & SETTINGS ---- */
-var obRole = 'mgr', obMode = 'split', obBal = 'zero', obStep = 1;
-function openOnboarding(step) {
- obStep = step || 1;
- renderOnboardingModalContent();
- openModal('onboard-modal');
-}
-function renderOnboardingModalContent() {
- var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
- h += '<span class="top-brand">💧 BINAYATI · بنايتي</span>';
- h += '<div style="display:flex;gap:6px"><button class="btn-edit" style="padding:4px 10px" onclick="toggleLang();renderOnboardingModalContent()">' + (LANG==='ar'?'English':'العربية') + '</button>';
- h += '<button class="btn-del" style="padding:4px 9px" onclick="closeModal(\'onboard-modal\')">✕</button></div></div>';
-
- h += '<div class="step-dots">';
- [1,2,3].forEach(function(n) { h += '<div class="step-dot' + (n <= obStep ? ' on' : '') + '"></div>'; });
- h += '</div>';
-
- if (obStep === 1) {
- h += '<h3>' + t('Welcome to Binayati', 'أهلاً بك في بنايتي') + '</h3>';
- h += '<p class="subtext">' + t('Smart building accounting, dual-currency cash drawers, and 1-tap WhatsApp billing & receipts.', 'إدارة مالية ذكية للبنايات، صناديق كاش بالدولار والليرة، وإشعارات وإيصالات واتساب بضغطة زر.') + '</p>';
- h += '<div class="choice-card' + (obRole==='mgr'?' on':'') + '" onclick="obRole=\'mgr\';renderOnboardingModalContent()">';
- h += '<span style="font-size:24px">👨‍💼</span><div><b>' + t('Building Manager (Syndic)', 'مدير البناية (Syndic)') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Set up building, manage treasury, projects & expenses.', 'تأسيس البناية، إدارة الصندوق، المشاريع والمصاريف.') + '</div></div></div>';
- h += '<div class="choice-card' + (obRole==='col'?' on':'') + '" onclick="obRole=\'col\';renderOnboardingModalContent()">';
- h += '<span style="font-size:24px">👷‍♂️</span><div><b>' + t('Building Collector (Natour)', 'الناطور / المحصّل') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Secure login via Registered Phone + 6-Digit Building PIN.', 'دخول آمن عبر رقم الهاتف المسجل والرمز السري.') + '</div></div></div>';
- h += '<button style="width:100%;margin-top:14px;padding:12px;background:var(--acc);color:#070b12" onclick="obStep=2;renderOnboardingModalContent()">' + t('Continue →', 'متابعة ←') + '</button>';
- } else if (obStep === 2 && obRole === 'col') {
- h += '<h3>🔐 ' + t('Natour Secure Verification', 'التحقق الآمن لدخول الناطور') + '</h3>';
- h += '<div style="margin-bottom:10px"><label style="font-size:12px;color:var(--mut)">' + t('Your Registered WhatsApp Phone', 'رقم هاتفك المسجل') + '</label><input type="text" id="ob-login-ph" dir="ltr" value="' + esc(DB.settings.collectorPhone || '96170123456') + '" style="margin-top:4px"></div>';
- h += '<div style="margin-bottom:14px"><label style="font-size:12px;color:var(--mut)">' + t('6-Digit Building Security PIN', 'رمز الأمان (PIN)') + '</label><input type="text" id="ob-login-pin" dir="ltr" value="' + esc(DB.settings.collectorPin || '482910') + '" style="margin-top:4px;font-size:18px;letter-spacing:3px;font-weight:800;color:var(--acc)"></div>';
- h += '<div class="form-row"><button class="btn-edit" style="padding:12px 16px" onclick="obStep=1;renderOnboardingModalContent()">' + t('← Back', '→ رجوع') + '</button><button style="flex:1;padding:12px;background:var(--ok);color:#070b12" onclick="verifyNatourPinLogin()">' + t('Verify & Open →', 'تحقق وافتح ←') + '</button></div>';
- } else if (obStep === 2 && obRole === 'mgr') {
- h += '<h3>' + t('Step 2 of 3 · Building & Natour Identity', 'الخطوة 2 من 3 · بيانات البناية والناطور') + '</h3>';
- h += '<div class="two-col-grid" style="margin-bottom:10px"><div><label style="font-size:11.5px;color:var(--mut)">Building (EN)</label><input type="text" id="ob-bld-en" value="' + esc(DB.settings.bldEn) + '"></div><div><label style="font-size:11.5px;color:var(--mut)">اسم البناية (AR)</label><input type="text" dir="rtl" id="ob-bld-ar" value="' + esc(DB.settings.bldAr) + '"></div></div>';
- h += '<div class="two-col-grid" style="margin-bottom:10px"><div><label style="font-size:11.5px;color:var(--mut)">Natour (EN)</label><input type="text" id="ob-col-en" value="' + esc(DB.settings.collectorEn) + '"></div><div><label style="font-size:11.5px;color:var(--mut)">اسم الناطور (AR)</label><input type="text" dir="rtl" id="ob-col-ar" value="' + esc(DB.settings.collectorAr) + '"></div></div>';
- h += '<div class="two-col-grid" style="margin-bottom:14px"><div><label style="font-size:11.5px;color:var(--mut)">Natour Phone</label><input type="text" dir="ltr" id="ob-col-ph" value="' + esc(DB.settings.collectorPhone || '96170123456') + '"></div><div><label style="font-size:11.5px;color:var(--mut)">LBP Rate / $1</label><input type="number" dir="ltr" id="ob-rate" value="' + (DB.settings.rate || 89500) + '"></div></div>';
- h += '<div class="form-row"><button class="btn-edit" style="padding:12px 16px" onclick="obStep=1;renderOnboardingModalContent()">' + t('← Back', '→ رجوع') + '</button><button style="flex:1;padding:12px;background:var(--acc);color:#070b12" onclick="saveObStep2AndNext()">' + t('Next: Treasury →', 'التالي: الصندوق ←') + '</button></div>';
- } else if (obStep === 3) {
- h += '<h3>' + t('Step 3 of 3 · Treasury & Opening Balance', 'الخطوة 3 من 3 · الصندوق والرصيد الافتتاحي') + '</h3>';
- h += '<div class="choice-card' + (obMode==='split'?' on':'') + '" onclick="obMode=\'split\';renderOnboardingModalContent()"><span style="font-size:20px">💵</span><div><b>' + t('Split USD & LBP Cash Drawers', 'صندوقان منفصلان (دولار + ليرة)') + '</b></div></div>';
- h += '<div class="choice-card' + (obMode==='single'?' on':'') + '" onclick="obMode=\'single\';renderOnboardingModalContent()"><span style="font-size:20px">🏦</span><div><b>' + t('Single Unified Treasury (USD)', 'صندوق موحد بالدولار فقط') + '</b></div></div>';
- h += '<div class="choice-card' + (obBal==='zero'?' on':'') + '" onclick="obBal=\'zero\';renderOnboardingModalContent()"><span style="font-size:18px">✨</span><div><b>' + t('Start Fresh from Zero ($0)', 'البدء من الصفر ($0)') + '</b></div></div>';
- h += '<div class="choice-card' + (obBal==='existing'?' on':'') + '" onclick="obBal=\'existing\';renderOnboardingModalContent()"><span style="font-size:18px">💼</span><div><b>' + t('Enter Existing Box Balance', 'إدخال رصيد سابق موجود في الصندوق') + '</b></div></div>';
- if (obBal === 'existing') {
- h += '<div class="two-col-grid" style="margin-top:8px;padding:12px;background:var(--card2);border-radius:14px"><div><label style="font-size:11px;color:var(--mut)">USD ($)</label><input type="number" id="ob-usd" value="' + (DB.settings.initialUsd || 450) + '"></div><div><label style="font-size:11px;color:var(--mut)">LBP (ل.ل.)</label><input type="number" id="ob-lbp" value="' + (DB.settings.initialLbp || 18000000) + '"></div></div>';
- }
- h += '<div class="form-row" style="margin-top:14px"><button class="btn-edit" style="padding:12px 16px" onclick="obStep=2;renderOnboardingModalContent()">' + t('← Back', '→ رجوع') + '</button><button style="flex:1;padding:12px;background:var(--acc);color:#070b12" onclick="finishOnboarding()">' + t('Launch Binayati 🚀', 'تشغيل تطبيق بنايتي 🚀') + '</button></div>';
- }
- document.getElementById('onboard-content').innerHTML = h;
-}
-function saveObStep2AndNext() {
- DB.settings.bldEn = document.getElementById('ob-bld-en').value.trim() || 'Block C';
- DB.settings.bldAr = document.getElementById('ob-bld-ar').value.trim() || 'البلوك C';
- DB.settings.collectorEn = document.getElementById('ob-col-en').value.trim() || 'Anas';
- DB.settings.collectorAr = document.getElementById('ob-col-ar').value.trim() || 'أنس';
- DB.settings.collectorPhone = document.getElementById('ob-col-ph').value.trim() || '96170123456';
- DB.settings.rate = Number(document.getElementById('ob-rate').value) || 89500;
- obStep = 3; renderOnboardingModalContent();
-}
-function verifyNatourPinLogin() {
- var ph = document.getElementById('ob-login-ph').value.replace(/\D/g, '');
- var pin = document.getElementById('ob-login-pin').value.trim();
- var expectedPh = String(DB.settings.collectorPhone || '').replace(/\D/g, '');
- if (ph !== expectedPh || pin !== String(DB.settings.collectorPin)) {
- alert(t('Invalid Phone or 6-Digit PIN!', 'رقم الهاتف أو رمز الأمان غير صحيح!'));
- return;
- }
- closeModal('onboard-modal'); setRole('col');
- showToast(t('Authenticated as ' + DB.settings.collectorEn, 'تم الدخول بنجاح: ' + DB.settings.collectorAr));
-}
-function finishOnboarding() {
- DB.settings.treasuryMode = obMode;
- if (obBal === 'zero') { DB.settings.initialUsd = 0; DB.settings.initialLbp = 0; }
- else {
- var uEl = document.getElementById('ob-usd'), lEl = document.getElementById('ob-lbp');
- if (uEl) DB.settings.initialUsd = Number(uEl.value) || 0;
- if (lEl) DB.settings.initialLbp = Number(lEl.value) || 0;
- }
- saveDB(); closeModal('onboard-modal'); setRole('mgr');
- showToast(t('Binayati setup complete!', 'تم حفظ إعدادات بنايتي بنجاح!'));
- render();
-}
-
 function openSettingsModal() {
- var h = '<div class="card-h"><h3>⚙️ ' + t('Building & Account Settings', 'إعدادات البناية والحساب') + '</h3><button class="btn-del" onclick="closeModal(\'settings-modal\')">✕</button></div>';
+ var h = '<div class="card-h"><h3>⚙️ ' + t('Building & Safe Settings', 'إعدادات البناية والصندوق') + '</h3><button class="btn-del" onclick="closeModal(\'settings-modal\')">✕</button></div>';
  h += '<div class="row-div"><label style="font-size:12px;color:var(--mut)">' + t('Building Name (EN / AR)', 'اسم البناية (EN / AR)') + '</label><div class="two-col-grid" style="margin-top:4px"><input type="text" value="' + esc(DB.settings.bldEn) + '" onchange="DB.settings.bldEn=this.value;saveDB();render()"><input type="text" dir="rtl" value="' + esc(DB.settings.bldAr) + '" onchange="DB.settings.bldAr=this.value;saveDB();render()"></div></div>';
- h += '<div class="row-div"><label style="font-size:12px;color:var(--mut)">' + t('Collector / Natour Name (EN / AR)', 'اسم الناطور (EN / AR)') + '</label><div class="two-col-grid" style="margin-top:4px"><input type="text" value="' + esc(DB.settings.collectorEn) + '" onchange="DB.settings.collectorEn=this.value;saveDB();render()"><input type="text" dir="rtl" value="' + esc(DB.settings.collectorAr) + '" onchange="DB.settings.collectorAr=this.value;saveDB();render()"></div></div>';
+ h += '<div class="row-div"><label style="font-size:12px;color:var(--mut)">' + t('Safe Currency Mode', 'عملة صندوق البناية') + '</label><select style="margin-top:4px" onchange="DB.settings.treasuryMode=this.value;saveDB();render()"><option value="single"' + (DB.settings.treasuryMode==='single'?' selected':'') + '>💵 USD Only ($)</option><option value="split"' + (DB.settings.treasuryMode==='split'?' selected':'') + '>🇱🇧 Both USD ($) & LBP (ل.ل.)</option></select></div>';
  h += '<div class="row-div"><label style="font-size:12px;color:var(--mut)">' + t('Exchange Rate (LBP per $1 USD)', 'سعر الصرف (ل.ل. لكل 1 دولار)') + '</label><input type="number" dir="ltr" style="margin-top:4px" value="' + (DB.settings.rate || 89500) + '" onchange="DB.settings.rate=Number(this.value)||89500;saveDB();render()"></div>';
- h += '<div class="row-div"><button style="width:100%;padding:10px;background:var(--card2);border:1px solid var(--line)" onclick="closeModal(\'settings-modal\');openOnboarding(1)">✨ ' + t('Re-open First-Time Setup Wizard', 'إعادة فتح معالج الإعداد الأولي') + '</button></div>';
+ h += '<div class="row-div"><button style="width:100%;padding:12px;background:var(--soft);color:var(--acc)" onclick="closeModal(\'settings-modal\');openOnboarding(1)">✨ ' + t('Launch Guided Setup Wizard', 'فتح دليل الإعداد خطوة بخطوة') + '</button></div>';
  document.getElementById('settings-content').innerHTML = h;
  openModal('settings-modal');
 }
@@ -2554,17 +3028,13 @@ function setRole(r) {
 }
 function setTab(tName) {
  TAB = tName;
- document.querySelectorAll('#mgr-dock button').forEach(function(b) {
- b.className = b.getAttribute('data-tab') === tName ? 'on' : '';
+ document.querySelectorAll('#mgr-dock button.nav-tab').forEach(function(b) {
+ b.className = 'nav-tab' + (b.getAttribute('data-tab') === tName ? ' on' : '');
  });
  render();
  window.scrollTo(0, 0);
 }
 function toggleLang() { LANG = LANG === 'ar' ? 'en' : 'ar'; render(); }
-function toggleTheme() {
- var root = document.documentElement;
- root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-}
 
 render();
 </script>

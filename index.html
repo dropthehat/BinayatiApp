@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Binayati · بنايتي — V12 Smart Building Manager</title>
+<title>Binayati · بنايتي — V13 Smart Building Manager</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -89,7 +89,7 @@ button:active { transform: scale(0.96); }
 .hero-stats-grid div b { display: block; font-size: 15px; font-weight: 800; margin-top: 2px; }
 .hero-stats-grid div small { display: block; font-size: 10px; opacity: 0.78; margin-top: 1px; }
 
-/* Standard Page Header (For Non-Home Tabs) */
+/* Standard Page Header */
 header.top-bar {
  padding: 12px 18px 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
 }
@@ -205,7 +205,7 @@ header.top-bar {
 .corner-menu button:hover { background: var(--card2); }
 .corner-menu button.danger { color: var(--bad); }
 
-/* List Rows + Single-Line Names + 2-Line Stacked Paid/Owed */
+/* List Rows */
 .list-row {
  display: flex; align-items: center; justify-content: space-between; gap: 10px;
  padding: 11px 0; border-top: 1px solid var(--line);
@@ -423,7 +423,6 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .step-dot { height: 6px; flex: 1; border-radius: 999px; background: var(--line); transition: background .25s; }
 .step-dot.on { background: var(--acc); }
 
-/* Mini Phone Mockup inside Onboarding Step 7 */
 .mini-phone {
  border: 3px solid #1e293b; border-radius: 22px; background: #f8fafc;
  padding: 10px 12px; margin: 10px 0 14px; box-shadow: 0 8px 25px rgba(0,0,0,0.08);
@@ -432,7 +431,6 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
  width: 60px; height: 5px; background: #cbd5e1; border-radius: 999px; margin: 0 auto 8px;
 }
 
-/* Monthly Report / Shareable Sheet Styles */
 .report-sheet {
  background: #ffffff; border: 2px solid var(--line); border-radius: 20px; padding: 16px; margin: 10px 0 14px;
 }
@@ -494,7 +492,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
  <main id="app-body"></main>
 </div>
 
-<!-- MULTI-ACTION FLOATING + SPEED DIAL MENU (Manager Only) -->
+<!-- SPEED DIAL MENU -->
 <div class="fab-menu" id="fab-menu" onclick="event.stopPropagation()">
  <button onclick="closeAllPopovers();openDirectPayModal()">
  <span style="font-size:20px">💵</span>
@@ -518,7 +516,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
  </button>
 </div>
 
-<!-- DOCKED BOTTOM BAR WITH CENTERED INDIGO + BUTTON -->
+<!-- DOCK -->
 <nav class="bottom-dock" id="mgr-dock">
  <button class="nav-tab on" data-tab="dash" onclick="CYCLE_DETAIL_MODE=false;setTab('dash')">
  <span class="ico">🏠</span><span id="nav-dash">Home</span>
@@ -537,9 +535,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
  </button>
 </nav>
 
-<!-- ==========================================================================
- MODALS
- ========================================================================== -->
+<!-- MODALS -->
 <div class="modal-bg" id="onboard-modal"><div class="modal-card" id="onboard-content"></div></div>
 <div class="modal-bg" id="report-modal"><div class="modal-card" id="report-content"></div></div>
 <div class="modal-bg" id="new-cycle-modal"><div class="modal-card" id="new-cycle-content"></div></div>
@@ -547,7 +543,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 <div class="modal-bg" id="supplier-modal"><div class="modal-card" id="supplier-content"></div></div>
 <div class="modal-bg" id="settings-modal"><div class="modal-card" id="settings-content"></div></div>
 
-<!-- MODAL: ADD / EDIT CHARGE -->
+<!-- CHARGE MODAL -->
 <div class="modal-bg" id="charge-modal">
  <div class="modal-card">
  <div class="card-h"><h3 id="cm-title">Add Charge</h3><button class="btn-del" onclick="closeModal('charge-modal')">✕</button></div>
@@ -571,7 +567,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
  </div>
 </div>
 
-<!-- MODAL: ADD / EDIT UNIT -->
+<!-- UNIT MODAL -->
 <div class="modal-bg" id="unit-modal">
  <div class="modal-card">
  <div class="card-h"><h3 id="um-title">Edit Apartment</h3><button class="btn-del" onclick="closeModal('unit-modal')">✕</button></div>
@@ -598,7 +594,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
  </div>
 </div>
 
-<!-- MODAL: EXPENSE LOGGER -->
+<!-- EXPENSE MODAL -->
 <div class="modal-bg" id="exp-modal">
  <div class="modal-card">
  <div class="card-h"><h3 id="ex-modal-title">Add Building Bill / Expense</h3><button class="btn-del" onclick="closeModal('exp-modal')">✕</button></div>
@@ -621,6 +617,16 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
  <option value="natour_pending">👷‍♂️ Send to Natour to Pay from His Cash (فواتير يدفعها الناطور)</option>
  <option value="natour_paid">✓ Already Paid by Natour from His Cash (دفعها الناطور)</option>
  </select>
+ </div>
+
+ <div style="margin-bottom:10px;padding:10px;background:var(--soft);border-radius:12px">
+ <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--acc);cursor:pointer">
+ <input type="checkbox" id="ex-split-toggle" style="width:18px;height:18px" onchange="document.getElementById('ex-split-box').style.display=this.checked?'block':'none'">
+ <span>➗ Split this bill & add as a charge to apartments this month</span>
+ </label>
+ <div id="ex-split-box" style="display:none;margin-top:8px;font-size:11.5px;color:var(--mut)">
+ This will automatically divide the bill equally among all apartments and add it as a charge chip to collect.
+ </div>
  </div>
 
  <div class="two-col-grid" style="margin-bottom:10px">
@@ -679,7 +685,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
  </div>
 </div>
 
-<!-- MODAL: ADD MAINTENANCE REMINDER -->
+<!-- REMINDER MODAL -->
 <div class="modal-bg" id="rem-modal">
  <div class="modal-card">
  <div class="card-h"><h3>🔔 Add Maintenance Reminder</h3><button class="btn-del" onclick="closeModal('rem-modal')">✕</button></div>
@@ -728,20 +734,19 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
  <input type="checkbox" id="rm-natour" checked style="width:20px;height:20px">
  <div>
  <b style="font-size:13px;display:block;color:var(--acc)">👷‍♂️ Send to Natour's Checklist</b>
- <span style="font-size:11.5px;color:var(--mut)">Shows on the Natour's phone so he can tick it when done</span>
+ <span style="font-size:11.5px;color:var(--mut)">Shows on the Natour's phone so he can check & tick when done</span>
  </div>
  </label>
  <button style="width:100%;padding:13px;background:var(--acc);color:#fff" onclick="saveReminderModal()">Save Reminder</button>
  </div>
 </div>
-
 <script>
 /* ============================================================================
- 1. BILINGUAL DICTIONARY & STATE (BINAYATI · بنايتي V12)
+ 2. BILINGUAL DICTIONARY & STATE (BINAYATI · بنايتي V13)
  ============================================================================ */
-var STORAGE_KEY = 'binayati_v12_store';
+var STORAGE_KEY = 'binayati_v13_store';
 var ROLE = 'mgr';
-var TAB = 'dash'; // 'dash', 'setup', 'expenses', 'natour', 'dir', 'ledger', 'task_history'
+var TAB = 'dash';
 var LANG = 'en';
 var UNPAID_ONLY = false;
 var REF_CUR = 'USD';
@@ -816,7 +821,7 @@ var DEFAULT_DB = {
  ],
  dues: [
  { id: 'd_water', en: 'Water Bill', ar: 'فاتورة المياه', amt: 1250000, cur: 'LBP' },
- { id: 'sp_sol_m1', en: '☀️ Solar Inst. 1/5', ar: '☀️ قسط طاقة شمسية 1/5', amt: 108, cur: 'USD', linkedProject: 'Solar 6kW Install', linkedColId: 'sp_m1' }
+ { id: 'sp_sol_m1', en: '☀️ Solar Inst. (Oct 2026)', ar: '☀️ قسط طاقة شمسية (تشرين الأول 2026)', amt: 108, cur: 'USD', linkedProject: 'Solar 6kW Install', linkedColId: 'sp_m1' }
  ],
  services: [
  { id: 's_gen', en: 'Private Generator', ar: 'المولد الخاص (موتور)', cur: 'USD', passThrough: true, map: { 'U_SS2R': 45, 'U_2A': 50 } },
@@ -846,11 +851,11 @@ var DEFAULT_DB = {
  dues: [],
  services: [
  { id: 'sp_down', en: 'Initial Down Payment ($300 Split)', ar: 'الدفعة الأولى (من أصل 300$)', cur: 'USD', passThrough: false, map: { 'U_SS2R': 60, 'U_SS1R': 60, 'U_1A': 60, 'U_2A': 60, 'U_2B': 60 } },
- { id: 'sp_m1', en: 'Installment 1 of 5', ar: 'القسط الشهري 1 من 5', cur: 'USD', passThrough: false, map: { 'U_SS2R': 108, 'U_SS1R': 108, 'U_1A': 108, 'U_2A': 108, 'U_2B': 108 } },
- { id: 'sp_m2', en: 'Installment 2 of 5', ar: 'القسط الشهري 2 من 5', cur: 'USD', passThrough: false, map: { 'U_SS2R': 108, 'U_SS1R': 108, 'U_1A': 108, 'U_2A': 108, 'U_2B': 108 } },
- { id: 'sp_m3', en: 'Installment 3 of 5', ar: 'القسط الشهري 3 من 5', cur: 'USD', passThrough: false, map: { 'U_SS2R': 108, 'U_SS1R': 108, 'U_1A': 108, 'U_2A': 108, 'U_2B': 108 } },
- { id: 'sp_m4', en: 'Installment 4 of 5', ar: 'القسط الشهري 4 من 5', cur: 'USD', passThrough: false, map: { 'U_SS2R': 108, 'U_SS1R': 108, 'U_1A': 108, 'U_2A': 108, 'U_2B': 108 } },
- { id: 'sp_m5', en: 'Installment 5 of 5', ar: 'القسط الشهري 5 من 5', cur: 'USD', passThrough: false, map: { 'U_SS2R': 108, 'U_SS1R': 108, 'U_1A': 108, 'U_2A': 108, 'U_2B': 108 } }
+ { id: 'sp_m1', en: 'Oct 2026 Installment (1/5)', ar: 'قسط تشرين الأول 2026 (1/5)', cur: 'USD', passThrough: false, map: { 'U_SS2R': 108, 'U_SS1R': 108, 'U_1A': 108, 'U_2A': 108, 'U_2B': 108 } },
+ { id: 'sp_m2', en: 'Nov 2026 Installment (2/5)', ar: 'قسط تشرين الثاني 2026 (2/5)', cur: 'USD', passThrough: false, map: { 'U_SS2R': 108, 'U_SS1R': 108, 'U_1A': 108, 'U_2A': 108, 'U_2B': 108 } },
+ { id: 'sp_m3', en: 'Dec 2026 Installment (3/5)', ar: 'قسط كانون الأول 2026 (3/5)', cur: 'USD', passThrough: false, map: { 'U_SS2R': 108, 'U_SS1R': 108, 'U_1A': 108, 'U_2A': 108, 'U_2B': 108 } },
+ { id: 'sp_m4', en: 'Jan 2027 Installment (4/5)', ar: 'قسط كانون الثاني 2027 (4/5)', cur: 'USD', passThrough: false, map: { 'U_SS2R': 108, 'U_SS1R': 108, 'U_1A': 108, 'U_2A': 108, 'U_2B': 108 } },
+ { id: 'sp_m5', en: 'Feb 2027 Installment (5/5)', ar: 'قسط شباط 2027 (5/5)', cur: 'USD', passThrough: false, map: { 'U_SS2R': 108, 'U_SS1R': 108, 'U_1A': 108, 'U_2A': 108, 'U_2B': 108 } }
  ],
  paid: {
  'sp_down': { 'U_SS2R': 1, 'U_SS1R': 1, 'U_1A': 1, 'U_2A': 1, 'U_2B': 2 },
@@ -866,9 +871,9 @@ var DEFAULT_DB = {
  { id: 'U_2B', code: '2B', en: 'Ziad Nader', ar: 'زياد نادر', ph: '9613900100', prefLang: 'ar' }
  ],
  reminders: [
- { id: 'r1', en: 'Wash & Sanitize Trash Bins', ar: 'غسيل مستوعبات النفايات والمدخل', date: '2026-10-22', freq: 'Weekly', assignNatour: true },
- { id: 'r2', en: 'Wipe Dust off Solar Panels', ar: 'تنظيف ألواح الطاقة الشمسية', date: '2026-10-25', freq: 'Monthly', assignNatour: true },
- { id: 'r3', en: 'Building Pest Control & Fumigation', ar: 'رش مبيدات وحشرات للبناية', date: '2026-11-10', freq: 'Every 6 Months', assignNatour: false }
+ { id: 'r1', en: 'Wash & Sanitize Trash Bins', ar: 'غسيل مستوعبات النفايات والمدخل', date: '2026-10-22', freq: 'Weekly', assignNatour: true, done: false },
+ { id: 'r2', en: 'Wipe Dust off Solar Panels', ar: 'تنظيف ألواح الطاقة الشمسية', date: '2026-10-25', freq: 'Monthly', assignNatour: true, done: false },
+ { id: 'r3', en: 'Building Pest Control & Fumigation', ar: 'رش مبيدات وحشرات للبناية', date: '2026-11-10', freq: 'Every 6 Months', assignNatour: false, done: false }
  ],
  completedTasks: [
  { id: 'ct1', en: 'Fire Extinguisher Safety Check', ar: 'فحص طفايات الحريق', completedAt: '2026-10-14', by: '👨‍💼 Manager' },
@@ -888,10 +893,10 @@ var DEFAULT_DB = {
  { id: 'l3', desc: 'Shared Generator Fuel & Service', sub: '⚡ Generator & Fuel', channel: 'Building Safe', amt: 110, cur: 'USD', type: 'out', at: '2026-10-10', ref: 'FUEL-102' },
  { id: 'l4', desc: 'Ahmad El-Khatib (SS2R) · Oct Dues', sub: 'Collected by Natour', channel: 'Natour Cash', amt: 35, cur: 'USD', type: 'in', at: '2026-10-09', ref: 'NATOUR' }
  ],
- waTemplateAr: '💧 *{building}* · *{month}*\n\nتحية طيبة *{name}* ({unit})، 👋\n{items}\n\n👉 *المبلغ المطلوب تسليمه إلى {collector}:*\n*{due}*\n\nنشكر حسن تعاونكم! 🙏✨',
- waTemplateEn: '💧 *{building}* · *{month}*\n\nHello *{name}* ({unit}), 👋\n{items}\n\n👉 *Total due to pass to {collector}:*\n*{due}*\n\nThank you for your cooperation! 🙏✨',
- waReceiptAr: '🧾 *إيصال استلام · {building}*\n*{month}*\n\nشكراً جزيلاً *{name}* ({unit})! 🌸\nتم استلام كامل مستحقاتكم:\n{items}\n\n✅ *الرصيد المتبقي: 0 (مسدّد بالكامل)*\nبارك الله بكم! 🙏✨',
- waReceiptEn: '🧾 *Payment Receipt · {building}*\n*{month}*\n\nThank you *{name}* ({unit})! 🌸\nWe confirm receiving your full payment:\n{items}\n\n✅ *Remaining Balance: $0 (Settled in Full)*\nThank you for your support! 🙏✨'
+ waTemplateAr: '🏠 *بنايتي · Binayati* 💧\n\n💡 *فاتورة شهرية / PAYMENT NOTICE*\n*{building}* · *{month}*\n\nتحية طيبة *{name}* ({unit})، 👋\n{items}\n\n👉 *المبلغ المطلوب تسليمه إلى {collector}:*\n*{due}*\n\nنشكر حسن تعاونكم! 🙏✨',
+ waTemplateEn: '🏠 *Binayati · بنايتي* 💧\n\n💡 *Friendly Bill Reminder / PAYMENT NOTICE*\n*{building}* · *{month}*\n\nHello *{name}* ({unit}), 👋\n{items}\n\n👉 *Total due to pass to {collector}:*\n*{due}*\n\nThank you for your support! 🙏✨',
+ waReceiptAr: '🏠 *بنايتي · Binayati* 💧\n\n🧾 *إيصال استلام رسمي · OFFICIAL RECEIPT*\n*{building}* · *{month}*\n\nشكراً جزيلاً *{name}* ({unit})! 🌸\nتم استلام كامل مستحقاتكم:\n{items}\n\n✅ *الرصيد المتبقي: 0 (مسدّد بالكامل)*\nبارك الله بكم! 🙏✨',
+ waReceiptEn: '🏠 *Binayati · بنايتي* 💧\n\n🧾 *Official Payment Receipt*\n*{building}* · *{month}*\n\nThank you *{name}* ({unit})! 🌸\nWe confirm receiving your full payment:\n{items}\n\n✅ *Remaining Balance: $0 (Settled in Full)*\nThank you for your support! 🙏✨'
 };
 
 var DB = loadDB();
@@ -904,246 +909,8 @@ function saveDB() {
 }
 
 /* ============================================================================
- 2. HELPERS, TRANSLATION & ACCOUNTING
+ 3. NATIVE MOBILE SHARE SHEET & REPORT EXPORT ENGINE (Fixed for iPhone/Android)
  ============================================================================ */
-function esc(s) {
- return String(s == null ? '' : s).replace(/[&<>"]/g, function(c) {
- return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
- });
-}
-function fmt(n, cur, forceLang) {
- var lg = forceLang || LANG;
- var v = Math.round((Number(n) || 0) * 100) / 100;
- if (cur === 'LBP') return Math.round(v).toLocaleString('en-US') + (lg === 'ar' ? ' ل.ل.' : ' LBP');
- return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-}
-function dispCycleName(cKey, forceLang) {
- var lg = forceLang || LANG;
- var cyc = DB.cycles[cKey];
- if (lg === 'ar') {
- if (cyc && cyc.arLabel) return cyc.arLabel;
- var M = {january:'كانون الثاني',february:'شباط',march:'آذار',april:'نيسان',may:'أيار',june:'حزيران',july:'تموز',august:'آب',september:'أيلول',october:'تشرين الأول',november:'تشرين الثاني',december:'كانون الأول'};
- var x = /^\s*([A-Za-z]+)\s+(\d{4})/.exec(String(cKey || ''));
- return x && M[x[1].toLowerCase()] ? M[x[1].toLowerCase()] + ' ' + x[2] : String(cKey || '');
- }
- return cKey;
-}
-
-function formatWaHtml(rawText) {
- var safe = esc(rawText);
- return safe.replace(/\*([^*\n]+)\*/g, '<strong>$1</strong>');
-}
-
-function getCycleCols(cKey, onlyBuilding) {
- var cyc = DB.cycles[cKey] || { fixed: [], dues: [], services: [] };
- var cols = [];
- (cyc.fixed || []).forEach(function(f) {
- cols.push({ id: f.id, kind: 'fixed', passThrough: false, en: f.en, ar: f.ar, cur: f.cur, valFor: function(uId) { return (f.exc && f.exc[uId] != null) ? Number(f.exc[uId]) : Number(f.amt); } });
- });
- (cyc.dues || []).forEach(function(d) {
- cols.push({ id: d.id, kind: 'dues', passThrough: false, en: d.en, ar: d.ar, cur: d.cur, linkedProject: d.linkedProject, linkedColId: d.linkedColId, valFor: function() { return Number(d.amt); } });
- });
- (cyc.services || []).forEach(function(s) {
- var isPt = (s.passThrough !== undefined) ? !!s.passThrough : !cyc.isProject;
- if (onlyBuilding && isPt) return;
- cols.push({ id: s.id, kind: 'services', passThrough: isPt, en: s.en, ar: s.ar, cur: s.cur, valFor: function(uId) { return Number((s.map || {})[uId]) || 0; } });
- });
- return cols;
-}
-
-function getCycleStats(cKey) {
- var cyc = DB.cycles[cKey];
- if (!cyc) return {
- usdGot:0, usdSum:0, lbpGot:0, lbpSum:0,
- natUsdGot:0, natLbpGot:0, mgrUsdGot:0, mgrLbpGot:0,
- natBillsPaidUsd:0, natBillsPaidLbp:0, natNetUsd:0, natNetLbp:0,
- supGotUsd:0, supSumUsd:0,
- eqGotUsd:0, eqSumUsd:0, expUsd:0, netCycleUsd:0, settled:0, total:DB.apartments.length, pct:0
- };
-
- var allCols = getCycleCols(cKey, false);
- var usdGot = 0, usdSum = 0, lbpGot = 0, lbpSum = 0;
- var natUsdGot = 0, natLbpGot = 0, mgrUsdGot = 0, mgrLbpGot = 0;
- var supGotUsd = 0, supSumUsd = 0;
- var settled = 0, activeUnits = 0;
- var rate = Number(DB.settings.rate) || 89500;
-
- DB.apartments.forEach(function(a) {
- var allPd = true, hasAnyBld = false;
- allCols.forEach(function(c) {
- var v = c.valFor(a.id); if (v <= 0) return;
- var pState = (cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][a.id]) || 0;
- var pd = pState > 0;
-
- if (c.passThrough) {
- var vUsd = c.cur === 'LBP' ? (v / rate) : v;
- supSumUsd += vUsd;
- if (pd) supGotUsd += vUsd;
- } else {
- hasAnyBld = true;
- if (!pd) allPd = false;
- if (c.cur === 'LBP') {
- lbpSum += v;
- if (pd) {
- lbpGot += v;
- if (pState === 2) mgrLbpGot += v; else natLbpGot += v;
- }
- } else {
- usdSum += v;
- if (pd) {
- usdGot += v;
- if (pState === 2) mgrUsdGot += v; else natUsdGot += v;
- }
- }
- }
- });
- if (hasAnyBld) {
- activeUnits++;
- if (allPd) settled++;
- }
- });
-
- var expUsd = 0, natBillsPaidUsd = 0, natBillsPaidLbp = 0;
- DB.expenses.forEach(function(e) {
- if (e.month === cKey && e.payer !== 'natour_pending') {
- expUsd += e.cur === 'LBP' ? (Number(e.amt) / rate) : Number(e.amt);
- if (e.payer === 'natour_paid') {
- if (e.cur === 'LBP') natBillsPaidLbp += Number(e.amt) || 0;
- else natBillsPaidUsd += Number(e.amt) || 0;
- }
- }
- });
-
- var eqGotUsd = usdGot + (lbpGot / rate);
- var eqSumUsd = cyc.isProject && cyc.targetBudget ? Math.max(Number(cyc.targetBudget), usdSum + (lbpSum / rate)) : (usdSum + (lbpSum / rate));
- var netCycleUsd = eqGotUsd - expUsd;
- var pct = eqSumUsd > 0 ? Math.min(100, Math.round((eqGotUsd / eqSumUsd) * 100)) : 0;
-
- return {
- usdGot:usdGot, usdSum:usdSum, lbpGot:lbpGot, lbpSum:lbpSum,
- natUsdGot:natUsdGot, natLbpGot:natLbpGot, mgrUsdGot:mgrUsdGot, mgrLbpGot:mgrLbpGot,
- natBillsPaidUsd:natBillsPaidUsd, natBillsPaidLbp:natBillsPaidLbp,
- natNetUsd: natUsdGot - natBillsPaidUsd,
- natNetLbp: natLbpGot - natBillsPaidLbp,
- supGotUsd:supGotUsd, supSumUsd:supSumUsd,
- eqGotUsd:eqGotUsd, eqSumUsd:eqSumUsd, expUsd:expUsd, netCycleUsd:netCycleUsd,
- settled:settled, total:activeUnits || DB.apartments.length, pct:pct
- };
-}
-
-function getSafeBalance() {
- var rate = Number(DB.settings.rate) || 89500;
- var inUsd = 0, inLbp = 0, outUsd = 0, outLbp = 0;
- Object.keys(DB.cycles).forEach(function(ck) {
- var cyc = DB.cycles[ck];
- var bldCols = getCycleCols(ck, true);
- DB.apartments.forEach(function(a) {
- bldCols.forEach(function(c) {
- if (c.linkedProject) return;
- var v = c.valFor(a.id); if (v <= 0) return;
- var pd = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][a.id]);
- if (pd) {
- if (c.cur === 'LBP') inLbp += v; else inUsd += v;
- }
- });
- });
- });
- DB.expenses.forEach(function(e) {
- if (e.payer === 'natour_pending') return;
- if (e.cur === 'LBP') outLbp += Number(e.amt) || 0;
- else outUsd += Number(e.amt) || 0;
- });
- var netUsd = (Number(DB.settings.initialUsd) || 0) + inUsd - outUsd;
- var netLbp = (Number(DB.settings.initialLbp) || 0) + inLbp - outLbp;
- var refVal = REF_CUR === 'USD' ? (netUsd + netLbp / rate) : (netLbp + netUsd * rate);
- return { netUsd: netUsd, netLbp: netLbp, refVal: refVal };
-}
-
-function buildDonutSvg(segments, totalUsdStr, subLabel) {
- var r = 74, c = 2 * Math.PI * r, offset = 0, circles = '';
- if (!segments.length) {
- circles = '<circle cx="95" cy="95" r="' + r + '" fill="none" stroke="var(--line)" stroke-width="22"/>';
- } else {
- segments.forEach(function(seg) {
- var len = Math.max(0, (seg.pct / 100) * c - 3);
- circles += '<circle cx="95" cy="95" r="' + r + '" fill="none" stroke="' + seg.color + '" stroke-width="22" stroke-linecap="round" stroke-dasharray="' + len + ' ' + c + '" stroke-dashoffset="' + (-offset) + '" transform="rotate(-90 95 95)"/>';
- offset += (seg.pct / 100) * c;
- });
- }
- return '<div class="chart-wrap"><svg width="190" height="190" viewBox="0 0 190 190">' + circles + '</svg>'
- + '<div class="donut-center"><b dir="ltr">' + totalUsdStr + '</b><span>' + esc(subLabel) + '</span></div></div>';
-}
-
-/* ============================================================================
- 3. WHATSAPP GENERATOR & SHAREABLE MONTHLY REPORT (IMAGE / PDF / WHATSAPP)
- ============================================================================ */
-function isAptSettled(apt, cKey) {
- var cyc = DB.cycles[cKey];
- var cols = getCycleCols(cKey, false);
- var dueU = 0, dueL = 0, hasCharges = false;
- cols.forEach(function(c) {
- var v = c.valFor(apt.id); if (v <= 0) return;
- hasCharges = true;
- var pd = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][apt.id]);
- if (!pd) { if (c.cur === 'LBP') dueL += v; else dueU += v; }
- });
- return hasCharges && dueU === 0 && dueL === 0;
-}
-
-function buildWhatsAppText(apt, overrideLang, forceState) {
- var cyc = DB.cycles[SELECTED_MONTH];
- var cols = getCycleCols(SELECTED_MONTH, false);
- var mode = overrideLang || apt.prefLang || 'both';
- var itemsAr = [], itemsEn = [], u = 0, l = 0;
-
- cols.forEach(function(c) {
- var v = c.valFor(apt.id); if (v <= 0) return;
- var pState = (cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][apt.id]) || 0;
- var pd = pState > 0;
- var tickMark = (forceState === 'receipt' || pd) ? ' ✅' : '';
- itemsAr.push('• ' + (c.ar || c.en) + ': ' + fmt(v, c.cur, 'ar') + tickMark);
- itemsEn.push('• ' + c.en + ': ' + fmt(v, c.cur, 'en') + tickMark);
- if (!pd) { if (c.cur === 'LBP') l += v; else u += v; }
- });
-
- var settled = (forceState === 'receipt') || (forceState !== 'due' && u === 0 && l === 0);
-
- var dueAr = [], dueEn = [];
- if (u > 0) { dueAr.push(fmt(u, 'USD', 'ar')); dueEn.push(fmt(u, 'USD', 'en')); }
- if (l > 0) { dueAr.push(fmt(l, 'LBP', 'ar')); dueEn.push(fmt(l, 'LBP', 'en')); }
-
- var tplAr = settled ? (DB.waReceiptAr || DEFAULT_DB.waReceiptAr) : (DB.waTemplateAr || DEFAULT_DB.waTemplateAr);
- var tplEn = settled ? (DB.waReceiptEn || DEFAULT_DB.waReceiptEn) : (DB.waTemplateEn || DEFAULT_DB.waTemplateEn);
-
- var blockAr = tplAr
- .replace('{building}', DB.settings.bldAr || DB.settings.bldEn)
- .replace('{month}', dispCycleName(SELECTED_MONTH, 'ar'))
- .replace('{name}', apt.ar || apt.en)
- .replace('{unit}', apt.code)
- .replace('{items}', itemsAr.join('\n'))
- .replace('{due}', dueAr.join(' + ') || 'مسدّد بالكامل ✅')
- .replace('{collector}', DB.settings.collectorAr || DB.settings.collectorEn);
-
- var blockEn = tplEn
- .replace('{building}', DB.settings.bldEn)
- .replace('{month}', dispCycleName(SELECTED_MONTH, 'en'))
- .replace('{name}', apt.en)
- .replace('{unit}', apt.code)
- .replace('{items}', itemsEn.join('\n'))
- .replace('{due}', dueEn.join(' + ') || 'All Settled ✅')
- .replace('{collector}', DB.settings.collectorEn);
-
- if (mode === 'ar') return blockAr;
- if (mode === 'en') return blockEn;
- return blockAr + '\n\n────────────\n\n' + blockEn;
-}
-
-function buildWaLink(apt) {
- var txt = buildWhatsAppText(apt);
- return 'https://wa.me/' + String(apt.ph || '').replace(/\D/g, '') + '?text=' + encodeURIComponent(txt);
-}
-
-/* ---- MONTHLY BUILDING REPORT MODAL ---- */
 function openMonthlyReportModal() {
  renderMonthlyReportContent();
  openModal('report-modal');
@@ -1208,15 +975,16 @@ function renderMonthlyReportContent() {
  h += '</div>';
 
  h += '<div class="two-col-grid no-print" style="margin-bottom:8px">';
- h += '<button style="padding:12px;background:var(--acc);color:#fff" onclick="downloadReportImage()">📸 ' + t('Save as Image (PNG)', 'حفظ كصورة (PNG)') + '</button>';
+ h += '<button style="padding:12px;background:var(--acc);color:#fff" onclick="shareReportImageNative()">📲 ' + t('Share Report Image (WhatsApp)', 'مشاركة صورة التقرير (واتساب)') + '</button>';
  h += '<button style="padding:12px;background:var(--card2);border:1px solid var(--line)" onclick="window.print()">🖨️ ' + t('Save PDF / Print', 'حفظ PDF / طباعة') + '</button>';
  h += '</div>';
- h += '<button class="no-print" style="width:100%;padding:12px;background:var(--okbg);color:var(--ok);border:1px solid var(--ok)" onclick="shareReportToWhatsAppGroup()">💬 ' + t('Share Summary to Building WhatsApp Group', 'مشاركة التقرير في مجموعة واتساب البناية') + '</button>';
+ h += '<button class="no-print" style="width:100%;padding:12px;background:var(--okbg);color:var(--ok);border:1px solid var(--ok)" onclick="shareReportToWhatsAppGroup()">💬 ' + t('Share Summary Text to WhatsApp Group', 'مشاركة ملخص النص في مجموعة واتساب') + '</button>';
 
  document.getElementById('report-content').innerHTML = h;
 }
 
-function downloadReportImage() {
+// Uses native navigator.share() to let iPhones and Androids save/share image directly to WhatsApp or Photos!
+function shareReportImageNative() {
  var s = getCycleStats(SELECTED_MONTH);
  var sf = getSafeBalance();
  var cyc = DB.cycles[SELECTED_MONTH];
@@ -1298,11 +1066,23 @@ function downloadReportImage() {
  ctx.fillText(eqOwed === 0 ? ('✓ Paid $' + eqPaid) : ('Owes $' + eqOwed), 620, y);
  });
 
+ canvas.toBlob(function(blob) {
+ var file = new File([blob], 'Binayati-Report-' + SELECTED_MONTH.replace(/\s+/g, '-') + '.png', { type: 'image/png' });
+ if (navigator.canShare && navigator.canShare({ files: [file] })) {
+ navigator.share({
+ files: [file],
+ title: 'Binayati Monthly Report',
+ text: '📊 ' + DB.settings.bldEn + ' · ' + SELECTED_MONTH + ' Financial Report'
+ }).catch(function(err){ console.log(err); });
+ } else {
+ // Fallback for browsers that don't support file sharing
  var link = document.createElement('a');
- link.download = 'Binayati-Report-' + SELECTED_MONTH.replace(/\s+/g, '-') + '.png';
- link.href = canvas.toDataURL('image/png');
+ link.download = file.name;
+ link.href = URL.createObjectURL(blob);
  link.click();
  showToast(t('Report image saved!', 'تم حفظ صورة التقرير!'));
+ }
+ }, 'image/png');
 }
 
 function shareReportToWhatsAppGroup() {
@@ -1314,6 +1094,7 @@ function shareReportToWhatsAppGroup() {
  var cycExps = DB.expenses.filter(function(e) { return e.month === SELECTED_MONTH && e.payer !== 'natour_pending'; });
 
  var lines = [];
+ lines.push('🏠 *Binayati · بنايتي* 💧');
  lines.push('📊 *' + DB.settings.bldEn + ' · ' + DB.settings.bldAr + '*');
  lines.push('📅 *' + SELECTED_MONTH + ' — Monthly Report*');
  lines.push('────────────────────');
@@ -1376,7 +1157,6 @@ function render() {
  document.getElementById('sim-col').textContent = t('👷‍♂️ Natour', '👷‍♂️ الناطور');
  document.getElementById('btn-ob-sim').textContent = t('✨ Setup Guide', '✨ دليل الإعداد');
 
- // Translate Speed-Dial FAB Menu
  document.getElementById('fm-pay').textContent = t('Record Resident Payment', 'تسجيل دفعة من ساكن للمدير');
  document.getElementById('fm-pay-sub').textContent = t('Cash to Manager, Whish, OMT or Bank', 'كاش للمدير، Whish، OMT أو تحويل');
  document.getElementById('fm-exp').textContent = t('Add Building Bill / Expense', 'تسجيل فاتورة أو مصروف');
@@ -1388,7 +1168,6 @@ function render() {
  document.getElementById('fm-tsk').textContent = t('Add Maintenance Reminder', 'إضافة تذكير صيانة');
  document.getElementById('fm-tsk-sub').textContent = t('For Building or Natour checklist', 'للبناية أو لقائمة مهام الناطور');
 
- // Translate Bottom Dock
  document.getElementById('nav-dash').textContent = t('Home', 'الرئيسية');
  document.getElementById('nav-exp').textContent = t('Expenses', 'المصاريف');
  document.getElementById('nav-nat').textContent = t('Natour', 'الناطور');
@@ -1439,7 +1218,7 @@ function render() {
  }
 }
 
-/* ---- SCREEN 1A: ROYAL INDIGO HOME SCREEN ---- */
+/* ---- SCREEN 1A: ROYAL INDIGO HOME SCREEN (With Collapsible Completed Tasks Drawer & Undo!) ---- */
 function renderOverviewScreen() {
  var sf = getSafeBalance();
  var s = getCycleStats(SELECTED_MONTH);
@@ -1488,17 +1267,37 @@ function renderOverviewScreen() {
  });
  h += '</div>';
 
+ // Maintenance & Tasks Card with Pending State (`⬜`) + Collapsible Completed Drawer with `↩ Undo`
  h += '<div class="card"><div class="card-h"><h2>🔔 ' + t('Maintenance & Natour Tasks', 'تذكيرات الصيانة ومهام الناطور') + '</h2>';
- h += '<div style="display:flex;gap:6px"><button class="btn-edit" onclick="setTab(\'task_history\')">✅ ' + t('Done Log', 'المنجزة') + '</button><button class="btn-edit" style="color:var(--acc)" onclick="openReminderModal()">+ ' + t('Add', 'إضافة') + '</button></div></div>';
+ h += '<button class="btn-edit" style="color:var(--acc)" onclick="openReminderModal()">+ ' + t('Add', 'إضافة') + '</button></div>';
+
  if (!DB.reminders || !DB.reminders.length) {
- h += '<div class="subtext">' + t('No upcoming maintenance reminders.', 'لا توجد تذكيرات صيانة قادمة.') + '</div>';
+ h += '<div class="subtext">' + t('No pending maintenance tasks.', 'لا توجد مهام صيانة معلقة.') + '</div>';
  } else {
  DB.reminders.forEach(function(rm, idx) {
  h += '<div class="list-row">';
  h += '<div class="list-left"><span style="font-size:18px">' + (rm.assignNatour ? '👷‍♂️' : '🏢') + '</span><div style="min-width:0"><b class="single-line-name">' + esc(LANG==='ar'?(rm.ar||rm.en):rm.en) + '</b>';
- h += '<div style="font-size:11.5px;color:var(--mut)">' + esc(rm.date) + ' · ' + esc(rm.freq) + (rm.assignNatour ? (' · <span style="color:var(--acc);font-weight:700">' + t('On Natour Phone', 'على هاتف الناطور') + '</span>') : (' · <span>' + t('Building Reminder', 'تذكير للبناية') + '</span>')) + '</div></div></div>';
- h += '<button class="btn-edit" style="color:var(--ok);border-color:var(--ok)" onclick="completeReminder(' + idx + ')">✓ ' + t('Done', 'تم') + '</button></div>';
+ h += '<div style="font-size:11.5px;color:var(--mut)">' + esc(rm.date) + ' · ' + esc(rm.freq) + (rm.assignNatour ? (' · <span style="color:var(--acc);font-weight:700">' + t('On Natour Phone', 'على هاتف الناطور') + '</span>') : '') + '</div></div></div>';
+ h += '<button class="btn-edit" style="background:var(--card2);color:var(--ink);border-color:var(--line)" onclick="completeReminder(' + idx + ')">⬜ ' + t('Mark Done', 'إنجاز') + '</button></div>';
  });
+ }
+
+ // Collapsible Completed Tasks Drawer Right Inside the Card!
+ var compCount = (DB.completedTasks || []).length;
+ if (compCount > 0) {
+ h += '<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line">';
+ h += '<button class="btn-edit" style="width:100%;justify-content:center;background:var(--soft);color:var(--acc);border:0" onclick="TOGGLE_COMPLETED_DRAWER = !window.TOGGLE_COMPLETED_DRAWER;render()">'
+ + (window.TOGGLE_COMPLETED_DRAWER ? '▲ ' + t('Hide Completed Tasks Archive', 'إحفاء أرشيف المهام المنجزة') : '✅ ' + t('View Completed Archive (' + compCount + ')', 'عرض أرشيف المهام المنجزة (' + compCount + ')')) + '</button>';
+
+ if (window.TOGGLE_COMPLETED_DRAWER) {
+ h += '<div style="margin-top:10px">';
+ DB.completedTasks.forEach(function(ct, cIdx) {
+ h += '<div class="list-row" style="padding:7px 0"><div class="list-left"><span>✅</span><div style="min-width:0"><b class="single-line-name" style="text-decoration:line-through;color:var(--mut)">' + esc(LANG==='ar'?(ct.ar||ct.en):ct.en) + '</b><div style="font-size:11px;color:var(--mut)">' + esc(ct.completedAt) + ' · ' + esc(ct.by) + '</div></div></div>';
+ h += '<button class="btn-edit" style="color:var(--bad);background:var(--errbg);border:0;padding:4px 8px" onclick="undoCompleteTask(' + cIdx + ')">↩ ' + t('Undo', 'تراجع') + '</button></div>';
+ });
+ h += '</div>';
+ }
+ h += '</div>';
  }
  h += '</div>';
 
@@ -1512,7 +1311,7 @@ function escapeForHeroSub(sf) {
  return '💵 ' + fmt(sf.netUsd, 'USD', 'en') + '   +   🇱🇧 ' + fmt(sf.netLbp, 'LBP', 'en');
 }
 
-/* ---- SCREEN 1B: FOCUSED MONTH / PROJECT VIEW + 1-TAP SHARE MONTHLY REPORT ---- */
+/* ---- FOCUSED CYCLE VIEW ---- */
 function openCycleDetail(cKey) {
  SELECTED_MONTH = cKey;
  CYCLE_DETAIL_MODE = true;
@@ -1653,27 +1452,31 @@ function renderFocusedCycleView() {
  document.getElementById('app-body').innerHTML = h;
 }
 
-/* ============================================================================
- 5. ILLUSTRATED 7-STEP ONBOARDING WIZARD
- ============================================================================ */
+/* ---- TASK UNDO & COMPLETION LOGIC ---- */
+function undoCompleteTask(cIdx) {
+ var ct = (DB.completedTasks || [])[cIdx];
+ if (!ct) return;
+ DB.reminders.push({
+ id: 'rm_' + Date.now(),
+ en: ct.en,
+ ar: ct.ar || ct.en,
+ date: todayIso(),
+ freq: 'Monthly',
+ assignNatour: true
+ });
+ DB.completedTasks.splice(cIdx, 1);
+ saveDB();
+ showToast(t('Task restored to pending reminders!', 'تم استعادة المهمة للقائمة المعلقة!'));
+ render();
+}
+
+/* ---- 7-STEP ONBOARDING WIZARD ---- */
 var OB = {
- step: 1,
- role: 'mgr',
- bldEn: 'Block C',
- bldAr: 'البلوك C',
- unitCount: 5,
- curMode: 'single',
- rate: 89500,
- balMode: 'zero',
- initUsd: 450,
- initLbp: 18000000,
- useMaint: true, maintAmt: 20,
- useNatFee: true, natFeeAmt: 15,
- useWater: true,
- useSuppliers: true,
+ step: 1, role: 'mgr', bldEn: 'Block C', bldAr: 'البلوك C', unitCount: 5,
+ curMode: 'single', rate: 89500, balMode: 'zero', initUsd: 450, initLbp: 18000000,
+ useMaint: true, maintAmt: 20, useNatFee: true, natFeeAmt: 15, useWater: true, useSuppliers: true,
  remPest: true, remElev: true, remTrash: true, remSolar: true,
- startMon: 'October', startYr: '2026',
- natNameEn: 'Anas', natNameAr: 'أنس', natPhone: '96170123456'
+ startMon: 'October', startYr: '2026', natNameEn: 'Anas', natNameAr: 'أنس', natPhone: '96170123456'
 };
 
 function openOnboarding(startStep) {
@@ -1702,8 +1505,7 @@ function getObSvgIllustration(step) {
  + '</svg></div>';
  }
  if (step === 2) {
- var litCount = Math.min(9, OB.unitCount);
- var wins = '';
+ var litCount = Math.min(9, OB.unitCount), wins = '';
  for (var i = 0; i < 9; i++) {
  var wx = 55 + (i % 3) * 19, wy = 36 + Math.floor(i / 3) * 20;
  wins += '<rect x="' + wx + '" y="' + wy + '" width="13" height="13" rx="3" fill="' + (i < litCount ? '#ffd166' : 'rgba(255,255,255,0.25)') + '"/>';
@@ -1983,7 +1785,7 @@ function verifyNatourPinLogin() {
 }
 
 /* ============================================================================
- 6. REMAINING SCREENS (Charges, Expenses, Natour, Units, Collector)
+ 8. REMAINDER OF UI CONTROLLERS & RENDERER
  ============================================================================ */
 function renderChargesScreen() {
  var cyc = DB.cycles[SELECTED_MONTH];
@@ -2222,18 +2024,17 @@ function renderTaskHistoryScreen() {
  if (!DB.completedTasks || !DB.completedTasks.length) {
  h += '<div class="subtext">' + t('No completed tasks yet.', 'لا توجد مهام منجزة بعد.') + '</div>';
  } else {
- DB.completedTasks.forEach(function(ct) {
+ DB.completedTasks.forEach(function(ct, cIdx) {
  h += '<div class="list-row"><div class="list-left"><span style="font-size:18px">🛡️</span>';
- h += '<div style="min-width:0"><b class="single-line-name">' + esc(LANG==='ar'?(ct.ar||ct.en):ct.en) + '</b>';
+ h += '<div style="min-width:0"><b class="single-line-name" style="text-decoration:line-through;color:var(--mut)">' + esc(LANG==='ar'?(ct.ar||ct.en):ct.en) + '</b>';
  h += '<div style="font-size:11.5px;color:var(--mut)">' + t('Done on: ', 'أنجزت في: ') + esc(ct.completedAt) + ' · <span style="color:var(--acc);font-weight:700">' + esc(ct.by) + '</span></div></div></div>';
- h += '<span style="font-size:12px;font-weight:800;color:var(--ok)">✓ ' + t('Done', 'منجز') + '</span></div>';
+ h += '<button class="btn-edit" style="color:var(--bad);background:var(--errbg);border:0;padding:4px 8px" onclick="undoCompleteTask(' + cIdx + ')">↩ ' + t('Undo', 'تراجع') + '</button></div>';
  });
  }
  h += '</div>';
  document.getElementById('app-body').innerHTML = h;
 }
 
-/* ---- NATOUR COLLECTOR SCREEN (Completed!) ---- */
 function renderCollectorScreen() {
  var ar = LANG === 'ar';
  var cyc = DB.cycles[SELECTED_MONTH];
@@ -2378,157 +2179,8 @@ function toggleNatourBillPaid(expIdx) {
 }
 
 /* ============================================================================
- 7. MODAL CONTROLLERS (Supplier Bills, Direct Pay, New Cycle/Project, Expenses, Charges, Units, Reminders)
+ 9. MISC MODAL CONTROLLERS & RENDER BOOT
  ============================================================================ */
-var curSupIdx = 0;
-function openSupplierModal(idx) {
- var cyc = DB.cycles[SELECTED_MONTH];
- if (!cyc.services || !cyc.services.length) {
- cyc.services = [
- { id: 's_gen', en: 'Private Generator', ar: 'المولد الخاص (موتور)', cur: 'USD', passThrough: true, map: {} },
- { id: 's_net', en: 'Internet', ar: 'اشتراك الإنترنت', cur: 'USD', passThrough: true, map: {} },
- { id: 's_dish', en: 'Satellite / Dish', ar: 'اشتراك الدش', cur: 'USD', passThrough: true, map: {} }
- ];
- }
- curSupIdx = (typeof idx === 'number') ? idx : 0;
- renderSupplierModalContent();
- openModal('supplier-modal');
-}
-
-function renderSupplierModalContent() {
- var cyc = DB.cycles[SELECTED_MONTH];
- var svList = cyc.services;
- var sv = svList[curSupIdx] || svList[0];
-
- var h = '<div class="card-h"><h3>🔌 ' + t('Supplier Bills (Pass-Through)', 'فواتير المولد والإنترنت والدش') + '</h3><button class="btn-del" onclick="closeModal(\'supplier-modal\')">✕</button></div>';
- h += '<p class="subtext">' + t('Enter each unit\'s monthly Moteur, Internet, or Dish bill. Collected cash goes into the Supplier Pocket and never affects the Building Safe.', 'أدخل فاتورة المولد أو الإنترنت أو الدش لكل شقة. تُحفظ هذه المبالغ في جيب أمانات الموردين ولا تؤثر على صندوق البناية.') + '</p>';
-
- h += '<div class="seg-bar">';
- svList.forEach(function(item, i) {
- h += '<button class="' + (i === curSupIdx ? 'on' : '') + '" onclick="saveCurrentSupplierMap();curSupIdx=' + i + ';renderSupplierModalContent()">' + esc(LANG==='ar'?(item.ar||item.en):item.en) + '</button>';
- });
- h += '</div>';
-
- h += '<div style="max-height:260px;overflow-y:auto;padding:10px;background:var(--card2);border-radius:14px;margin-bottom:14px" id="sup-apt-inputs">';
- DB.apartments.forEach(function(a) {
- var val = (sv.map && sv.map[a.id]) || '';
- h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid var(--line)">';
- h += '<span><b>' + esc(a.code) + '</b> · ' + esc(LANG==='ar'?(a.ar||a.en):a.en) + '</span>';
- h += '<div style="display:flex;align-items:center;gap:6px"><input type="number" data-sup-apt="' + a.id + '" style="width:95px;text-align:right" placeholder="0" value="' + val + '"> <small>$</small></div></div>';
- });
- h += '</div>';
-
- h += '<button style="width:100%;padding:13px;background:var(--acc);color:#fff" onclick="saveCurrentSupplierMap();saveDB();closeModal(\'supplier-modal\');showToast(t(\'Supplier bills updated!\',\'تم حفظ فواتير الاشتراكات!\'));render()">✓ ' + t('Save Supplier Bills', 'حفظ فواتير الاشتراكات') + '</button>';
- document.getElementById('supplier-content').innerHTML = h;
-}
-
-function saveCurrentSupplierMap() {
- var cyc = DB.cycles[SELECTED_MONTH];
- var sv = cyc.services[curSupIdx];
- if (!sv) return;
- var map = {};
- document.querySelectorAll('#sup-apt-inputs input[data-sup-apt]').forEach(function(inp) {
- var v = Number(inp.value) || 0;
- if (v > 0) map[inp.getAttribute('data-sup-apt')] = v;
- });
- sv.map = map;
-}
-
-function openDirectPayModal() {
- var h = '<div class="card-h"><h3 style="color:var(--purp)">💵 ' + t('Record Resident Payment to Manager', 'تسجيل دفعة مستلمة مباشرة للمدير') + '</h3><button class="btn-del" onclick="closeModal(\'direct-pay-modal\')">✕</button></div>';
- h += '<p class="subtext">' + t('Whether the resident paid you in Cash, Whish, OMT, or Bank Transfer, recording it here marks their dues as Paid on the Natour\'s phone WITHOUT adding it to the Natour\'s cash pocket.', 'سواء دفع الساكن للمدير كاش أو عبر Whish أو OMT، تسجيل الدفعة هنا يظهرها كمسددة على هاتف الناطور دون إضافتها إلى الكاش الموجود مع الناطور.') + '</p>';
-
- h += '<div class="two-col-grid" style="margin-bottom:10px">';
- h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Apartment', 'الشقة') + '</label><select id="wp-apt" style="margin-top:4px" onchange="populateDirectPayDues()">';
- DB.apartments.forEach(function(a) { h += '<option value="' + a.id + '">' + esc(a.code) + ' · ' + esc(LANG==='ar'?(a.ar||a.en):a.en) + '</option>'; });
- h += '</select></div>';
- h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Month / Project', 'الشهر / المشروع') + '</label><select id="wp-cyc" style="margin-top:4px" onchange="populateDirectPayDues()">';
- Object.keys(DB.cycles).forEach(function(ck) { h += '<option value="' + esc(ck) + '"' + (ck===SELECTED_MONTH?' selected':'') + '>' + esc(dispCycleName(ck)) + '</option>'; });
- h += '</select></div></div>';
-
- h += '<div class="two-col-grid" style="margin-bottom:10px">';
- h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Payment Method', 'وسيلة الدفع للمدير') + '</label><select id="wp-channel" style="margin-top:4px">'
- + '<option value="Cash to Manager">💵 Cash to Manager · كاش للمدير</option>'
- + '<option value="Whish Money">🟣 Whish Money · ويش موني</option>'
- + '<option value="OMT Pay">🟡 OMT Pay · أو أم تي</option>'
- + '<option value="Bank Transfer">🏦 Bank Transfer · تحويل بنكي</option></select></div>';
- h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Date', 'التاريخ') + '</label><input type="date" id="wp-date" value="' + todayIso() + '" style="margin-top:4px"></div>';
- h += '</div>';
-
- h += '<div class="amt-cur-grid" style="margin-bottom:10px">';
- h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Amount Received', 'المبلغ المستلم') + '</label><input type="number" id="wp-amt" style="margin-top:4px"></div>';
- h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Currency', 'العملة') + '</label><select id="wp-cur" style="margin-top:4px"><option value="USD">USD ($)</option><option value="LBP">LBP (ل.ل.)</option></select></div>';
- h += '</div>';
-
- h += '<div style="margin-bottom:12px"><label style="font-size:11.5px;color:var(--mut)">' + t('Reference / Note (Optional)', 'رقم الإشعار أو ملاحظة') + '</label><input type="text" id="wp-ref" placeholder="e.g. Paid cash at door / WH-9821" style="margin-top:4px"></div>';
- h += '<div id="wp-due-info" style="padding:10px 12px;background:var(--soft);color:var(--acc);font-weight:700;border-radius:12px;font-size:12px;margin-bottom:14px"></div>';
-
- h += '<button style="width:100%;padding:13px;background:var(--purp);color:#fff" onclick="saveDirectPayModal()">✓ ' + t('Confirm Payment & Mark Paid', 'تأكيد الدفعة وتسديد الشقة') + '</button>';
- document.getElementById('direct-pay-content').innerHTML = h;
- populateDirectPayDues();
- openModal('direct-pay-modal');
-}
-
-function populateDirectPayDues() {
- var aptId = document.getElementById('wp-apt').value;
- var cKey = document.getElementById('wp-cyc').value;
- var cyc = DB.cycles[cKey];
- var bldCols = getCycleCols(cKey, true);
- var rate = Number(DB.settings.rate) || 89500;
- var dueEqUsd = 0;
- bldCols.forEach(function(c) {
- var v = c.valFor(aptId);
- var pd = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][aptId]);
- if (!pd) dueEqUsd += (c.cur === 'LBP' ? (v / rate) : v);
- });
- document.getElementById('wp-amt').value = Math.round(dueEqUsd) || 50;
- document.getElementById('wp-due-info').innerHTML = t(
- 'Unpaid Building Dues in <b>' + cKey + '</b> for this apartment: <b>$' + Math.round(dueEqUsd) + ' USD</b>',
- 'مستحقات البناية غير المدفوعة في <b>' + dispCycleName(cKey) + '</b> لهذه الشقة: <b>$' + Math.round(dueEqUsd) + '</b>'
- );
-}
-
-function saveDirectPayModal() {
- var aptId = document.getElementById('wp-apt').value;
- var cKey = document.getElementById('wp-cyc').value;
- var channel = document.getElementById('wp-channel').value;
- var dt = document.getElementById('wp-date').value || todayIso();
- var amt = Number(document.getElementById('wp-amt').value) || 0;
- var cur = document.getElementById('wp-cur').value;
- var ref = document.getElementById('wp-ref').value.trim() || 'MGR-DIRECT';
- var apt = DB.apartments.filter(function(a){return a.id===aptId;})[0];
-
- var cyc = DB.cycles[cKey];
- cyc.paid = cyc.paid || {};
- cyc.mgrPayChannel = cyc.mgrPayChannel || {};
- cyc.mgrPayChannel[aptId] = channel;
-
- getCycleCols(cKey, true).forEach(function(c) {
- if (c.valFor(aptId) > 0) {
- cyc.paid[c.id] = cyc.paid[c.id] || {};
- cyc.paid[c.id][aptId] = 2;
- if (c.linkedProject && DB.cycles[c.linkedProject]) {
- var pCyc = DB.cycles[c.linkedProject];
- var tCol = c.linkedColId || 'sp_m1';
- pCyc.paid[tCol] = pCyc.paid[tCol] || {};
- pCyc.paid[tCol][aptId] = 2;
- }
- }
- });
-
- DB.ledger.unshift({
- id: 'l_' + Date.now(),
- desc: apt.en + ' (' + apt.code + ') · ' + cKey,
- sub: channel,
- channel: channel,
- amt: amt, cur: cur, type: 'in', at: dt, ref: ref
- });
-
- saveDB(); closeModal('direct-pay-modal');
- showToast(t('Recorded via ' + channel + ' (Natour cash untouched)', 'تم التسجيل عبر ' + channel + ' (دون التأثير على كاش الناطور)'));
- render();
-}
-
 var ncType = 'month';
 function openNewCycleModal(defaultType) {
  ncType = defaultType || 'month';
@@ -2557,8 +2209,8 @@ function renderNewCycleModalContent() {
  } else {
  h += '<div style="margin:12px 0;padding:12px;background:var(--card2);border:1px solid var(--line);border-radius:16px">';
  h += '<div class="two-col-grid" style="margin-bottom:10px">';
- h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Project Title (EN)', 'اسم المشروع (EN)') + '</label><input type="text" id="nc-proj-en" value="Elevator Overhaul" style="margin-top:4px"></div>';
- h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Project Title (AR)', 'اسم المشروع (AR)') + '</label><input type="text" dir="rtl" id="nc-proj-ar" value="تجديد المصعد" style="margin-top:4px"></div>';
+ h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Project Title (EN)', 'اسم المشروع (EN)') + '</label><input type="text" id="nc-proj-en" value="Solar 6kW Install" style="margin-top:4px"></div>';
+ h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Project Title (AR)', 'اسم المشروع (AR)') + '</label><input type="text" dir="rtl" id="nc-proj-ar" value="تركيب طاقة شمسية" style="margin-top:4px"></div>';
  h += '</div>';
 
  h += '<div style="display:grid;grid-template-columns:1fr 1fr 80px;gap:8px;margin-bottom:10px">';
@@ -2575,7 +2227,7 @@ function renderNewCycleModalContent() {
  });
  h += '</div>';
 
- h += '<label style="display:flex;align-items:center;gap:8px;font-size:12px;margin:8px 0;cursor:pointer"><input type="checkbox" id="nc-inject" checked style="width:17px;height:17px"><span>' + t('Auto-add monthly installment into active Monthly Cycle', 'إضافة القسط الشهري تلقائياً داخل فاتورة الشهر') + '</span></label>';
+ h += '<label style="display:flex;align-items:center;gap:8px;font-size:12px;margin:8px 0;cursor:pointer"><input type="checkbox" id="nc-inject" checked style="width:17px;height:17px"><span>' + t('Auto-add first installment into active Monthly Cycle', 'إضافة القسط الشهري تلقائياً داخل فاتورة الشهر') + '</span></label>';
  h += '<div id="nc-calc-preview" style="padding:9px 12px;background:var(--soft);border-radius:12px;font-size:12px;color:var(--acc);font-weight:700"></div>';
  h += '</div>';
  }
@@ -2646,12 +2298,22 @@ function saveNewCycleModal() {
  activeUnits.forEach(function(uId) { dMap[uId] = downPerUnit; });
  svList.push({ id: 'sp_down_' + Date.now(), en: 'Initial Down Payment ($' + down + ' Split)', ar: 'الدفعة الأولى (من أصل $' + down + ')', cur: 'USD', passThrough: false, map: dMap });
  }
+
+ // Naming installments by actual calendar months!
+ var monthNames = ['October', 'November', 'December', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September'];
+ var monthNamesAr = ['تشرين الأول', 'تشرين الثاني', 'كانون الأول', 'كانون الثاني', 'شباط', 'آذار', 'نيسان', 'أيار', 'حزيران', 'تموز', 'آب', 'أيلول'];
  var firstInstId = 'sp_m1_' + Date.now();
+
  for (var i = 1; i <= mos; i++) {
  var mMap = {};
  activeUnits.forEach(function(uId) { mMap[uId] = moPerUnit; });
  var cId = (i === 1) ? firstInstId : ('sp_m' + i + '_' + Date.now());
- svList.push({ id: cId, en: 'Installment ' + i + ' of ' + mos, ar: 'القسط الشهري ' + i + ' من ' + mos, cur: 'USD', passThrough: false, map: mMap });
+ var mIdx = (9 + (i - 1)) % 12; // Starts October (idx 9)
+ var yrVal = 2026 + Math.floor((9 + i - 1) / 12);
+ var mLabelEn = monthNames[mIdx] + ' ' + yrVal + ' Installment (' + i + '/' + mos + ')';
+ var mLabelAr = 'قسط ' + monthNamesAr[mIdx] + ' ' + yrVal + ' (' + i + '/' + mos + ')';
+
+ svList.push({ id: cId, en: mLabelEn, ar: mLabelAr, cur: 'USD', passThrough: false, map: mMap });
  }
 
  DB.cycles[pEn] = {
@@ -2667,8 +2329,8 @@ function saveNewCycleModal() {
  if (injectIntoMonth && DB.cycles['October 2026']) {
  DB.cycles['October 2026'].dues.push({
  id: 'due_' + firstInstId,
- en: '🛠️ ' + pEn + ' (Inst. 1/' + mos + ')',
- ar: '🛠️ ' + pAr + ' (قسط 1/' + mos + ')',
+ en: '🛠️ ' + pEn + ' (Oct 2026 Inst. 1/' + mos + ')',
+ ar: '🛠️ ' + pAr + ' (قسط تشرين الأول 1/' + mos + ')',
  amt: moPerUnit,
  cur: 'USD',
  linkedProject: pEn,
@@ -2679,7 +2341,7 @@ function saveNewCycleModal() {
  SELECTED_MONTH = pEn;
  CYCLE_DETAIL_MODE = true;
  saveDB(); closeModal('new-cycle-modal');
- showToast(t('Project created!', 'تم إنشاء المشروع!'));
+ showToast(t('Project created with calendar months!', 'تم إنشاء المشروع مع أسماء الشهور التقويمية!'));
  setTab('dash');
  }
 }
@@ -2696,81 +2358,369 @@ function deleteSelectedCycle() {
  saveDB(); showToast(t('Deleted', 'تم الحذف')); render();
 }
 
-var curExpIdx = -1;
-function openExpenseModal(idx) {
- curExpIdx = (typeof idx === 'number' && idx >= 0) ? idx : -1;
- var item = curExpIdx >= 0 ? DB.expenses[curExpIdx] : null;
+function openDirectPayModal() {
+ var h = '<div class="card-h"><h3 style="color:var(--purp)">💵 ' + t('Record Resident Payment to Manager', 'تسجيل دفعة مستلمة مباشرة للمدير') + '</h3><button class="btn-del" onclick="closeModal(\'direct-pay-modal\')">✕</button></div>';
+ h += '<p class="subtext">' + t('Whether the tenant paid you in Cash, Whish, OMT, or Bank Transfer, recording it here marks their dues as Paid on the Natour\'s phone WITHOUT adding it to the Natour\'s cash pocket.', 'سواء دفع الساكن للمدير كاش أو عبر Whish أو OMT، تسجيل الدفعة هنا يظهرها كمسددة على هاتف الناطور دون إضافتها إلى الكاش الموجود مع الناطور.') + '</p>';
 
- var cycSel = document.getElementById('ex-cycle');
- var ch = '';
- Object.keys(DB.cycles).forEach(function(ck) {
- var isP = DB.cycles[ck].isProject;
- var selCycle = item ? item.month : SELECTED_MONTH;
- ch += '<option value="' + esc(ck) + '"' + (ck === selCycle ? ' selected' : '') + '>' + (isP ? '🛠️ ' : '📅 ') + esc(dispCycleName(ck)) + '</option>';
+ h += '<div class="two-col-grid" style="margin-bottom:10px">';
+ h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Apartment', 'الشقة') + '</label><select id="wp-apt" style="margin-top:4px" onchange="populateDirectPayDues()">';
+ DB.apartments.forEach(function(a) { h += '<option value="' + a.id + '">' + esc(a.code) + ' · ' + esc(LANG==='ar'?(a.ar||a.en):a.en) + '</option>'; });
+ h += '</select></div>';
+ h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Month / Project', 'الشهر / المشروع') + '</label><select id="wp-cyc" style="margin-top:4px" onchange="populateDirectPayDues()">';
+ Object.keys(DB.cycles).forEach(function(ck) { h += '<option value="' + esc(ck) + '"' + (ck===SELECTED_MONTH?' selected':'') + '>' + esc(dispCycleName(ck)) + '</option>'; });
+ h += '</select></div></div>';
+
+ h += '<div class="two-col-grid" style="margin-bottom:10px">';
+ h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Payment Method', 'وسيلة الدفع للمدير') + '</label><select id="wp-channel" style="margin-top:4px">'
+ + '<option value="Cash to Manager">💵 Cash to Manager · كاش للمدير</option>'
+ + '<option value="Whish Money">🟣 Whish Money · ويش موني</option>'
+ + '<option value="OMT Pay">🟡 OMT Pay · أو أم تي</option>'
+ + '<option value="Bank Transfer">🏦 Bank Transfer · تحويل بنكي</option></select></div>';
+ h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Date', 'التاريخ') + '</label><input type="date" id="wp-date" value="' + todayIso() + '" style="margin-top:4px"></div>';
+ h += '</div>';
+
+ h += '<div class="amt-cur-grid" style="margin-bottom:10px">';
+ h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Amount Received', 'المبلغ المستلم') + '</label><input type="number" id="wp-amt" style="margin-top:4px"></div>';
+ h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Currency', 'العملة') + '</label><select id="wp-cur" style="margin-top:4px"><option value="USD">USD ($)</option><option value="LBP">LBP (ل.ل.)</option></select></div>';
+ h += '</div>';
+
+ h += '<div style="margin-bottom:12px"><label style="font-size:11.5px;color:var(--mut)">' + t('Reference / Note (Optional)', 'رقم الإشعار أو ملاحظة') + '</label><input type="text" id="wp-ref" placeholder="e.g. Paid cash at door / WH-9821" style="margin-top:4px"></div>';
+ h += '<div id="wp-due-info" style="padding:10px 12px;background:var(--soft);color:var(--acc);font-weight:700;border-radius:12px;font-size:12px;margin-bottom:14px"></div>';
+
+ h += '<button style="width:100%;padding:13px;background:var(--purp);color:#fff" onclick="saveDirectPayModal()">✓ ' + t('Confirm Payment & Settle Unit', 'تأكيد الدفعة وتسديد الشقة') + '</button>';
+ document.getElementById('direct-pay-content').innerHTML = h;
+ populateDirectPayDues();
+ openModal('direct-pay-modal');
+}
+
+function populateDirectPayDues() {
+ var aptId = document.getElementById('wp-apt').value;
+ var cKey = document.getElementById('wp-cyc').value;
+ var cyc = DB.cycles[cKey];
+ var bldCols = getCycleCols(cKey, true);
+ var rate = Number(DB.settings.rate) || 89500;
+ var dueEqUsd = 0;
+ bldCols.forEach(function(c) {
+ var v = c.valFor(aptId);
+ var pd = !!(cyc.paid && cyc.paid[c.id] && cyc.paid[c.id][aptId]);
+ if (!pd) dueEqUsd += (c.cur === 'LBP' ? (v / rate) : v);
  });
- cycSel.innerHTML = ch;
-
- populateExpensePresets();
- if (item) {
- document.getElementById('ex-modal-title').textContent = t('✏️ Edit Bill / Expense', '✏️ تعديل الفاتورة / المصروف');
- document.getElementById('ex-date').value = item.date || todayIso();
- document.getElementById('ex-payer').value = item.payer || 'mgr';
- document.getElementById('ex-cat').value = item.cat || 'gen';
- document.getElementById('ex-desc').value = item.desc || '';
- document.getElementById('ex-amt').value = item.amt || '';
- document.getElementById('ex-cur').value = item.cur || 'USD';
- document.getElementById('ex-ref').value = item.ref || '';
- document.getElementById('ex-notes').value = item.notes || '';
- document.getElementById('ex-del-btn').style.display = 'block';
- } else {
- document.getElementById('ex-date').value = todayIso();
- document.getElementById('ex-payer').value = 'mgr';
- document.getElementById('ex-desc').value = '';
- document.getElementById('ex-amt').value = '';
- document.getElementById('ex-ref').value = '';
- document.getElementById('ex-notes').value = '';
- if (SELECTED_EXP_CAT) document.getElementById('ex-cat').value = SELECTED_EXP_CAT;
- document.getElementById('ex-del-btn').style.display = 'none';
- }
- openModal('exp-modal');
+ document.getElementById('wp-amt').value = Math.round(dueEqUsd) || 50;
+ document.getElementById('wp-due-info').innerHTML = t(
+ 'Unpaid Building Dues in <b>' + cKey + '</b> for this apartment: <b>$' + Math.round(dueEqUsd) + ' USD</b>',
+ 'مستحقات البناية غير المدفوعة في <b>' + dispCycleName(cKey) + '</b> لهذه الشقة: <b>$' + Math.round(dueEqUsd) + '</b>'
+ );
 }
 
-function populateExpensePresets() {
- var cKey = document.getElementById('ex-cycle').value;
- var isProj = DB.cycles[cKey] && DB.cycles[cKey].isProject;
- var pSel = document.getElementById('ex-preset');
- if (isProj) {
- if (curExpIdx < 0) document.getElementById('ex-cat').value = 'solar';
- pSel.innerHTML = '<option value="custom">' + t('✍️ Custom Item', '✍️ بند مخصص') + '</option>'
- + '<option value="solar|Solar Panels Batch|ألواح طاقة شمسية">☀️ Solar Panels Batch · ألواح طاقة شمسية</option>'
- + '<option value="solar|Hybrid Inverter & Lithium Battery|انفرتر وبطاريات ليثيوم">🔋 Hybrid Inverter & Battery · انفرتر وبطاريات</option>'
- + '<option value="repair|Steel Structure & Installation Labor|هيكل حديد ويد عاملة تركيب">🔧 Steel Mounting & Labor · حديد ويد عاملة</option>';
- } else {
- if (curExpIdx < 0 && !SELECTED_EXP_CAT) document.getElementById('ex-cat').value = 'gen';
- pSel.innerHTML = '<option value="custom">' + t('✍️ Custom Bill', '✍️ فاتورة مخصصة') + '</option>'
- + '<option value="water|Water Collector Bill|فاتورة جابي المياه">💧 Water Collector Bill · فاتورة جابي المياه</option>'
- + '<option value="clean|Cleaning Products & Sponges|مواد تنظيف للمبنى">🧹 Cleaning Supplies · مواد تنظيف</option>'
- + '<option value="gen|Shared Generator Fuel & Service|مازوت وصيانة المولد">⚡ Shared Generator Fuel · مازوت المولد</option>'
- + '<option value="elev|Elevator Monthly Maintenance|صيانة المصعد الشهرية">🛗 Elevator Maintenance · صيانة المصعد</option>'
- + '<option value="light|Staircase LED Bulbs Replacement|لمبات إنارة للدرج">💡 Staircase Bulbs · لمبات للدرج</option>';
+function saveDirectPayModal() {
+ var aptId = document.getElementById('wp-apt').value;
+ var cKey = document.getElementById('wp-cyc').value;
+ var channel = document.getElementById('wp-channel').value;
+ var dt = document.getElementById('wp-date').value || todayIso();
+ var amt = Number(document.getElementById('wp-amt').value) || 0;
+ var cur = document.getElementById('wp-cur').value;
+ var ref = document.getElementById('wp-ref').value.trim() || 'MGR-DIRECT';
+ var apt = DB.apartments.filter(function(a){return a.id===aptId;})[0];
+
+ var cyc = DB.cycles[cKey];
+ cyc.paid = cyc.paid || {};
+ cyc.mgrPayChannel = cyc.mgrPayChannel || {};
+ cyc.mgrPayChannel[aptId] = channel;
+
+ getCycleCols(cKey, true).forEach(function(c) {
+ if (c.valFor(aptId) > 0) {
+ cyc.paid[c.id] = cyc.paid[c.id] || {};
+ cyc.paid[c.id][aptId] = 2;
+ if (c.linkedProject && DB.cycles[c.linkedProject]) {
+ var pCyc = DB.cycles[c.linkedProject];
+ var tCol = c.linkedColId || 'sp_m1';
+ pCyc.paid[tCol] = pCyc.paid[tCol] || {};
+ pCyc.paid[tCol][aptId] = 2;
  }
+ }
+ });
+
+ DB.ledger.unshift({
+ id: 'l_' + Date.now(),
+ desc: apt.en + ' (' + apt.code + ') · ' + cKey,
+ sub: channel,
+ channel: channel,
+ amt: amt, cur: cur, type: 'in', at: dt, ref: ref
+ });
+
+ saveDB(); closeModal('direct-pay-modal');
+ showToast(t('Recorded via ' + channel + ' (Natour cash untouched)', 'تم التسجيل عبر ' + channel + ' (دون التأثير على كاش الناطور)'));
+ render();
 }
 
-function applyExpensePreset(val) {
- if (!val || val === 'custom') {
- document.getElementById('ex-desc').value = '';
- document.getElementById('ex-desc').focus();
- return;
+function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+function showToast(msg) {
+ var el = document.getElementById('toast');
+ document.getElementById('toast-msg').textContent = msg;
+ el.classList.add('pop');
+ setTimeout(function() { el.classList.remove('pop'); }, 2800);
+}
+function setRole(r) {
+ ROLE = r;
+ document.getElementById('sim-mgr').className = r === 'mgr' ? 'on' : '';
+ document.getElementById('sim-col').className = r === 'col' ? 'on' : '';
+ render();
+}
+function setTab(tName) {
+ TAB = tName;
+ document.querySelectorAll('#mgr-dock button.nav-tab').forEach(function(b) {
+ b.className = 'nav-tab' + (b.getAttribute('data-tab') === tName ? ' on' : '');
+ });
+ render();
+ window.scrollTo(0, 0);
+}
+function toggleLang() { LANG = LANG === 'ar' ? 'en' : 'ar'; render(); }
+
+render();
+</script>
+</body>
+</html>
+<script>
+/* ============================================================================
+ 10. FINAL UI SCREENS & BOOTSTRAP (Part 3)
+ ============================================================================ */
+function renderChargesScreen() {
+ var cyc = DB.cycles[SELECTED_MONTH];
+ var isProj = !!(cyc && cyc.isProject);
+ var h = '<div class="card" style="background:var(--soft);border-color:var(--acc);padding:14px 18px">';
+ h += '<div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:11px;font-weight:800;color:var(--acc);text-transform:uppercase">' + t('EDITING MONTHLY DUES', 'تعديل المستحقات') + '</div><b style="font-size:17px">' + esc(dispCycleName(SELECTED_MONTH)) + '</b></div>';
+ h += '<button class="btn-edit" style="background:var(--acc);color:#fff;border:0" onclick="setTab(\'dash\')">✓ ' + t('Done', 'تم') + '</button></div></div>';
+
+ if (!isProj) {
+ h += '<div class="card"><div class="card-h"><h2>' + t('Fixed Monthly Fees', 'الرسوم الشهرية الثابتة') + '</h2><button class="btn-edit" style="color:var(--acc)" onclick="openChargeModal(\'fixed\', -1)">+ ' + t('Add Fee', 'إضافة رسم') + '</button></div>';
+ cyc.fixed.forEach(function(f, idx) {
+ h += '<div class="list-row"><div class="list-left"><div><b>' + esc(f.en) + '</b> <small style="color:var(--mut)">· ' + esc(f.ar) + '</small><div style="font-size:12px;color:var(--acc);font-weight:700" dir="ltr"><bdi>' + fmt(f.amt, f.cur, 'en') + '</bdi> / apt</div></div></div>';
+ h += '<button class="btn-edit" onclick="openChargeModal(\'fixed\', ' + idx + ')">✏️ ' + t('Edit', 'تعديل') + '</button></div>';
+ });
+ h += '</div>';
+
+ h += '<div class="card"><div class="card-h"><h2>' + t('Shared Bills & Project Installments', 'الفواتير المشتركة وأقساط المشاريع') + '</h2><button class="btn-edit" style="color:var(--warn)" onclick="openChargeModal(\'dues\', -1)">+ ' + t('Add Bill', 'إضافة فاتورة') + '</button></div>';
+ cyc.dues.forEach(function(d, idx) {
+ h += '<div class="list-row"><div class="list-left"><div><b>' + esc(d.en) + '</b> <small style="color:var(--mut)">· ' + esc(d.ar) + '</small><div style="font-size:12px;color:var(--warn);font-weight:700" dir="ltr"><bdi>' + fmt(d.amt, d.cur, 'en') + '</bdi> / apt</div></div></div>';
+ h += '<button class="btn-edit" onclick="openChargeModal(\'dues\', ' + idx + ')">✏️ ' + t('Edit', 'تعديل') + '</button></div>';
+ });
+ h += '</div>';
+
+ h += '<div class="card" style="border-style:dashed"><div class="card-h"><h2>🔌 ' + t('Private Subscriptions (Moteur / Internet / Dish)', 'الاشتراكات الخاصة (المولد / الإنترنت / الدش)') + '</h2><button class="btn-edit" onclick="openSupplierModal()">⚙️ ' + t('Edit', 'تعديل') + '</button></div>';
+ h += '<p class="subtext" style="margin:0">' + t('Collected by the Natour for outside suppliers — never mixed with your Building Safe.', 'يحصّلها الناطور لأصحاب الاشتراكات ولا تختلط بصندوق البناية.') + '</p></div>';
+ } else {
+ h += '<div class="card"><div class="card-h"><h2>🛠️ ' + t('Project Down Payment & Installments', 'الدفعة الأولى وأقساط المشروع') + '</h2><button class="btn-edit" style="color:var(--acc)" onclick="openChargeModal(\'services\', -1)">+ ' + t('Add Installment', 'إضافة قسط') + '</button></div>';
+ cyc.services.forEach(function(sv, idx) {
+ var activeKeys = Object.keys(sv.map || {}).filter(function(k) { return Number(sv.map[k]) > 0; });
+ var sumVal = activeKeys.reduce(function(acc, k) { return acc + Number(sv.map[k]); }, 0);
+ h += '<div class="list-row"><div class="list-left"><div><b>' + esc(LANG==='ar'?(sv.ar||sv.en):sv.en) + '</b><div style="font-size:12px;color:var(--acc);font-weight:700">' + activeKeys.length + ' ' + t('apts · Total ', 'شقق · المجموع ') + fmt(sumVal, sv.cur, 'en') + '</div></div></div>';
+ h += '<button class="btn-edit" onclick="openChargeModal(\'services\', ' + idx + ')">✏️ ' + t('Edit', 'تعديل') + '</button></div>';
+ });
+ h += '</div>';
  }
- var p = val.split('|');
- document.getElementById('ex-cat').value = p[0];
- document.getElementById('ex-desc').value = p[1] + ' · ' + p[2];
+ document.getElementById('app-body').innerHTML = h;
+}
+
+function renderExpensesScreen() {
+ var rate = Number(DB.settings.rate) || 89500;
+ var totalsByCat = {}, grandUsd = 0;
+
+ DB.expenses.forEach(function(e) {
+ if (e.payer === 'natour_pending') return;
+ var usdEq = e.cur === 'LBP' ? (Number(e.amt) / rate) : Number(e.amt);
+ totalsByCat[e.cat] = (totalsByCat[e.cat] || 0) + usdEq;
+ grandUsd += usdEq;
+ });
+
+ var segments = Object.keys(totalsByCat).map(function(k) {
+ var c = EXP_CATS[k] || EXP_CATS.repair, val = totalsByCat[k];
+ return { id: k, en: c.en, ar: c.ar, ico: c.ico, color: c.color, usd: val, pct: grandUsd > 0 ? Math.round((val / grandUsd) * 100) : 0 };
+ }).sort(function(a, b) { return b.usd - a.usd; });
+
+ var h = '<div class="card"><div class="card-h"><h2>📊 ' + t('Expenses by Category', 'المصاريف حسب الفئة') + '</h2><button class="btn-edit" style="color:var(--bad)" onclick="openExpenseModal(-1)">+ ' + t('Add Bill', 'إضافة فاتورة') + '</button></div>';
+ h += '<p class="subtext">' + t('Tap any category below to see all bills in that category.', 'اضغط على أي فئة أدناه لعرض جميع الفواتير الخاصة بها.') + '</p>';
+ h += buildDonutSvg(segments, '$' + Math.round(grandUsd).toLocaleString(), t('Total Bills Paid', 'مجموع المصاريف'));
+
+ segments.forEach(function(seg) {
+ var isSel = SELECTED_EXP_CAT === seg.id;
+ h += '<div class="list-row clickable' + (isSel ? ' selected-cat' : '') + '" onclick="SELECTED_EXP_CAT=(SELECTED_EXP_CAT===\'' + seg.id + '\'?null:\'' + seg.id + '\');render()">';
+ h += '<div class="cat-ico" style="background:' + seg.color + '22;color:' + seg.color + '">' + seg.ico + '</div>';
+ h += '<div class="cat-mid" style="margin-inline-start:10px"><div class="cat-top"><b>' + esc(LANG==='ar'?seg.ar:seg.en) + (isSel ? ' ✓' : '') + '</b><span dir="ltr">$' + Math.round(seg.usd) + ' <small style="color:var(--mut)">(' + seg.pct + '%)</small></span></div>';
+ h += '<div class="cat-bar"><i style="width:' + seg.pct + '%;background:' + seg.color + '"></i></div></div></div>';
+ });
+ h += '</div>';
+
+ var activeCatObj = SELECTED_EXP_CAT ? EXP_CATS[SELECTED_EXP_CAT] : null;
+ h += '<div class="card"><div class="card-h"><h2>' + (activeCatObj ? (activeCatObj.ico + ' ' + esc(LANG==='ar'?activeCatObj.ar:activeCatObj.en)) : t('All Bills & Expenses', 'سجل جميع الفواتير والمصاريف')) + '</h2>';
+ if (activeCatObj) {
+ h += '<button class="btn-edit" onclick="SELECTED_EXP_CAT=null;render()">✕ ' + t('Show All', 'عرض الكل') + '</button>';
+ }
+ h += '</div>';
+
+ var shownCount = 0;
+ DB.expenses.forEach(function(e, idx) {
+ if (SELECTED_EXP_CAT && e.cat !== SELECTED_EXP_CAT) return;
+ shownCount++;
+ var c = EXP_CATS[e.cat] || EXP_CATS.repair;
+ var payerBadge = e.payer === 'natour_pending'
+ ? '<span class="badge-pay" style="background:var(--wbg);color:var(--warn)">⏳ ' + t('Sent to Natour', 'يدفعها الناطور') + '</span>'
+ : (e.payer === 'natour_paid'
+ ? '<span class="badge-pay cash">👷‍♂️ ' + t('Paid by Natour', 'دفعها الناطور') + '</span>'
+ : '<span class="badge-pay mgr">👨‍💼 ' + t('Manager', 'المدير') + '</span>');
+
+ h += '<div class="list-row clickable" onclick="openExpenseModal(' + idx + ')">';
+ h += '<div class="list-left"><div class="cat-ico" style="background:' + c.color + '22;color:' + c.color + '">' + c.ico + '</div>';
+ h += '<div style="min-width:0"><b class="single-line-name">' + esc(e.desc) + '</b>';
+ h += '<div style="font-size:11.5px;color:var(--mut)">📅 ' + esc(e.date || '2026-10-20') + ' · ' + payerBadge + (e.ref ? (' · #' + esc(e.ref)) : '') + '</div>';
+ if (e.notes) h += '<div style="font-size:11px;color:var(--acc)">📝 ' + esc(e.notes) + '</div>';
+ h += '</div></div>';
+ h += '<div style="display:flex;align-items:center;gap:8px;flex:none"><b dir="ltr" style="color:' + (e.payer==='natour_pending'?'var(--warn)':'var(--bad)') + '"><bdi>- ' + fmt(e.amt, e.cur, 'en') + '</bdi></b><span style="font-size:12px;color:var(--mut)">✏️</span></div></div>';
+ });
+ if (!shownCount) {
+ h += '<div class="subtext">' + t('No bills in this category.', 'لا توجد فواتير في هذه الفئة.') + '</div>';
+ }
+ h += '</div>';
+
+ document.getElementById('app-body').innerHTML = h;
+}
+
+function renderNatourPortalScreen() {
+ var sampleApt = DB.apartments.filter(function(a) { return a.id === PREVIEW_APT_ID; })[0] || DB.apartments[0];
+ var h = '';
+
+ h += '<div class="card">';
+ h += '<div class="card-h"><h2>🔐 ' + t('Invite Natour & Security PIN', 'دعوة الناطور ورمز الدخول') + '</h2>';
+ h += '<button class="btn-edit" style="background:var(--acc);color:#fff;border:0" onclick="setRole(\'col\')">' + t('Preview Natour Screen →', 'معاينة شاشة الناطور ←') + '</button></div>';
+ h += '<p class="subtext">' + t('Share the link below via WhatsApp so your Natour can open his payment checklist on his phone.', 'أرسل الرابط أدناه عبر واتساب ليتمكن الناطور من فتح قائمة التحصيل على هاتفه.') + '</p>';
+
+ h += '<div class="drawer-row" style="margin-bottom:10px">';
+ h += '<div class="drawer-box"><span>' + t('Natour WhatsApp Phone', 'هاتف الناطور') + '</span><b dir="ltr">+' + esc(DB.settings.collectorPhone || '96170123456') + '</b><small>' + esc(LANG==='ar'?DB.settings.collectorAr:DB.settings.collectorEn) + '</small></div>';
+ h += '<div class="drawer-box"><span>' + t('6-Digit PIN', 'رمز الدخول السري') + '</span><div class="pin-box" dir="ltr">' + esc(DB.settings.collectorPin || '482910') + '</div></div>';
+ h += '</div>';
+
+ var magicUrl = 'https://binayati.app/c/' + (DB.settings.collectorToken || 'bny-9f4a-882c');
+ var inviteMsg = t(
+ '👷‍♂️ Hello ' + DB.settings.collectorEn + ', tap your link to open ' + DB.settings.bldEn + ' on Binayati:\n' + magicUrl + '\n\nPhone: +' + DB.settings.collectorPhone + '\nPIN: *' + DB.settings.collectorPin + '*',
+ '👷‍♂️ مرحباً ' + DB.settings.collectorAr + '، اضغط على الرابط لفتح تحصيل ' + DB.settings.bldAr + ' في تطبيق بنايتي:\n' + magicUrl + '\n\nرقم الهاتف: +' + DB.settings.collectorPhone + '\nالرمز السري: *' + DB.settings.collectorPin + '*'
+ );
+ var waInviteHref = 'https://wa.me/' + String(DB.settings.collectorPhone || '').replace(/\D/g, '') + '?text=' + encodeURIComponent(inviteMsg);
+
+ h += '<div class="form-row">';
+ h += '<a class="btn-edit" style="flex:1;justify-content:center;padding:11px;background:var(--okbg);border-color:var(--ok);color:var(--ok);text-decoration:none;font-weight:800" href="' + waInviteHref + '" target="_blank">📲 ' + t('Send App Link via WhatsApp', 'إرسال رابط التطبيق عبر واتساب') + '</a>';
+ h += '<button class="btn-del" onclick="regenerateNatourPin()">🔄 ' + t('New PIN', 'رمز جديد') + '</button>';
+ h += '</div></div>';
+
+ h += '<div class="card"><div class="card-h"><h2>💬 ' + t('WhatsApp Messages & Receipts', 'رسائل وإيصالات واتساب للسكان') + '</h2>';
+ h += '<button class="btn-edit" onclick="WA_EXPANDED=!WA_EXPANDED;render()">' + (WA_EXPANDED ? '🔽 ' + t('Compact', 'تصغير') : '🔍 ' + t('Expand', 'تكبير')) + '</button></div>';
+
+ h += '<div class="seg-bar">';
+ h += '<button class="' + (PREVIEW_MODE==='auto'?'on':'') + '" onclick="PREVIEW_MODE=\'auto\';render()">⚡ ' + t('Auto State', 'تلقائي') + '</button>';
+ h += '<button class="' + (PREVIEW_MODE==='due'?'on':'') + '" onclick="PREVIEW_MODE=\'due\';render()">📣 ' + t('Payment Due', 'المطالبة') + '</button>';
+ h += '<button class="' + (PREVIEW_MODE==='receipt'?'on':'') + '" onclick="PREVIEW_MODE=\'receipt\';render()">🧾 ' + t('Paid Receipt', 'الإيصال') + '</button>';
+ h += '</div>';
+
+ var taClass = 'wa-textarea' + (WA_EXPANDED ? ' expanded' : '');
+ if (PREVIEW_MODE === 'receipt') {
+ h += '<label style="font-size:12px;font-weight:700;color:var(--ok)">' + t('Arabic Receipt Message', 'رسالة إيصال الدفع بالعربية') + '</label>';
+ h += '<textarea dir="rtl" class="' + taClass + '" style="margin:4px 0 12px" oninput="autoFitTa(this);DB.waReceiptAr=this.value;saveDB();updateWaPreview()">' + esc(DB.waReceiptAr) + '</textarea>';
+ h += '<label style="font-size:12px;font-weight:700;color:var(--ok)">' + t('English Receipt Message', 'رسالة إيصال الدفع بالإنجليزية') + '</label>';
+ h += '<textarea dir="ltr" class="' + taClass + '" style="margin:4px 0 14px" oninput="autoFitTa(this);DB.waReceiptEn=this.value;saveDB();updateWaPreview()">' + esc(DB.waReceiptEn) + '</textarea>';
+ } else {
+ h += '<label style="font-size:12px;font-weight:700;color:var(--mut)">' + t('Arabic Payment Request', 'رسالة المطالبة بالعربية') + '</label>';
+ h += '<textarea dir="rtl" class="' + taClass + '" style="margin:4px 0 12px" oninput="autoFitTa(this);DB.waTemplateAr=this.value;saveDB();updateWaPreview()">' + esc(DB.waTemplateAr) + '</textarea>';
+ h += '<label style="font-size:12px;font-weight:700;color:var(--mut)">' + t('English Payment Request', 'رسالة المطالبة بالإنجليزية') + '</label>';
+ h += '<textarea dir="ltr" class="' + taClass + '" style="margin:4px 0 14px" oninput="autoFitTa(this);DB.waTemplateEn=this.value;saveDB();updateWaPreview()">' + esc(DB.waTemplateEn) + '</textarea>';
+ }
+
+ h += '<div style="font-size:12px;font-weight:800;color:var(--ok);margin-bottom:6px">● ' + t('Live WhatsApp Preview', 'معاينة رسالة واتساب') + '</div>';
+ h += '<div class="two-col-grid" style="grid-template-columns:2fr 1fr">';
+ h += '<select style="padding:7px 10px;font-size:12px" onchange="PREVIEW_APT_ID=this.value;render()">';
+ DB.apartments.forEach(function(a) {
+ var st = isAptSettled(a, SELECTED_MONTH) ? t('🧾 Paid', '🧾 مسدد') : t('📣 Unpaid', '📣 غير مسدد');
+ h += '<option value="' + a.id + '"' + (a.id === sampleApt.id ? ' selected' : '') + '>' + esc(LANG==='ar'?(a.ar||a.en):a.en) + ' (' + esc(a.code) + ' · ' + st + ')</option>';
+ });
+ h += '</select>';
+ h += '<select style="padding:7px 10px;font-size:12px" onchange="PREVIEW_LANG=this.value;updateWaPreview()">';
+ h += '<option value="both"' + (PREVIEW_LANG==='both'?' selected':'') + '>🌐 AR+EN</option>';
+ h += '<option value="ar"' + (PREVIEW_LANG==='ar'?' selected':'') + '>🇱🇧 AR</option>';
+ h += '<option value="en"' + (PREVIEW_LANG==='en'?' selected':'') + '>🇬🇧 EN</option>';
+ h += '</select></div>';
+
+ var rawMsg = buildWhatsAppText(sampleApt, PREVIEW_LANG, PREVIEW_MODE);
+ h += '<div class="wa-preview-box"><div class="wa-bubble" id="wa-live-bubble">' + formatWaHtml(rawMsg) + '</div></div>';
+ h += '</div>';
+
+ document.getElementById('app-body').innerHTML = h;
+ document.querySelectorAll('.wa-textarea').forEach(autoFitTa);
+}
+
+function autoFitTa(el) {
+ if (!el) return;
+ el.style.height = 'auto';
+ el.style.height = Math.max(150, el.scrollHeight + 6) + 'px';
+}
+
+function updateWaPreview() {
+ var sampleApt = DB.apartments.filter(function(a) { return a.id === PREVIEW_APT_ID; })[0] || DB.apartments[0];
+ var el = document.getElementById('wa-live-bubble');
+ if (el && sampleApt) el.innerHTML = formatWaHtml(buildWhatsAppText(sampleApt, PREVIEW_LANG, PREVIEW_MODE));
+}
+
+function regenerateNatourPin() {
+ var newPin = String(Math.floor(100000 + Math.random() * 900000));
+ var randHex = Math.random().toString(16).substring(2, 6);
+ DB.settings.collectorPin = newPin;
+ DB.settings.collectorToken = 'bny-' + randHex + '-' + newPin.substring(0, 4);
+ saveDB();
+ showToast(t('New PIN generated: ' + newPin, 'تم إنشاء رمز جديد: ' + newPin));
+ render();
+}
+
+function renderUnitsScreen() {
+ var langLabels = { both: '🌐 AR + EN', ar: '🇱🇧 AR Only', en: '🇬🇧 EN Only' };
+ var h = '<div class="card"><div class="card-h"><h2>🏢 ' + t('Building Apartments', 'شقق البناية') + ' (' + DB.apartments.length + ')</h2><button class="btn-edit" style="color:var(--acc)" onclick="openUnitModal(-1)">+ ' + t('Add Apt', 'إضافة شقة') + '</button></div>';
+ h += '<p class="subtext">' + t('Tap Edit on any apartment to update resident name, phone, or WhatsApp language.', 'اضغط تعديل على أي شقة لتحديث اسم الساكن أو رقم الهاتف أو لغة رسائل واتساب.') + '</p>';
+
+ DB.apartments.forEach(function(a, idx) {
+ h += '<div class="list-row">';
+ h += '<div class="list-left"><span class="badge-code">' + esc(a.code) + '</span>';
+ h += '<div style="min-width:0"><b class="single-line-name">' + esc(LANG==='ar'?(a.ar||a.en):a.en) + ' <span class="badge-lang">' + (langLabels[a.prefLang || 'both']) + '</span></b>';
+ h += '<div style="font-size:12px;color:var(--mut)"><bdi>' + esc(LANG==='ar'?a.en:a.ar) + '</bdi> · +' + esc(a.ph) + '</div></div></div>';
+ h += '<button class="btn-edit" onclick="openUnitModal(' + idx + ')">✏️ ' + t('Edit', 'تعديل') + '</button></div>';
+ });
+ h += '</div>';
+
+ h += '<div class="card" style="padding:14px 18px;display:flex;justify-content:space-between;align-items:center">';
+ h += '<div><b>⚙️ ' + t('Building & Safe Settings', 'إعدادات البناية والصندوق') + '</b><div style="font-size:11.5px;color:var(--mut)">' + esc(DB.settings.bldEn) + ' · ' + Number(DB.settings.rate).toLocaleString() + ' LBP/$1</div></div>';
+ h += '<button class="btn-edit" onclick="openSettingsModal()">✏️ ' + t('Edit', 'تعديل') + '</button></div>';
+
+ document.getElementById('app-body').innerHTML = h;
+}
+
+function renderLedgerScreen() {
+ var h = '<div class="card"><div class="card-h"><h2>📜 ' + t('All Money History', 'سجل جميع الدفعات والمصاريف') + '</h2>';
+ h += '<button class="btn-edit" style="color:var(--purp)" onclick="openDirectPayModal()">+ ' + t('Record Pay', 'تسجيل دفعة') + '</button></div>';
+ h += '<p class="subtext">' + t('Every payment collected and every bill paid across your building.', 'جميع الدفعات المقبوضة والفواتير المدفوعة في البناية.') + '</p>';
+
+ (DB.ledger || []).forEach(function(l) {
+ var isOut = l.type === 'out';
+ var isMgr = l.channel && (l.channel.indexOf('Whish') !== -1 || l.channel.indexOf('Manager') !== -1 || l.channel.indexOf('OMT') !== -1);
+ h += '<div class="list-row"><div class="list-left">';
+ h += '<div class="cat-ico" style="width:34px;height:34px;font-size:15px;background:' + (isOut ? 'var(--errbg);color:var(--bad)' : (isMgr ? 'var(--purpbg);color:var(--purp)' : 'var(--okbg);color:var(--ok)')) + '">' + (isOut ? '−' : '+') + '</div>';
+ h += '<div style="min-width:0"><b class="single-line-name">' + esc(l.desc) + '</b>';
+ h += '<div style="font-size:11.5px;color:var(--mut)">' + esc(l.at) + ' · <span class="badge-pay ' + (isMgr ? 'mgr' : 'cash') + '">' + esc(l.channel || 'Cash') + '</span> ' + (l.ref ? ('· #' + esc(l.ref)) : '') + '</div></div></div>';
+ h += '<b dir="ltr" style="color:' + (isOut ? 'var(--bad)' : 'var(--ok)') + ';font-size:14px;flex:none"><bdi>' + (isOut ? '- ' : '+ ') + fmt(l.amt, l.cur, 'en') + '</bdi></b></div>';
+ });
+ h += '</div>';
+ document.getElementById('app-body').innerHTML = h;
 }
 
 function saveCategorizedExpense() {
  var dt = document.getElementById('ex-date').value || todayIso();
  var targetCycle = document.getElementById('ex-cycle').value || SELECTED_MONTH;
  var payer = document.getElementById('ex-payer').value || 'mgr';
+ var isSplit = document.getElementById('ex-split-toggle').checked;
  var cat = document.getElementById('ex-cat').value;
  var desc = document.getElementById('ex-desc').value.trim();
  var amt = Number(document.getElementById('ex-amt').value) || 0;
@@ -2790,7 +2740,23 @@ function saveCategorizedExpense() {
  if (payer !== 'natour_pending') {
  DB.ledger.unshift({ id: 'l_' + Date.now(), desc: desc, sub: cObj.ico + ' ' + targetCycle, channel: payer==='natour_paid'?'Paid by Natour Cash':'Building Safe', amt: amt, cur: cur, type: 'out', at: dt, ref: ref });
  }
- showToast(payer === 'natour_pending' ? t('Sent to Natour to pay from his cash!', 'تم إرسال الفاتورة للناطور لدفعها!') : t('Expense saved!', 'تم حفظ المصروف!'));
+ if (isSplit && DB.cycles[targetCycle] && !DB.cycles[targetCycle].isProject) {
+ var aptCount = DB.apartments.length || 1;
+ var shareAmt = Math.round((amt / aptCount) * 100) / 100;
+ var dMap = {};
+ DB.apartments.forEach(function(a) { dMap[a.id] = shareAmt; });
+ DB.cycles[targetCycle].services.push({
+ id: 's_split_' + Date.now(),
+ en: desc + ' (Split)',
+ ar: desc + ' (مقسم)',
+ cur: cur,
+ passThrough: false,
+ map: dMap
+ });
+ showToast(t('Bill saved & split across apartments!', 'تم حفظ الفاتورة وتقسيمها على الشقق!'));
+ } else {
+ showToast(t('Expense saved!', 'تم حفظ المصروف!'));
+ }
  }
  saveDB(); closeModal('exp-modal'); render();
 }
@@ -2965,43 +2931,6 @@ function completeReminder(idx) {
  saveDB(); render();
 }
 
-function toggleTick(cId, aId) {
- var cyc = DB.cycles[SELECTED_MONTH];
- cyc.paid[cId] = cyc.paid[cId] || {};
- var curState = cyc.paid[cId][aId] || 0;
-
- if (curState === 2 && ROLE === 'col') {
- showToast(t('🔒 Paid directly to Manager (Not in your cash pocket)', '🔒 دُفعت مباشرة للمدير (لا تدخل في الكاش معك)'));
- return;
- }
-
- var on = curState === 0;
- if (on) cyc.paid[cId][aId] = 1; else delete cyc.paid[cId][aId];
-
- var col = getCycleCols(SELECTED_MONTH, false).filter(function(c) { return c.id === cId; })[0];
- if (col && col.linkedProject && DB.cycles[col.linkedProject]) {
- var pCyc = DB.cycles[col.linkedProject];
- var targetCol = col.linkedColId || 'sp_m1';
- pCyc.paid[targetCol] = pCyc.paid[targetCol] || {};
- if (on) pCyc.paid[targetCol][aId] = 1; else delete pCyc.paid[targetCol][aId];
- }
-
- var apt = DB.apartments.filter(function(a) { return a.id === aId; })[0];
- var v = col.valFor(aId);
- if (!col.passThrough) {
- DB.ledger.unshift({
- id: 'l_' + Date.now(),
- desc: apt.en + ' (' + apt.code + ') · ' + col.en,
- sub: SELECTED_MONTH,
- channel: 'Natour Cash',
- amt: v, cur: col.cur, type: on ? 'in' : 'out', at: todayIso(), ref: 'NATOUR'
- });
- }
- saveDB();
- showToast((on ? t('Collected Cash: ', 'تم قبض كاش: ') : t('Unmarked: ', 'تم إلغاء: ')) + (LANG==='ar'?apt.ar:apt.en) + ' · ' + (LANG==='ar'?col.ar:col.en));
- render();
-}
-
 function openSettingsModal() {
  var h = '<div class="card-h"><h3>⚙️ ' + t('Building & Safe Settings', 'إعدادات البناية والصندوق') + '</h3><button class="btn-del" onclick="closeModal(\'settings-modal\')">✕</button></div>';
  h += '<div class="row-div"><label style="font-size:12px;color:var(--mut)">' + t('Building Name (EN / AR)', 'اسم البناية (EN / AR)') + '</label><div class="two-col-grid" style="margin-top:4px"><input type="text" value="' + esc(DB.settings.bldEn) + '" onchange="DB.settings.bldEn=this.value;saveDB();render()"><input type="text" dir="rtl" value="' + esc(DB.settings.bldAr) + '" onchange="DB.settings.bldAr=this.value;saveDB();render()"></div></div>';
@@ -3012,31 +2941,8 @@ function openSettingsModal() {
  openModal('settings-modal');
 }
 
-function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-function showToast(msg) {
- var el = document.getElementById('toast');
- document.getElementById('toast-msg').textContent = msg;
- el.classList.add('pop');
- setTimeout(function() { el.classList.remove('pop'); }, 2800);
-}
-function setRole(r) {
- ROLE = r;
- document.getElementById('sim-mgr').className = r === 'mgr' ? 'on' : '';
- document.getElementById('sim-col').className = r === 'col' ? 'on' : '';
- render();
-}
-function setTab(tName) {
- TAB = tName;
- document.querySelectorAll('#mgr-dock button.nav-tab').forEach(function(b) {
- b.className = 'nav-tab' + (b.getAttribute('data-tab') === tName ? ' on' : '');
- });
- render();
- window.scrollTo(0, 0);
-}
-function toggleLang() { LANG = LANG === 'ar' ? 'en' : 'ar'; render(); }
-
 render();
 </script>
 </body>
 </html>
+

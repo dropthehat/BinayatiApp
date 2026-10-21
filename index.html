@@ -46,6 +46,59 @@ button:active { transform: scale(0.96); }
  background: rgba(255,255,255,0.18); backdrop-filter: blur(8px); color: #fff; padding: 6px 13px;
  border-radius: 999px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;
 }
+/* ---- Living building hero (Home) ---- */
+.home-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 18px 10px; }
+.home-pill { background: var(--card); border: 1px solid var(--line); color: var(--ink); padding: 7px 13px; border-radius: 999px; font-size: 12.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; box-shadow: var(--shadow); }
+.home-cur-toggle { display: inline-flex; background: var(--soft); padding: 3px; border-radius: 999px; gap: 2px; }
+.home-cur-toggle button { background: transparent; color: var(--mut); padding: 5px 11px; font-size: 11.5px; border-radius: 999px; }
+.home-cur-toggle button.on { background: var(--card); color: var(--acc); box-shadow: 0 1px 4px rgba(20,23,44,.12); }
+.bh { position: relative; margin: 0 16px 12px; border-radius: 26px; overflow: hidden; aspect-ratio: 366 / 256; box-shadow: var(--shadow-lg); background: var(--sky2); }
+.bh svg.bh-art { display: block; width: 100%; height: 100%; }
+.bh-chip { position: absolute; left: 12px; top: 12px; display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.bh-chip i { width: 7px; height: 7px; border-radius: 50%; display: block; }
+.bh.day .bh-chip { background: rgba(255,255,255,.82); color: #14172C; }
+.bh.dusk .bh-chip, .bh.night .bh-chip { background: rgba(10,12,40,.5); color: #F3EEDC; }
+.bh.day .bh-chip i { background: #F5A524; } .bh.dusk .bh-chip i { background: #FF9A6C; } .bh.night .bh-chip i { background: #F3EEDC; }
+.bh.day { --sky1:#6FB1EE; --sky2:#A6D0F4; --sky3:#F6E2C4; --sun:#FFF4CF; --cloud:rgba(255,255,255,.88); --mount:#B4C6DA; --far:#C3D0E0; --neigh:#DDD1C1; --nline:#CABEAC; --nw:#8FA5BD; --nwlit:#8FA5BD; --facade:#ECE2CF; --shade:#CDBDA2; --parapet:#F6EFE2; --slab:#F8F2E7; --slabEdge:#B9A688; --lobby:#D6C7AE; --doorFrame:#5A4A38; --doorGlass:#A9C3DE; --side:#D2CBBD; --street:#8F8B98; --lane:#EDEAE2; --pole:#56515E; --wire:#3B3A44; --rail:#4E4234; --trunk:#6A5442; --leaf:#4E8B5F; --leaf2:#76AD7F; --tankBase:#8D8577; --ac:#F4F6FA; --core:#BFC9D3; --sh:#7E9E86; --sl:#5F7F68; --w1:#FCE7B8; --w2:#F2C077; --w3:#EDB566; --glassOff:#4A5A75; --bulb:#E5E2D8; }
+.bh.dusk { --sky1:#3F4B9A; --sky2:#B58AB8; --sky3:#FFB98A; --sun:#FFB27A; --cloud:rgba(255,205,195,.6); --mount:#6E6AA8; --far:#7C72AE; --neigh:#8A7EA6; --nline:#7B6F97; --nw:#5B5585; --nwlit:#F2B45E; --facade:#C8B2A6; --shade:#9C8496; --parapet:#D9C6B8; --slab:#E3D2C4; --slabEdge:#8E7A8E; --lobby:#A891A0; --doorFrame:#4A3A48; --doorGlass:#FFC35E; --side:#9C8CA6; --street:#5E5878; --lane:#C9BFD6; --pole:#3A3350; --wire:#2A2440; --rail:#3A2E3A; --trunk:#4E3E3A; --leaf:#3E5E58; --leaf2:#557A6E; --tankBase:#6E6478; --ac:#E3E2EC; --core:#8F8AAE; --sh:#6F8572; --sl:#556A59; --w1:#FFE6A6; --w2:#FFC35E; --w3:#E38A36; --glassOff:#3B3F66; --bulb:#FFF4D6; }
+.bh.night { --sky1:#060920; --sky2:#15184A; --sky3:#3B2E66; --sun:#F7F1DE; --cloud:transparent; --mount:#2A2658; --far:#221F4B; --neigh:#1C1A40; --nline:#2C2960; --nw:#26234E; --nwlit:#E9A85A; --facade:#2F2B64; --shade:#1A183C; --parapet:#3E3A7A; --slab:#46418A; --slabEdge:#7C76CC; --lobby:#1E1B43; --doorFrame:#15133A; --doorGlass:#FFC35E; --side:#2A2752; --street:#15142E; --lane:#4A4680; --pole:#120F2C; --wire:#0B0A1E; --rail:#0F0D28; --trunk:#2A1E22; --leaf:#152B33; --leaf2:#1E3B43; --tankBase:#2A2756; --ac:#C5CCDA; --core:#3A3670; --sh:#3B4160; --sl:#2B3049; --w1:#FFE6A6; --w2:#FFC35E; --w3:#E38A36; --glassOff:#1E2147; --bulb:#FFF8E2; }
+.bh-mount{fill:var(--mount)} .bh-far{fill:var(--far)} .bh-neigh{fill:var(--neigh)} .bh-nline{fill:var(--nline)} .bh-nw{fill:var(--nw)} .bh-nw.lit{fill:var(--nwlit)}
+.bh-facade{fill:var(--facade)} .bh-shade{fill:var(--shade)} .bh-parapet{fill:var(--parapet)} .bh-slab{fill:var(--slab)} .bh-slabEdge{fill:var(--slabEdge)}
+.bh-lobby{fill:var(--lobby)} .bh-doorFrame{fill:var(--doorFrame)} .bh-doorGlass{fill:var(--doorGlass)} .bh-side{fill:var(--side)} .bh-street{fill:var(--street)} .bh-lane{fill:var(--lane)}
+.bh-pole{fill:var(--pole)} .bh-wire{fill:none;stroke:var(--wire);stroke-width:.6;stroke-linecap:round} .bh-rail{fill:none;stroke:var(--rail)}
+.bh-trunk{fill:none;stroke:var(--trunk);stroke-width:2.2;stroke-linecap:round} .bh-leaf{fill:var(--leaf)} .bh-leaf2{fill:var(--leaf2)}
+.bh-tankBase{fill:var(--tankBase)} .bh-ac{fill:var(--ac)} .bh-bulb{fill:var(--bulb)} .bh-cloud{fill:var(--cloud)}
+.bh-core{fill:var(--core)} .bh.elev .bh-core{fill:#7FE3C2;animation:bhCore 2.2s ease-in-out infinite}
+.bh-glassOff{fill:var(--glassOff)} .bh-mull{fill:rgba(0,0,0,.32)}
+.bh-win{cursor:pointer;outline:none}
+.bh-win:focus-visible .bh-frame{stroke:#FFFFFF;stroke-width:1.4}
+.bh-dot{fill:#F59E0B;stroke:#FFFFFF;stroke-width:1;transform-box:fill-box;transform-origin:center;animation:bhPulse 1.8s ease-in-out infinite}
+.bh.day .bh-halo{display:none}
+.bh.day .bh-lampglow{opacity:0} .bh.dusk .bh-lampglow{opacity:.7}
+.bh.day .bh-moon, .bh.dusk .bh-moon, .bh.day .bh-star{display:none}
+.bh.dusk .bh-star{opacity:.35}
+.bh.night .bh-sun, .bh.night .bh-cloud{display:none}
+.bh-star{fill:#FFF6DA;animation:bhTw 3s ease-in-out infinite}
+.bh-cloud{animation:bhDrift 16s ease-in-out infinite alternate}
+.bh-bob{animation:bhBob 2.4s ease-in-out infinite}
+@keyframes bhCore{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes bhPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
+@keyframes bhTw{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes bhDrift{from{transform:translateX(0)}to{transform:translateX(16px)}}
+@keyframes bhBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+@media (prefers-reduced-motion: reduce){.bh *{animation:none!important}}
+.safe-lbl { font-size: 12px; font-weight: 700; color: var(--mut); }
+.safe-num { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; margin: 2px 0 2px; color: var(--ink); }
+.owe-chip { min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1.5px solid #F2C77E; background: #FFF6E6; color: #7A4A00; font-weight: 800; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+.owe-chip span { font-weight: 600; }
+.qa-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+.qa { background: var(--card2); border: 1px solid var(--line); color: var(--ink); border-radius: 16px; padding: 10px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+.qa span { font-size: 10.5px; color: var(--mut); font-weight: 700; }
+.qa b { font-size: 14px; font-weight: 800; }
+.qa.cta { background: var(--acc); border-color: var(--acc); color: #FFFFFF; box-shadow: 0 8px 20px rgba(91,76,245,.3); }
+.qa.cta span { color: rgba(255,255,255,.85); }
+.home-note { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; font-size: 12.5px; font-weight: 700; line-height: 1.4; margin-top: 10px; }
+.home-note i { flex: none; width: 9px; height: 9px; border-radius: 50%; display: block; }
 .hero-center { text-align: center; margin: 6px 0 16px; }
 .hero-center .lbl { font-size: 12.5px; opacity: 0.85; font-weight: 600; }
 .hero-center .big-num { font-size: 38px; font-weight: 800; letter-spacing: -0.02em; margin: 2px 0 4px; }
@@ -1340,31 +1393,316 @@ function escapeForHeroSub(sf) {
  return '💵 ' + fmt(sf.netUsd, 'USD', 'en') + '   +   🇱🇧 ' + fmt(sf.netLbp, 'LBP', 'en');
 }
 
+/* ============================================================================
+ LIVING BUILDING HERO — windows = who paid, sky = real time of day
+ ============================================================================ */
+var HERO_LAST_PHASE = '';
+
+/* Approximate sunrise/sunset for Beirut, in local minutes after midnight. */
+function sunTimesLocal(d) {
+ var lat = 33.89, lon = 35.5;
+ var N = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
+ var B = (2 * Math.PI / 365) * (N - 81);
+ var decl = (23.44 * Math.PI / 180) * Math.sin(B);
+ var eot = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
+ var tz = -d.getTimezoneOffset() / 60;
+ var noon = 720 - 4 * lon - eot + tz * 60;
+ var phi = lat * Math.PI / 180;
+ var cosH = (Math.sin(-0.833 * Math.PI / 180) - Math.sin(phi) * Math.sin(decl)) / (Math.cos(phi) * Math.cos(decl));
+ var H = Math.acos(Math.max(-1, Math.min(1, cosH))) * 180 / Math.PI;
+ return { rise: noon - 4 * H, set: noon + 4 * H };
+}
+
+function heroPhase(now) {
+ var st = sunTimesLocal(now);
+ var m = now.getHours() * 60 + now.getMinutes();
+ var key, label;
+ if (m < st.rise - 35 || m > st.set + 45) { key = 'night'; label = t('Night', 'ليلاً'); }
+ else if (m < st.rise + 45) { key = 'dusk'; label = t('Sunrise', 'الشروق'); }
+ else if (m > st.set - 50) { key = 'dusk'; label = t('Sunset', 'الغروب'); }
+ else { key = 'day'; label = m < (st.rise + st.set) / 2 ? t('Morning', 'صباحاً') : t('Afternoon', 'بعد الظهر'); }
+ var frac = Math.max(0, Math.min(1, (m - st.rise) / (st.set - st.rise)));
+ var time = now.toLocaleTimeString(LANG === 'ar' ? 'ar-LB' : 'en-US', { hour: 'numeric', minute: '2-digit' });
+ return { key: key, label: label, chip: time + ' · ' + label, sunX: 40 + frac * 286, sunY: 150 - Math.sin(Math.PI * frac) * 118 };
+}
+
+/* Per-apartment status for the selected month (building dues only, no Moteur/Internet). */
+function heroAptStatus(cKey) {
+ var cyc = DB.cycles[cKey];
+ var rate = getRate();
+ var cols = getCycleCols(cKey, true);
+ return DB.apartments.map(function(a) {
+ var owedEq = 0, any = false;
+ cols.forEach(function(c) {
+ var v = c.valFor(a.id);
+ if (v <= 0) return;
+ any = true;
+ if (cellState(cyc, c.id, a.id) === 0) owedEq += c.cur === 'LBP' ? v / rate : v;
+ });
+ return { a: a, any: any, owes: owedEq > 0.0001, owedEq: owedEq };
+ });
+}
+
+function heroDueReminder() {
+ var d = new Date(); d.setDate(d.getDate() + 3);
+ var limit = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+ var due = (DB.reminders || []).filter(function(rm) { return rm.date && rm.date <= limit; });
+ due.sort(function(x, y) { return x.date < y.date ? -1 : 1; });
+ return due[0] || null;
+}
+
+function heroWinTap(aptId) {
+ var st = heroAptStatus(SELECTED_MONTH).filter(function(x) { return x.a.id === aptId; })[0];
+ if (!st) return;
+ if (!st.owes) {
+ showToast(t(st.a.code + ' has paid ' + dispCycleName(SELECTED_MONTH, 'en'), st.a.code + ' سدد ' + dispCycleName(SELECTED_MONTH, 'ar')));
+ return;
+ }
+ openDirectPayModal();
+ var sel = document.getElementById('wp-apt');
+ if (sel) { sel.value = aptId; populateDirectPayDues(); }
+}
+
+function heroR(n) { return Math.round(n * 10) / 10; }
+
+function heroRailPath(x, w, y1, y2) {
+ var d = 'M' + heroR(x - 4) + ' ' + heroR(y1) + 'H' + heroR(x + w + 4);
+ for (var px = x - 3; px <= x + w + 3; px += 4) d += 'M' + heroR(px) + ' ' + heroR(y1) + 'V' + heroR(y2);
+ return d;
+}
+
+function buildingHeroHtml(statuses, natourEqUsd, dueRm) {
+ var ph = heroPhase(new Date());
+ HERO_LAST_PHASE = ph.key + '|' + ph.label;
+
+ var n = statuses.length;
+ var cols = n <= 12 ? 2 : 4;
+ var floors = Math.max(1, Math.ceil(n / cols));
+ var fh = floors <= 5 ? 28 : Math.max(14, Math.floor(150 / floors));
+ var bw = cols === 2 ? 150 : 220;
+ var bx = 183 - bw / 2, bx2 = bx + bw;
+ var lobbyTop = 197, top = lobbyTop - floors * fh;
+ var perSide = cols / 2, gapW = 6;
+ var perHalf = (bw - 24 - 26) / 2;
+ var ww = (perHalf - (perSide - 1) * gapW) / perSide;
+ var wh = fh * 0.61;
+
+ var s = '<svg class="bh-art" viewBox="0 0 366 256" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">';
+ s += '<defs>';
+ s += '<linearGradient id="bhSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sky1)"/><stop offset="0.55" style="stop-color:var(--sky2)"/><stop offset="1" style="stop-color:var(--sky3)"/></linearGradient>';
+ s += '<radialGradient id="bhWarm" cx="0.5" cy="0.65" r="0.75"><stop offset="0" style="stop-color:var(--w1)"/><stop offset="0.55" style="stop-color:var(--w2)"/><stop offset="1" style="stop-color:var(--w3)"/></radialGradient>';
+ s += '<radialGradient id="bhSunGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" style="stop-color:var(--sun);stop-opacity:.65"/><stop offset="1" style="stop-color:var(--sun);stop-opacity:0"/></radialGradient>';
+ s += '<linearGradient id="bhCone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:#FFE6A6;stop-opacity:.55"/><stop offset="1" style="stop-color:#FFE6A6;stop-opacity:0"/></linearGradient>';
+ s += '<linearGradient id="bhPnl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:#4C7FE0"/><stop offset="1" style="stop-color:#1F3F8F"/></linearGradient>';
+ s += '<linearGradient id="bhTkW" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:#F1F4FA"/><stop offset="0.6" style="stop-color:#CBD3E3"/><stop offset="1" style="stop-color:#8F99B3"/></linearGradient>';
+ s += '<linearGradient id="bhTkB" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:#8FB6EC"/><stop offset="0.6" style="stop-color:#4F7FC8"/><stop offset="1" style="stop-color:#2E4F8C"/></linearGradient>';
+ s += '<pattern id="bhSlat" width="4" height="3" patternUnits="userSpaceOnUse"><rect width="4" height="2" style="fill:var(--sh)"/><rect y="2" width="4" height="1" style="fill:var(--sl)"/></pattern>';
+ s += '<filter id="bhGlow" x="-40%" y="-80%" width="180%" height="260%"><feGaussianBlur stdDeviation="2.6"/></filter>';
+ s += '<filter id="bhBlur" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="5"/></filter>';
+ s += '</defs>';
+
+ // Sky, sun / moon, stars, clouds
+ s += '<rect width="366" height="256" fill="url(#bhSky)"/>';
+ s += '<g class="bh-sun"><circle cx="' + heroR(ph.sunX) + '" cy="' + heroR(ph.sunY) + '" r="40" fill="url(#bhSunGlow)"/><circle cx="' + heroR(ph.sunX) + '" cy="' + heroR(ph.sunY) + '" r="14" style="fill:var(--sun)"/></g>';
+ s += '<g class="bh-moon"><circle cx="314" cy="40" r="34" fill="url(#bhSunGlow)"/><circle cx="314" cy="40" r="12" fill="#F7F1DE"/><circle cx="310" cy="37" r="2.6" fill="#E6DDC2"/><circle cx="318" cy="44" r="1.8" fill="#E6DDC2"/></g>';
+ [[90,18],[140,40],[190,14],[236,34],[280,12],[322,46],[112,62],[300,78],[24,84],[166,74]].forEach(function(p, i) {
+ s += '<circle class="bh-star" cx="' + p[0] + '" cy="' + p[1] + '" r="' + (i % 3 === 0 ? 1 : 0.7) + '" style="animation-delay:' + (i * 0.35).toFixed(2) + 's"/>';
+ });
+ s += '<g class="bh-cloud"><ellipse cx="68" cy="66" rx="28" ry="7"/><ellipse cx="62" cy="60" rx="13" ry="8"/></g>';
+ s += '<g class="bh-cloud" style="animation-delay:-6s"><ellipse cx="222" cy="36" rx="22" ry="6"/><ellipse cx="228" cy="31" rx="10" ry="6.5"/></g>';
+ s += '<g class="bh-cloud" style="animation-delay:-10s"><ellipse cx="312" cy="100" rx="24" ry="6"/><ellipse cx="306" cy="95" rx="11" ry="6.5"/></g>';
+
+ // Mountains + far skyline
+ s += '<path class="bh-mount" d="M0 160 C 40 146, 70 152, 100 142 C 140 128, 170 140, 200 134 C 240 126, 270 142, 306 136 C 330 132, 350 140, 366 136 L366 226 L0 226 Z"/>';
+ s += '<rect class="bh-far" x="0" y="150" width="22" height="76"/><rect class="bh-far" x="6" y="136" width="12" height="90"/><rect class="bh-far" x="326" y="112" width="14" height="114"/><rect class="bh-far" x="342" y="152" width="24" height="74"/>';
+
+ // Neighbour buildings (fill the space either side)
+ function neighbour(x1, x2, y1, seed) {
+ var o = '<rect class="bh-neigh" x="' + x1 + '" y="' + y1 + '" width="' + (x2 - x1) + '" height="' + (226 - y1) + '"/>';
+ var c = 0;
+ for (var wy = y1 + 10; wy + 8 < 222; wy += 18) {
+ o += '<rect class="bh-nline" x="' + x1 + '" y="' + (wy + 10) + '" width="' + (x2 - x1) + '" height="1"/>';
+ for (var wx = x1 + 8; wx + 11 < x2 - 4; wx += 20) {
+ c++;
+ o += '<rect class="bh-nw' + ((c * 7 + seed) % 5 === 0 ? ' lit' : '') + '" x="' + wx + '" y="' + wy + '" width="11" height="8"/>';
+ }
+ }
+ return o;
+ }
+ if (bx > 30) s += neighbour(Math.max(0, bx - 90), bx, 108, 2);
+ if (bx2 + 10 < 340) s += neighbour(bx2 + 10, Math.min(366, bx2 + 88), 124, 4);
+
+ // Utility pole + Moteur wires
+ var poleX = Math.max(12, bx - 58);
+ s += '<rect class="bh-pole" x="' + poleX + '" y="92" width="2" height="134"/><rect class="bh-pole" x="' + (poleX - 7) + '" y="99" width="16" height="1.4"/>';
+ s += '<path class="bh-wire" d="M' + (poleX - 6) + ' 100 Q ' + ((poleX + bx) / 2) + ' 118 ' + bx + ' ' + Math.max(top + 14, 92) + ' M' + (poleX - 4) + ' 100 Q ' + ((poleX + bx) / 2) + ' 132 ' + bx + ' 124 M' + (poleX + 6) + ' 100 Q ' + ((poleX + bx) / 2) + ' 142 ' + bx + ' 152 M' + (poleX - 6) + ' 100 Q ' + (poleX / 2) + ' 112 0 96"/>';
+
+ // Main building body
+ s += '<path class="bh-shade" d="M' + bx2 + ' ' + top + ' L' + (bx2 + 10) + ' ' + (top + 6) + ' L' + (bx2 + 10) + ' 226 L' + bx2 + ' 226 Z"/>';
+ s += '<rect class="bh-facade" x="' + bx + '" y="' + top + '" width="' + bw + '" height="' + (226 - top) + '"/>';
+ s += '<rect class="bh-parapet" x="' + (bx - 3) + '" y="' + (top - 6) + '" width="' + (bw + 6) + '" height="6"/>';
+
+ // Roof: water tanks, dish, solar panels
+ var tall = top < 52;
+ var tankX = tall ? Math.max(bx + 6, 140) : bx + 6;
+ s += '<g transform="translate(' + tankX + ' ' + (top - 26) + ')"><rect class="bh-tankBase" x="0" y="16" width="34" height="4"/><rect x="2" y="2" width="14" height="15" rx="1" fill="url(#bhTkW)"/><ellipse cx="9" cy="2" rx="7" ry="2.2" fill="#F6F8FC"/><rect x="18" y="4" width="14" height="13" rx="1" fill="url(#bhTkB)"/><ellipse cx="25" cy="4" rx="7" ry="2.2" fill="#A9C7F2"/></g>';
+ if (!tall || cols === 4) s += '<g transform="translate(' + (tall ? tankX + 50 : bx + 56) + ' ' + (top - 16) + ') rotate(-28)"><ellipse rx="6.5" ry="4.3" fill="#E3E8F2"/><ellipse cx="0.5" cy="0.4" rx="4.6" ry="2.8" fill="#C6CEDD"/></g>';
+ var p1 = bx2 - 72, p2 = bx2 - 36, py = top - 3;
+ [p1, p2].forEach(function(px) {
+ s += '<path d="M' + (px + 2) + ' ' + py + ' L' + (px + 5) + ' ' + (py - 11) + ' M' + (px + 30) + ' ' + py + ' L' + (px + 27) + ' ' + (py - 11) + '" style="stroke:#4A4560;stroke-width:.9"/>';
+ s += '<path d="M' + px + ' ' + py + ' L' + (px + 32) + ' ' + py + ' L' + (px + 27) + ' ' + (py - 12) + ' L' + (px + 5) + ' ' + (py - 12) + ' Z" fill="url(#bhPnl)" style="stroke:#C9D8FF;stroke-width:.5"/>';
+ s += '<path d="M' + (px + 2.5) + ' ' + (py - 6) + ' H' + (px + 29.5) + ' M' + (px + 16) + ' ' + (py - 12) + ' V' + py + '" style="fill:none;stroke:#8FB0F5;stroke-width:.35"/>';
+ });
+
+ // Floors: elevator core, slabs, AC units
+ for (var f = 0; f < floors; f++) {
+ var ft = lobbyTop - (f + 1) * fh;
+ s += '<rect class="bh-core" x="178" y="' + heroR(ft + fh * 0.25) + '" width="10" height="' + heroR(fh * 0.46) + '" rx="0.6"/>';
+ s += '<rect class="bh-slab" x="' + (bx - 4) + '" y="' + heroR(ft + fh * 0.89) + '" width="' + (bw + 8) + '" height="' + heroR(Math.max(2, fh * 0.1)) + '"/>';
+ s += '<rect class="bh-slabEdge" x="' + (bx - 4) + '" y="' + heroR(ft + fh * 0.89 + Math.max(2, fh * 0.1)) + '" width="' + (bw + 8) + '" height="0.8"/>';
+ if (f % 2 === 1) s += '<rect class="bh-ac" x="' + (bx2 - 9) + '" y="' + heroR(ft + fh * 0.5) + '" width="8" height="5" rx="0.6"/>';
+ }
+
+ // Windows (one per apartment) + railings
+ var rails = '';
+ for (var i = 0; i < floors * cols; i++) {
+ var fl = Math.floor(i / cols), k = i % cols;
+ var ft2 = lobbyTop - (fl + 1) * fh;
+ var half = k < perSide ? 0 : 1, kk = k % perSide;
+ var x = heroR((half === 0 ? bx + 12 : 183 + 13) + kk * (ww + gapW));
+ var y = heroR(ft2 + fh * 0.21);
+ var st = statuses[i];
+ if (!st) continue;
+ rails += heroRailPath(x, ww, ft2 + fh * 0.64, ft2 + fh * 0.89);
+ var owes = st.owes;
+ var lbl = st.a.code + ' · ' + (owes ? t('still owes', 'لم يسدد بعد') : t('paid', 'مسدد'));
+ s += '<g class="bh-win" role="button" tabindex="0" aria-label="' + esc(lbl) + '" onclick="heroWinTap(' + jsArg(st.a.id) + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();heroWinTap(' + jsArg(st.a.id) + ')}">';
+ s += '<title>' + esc(lbl) + '</title>';
+ if (!owes) s += '<rect class="bh-halo" x="' + x + '" y="' + y + '" width="' + heroR(ww) + '" height="' + heroR(wh) + '" fill="url(#bhWarm)" filter="url(#bhGlow)" opacity=".8"/>';
+ s += '<rect class="bh-frame" x="' + heroR(x - 1.2) + '" y="' + heroR(y - 1.2) + '" width="' + heroR(ww + 2.4) + '" height="' + heroR(wh + 2.4) + '" rx="1" style="fill:var(--rail)"/>';
+ s += '<rect x="' + x + '" y="' + y + '" width="' + heroR(ww) + '" height="' + heroR(wh) + '" ' + (owes ? 'class="bh-glassOff"' : 'fill="url(#bhWarm)"') + '/>';
+ var shW = owes ? ww / 2 : 3;
+ s += '<rect x="' + x + '" y="' + y + '" width="' + heroR(shW) + '" height="' + heroR(wh) + '" fill="url(#bhSlat)"/>';
+ s += '<rect x="' + heroR(x + ww - shW) + '" y="' + y + '" width="' + heroR(shW) + '" height="' + heroR(wh) + '" fill="url(#bhSlat)"/>';
+ s += '<rect class="bh-mull" x="' + heroR(x + ww / 2 - 0.6) + '" y="' + y + '" width="1.2" height="' + heroR(wh) + '"/>';
+ if (owes) s += '<circle class="bh-dot" cx="' + heroR(x + ww - 4) + '" cy="' + heroR(y + 4) + '" r="2.6"/>';
+ s += '</g>';
+ }
+
+ // Lobby
+ s += '<rect class="bh-lobby" x="' + bx + '" y="' + lobbyTop + '" width="' + bw + '" height="29"/>';
+ s += '<rect class="bh-parapet" x="156" y="199" width="54" height="3" rx="0.6"/>';
+ s += '<rect class="bh-doorFrame" x="168" y="204.5" width="30" height="21.5"/><rect class="bh-doorGlass" x="169.5" y="206" width="27" height="20"/><rect class="bh-doorFrame" x="182.6" y="206" width="0.8" height="20"/>';
+ var signTxt = String(DB.settings.bldEn || 'Building').toUpperCase().slice(0, 12);
+ s += '<rect x="' + (bx + 8) + '" y="204" width="40" height="9" rx="1.5" fill="#FFF1D0"/>';
+ s += '<text x="' + (bx + 28) + '" y="210.6" style="font-size:5.2px;font-weight:800;letter-spacing:.5px;fill:#2B2858;text-anchor:middle">' + esc(signTxt) + '</text>';
+ s += '<rect x="158" y="220" width="6" height="6" rx="0.6" fill="#7A4E3A"/><ellipse class="bh-leaf" cx="161" cy="216.5" rx="4" ry="5"/>';
+ s += '<rect x="202" y="220" width="6" height="6" rx="0.6" fill="#7A4E3A"/><ellipse class="bh-leaf" cx="205" cy="216.5" rx="4" ry="5"/>';
+
+ // Street
+ s += '<rect class="bh-side" x="0" y="226" width="366" height="7"/><rect class="bh-street" x="0" y="233" width="366" height="23"/>';
+ for (var lx = 14; lx < 366; lx += 48) s += '<rect class="bh-lane" x="' + lx + '" y="245" width="16" height="1.4"/>';
+
+ // Railings drawn over the windows
+ s += '<path class="bh-rail" d="' + rails + '" style="stroke-width:.6"/>';
+
+ // Tree, street lamp, bins
+ var tx = bx - 22;
+ s += '<path class="bh-trunk" d="M' + tx + ' 226 Q ' + (tx + 1) + ' 214 ' + (tx - 1) + ' 206"/>';
+ s += '<circle class="bh-leaf" cx="' + tx + '" cy="200" r="11"/><circle class="bh-leaf" cx="' + (tx - 10) + '" cy="207" r="9"/><circle class="bh-leaf" cx="' + (tx + 10) + '" cy="208" r="9"/><circle class="bh-leaf2" cx="' + (tx + 5) + '" cy="196" r="4.5"/><circle class="bh-leaf2" cx="' + (tx - 7) + '" cy="203" r="3.5"/>';
+ var lpx = Math.min(346, bx2 + 44);
+ s += '<path class="bh-lampglow" d="M' + (lpx - 13) + ' 166 L ' + (lpx - 32) + ' 226 L ' + (lpx + 14) + ' 226 L ' + (lpx - 7) + ' 166 Z" fill="url(#bhCone)"/>';
+ s += '<circle class="bh-lampglow" cx="' + (lpx - 10) + '" cy="163" r="6" fill="#FFE6A6" filter="url(#bhBlur)"/>';
+ s += '<rect class="bh-pole" x="' + lpx + '" y="162" width="1.8" height="64"/>';
+ s += '<path d="M' + (lpx + 1) + ' 164 Q ' + (lpx + 1) + ' 156 ' + (lpx - 9) + ' 156" style="fill:none;stroke:var(--pole);stroke-width:1.5"/>';
+ s += '<path class="bh-pole" d="M' + (lpx - 14.5) + ' 156 L' + (lpx - 5.5) + ' 156 L' + (lpx - 7.5) + ' 159.4 L' + (lpx - 12.5) + ' 159.4 Z"/>';
+ s += '<ellipse class="bh-bulb" cx="' + (lpx - 10) + '" cy="160" rx="2.4" ry="1.1"/>';
+ if (lpx + 12 < 360) s += '<rect x="' + (lpx + 8) + '" y="218" width="6" height="8" rx="0.8" fill="#1C8A5E"/><rect x="' + (lpx + 7.5) + '" y="216.8" width="7" height="1.8" rx="0.5" fill="#2BB37C"/>';
+
+ // Natour at the door when he's holding cash
+ if (natourEqUsd >= 1) {
+ var amtTxt = '$' + Math.round(natourEqUsd).toLocaleString('en-US');
+ var bwid = 8 + amtTxt.length * 4.4;
+ s += '<g transform="translate(214 0)">';
+ s += '<g class="bh-bob"><rect x="17" y="199" width="' + heroR(bwid) + '" height="10" rx="5" fill="#FFFFFF" style="stroke:#F59E0B;stroke-width:1"/>';
+ s += '<text x="' + heroR(17 + bwid / 2) + '" y="206.3" style="font-size:6px;font-weight:800;fill:#7A4A00;text-anchor:middle">' + amtTxt + '</text></g>';
+ s += '<circle cx="9" cy="203" r="4" fill="#F1CBA6"/><path d="M4.8 202 Q 9 196.8 13.2 202 L 15 202.3 L 13.2 203 Z" fill="#F59E0B"/>';
+ s += '<path d="M3.5 226 Q 3.5 208 9 208 Q 14.5 208 14.5 226 Z" fill="#F59E0B"/>';
+ s += '</g>';
+ }
+
+ s += '</svg>';
+
+ var cls = 'bh ' + ph.key + (dueRm ? ' elev' : '');
+ return '<div class="' + cls + '">' + s + '<div class="bh-chip" id="bh-time"><i></i><span>' + esc(ph.chip) + '</span></div></div>';
+}
+
+/* Keep the sky in step with the clock while the Home screen is open. */
+setInterval(function() {
+ var chip = document.getElementById('bh-time');
+ if (!chip) return;
+ var ph = heroPhase(new Date());
+ if ((ph.key + '|' + ph.label) !== HERO_LAST_PHASE) { render(); return; }
+ var span = chip.querySelector('span');
+ if (span) span.textContent = ph.chip;
+}, 60000);
+
 function renderOverviewScreen() {
  var sf = getSafeBalance();
  var s = getCycleStats(SELECTED_MONTH);
  var h = '';
 
- h += '<div class="indigo-hero">';
- h += '<div class="hero-top">';
- h += '<span class="hero-pill">🏢 ' + esc(LANG === 'ar' ? DB.settings.bldAr : DB.settings.bldEn) + '</span>';
+ var rate = getRate();
+ var statuses = heroAptStatus(SELECTED_MONTH);
+ var natourEq = Math.max(0, s.natNetUsd + s.natNetLbp / rate);
+ var dueRm = heroDueReminder();
+ var owing = statuses.filter(function(x) { return x.owes; });
+
+ h += '<div class="home-top">';
+ h += '<span class="home-pill">🏢 ' + esc(LANG === 'ar' ? DB.settings.bldAr : DB.settings.bldEn) + '</span>';
  if (DB.settings.treasuryMode === 'split') {
- h += '<div class="hero-cur-toggle"><button class="' + (REF_CUR === 'USD' ? 'on' : '') + '" onclick="REF_CUR=\'USD\';render()">USD $</button><button class="' + (REF_CUR === 'LBP' ? 'on' : '') + '" onclick="REF_CUR=\'LBP\';render()">LBP ل.ل</button></div>';
+ h += '<div class="home-cur-toggle"><button class="' + (REF_CUR === 'USD' ? 'on' : '') + '" onclick="REF_CUR=\'USD\';render()">USD $</button><button class="' + (REF_CUR === 'LBP' ? 'on' : '') + '" onclick="REF_CUR=\'LBP\';render()">LBP ل.ل</button></div>';
  } else {
- h += '<span class="hero-pill" style="cursor:pointer" onclick="openSettingsModal()">⚙️ ' + t('Setup', 'الإعدادات') + '</span>';
+ h += '<button type="button" class="home-pill" onclick="openSettingsModal()">⚙️ ' + t('Setup', 'الإعدادات') + '</button>';
  }
  h += '</div>';
 
- h += '<div class="hero-center">';
- h += '<div class="lbl">' + t('Total Money in Building Safe', 'إجمالي المبلغ في صندوق البناية') + '</div>';
- h += '<div class="big-num" dir="ltr">' + fmt(sf.refVal, DB.settings.treasuryMode === 'single' ? 'USD' : REF_CUR, 'en') + '</div>';
- h += '<div class="sub-lbl">' + escapeForHeroSub(sf) + '</div>';
- h += '</div>';
+ h += buildingHeroHtml(statuses, natourEq, dueRm);
 
- h += '<div class="hero-stats-grid">';
- h += '<button type="button" class="stat-tile" onclick="openCycleDetail(' + jsArg(SELECTED_MONTH) + ')"><span>' + t('Active Month', 'الشهر الحالي') + '</span><b>' + s.pct + '%</b><small>' + s.settled + '/' + s.total + ' ' + t('paid', 'سددوا') + '</small></button>';
- h += '<button type="button" class="stat-tile stat-cta" onclick="openDirectPayModal()"><span>' + t('Record Payment', 'تسجيل دفعة') + '</span><b>+ ' + t('Pay', 'قبض') + '</b><small>' + t('Cash / Whish', 'كاش / ويش') + '</small></button>';
- h += '<button type="button" class="stat-tile" onclick="setTab(\'ledger\')"><span>' + t('Money Log', 'سجل الأموال') + '</span><b>📜 ' + t('View', 'عرض') + '</b><small>' + t('All history', 'كل الحركات') + '</small></button>';
+ h += '<div class="card" style="margin-top:0">';
+ h += '<div class="safe-lbl">' + t('Total Money in Building Safe', 'إجمالي المبلغ في صندوق البناية') + '</div>';
+ h += '<div class="safe-num" dir="ltr">' + fmt(sf.refVal, DB.settings.treasuryMode === 'single' ? 'USD' : REF_CUR, 'en') + '</div>';
+ h += '<div style="font-size:12px;color:var(--mut);font-weight:600">' + escapeForHeroSub(sf) + '</div>';
+
+ h += '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;margin-bottom:6px;gap:8px">';
+ h += '<b style="font-size:14px">' + esc(dispCycleName(SELECTED_MONTH)) + ' · ' + s.settled + ' ' + t('of', 'من') + ' ' + s.total + ' ' + t('paid', 'سددوا') + '</b>';
+ h += '<span style="font-size:12.5px;font-weight:800;color:' + (s.total > 0 && s.settled === s.total ? 'var(--ok)' : 'var(--acc)') + '">' + s.pct + '%</span></div>';
+ h += '<div class="prog-track"><div class="prog-fill" style="width:' + s.pct + '%"></div></div>';
+
+ if (owing.length) {
+ h += '<div style="font-size:12px;font-weight:700;color:var(--mut);margin:12px 0 6px">' + t('Still owe · tap to record a payment', 'لم يسددوا بعد · اضغط لتسجيل دفعة') + '</div>';
+ h += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+ owing.forEach(function(x) {
+ h += '<button type="button" class="owe-chip" onclick="heroWinTap(' + jsArg(x.a.id) + ')">' + esc(x.a.code) + '<span dir="ltr">$' + Math.round(x.owedEq) + '</span></button>';
+ });
+ h += '</div>';
+ } else if (s.total > 0) {
+ h += '<div class="home-note" style="background:var(--okbg);color:var(--ok)"><i style="background:var(--ok)"></i>' + t('Every apartment has paid. The building is fully lit.', 'جميع الشقق سددت. البناية مضاءة بالكامل.') + '</div>';
+ }
+
+ if (natourEq >= 1) {
+ h += '<div class="home-note" style="background:#FFF6E6;color:#7A4A00"><i style="background:#F59E0B"></i>'
+ + t(esc(DB.settings.collectorEn) + ' is holding $' + Math.round(natourEq) + ' that hasn’t been handed over yet.', esc(DB.settings.collectorAr) + ' يحمل $' + Math.round(natourEq) + ' لم يُسلَّم بعد.') + '</div>';
+ }
+ if (dueRm) {
+ h += '<div class="home-note" style="background:#E3F7F0;color:#0B6B4A"><i style="background:#34C79A"></i>'
+ + '<span>' + esc(LANG === 'ar' ? (dueRm.ar || dueRm.en) : dueRm.en) + ' · ' + t('due ', 'الموعد ') + esc(dueRm.date) + '<br><span style="font-weight:600">' + t('The building’s core glows green while a task is due.', 'قلب البناية يضيء بالأخضر طالما هناك مهمة مستحقة.') + '</span></span></div>';
+ }
+
+ h += '<div class="qa-row">';
+ h += '<button type="button" class="qa" onclick="openCycleDetail(' + jsArg(SELECTED_MONTH) + ')"><span>' + t('This month', 'هذا الشهر') + '</span><b>' + t('Details', 'التفاصيل') + '</b></button>';
+ h += '<button type="button" class="qa cta" onclick="openDirectPayModal()"><span>' + t('Cash / Whish', 'كاش / ويش') + '</span><b>+ ' + t('Payment', 'دفعة') + '</b></button>';
+ h += '<button type="button" class="qa" onclick="setTab(\'ledger\')"><span>' + t('All history', 'كل الحركات') + '</span><b>' + t('Money log', 'سجل الأموال') + '</b></button>';
  h += '</div></div>';
 
  h += '<div class="card">';

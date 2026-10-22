@@ -1,9 +1,10 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <!doctype html>
 <html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Binayati · بنايتي — V13 Smart Building Manager</title>
+<title>Binayati · بنايتي — V14.1 Smart Building Manager</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -59,9 +60,24 @@ button:active { transform: scale(0.96); }
 .bh.day .bh-chip { background: rgba(255,255,255,.82); color: #14172C; }
 .bh.dusk .bh-chip, .bh.night .bh-chip { background: rgba(10,12,40,.5); color: #F3EEDC; }
 .bh.day .bh-chip i { background: #F5A524; } .bh.dusk .bh-chip i { background: #FF9A6C; } .bh.night .bh-chip i { background: #F3EEDC; }
-.bh.day { --sky1:#6FB1EE; --sky2:#A6D0F4; --sky3:#F6E2C4; --sun:#FFF4CF; --cloud:rgba(255,255,255,.88); --mount:#B4C6DA; --far:#C3D0E0; --neigh:#DDD1C1; --nline:#CABEAC; --nw:#8FA5BD; --nwlit:#8FA5BD; --facade:#ECE2CF; --shade:#CDBDA2; --parapet:#F6EFE2; --slab:#F8F2E7; --slabEdge:#B9A688; --lobby:#D6C7AE; --doorFrame:#5A4A38; --doorGlass:#A9C3DE; --side:#D2CBBD; --street:#8F8B98; --lane:#EDEAE2; --pole:#56515E; --wire:#3B3A44; --rail:#4E4234; --trunk:#6A5442; --leaf:#4E8B5F; --leaf2:#76AD7F; --tankBase:#8D8577; --ac:#F4F6FA; --core:#BFC9D3; --sh:#7E9E86; --sl:#5F7F68; --w1:#FCE7B8; --w2:#F2C077; --w3:#EDB566; --glassOff:#4A5A75; --bulb:#E5E2D8; }
-.bh.dusk { --sky1:#3F4B9A; --sky2:#B58AB8; --sky3:#FFB98A; --sun:#FFB27A; --cloud:rgba(255,205,195,.6); --mount:#6E6AA8; --far:#7C72AE; --neigh:#8A7EA6; --nline:#7B6F97; --nw:#5B5585; --nwlit:#F2B45E; --facade:#C8B2A6; --shade:#9C8496; --parapet:#D9C6B8; --slab:#E3D2C4; --slabEdge:#8E7A8E; --lobby:#A891A0; --doorFrame:#4A3A48; --doorGlass:#FFC35E; --side:#9C8CA6; --street:#5E5878; --lane:#C9BFD6; --pole:#3A3350; --wire:#2A2440; --rail:#3A2E3A; --trunk:#4E3E3A; --leaf:#3E5E58; --leaf2:#557A6E; --tankBase:#6E6478; --ac:#E3E2EC; --core:#8F8AAE; --sh:#6F8572; --sl:#556A59; --w1:#FFE6A6; --w2:#FFC35E; --w3:#E38A36; --glassOff:#3B3F66; --bulb:#FFF4D6; }
-.bh.night { --sky1:#060920; --sky2:#15184A; --sky3:#3B2E66; --sun:#F7F1DE; --cloud:transparent; --mount:#2A2658; --far:#221F4B; --neigh:#1C1A40; --nline:#2C2960; --nw:#26234E; --nwlit:#E9A85A; --facade:#2F2B64; --shade:#1A183C; --parapet:#3E3A7A; --slab:#46418A; --slabEdge:#7C76CC; --lobby:#1E1B43; --doorFrame:#15133A; --doorGlass:#FFC35E; --side:#2A2752; --street:#15142E; --lane:#4A4680; --pole:#120F2C; --wire:#0B0A1E; --rail:#0F0D28; --trunk:#2A1E22; --leaf:#152B33; --leaf2:#1E3B43; --tankBase:#2A2756; --ac:#C5CCDA; --core:#3A3670; --sh:#3B4160; --sl:#2B3049; --w1:#FFE6A6; --w2:#FFC35E; --w3:#E38A36; --glassOff:#1E2147; --bulb:#FFF8E2; }
+.bh.day { --sky1:#3FA9F5; --sky2:#8FD3FF; --sky3:#FFF1DC; --sun:#FFF4CF; --cloud:rgba(255,255,255,.88); --mount:#B4C6DA; --far:#C3D0E0; --neigh:#DDD1C1; --nline:#CABEAC; --nw:#8FA5BD; --nwlit:#8FA5BD; --facade:#ECE2CF; --shade:#CDBDA2; --parapet:#F6EFE2; --slab:#F8F2E7; --slabEdge:#B9A688; --lobby:#D6C7AE; --doorFrame:#5A4A38; --doorGlass:#A9C3DE; --side:#D2CBBD; --street:#8F8B98; --lane:#EDEAE2; --pole:#56515E; --wire:#3B3A44; --rail:#4E4234; --trunk:#6A5442; --leaf:#4E8B5F; --leaf2:#76AD7F; --tankBase:#8D8577; --ac:#F4F6FA; --core:#BFC9D3; --sh:#7E9E86; --sl:#5F7F68; --w1:#FCE7B8; --w2:#F2C077; --w3:#EDB566; --glassOff:#4A5A75; --bulb:#E5E2D8; }
+.bh.dusk { --sky1:#3B6FD8; --sky2:#F59FB5; --sky3:#FFD49A; --sun:#FFB36B; --cloud:rgba(255,228,218,.8); --mount:#9AA6DD; --far:#AEB3E2; --neigh:#C4BCDF; --nline:#B0A8D0; --nw:#8A90C2; --nwlit:#FFC56E; --facade:#F3DFCB; --shade:#CCB2A8; --parapet:#FCEDE0; --slab:#FFF4EA; --slabEdge:#BC9E93; --lobby:#DCC3B2; --doorFrame:#5A4440; --doorGlass:#FFC35E; --side:#CDBDCB; --street:#76729A; --lane:#EAE4F3; --pole:#4A4266; --wire:#3A3256; --rail:#4A3A3E; --trunk:#5E4A40; --leaf:#4C7A62; --leaf2:#6E9E7E; --tankBase:#8A7E8E; --ac:#F4F2F8; --core:#BCB8DA; --sh:#7E9E86; --sl:#5F7F68; --w1:#FFE6A6; --w2:#FFC35E; --w3:#F0A040; --glassOff:#5B6386; --bulb:#FFF4D6; }
+.bh.night { --sky1:#0E1A4A; --sky2:#22357F; --sky3:#4262B4; --sun:#F7F1DE; --cloud:transparent; --mount:#2F428C; --far:#2C3A7C; --neigh:#36438A; --nline:#2B3775; --nw:#45529A; --nwlit:#FFC56E; --facade:#5E6DB0; --shade:#404D8C; --parapet:#7886C6; --slab:#8A99D8; --slabEdge:#B3BEEE; --lobby:#4A5796; --doorFrame:#1C2350; --doorGlass:#FFC35E; --side:#3D4A88; --street:#1C275C; --lane:#6572AE; --pole:#18204A; --wire:#121A40; --rail:#1A2150; --trunk:#2E2630; --leaf:#2D5260; --leaf2:#427080; --tankBase:#404D8C; --ac:#DCE2F4; --core:#5463A8; --sh:#7080B8; --sl:#5A6AA2; --w1:#FFE6A6; --w2:#FFC35E; --w3:#F0A040; --glassOff:#2C3774; --bulb:#FFF8E2; }
+.bh.eve { --sky1:#1E2160; --sky2:#5B4E8E; --sky3:#C97E8A; --sun:#FF9A7A; --cloud:rgba(255,190,190,.35); --mount:#4A4688; --far:#4F4888; --neigh:#4A4277; --nline:#3F386A; --nw:#3A3566; --nwlit:#F0B05A; --facade:#8E7E9E; --shade:#5E5276; --parapet:#A595B2; --slab:#B3A3BE; --slabEdge:#6E6290; --lobby:#6E5F86; --doorFrame:#2E2448; --doorGlass:#FFC35E; --side:#5E5486; --street:#34305A; --lane:#8C84B0; --pole:#241F3E; --wire:#1A1530; --rail:#22193A; --trunk:#3A2E30; --leaf:#2A4448; --leaf2:#3B5C5E; --tankBase:#4A4266; --ac:#D4D2E2; --core:#62598E; --sh:#556A62; --sl:#43554D; --w1:#FFE6A6; --w2:#FFC35E; --w3:#E38A36; --glassOff:#2C2E58; --bulb:#FFF4D6; }
+.bh.eve .bh-chip { background: rgba(10,12,40,.5); color: #F3EEDC; }
+.bh.eve .bh-moon { display: none; }
+.bh.eve .bh-star { opacity: .6; }
+.bh.eve .bh-lampglow { opacity: .9; }
+.bh.bh-ob { margin: 0 0 14px; border-radius: 22px; box-shadow: 0 10px 28px rgba(20,23,44,.18); }
+.bh-stream { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 3 6; animation: bhDash 1s linear infinite; }
+.bh-drop { fill: #3B9EFF; opacity: 0; }
+.bh.drops .bh-drop { animation: bhDrop 1.8s ease-in infinite; }
+.bh-burst { transform-box: fill-box; transform-origin: center; animation: bhBurst 3.6s ease-out infinite both; }
+.bh-pop { animation: bhPop .5s cubic-bezier(.2,.8,.2,1.3) both; transform-box: fill-box; transform-origin: center bottom; }
+@keyframes bhDash { to { stroke-dashoffset: -18; } }
+@keyframes bhDrop { 0% { transform: translateY(-14px); opacity: 0; } 25% { opacity: 1; } 75% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(2px); opacity: 0; } }
+@keyframes bhBurst { 0% { transform: scale(.15); opacity: 0; } 8% { opacity: 1; } 55% { transform: scale(1); opacity: .9; } 80%, 100% { transform: scale(1.12); opacity: 0; } }
+@keyframes bhPop { from { transform: scale(.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .bh-mount{fill:var(--mount)} .bh-far{fill:var(--far)} .bh-neigh{fill:var(--neigh)} .bh-nline{fill:var(--nline)} .bh-nw{fill:var(--nw)} .bh-nw.lit{fill:var(--nwlit)}
 .bh-facade{fill:var(--facade)} .bh-shade{fill:var(--shade)} .bh-parapet{fill:var(--parapet)} .bh-slab{fill:var(--slab)} .bh-slabEdge{fill:var(--slabEdge)}
 .bh-lobby{fill:var(--lobby)} .bh-doorFrame{fill:var(--doorFrame)} .bh-doorGlass{fill:var(--doorGlass)} .bh-side{fill:var(--side)} .bh-street{fill:var(--street)} .bh-lane{fill:var(--lane)}
@@ -87,6 +103,62 @@ button:active { transform: scale(0.96); }
 @keyframes bhDrift{from{transform:translateX(0)}to{transform:translateX(16px)}}
 @keyframes bhBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
 @media (prefers-reduced-motion: reduce){.bh *{animation:none!important}}
+/* Onboarding studio (building only), reveal + confetti */
+.bh.studio { --w1:#FFE6A6; --w2:#FFC35E; --w3:#F0A040; --glassOff:#5D6B85; }
+.bh.studio .bh-halo { display: inline; }
+.bh.bh-bare { aspect-ratio: auto; width: 100%; height: 100%; margin: 0; border-radius: 0; box-shadow: none; background: transparent; overflow: visible; }
+.bh.nopop .bh-pop { animation: none; }
+.bh.reveal { background: transparent; }
+.bh.reveal .bh-bg { animation: bhReveal 1.8s ease .35s both; }
+.bh.reveal .bh-chip { animation: bhReveal .8s ease 1.6s both; }
+@keyframes bhReveal { from { opacity: 0; } to { opacity: 1; } }
+.cf-layer { position: fixed; inset: 0; pointer-events: none; z-index: 400; overflow: hidden; }
+.cf-layer i { position: absolute; top: -24px; width: 8px; height: 13px; border-radius: 2px; animation-name: cfFall; animation-timing-function: cubic-bezier(.25,.6,.4,1); animation-fill-mode: forwards; }
+@keyframes cfFall { to { transform: translateY(112vh) rotate(560deg); } }
+
+#onboard-modal { padding: 0; background: linear-gradient(180deg, #EEF0FF 0%, #F7F5FF 45%, #FFFFFF 100%); backdrop-filter: none; -webkit-backdrop-filter: none; }
+#onboard-content { width: 100%; max-width: 480px; height: 100%; max-height: none; border: 0; border-radius: 0; box-shadow: none; padding: 0; background: transparent; overflow: hidden; }
+.ob-screen { height: 100%; display: flex; flex-direction: column; }
+.ob-top { display: flex; justify-content: space-between; align-items: center; padding: calc(12px + env(safe-area-inset-top)) 20px 4px; }
+.ob-progress { display: flex; gap: 4px; padding: 8px 20px 0; }
+.ob-progress i { flex: 1; height: 5px; border-radius: 999px; background: #DDD9F0; transition: background .3s; }
+.ob-progress i.on { background: var(--acc); }
+.ob-stage { position: relative; flex: 0 0 auto; height: clamp(110px, calc(100vh - 560px), 250px); height: clamp(110px, calc(100dvh - 560px), 250px); padding: 8px 14px 0; display: flex; justify-content: center; }
+.ob-stage::before { content: ""; position: absolute; left: 50%; bottom: 4%; width: 82%; height: 86%; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(circle, rgba(124,111,249,.18) 0%, rgba(124,111,249,0) 70%); }
+.ob-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 10px 20px 4px; display: flex; flex-direction: column; gap: 8px; }
+.ob-title { margin: 0; font-size: 23px; line-height: 1.15; font-weight: 800; color: var(--ink); }
+.ob-sub { margin: 0 0 2px; font-size: 13.5px; line-height: 1.45; color: var(--mut); }
+.ob-foot { flex: 0 0 auto; display: flex; gap: 10px; padding: 10px 20px calc(14px + env(safe-area-inset-bottom)); }
+.ob-back { height: 52px; padding: 0 18px; border-radius: 16px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); font-weight: 700; font-size: 15px; }
+.ob-next { flex: 1; height: 52px; border-radius: 16px; background: var(--acc); color: #FFFFFF; font-weight: 800; font-size: 16px; box-shadow: 0 8px 20px rgba(91,76,245,.3); }
+.ob-next.green { background: #0E7C55; box-shadow: 0 8px 20px rgba(14,124,85,.28); }
+.ob-card { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 14px; border-radius: 18px; border: 1.5px solid var(--line); background: var(--card); text-align: start; color: var(--ink); }
+.ob-card.on { border-color: var(--acc); background: var(--soft); }
+.ob-card .ic { flex: none; width: 40px; height: 40px; border-radius: 12px; background: var(--soft); display: grid; place-items: center; font-size: 20px; }
+.ob-card.on .ic { background: #FFFFFF; }
+.ob-card b { display: block; font-size: 14.5px; }
+.ob-card small { display: block; font-size: 12px; color: var(--mut); margin-top: 2px; line-height: 1.35; font-weight: 500; }
+.ob-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 10px 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); text-align: start; color: var(--ink); }
+.ob-row b { font-size: 14px; display: block; }
+.ob-row small { display: block; font-size: 12px; color: var(--mut); font-weight: 500; margin-top: 1px; }
+.ob-stepper { display: flex; align-items: center; gap: 8px; flex: none; }
+.ob-stepper button { width: 40px; height: 40px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card2); font-size: 20px; font-weight: 700; color: var(--ink); }
+.ob-stepper span { min-width: 44px; text-align: center; font-size: 17px; font-weight: 800; }
+.ob-sw { flex: none; position: relative; width: 46px; height: 28px; border-radius: 14px; background: #CFCCDD; transition: background .2s; }
+.ob-sw::after { content: ""; position: absolute; left: 3px; top: 3px; width: 22px; height: 22px; border-radius: 11px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: transform .2s; }
+.ob-sw.on { background: var(--acc); }
+.ob-sw.on::after { transform: translateX(18px); }
+.ob-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.ob-pill { padding: 7px 11px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--card); font-size: 12.5px; font-weight: 700; color: var(--ink); }
+.ob-pill.on { background: var(--acc); border-color: var(--acc); color: #FFFFFF; }
+.ob-badge { font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 999px; margin-inline-start: 6px; vertical-align: 1px; }
+.ob-badge.nat { background: #FFF3DC; color: #8A5300; }
+.ob-badge.you { background: var(--soft); color: var(--acc); }
+.ob-lbl { font-size: 12px; font-weight: 700; color: var(--mut); display: block; margin-bottom: 4px; }
+.ob-note { font-size: 12.5px; font-weight: 700; padding: 9px 12px; border-radius: 12px; background: var(--soft); color: var(--acc); line-height: 1.4; }
+.ob-recap { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); font-size: 13px; }
+.ob-recap div { display: flex; justify-content: space-between; gap: 10px; }
+.ob-recap span { color: var(--mut); font-weight: 600; }
 .safe-lbl { font-size: 12px; font-weight: 700; color: var(--mut); }
 .safe-num { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; margin: 2px 0 2px; color: var(--ink); }
 .owe-chip { min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1.5px solid #F2C77E; background: #FFF6E6; color: #7A4A00; font-weight: 800; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
@@ -1397,6 +1469,7 @@ function escapeForHeroSub(sf) {
  LIVING BUILDING HERO — windows = who paid, sky = real time of day
  ============================================================================ */
 var HERO_LAST_PHASE = '';
+var HERO_REVEAL = false;
 
 /* Approximate sunrise/sunset for Beirut, in local minutes after midnight. */
 function sunTimesLocal(d) {
@@ -1471,11 +1544,15 @@ function heroRailPath(x, w, y1, y2) {
  return d;
 }
 
-function buildingHeroHtml(statuses, natourEqUsd, dueRm) {
- var ph = heroPhase(new Date());
- HERO_LAST_PHASE = ph.key + '|' + ph.label;
-
- var n = statuses.length;
+/* Shared building scene — used by the Home hero and the onboarding wizard.
+ o.phase: {key:'day'|'dusk'|'eve'|'night', sunX, sunY}
+ o.wins: [{state:'paid'|'owes'|'closed', label?, onclick?}] one per apartment
+ Optional: signText, chip, natourFigure, natourAmt, mgrFigure, coreGlow, solar,
+ safe {usdH, lbpH, split}, fixedStream, supStream, drops, dropsOn, celebrate, extraCls */
+function buildBuildingScene(o) {
+ var P = o.idp || 'bh';
+ var ph = o.phase;
+ var n = o.wins.length;
  var cols = n <= 12 ? 2 : 4;
  var floors = Math.max(1, Math.ceil(n / cols));
  var fh = floors <= 5 ? 28 : Math.max(14, Math.floor(150 / floors));
@@ -1487,47 +1564,58 @@ function buildingHeroHtml(statuses, natourEqUsd, dueRm) {
  var ww = (perHalf - (perSide - 1) * gapW) / perSide;
  var wh = fh * 0.61;
 
- var s = '<svg class="bh-art" viewBox="0 0 366 256" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">';
+ var vb = o.bare ? (bx - 66) + ' ' + (top - 42) + ' ' + (bw + 132) + ' ' + (240 - (top - 42)) : '0 0 366 256';
+ var s = '<svg class="bh-art" viewBox="' + vb + '" preserveAspectRatio="' + (o.bare ? 'xMidYMax meet' : 'xMidYMid slice') + '" xmlns="http://www.w3.org/2000/svg" aria-hidden="' + (o.interactive ? 'false' : 'true') + '">';
  s += '<defs>';
- s += '<linearGradient id="bhSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sky1)"/><stop offset="0.55" style="stop-color:var(--sky2)"/><stop offset="1" style="stop-color:var(--sky3)"/></linearGradient>';
- s += '<radialGradient id="bhWarm" cx="0.5" cy="0.65" r="0.75"><stop offset="0" style="stop-color:var(--w1)"/><stop offset="0.55" style="stop-color:var(--w2)"/><stop offset="1" style="stop-color:var(--w3)"/></radialGradient>';
- s += '<radialGradient id="bhSunGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" style="stop-color:var(--sun);stop-opacity:.65"/><stop offset="1" style="stop-color:var(--sun);stop-opacity:0"/></radialGradient>';
- s += '<linearGradient id="bhCone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:#FFE6A6;stop-opacity:.55"/><stop offset="1" style="stop-color:#FFE6A6;stop-opacity:0"/></linearGradient>';
- s += '<linearGradient id="bhPnl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:#4C7FE0"/><stop offset="1" style="stop-color:#1F3F8F"/></linearGradient>';
- s += '<linearGradient id="bhTkW" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:#F1F4FA"/><stop offset="0.6" style="stop-color:#CBD3E3"/><stop offset="1" style="stop-color:#8F99B3"/></linearGradient>';
- s += '<linearGradient id="bhTkB" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:#8FB6EC"/><stop offset="0.6" style="stop-color:#4F7FC8"/><stop offset="1" style="stop-color:#2E4F8C"/></linearGradient>';
- s += '<pattern id="bhSlat" width="4" height="3" patternUnits="userSpaceOnUse"><rect width="4" height="2" style="fill:var(--sh)"/><rect y="2" width="4" height="1" style="fill:var(--sl)"/></pattern>';
- s += '<filter id="bhGlow" x="-40%" y="-80%" width="180%" height="260%"><feGaussianBlur stdDeviation="2.6"/></filter>';
- s += '<filter id="bhBlur" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="5"/></filter>';
+ s += '<linearGradient id="' + P + 'Sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sky1)"/><stop offset="0.55" style="stop-color:var(--sky2)"/><stop offset="1" style="stop-color:var(--sky3)"/></linearGradient>';
+ s += '<radialGradient id="' + P + 'Warm" cx="0.5" cy="0.65" r="0.75"><stop offset="0" style="stop-color:var(--w1)"/><stop offset="0.55" style="stop-color:var(--w2)"/><stop offset="1" style="stop-color:var(--w3)"/></radialGradient>';
+ s += '<radialGradient id="' + P + 'SunGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" style="stop-color:var(--sun);stop-opacity:.65"/><stop offset="1" style="stop-color:var(--sun);stop-opacity:0"/></radialGradient>';
+ s += '<linearGradient id="' + P + 'Cone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:#FFE6A6;stop-opacity:.55"/><stop offset="1" style="stop-color:#FFE6A6;stop-opacity:0"/></linearGradient>';
+ s += '<linearGradient id="' + P + 'Pnl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:#4C7FE0"/><stop offset="1" style="stop-color:#1F3F8F"/></linearGradient>';
+ s += '<linearGradient id="' + P + 'TkW" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:#F1F4FA"/><stop offset="0.6" style="stop-color:#CBD3E3"/><stop offset="1" style="stop-color:#8F99B3"/></linearGradient>';
+ s += '<linearGradient id="' + P + 'TkB" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:#8FB6EC"/><stop offset="0.6" style="stop-color:#4F7FC8"/><stop offset="1" style="stop-color:#2E4F8C"/></linearGradient>';
+ s += '<pattern id="' + P + 'Slat" width="4" height="3" patternUnits="userSpaceOnUse"><rect width="4" height="2" style="fill:var(--sh)"/><rect y="2" width="4" height="1" style="fill:var(--sl)"/></pattern>';
+ s += '<filter id="' + P + 'Glow" x="-40%" y="-80%" width="180%" height="260%"><feGaussianBlur stdDeviation="2.6"/></filter>';
+ s += '<filter id="' + P + 'Blur" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="5"/></filter>';
  s += '</defs>';
 
+ if (!o.bare) {
+ s += '<g class="bh-bg">';
  // Sky, sun / moon, stars, clouds
- s += '<rect width="366" height="256" fill="url(#bhSky)"/>';
- s += '<g class="bh-sun"><circle cx="' + heroR(ph.sunX) + '" cy="' + heroR(ph.sunY) + '" r="40" fill="url(#bhSunGlow)"/><circle cx="' + heroR(ph.sunX) + '" cy="' + heroR(ph.sunY) + '" r="14" style="fill:var(--sun)"/></g>';
- s += '<g class="bh-moon"><circle cx="314" cy="40" r="34" fill="url(#bhSunGlow)"/><circle cx="314" cy="40" r="12" fill="#F7F1DE"/><circle cx="310" cy="37" r="2.6" fill="#E6DDC2"/><circle cx="318" cy="44" r="1.8" fill="#E6DDC2"/></g>';
- [[90,18],[140,40],[190,14],[236,34],[280,12],[322,46],[112,62],[300,78],[24,84],[166,74]].forEach(function(p, i) {
+ s += '<rect width="366" height="256" fill="url(#' + P + 'Sky)"/>';
+ s += '<g class="bh-sun"><circle cx="' + heroR(ph.sunX) + '" cy="' + heroR(ph.sunY) + '" r="40" fill="url(#' + P + 'SunGlow)"/><circle cx="' + heroR(ph.sunX) + '" cy="' + heroR(ph.sunY) + '" r="14" style="fill:var(--sun)"/></g>';
+ s += '<g class="bh-moon"><circle cx="314" cy="40" r="34" fill="url(#' + P + 'SunGlow)"/><circle cx="314" cy="40" r="12" fill="#F7F1DE"/><circle cx="310" cy="37" r="2.6" fill="#E6DDC2"/><circle cx="318" cy="44" r="1.8" fill="#E6DDC2"/></g>';
+ [[90,18],[140,40],[190,14],[236,34],[280,12],[322,76],[112,62],[300,90],[24,84],[166,74],[60,30],[250,58]].forEach(function(p, i) {
  s += '<circle class="bh-star" cx="' + p[0] + '" cy="' + p[1] + '" r="' + (i % 3 === 0 ? 1 : 0.7) + '" style="animation-delay:' + (i * 0.35).toFixed(2) + 's"/>';
  });
  s += '<g class="bh-cloud"><ellipse cx="68" cy="66" rx="28" ry="7"/><ellipse cx="62" cy="60" rx="13" ry="8"/></g>';
  s += '<g class="bh-cloud" style="animation-delay:-6s"><ellipse cx="222" cy="36" rx="22" ry="6"/><ellipse cx="228" cy="31" rx="10" ry="6.5"/></g>';
  s += '<g class="bh-cloud" style="animation-delay:-10s"><ellipse cx="312" cy="100" rx="24" ry="6"/><ellipse cx="306" cy="95" rx="11" ry="6.5"/></g>';
 
+ // Fireworks for the finale
+ if (o.celebrate) {
+ var burst = 'M4 0L11 0M3.5 2L9.5 5.5M2 3.5L5.5 9.5M0 4L0 11M-2 3.5L-5.5 9.5M-3.5 2L-9.5 5.5M-4 0L-11 0M-3.5 -2L-9.5 -5.5M-2 -3.5L-5.5 -9.5M0 -4L0 -11M2 -3.5L5.5 -9.5M3.5 -2L9.5 -5.5';
+ [[70, 52, 1, '#FFD27A', '.2'], [250, 30, 0.8, '#FF9EC4', '1.3'], [150, 26, 0.6, '#8FEBD2', '2.2']].forEach(function(b) {
+ s += '<g transform="translate(' + b[0] + ' ' + b[1] + ') scale(' + b[2] + ')"><path class="bh-burst" d="' + burst + '" style="fill:none;stroke:' + b[3] + ';stroke-width:1;stroke-linecap:round;animation-delay:' + b[4] + 's"/></g>';
+ });
+ }
+
  // Mountains + far skyline
  s += '<path class="bh-mount" d="M0 160 C 40 146, 70 152, 100 142 C 140 128, 170 140, 200 134 C 240 126, 270 142, 306 136 C 330 132, 350 140, 366 136 L366 226 L0 226 Z"/>';
  s += '<rect class="bh-far" x="0" y="150" width="22" height="76"/><rect class="bh-far" x="6" y="136" width="12" height="90"/><rect class="bh-far" x="326" y="112" width="14" height="114"/><rect class="bh-far" x="342" y="152" width="24" height="74"/>';
 
- // Neighbour buildings (fill the space either side)
+ // Neighbour buildings
  function neighbour(x1, x2, y1, seed) {
- var o = '<rect class="bh-neigh" x="' + x1 + '" y="' + y1 + '" width="' + (x2 - x1) + '" height="' + (226 - y1) + '"/>';
+ var out = '<rect class="bh-neigh" x="' + x1 + '" y="' + y1 + '" width="' + (x2 - x1) + '" height="' + (226 - y1) + '"/>';
  var c = 0;
  for (var wy = y1 + 10; wy + 8 < 222; wy += 18) {
- o += '<rect class="bh-nline" x="' + x1 + '" y="' + (wy + 10) + '" width="' + (x2 - x1) + '" height="1"/>';
+ out += '<rect class="bh-nline" x="' + x1 + '" y="' + (wy + 10) + '" width="' + (x2 - x1) + '" height="1"/>';
  for (var wx = x1 + 8; wx + 11 < x2 - 4; wx += 20) {
  c++;
- o += '<rect class="bh-nw' + ((c * 7 + seed) % 5 === 0 ? ' lit' : '') + '" x="' + wx + '" y="' + wy + '" width="11" height="8"/>';
+ out += '<rect class="bh-nw' + ((c * 7 + seed) % 5 === 0 ? ' lit' : '') + '" x="' + wx + '" y="' + wy + '" width="11" height="8"/>';
  }
  }
- return o;
+ return out;
  }
  if (bx > 30) s += neighbour(Math.max(0, bx - 90), bx, 108, 2);
  if (bx2 + 10 < 340) s += neighbour(bx2 + 10, Math.min(366, bx2 + 88), 124, 4);
@@ -1537,6 +1625,11 @@ function buildingHeroHtml(statuses, natourEqUsd, dueRm) {
  s += '<rect class="bh-pole" x="' + poleX + '" y="92" width="2" height="134"/><rect class="bh-pole" x="' + (poleX - 7) + '" y="99" width="16" height="1.4"/>';
  s += '<path class="bh-wire" d="M' + (poleX - 6) + ' 100 Q ' + ((poleX + bx) / 2) + ' 118 ' + bx + ' ' + Math.max(top + 14, 92) + ' M' + (poleX - 4) + ' 100 Q ' + ((poleX + bx) / 2) + ' 132 ' + bx + ' 124 M' + (poleX + 6) + ' 100 Q ' + ((poleX + bx) / 2) + ' 142 ' + bx + ' 152 M' + (poleX - 6) + ' 100 Q ' + (poleX / 2) + ' 112 0 96"/>';
 
+ s += '</g>';
+ } else {
+ s += '<ellipse cx="183" cy="229" rx="' + (bw / 2 + 74) + '" ry="7" fill="rgba(91,76,245,.13)"/>';
+ s += '<rect class="bh-side" x="' + (bx - 64) + '" y="226" width="' + (bw + 128) + '" height="5" rx="2.5"/>';
+ }
  // Main building body
  s += '<path class="bh-shade" d="M' + bx2 + ' ' + top + ' L' + (bx2 + 10) + ' ' + (top + 6) + ' L' + (bx2 + 10) + ' 226 L' + bx2 + ' 226 Z"/>';
  s += '<rect class="bh-facade" x="' + bx + '" y="' + top + '" width="' + bw + '" height="' + (226 - top) + '"/>';
@@ -1544,17 +1637,29 @@ function buildingHeroHtml(statuses, natourEqUsd, dueRm) {
 
  // Roof: water tanks, dish, solar panels
  var tall = top < 52;
- var tankX = tall ? Math.max(bx + 6, 140) : bx + 6;
- s += '<g transform="translate(' + tankX + ' ' + (top - 26) + ')"><rect class="bh-tankBase" x="0" y="16" width="34" height="4"/><rect x="2" y="2" width="14" height="15" rx="1" fill="url(#bhTkW)"/><ellipse cx="9" cy="2" rx="7" ry="2.2" fill="#F6F8FC"/><rect x="18" y="4" width="14" height="13" rx="1" fill="url(#bhTkB)"/><ellipse cx="25" cy="4" rx="7" ry="2.2" fill="#A9C7F2"/></g>';
- if (!tall || cols === 4) s += '<g transform="translate(' + (tall ? tankX + 50 : bx + 56) + ' ' + (top - 16) + ') rotate(-28)"><ellipse rx="6.5" ry="4.3" fill="#E3E8F2"/><ellipse cx="0.5" cy="0.4" rx="4.6" ry="2.8" fill="#C6CEDD"/></g>';
- var p1 = bx2 - 72, p2 = bx2 - 36, py = top - 3;
- [p1, p2].forEach(function(px) {
+ var tankX = tall ? Math.max(bx + 6, 140) : bx + 4;
+ s += '<g transform="translate(' + tankX + ' ' + (top - 26) + ')"><rect class="bh-tankBase" x="0" y="16" width="34" height="4"/><rect x="2" y="2" width="14" height="15" rx="1" fill="url(#' + P + 'TkW)"/><ellipse cx="9" cy="2" rx="7" ry="2.2" fill="#F6F8FC"/><rect x="18" y="4" width="14" height="13" rx="1" fill="url(#' + P + 'TkB)"/><ellipse cx="25" cy="4" rx="7" ry="2.2" fill="#A9C7F2"/></g>';
+ if (!tall || cols === 4) s += '<g transform="translate(' + (tall ? tankX + 50 : bx + 66) + ' ' + (top - 16) + ') rotate(-28)"><ellipse rx="6.5" ry="4.3" fill="#E3E8F2"/><ellipse cx="0.5" cy="0.4" rx="4.6" ry="2.8" fill="#C6CEDD"/></g>';
+ if (o.solar !== false) {
+ var py = top - 3;
+ [bx2 - 72, bx2 - 36].forEach(function(px) {
  s += '<path d="M' + (px + 2) + ' ' + py + ' L' + (px + 5) + ' ' + (py - 11) + ' M' + (px + 30) + ' ' + py + ' L' + (px + 27) + ' ' + (py - 11) + '" style="stroke:#4A4560;stroke-width:.9"/>';
- s += '<path d="M' + px + ' ' + py + ' L' + (px + 32) + ' ' + py + ' L' + (px + 27) + ' ' + (py - 12) + ' L' + (px + 5) + ' ' + (py - 12) + ' Z" fill="url(#bhPnl)" style="stroke:#C9D8FF;stroke-width:.5"/>';
+ s += '<path d="M' + px + ' ' + py + ' L' + (px + 32) + ' ' + py + ' L' + (px + 27) + ' ' + (py - 12) + ' L' + (px + 5) + ' ' + (py - 12) + ' Z" fill="url(#' + P + 'Pnl)" style="stroke:#C9D8FF;stroke-width:.5"/>';
  s += '<path d="M' + (px + 2.5) + ' ' + (py - 6) + ' H' + (px + 29.5) + ' M' + (px + 16) + ' ' + (py - 12) + ' V' + py + '" style="fill:none;stroke:#8FB0F5;stroke-width:.35"/>';
  });
+ }
+ if (o.mgrFigure) {
+ var mx = tall ? tankX + 42 : bx + 50;
+ s += '<g transform="translate(' + mx + ' ' + (top - 6) + ')"><g class="bh-bob">';
+ s += '<path d="M-6 0 Q -6 -14 0 -14 Q 6 -14 6 0 Z" fill="#FF6B4A" style="stroke:#FFFFFF;stroke-width:1.3"/>';
+ s += '<path d="M5 -10.5 L9.5 -17.5" style="stroke:#FFFFFF;stroke-width:4;stroke-linecap:round"/><path d="M5 -10.5 L9.5 -17.5" style="stroke:#FF6B4A;stroke-width:2.4;stroke-linecap:round"/>';
+ s += '<circle cx="0" cy="-18.5" r="4.4" fill="#F1CBA6" style="stroke:#FFFFFF;stroke-width:1.2"/>';
+ s += '<path d="M-4.2 -19.5 Q 0 -25 4.2 -19.5 Z" fill="#3B2A22"/>';
+ s += '</g></g>';
+ }
 
- // Floors: elevator core, slabs, AC units
+
+ // Floors: building core, slabs, AC units
  for (var f = 0; f < floors; f++) {
  var ft = lobbyTop - (f + 1) * fh;
  s += '<rect class="bh-core" x="178" y="' + heroR(ft + fh * 0.25) + '" width="10" height="' + heroR(fh * 0.46) + '" rx="0.6"/>';
@@ -1566,26 +1671,30 @@ function buildingHeroHtml(statuses, natourEqUsd, dueRm) {
  // Windows (one per apartment) + railings
  var rails = '';
  for (var i = 0; i < floors * cols; i++) {
+ var w = o.wins[i];
+ if (!w) continue;
  var fl = Math.floor(i / cols), k = i % cols;
  var ft2 = lobbyTop - (fl + 1) * fh;
  var half = k < perSide ? 0 : 1, kk = k % perSide;
  var x = heroR((half === 0 ? bx + 12 : 183 + 13) + kk * (ww + gapW));
  var y = heroR(ft2 + fh * 0.21);
- var st = statuses[i];
- if (!st) continue;
  rails += heroRailPath(x, ww, ft2 + fh * 0.64, ft2 + fh * 0.89);
- var owes = st.owes;
- var lbl = st.a.code + ' · ' + (owes ? t('still owes', 'لم يسدد بعد') : t('paid', 'مسدد'));
- s += '<g class="bh-win" role="button" tabindex="0" aria-label="' + esc(lbl) + '" onclick="heroWinTap(' + jsArg(st.a.id) + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();heroWinTap(' + jsArg(st.a.id) + ')}">';
- s += '<title>' + esc(lbl) + '</title>';
- if (!owes) s += '<rect class="bh-halo" x="' + x + '" y="' + y + '" width="' + heroR(ww) + '" height="' + heroR(wh) + '" fill="url(#bhWarm)" filter="url(#bhGlow)" opacity=".8"/>';
+ var lit = w.state === 'paid';
+ if (w.onclick) {
+ s += '<g class="bh-win" role="button" tabindex="0" aria-label="' + esc(w.label || '') + '" onclick="' + w.onclick + '" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();' + w.onclick + '}">';
+ if (w.label) s += '<title>' + esc(w.label) + '</title>';
+ } else {
+ s += '<g class="bh-win-static">';
+ }
+ if (lit) s += '<rect class="bh-halo" x="' + x + '" y="' + y + '" width="' + heroR(ww) + '" height="' + heroR(wh) + '" fill="url(#' + P + 'Warm)" filter="url(#' + P + 'Glow)" opacity=".8"/>';
  s += '<rect class="bh-frame" x="' + heroR(x - 1.2) + '" y="' + heroR(y - 1.2) + '" width="' + heroR(ww + 2.4) + '" height="' + heroR(wh + 2.4) + '" rx="1" style="fill:var(--rail)"/>';
- s += '<rect x="' + x + '" y="' + y + '" width="' + heroR(ww) + '" height="' + heroR(wh) + '" ' + (owes ? 'class="bh-glassOff"' : 'fill="url(#bhWarm)"') + '/>';
- var shW = owes ? ww / 2 : 3;
- s += '<rect x="' + x + '" y="' + y + '" width="' + heroR(shW) + '" height="' + heroR(wh) + '" fill="url(#bhSlat)"/>';
- s += '<rect x="' + heroR(x + ww - shW) + '" y="' + y + '" width="' + heroR(shW) + '" height="' + heroR(wh) + '" fill="url(#bhSlat)"/>';
+ s += '<rect x="' + x + '" y="' + y + '" width="' + heroR(ww) + '" height="' + heroR(wh) + '" ' + (lit ? 'fill="url(#' + P + 'Warm)"' : 'class="bh-glassOff"') + '/>';
+ var shW = lit ? 3 : ww / 2;
+ s += '<rect x="' + x + '" y="' + y + '" width="' + heroR(shW) + '" height="' + heroR(wh) + '" fill="url(#' + P + 'Slat)"/>';
+ s += '<rect x="' + heroR(x + ww - shW) + '" y="' + y + '" width="' + heroR(shW) + '" height="' + heroR(wh) + '" fill="url(#' + P + 'Slat)"/>';
  s += '<rect class="bh-mull" x="' + heroR(x + ww / 2 - 0.6) + '" y="' + y + '" width="1.2" height="' + heroR(wh) + '"/>';
- if (owes) s += '<circle class="bh-dot" cx="' + heroR(x + ww - 4) + '" cy="' + heroR(y + 4) + '" r="2.6"/>';
+ if (w.state === 'owes') s += '<circle class="bh-dot" cx="' + heroR(x + ww - 4) + '" cy="' + heroR(y + 4) + '" r="2.6"/>';
+ if (o.drops) s += '<circle class="bh-drop" cx="' + heroR(x + ww / 2) + '" cy="' + heroR(y - 1) + '" r="1.8" style="animation-delay:' + (i * 0.17).toFixed(2) + 's"/>';
  s += '</g>';
  }
 
@@ -1593,39 +1702,65 @@ function buildingHeroHtml(statuses, natourEqUsd, dueRm) {
  s += '<rect class="bh-lobby" x="' + bx + '" y="' + lobbyTop + '" width="' + bw + '" height="29"/>';
  s += '<rect class="bh-parapet" x="156" y="199" width="54" height="3" rx="0.6"/>';
  s += '<rect class="bh-doorFrame" x="168" y="204.5" width="30" height="21.5"/><rect class="bh-doorGlass" x="169.5" y="206" width="27" height="20"/><rect class="bh-doorFrame" x="182.6" y="206" width="0.8" height="20"/>';
- var signTxt = String(DB.settings.bldEn || 'Building').toUpperCase().slice(0, 12);
+ var signTxt = String(o.signText || 'Building').toUpperCase().slice(0, 12);
  s += '<rect x="' + (bx + 8) + '" y="204" width="40" height="9" rx="1.5" fill="#FFF1D0"/>';
- s += '<text x="' + (bx + 28) + '" y="210.6" style="font-size:5.2px;font-weight:800;letter-spacing:.5px;fill:#2B2858;text-anchor:middle">' + esc(signTxt) + '</text>';
+ s += '<text id="' + P + '-sign" x="' + (bx + 28) + '" y="210.6" style="font-size:5.2px;font-weight:800;letter-spacing:.5px;fill:#2B2858;text-anchor:middle">' + esc(signTxt) + '</text>';
  s += '<rect x="158" y="220" width="6" height="6" rx="0.6" fill="#7A4E3A"/><ellipse class="bh-leaf" cx="161" cy="216.5" rx="4" ry="5"/>';
  s += '<rect x="202" y="220" width="6" height="6" rx="0.6" fill="#7A4E3A"/><ellipse class="bh-leaf" cx="205" cy="216.5" rx="4" ry="5"/>';
 
  // Street
- s += '<rect class="bh-side" x="0" y="226" width="366" height="7"/><rect class="bh-street" x="0" y="233" width="366" height="23"/>';
+ if (!o.bare) {
+ s += '<g class="bh-bg"><rect class="bh-side" x="0" y="226" width="366" height="7"/><rect class="bh-street" x="0" y="233" width="366" height="23"/>';
  for (var lx = 14; lx < 366; lx += 48) s += '<rect class="bh-lane" x="' + lx + '" y="245" width="16" height="1.4"/>';
+ s += '</g>';
+ }
 
  // Railings drawn over the windows
- s += '<path class="bh-rail" d="' + rails + '" style="stroke-width:.6"/>';
+ if (rails) s += '<path class="bh-rail" d="' + rails + '" style="stroke-width:.6"/>';
 
- // Tree, street lamp, bins
+ // Left side: supplier box (Moteur / Internet) or a tree
  var tx = bx - 22;
+ if (o.supStream) {
+ s += '<path class="bh-stream" d="M' + bx + ' 214 C ' + (bx - 10) + ' 214, ' + (bx - 12) + ' 210, ' + (bx - 18) + ' 210" style="stroke:#F59E0B"/>';
+ s += '<g transform="translate(' + (bx - 58) + ' 196)"><g class="bh-pop"><rect width="40" height="30" rx="5" fill="#FFF3DC" style="stroke:#F59E0B;stroke-width:1.6"/><path d="M22 6 L14 16 H20 L18 24 L27 13 H21 Z" style="fill:none;stroke:#B45309;stroke-width:1.4;stroke-linejoin:round"/></g></g>';
+ } else if (!o.bare) {
+ s += '<g class="bh-bg">';
  s += '<path class="bh-trunk" d="M' + tx + ' 226 Q ' + (tx + 1) + ' 214 ' + (tx - 1) + ' 206"/>';
  s += '<circle class="bh-leaf" cx="' + tx + '" cy="200" r="11"/><circle class="bh-leaf" cx="' + (tx - 10) + '" cy="207" r="9"/><circle class="bh-leaf" cx="' + (tx + 10) + '" cy="208" r="9"/><circle class="bh-leaf2" cx="' + (tx + 5) + '" cy="196" r="4.5"/><circle class="bh-leaf2" cx="' + (tx - 7) + '" cy="203" r="3.5"/>';
+ s += '</g>';
+ }
+
+ // Right side: the building safe, or the street lamp
+ if (o.safe) {
+ var sx = bx2 + 16;
+ if (o.fixedStream) s += '<path class="bh-stream" d="M' + bx2 + ' 214 C ' + (bx2 + 8) + ' 214, ' + (bx2 + 10) + ' 208, ' + sx + ' 208" style="stroke:#A99DFF"/>';
+ s += '<g transform="translate(' + sx + ' 192)"><g class="bh-pop">';
+ s += '<rect width="42" height="34" rx="5" fill="#EEEAF8" style="stroke:#2E2B5F;stroke-width:1.6"/>';
+ s += '<rect x="' + 6 + '" y="' + heroR(28 - o.safe.usdH) + '" width="9" height="' + heroR(o.safe.usdH) + '" rx="1.5" fill="#10B981"/>';
+ if (o.safe.split) s += '<rect x="18" y="' + heroR(28 - o.safe.lbpH) + '" width="9" height="' + heroR(o.safe.lbpH) + '" rx="1.5" fill="#3B9EFF"/>';
+ s += '<circle cx="34" cy="14" r="4" style="fill:none;stroke:#2E2B5F;stroke-width:1.4"/>';
+ s += '</g></g>';
+ } else if (!o.bare) {
+ s += '<g class="bh-bg">';
  var lpx = Math.min(346, bx2 + 44);
- s += '<path class="bh-lampglow" d="M' + (lpx - 13) + ' 166 L ' + (lpx - 32) + ' 226 L ' + (lpx + 14) + ' 226 L ' + (lpx - 7) + ' 166 Z" fill="url(#bhCone)"/>';
- s += '<circle class="bh-lampglow" cx="' + (lpx - 10) + '" cy="163" r="6" fill="#FFE6A6" filter="url(#bhBlur)"/>';
+ s += '<path class="bh-lampglow" d="M' + (lpx - 13) + ' 166 L ' + (lpx - 32) + ' 226 L ' + (lpx + 14) + ' 226 L ' + (lpx - 7) + ' 166 Z" fill="url(#' + P + 'Cone)"/>';
+ s += '<circle class="bh-lampglow" cx="' + (lpx - 10) + '" cy="163" r="6" fill="#FFE6A6" filter="url(#' + P + 'Blur)"/>';
  s += '<rect class="bh-pole" x="' + lpx + '" y="162" width="1.8" height="64"/>';
  s += '<path d="M' + (lpx + 1) + ' 164 Q ' + (lpx + 1) + ' 156 ' + (lpx - 9) + ' 156" style="fill:none;stroke:var(--pole);stroke-width:1.5"/>';
  s += '<path class="bh-pole" d="M' + (lpx - 14.5) + ' 156 L' + (lpx - 5.5) + ' 156 L' + (lpx - 7.5) + ' 159.4 L' + (lpx - 12.5) + ' 159.4 Z"/>';
  s += '<ellipse class="bh-bulb" cx="' + (lpx - 10) + '" cy="160" rx="2.4" ry="1.1"/>';
  if (lpx + 12 < 360) s += '<rect x="' + (lpx + 8) + '" y="218" width="6" height="8" rx="0.8" fill="#1C8A5E"/><rect x="' + (lpx + 7.5) + '" y="216.8" width="7" height="1.8" rx="0.5" fill="#2BB37C"/>';
+ s += '</g>';
+ }
 
- // Natour at the door when he's holding cash
- if (natourEqUsd >= 1) {
- var amtTxt = '$' + Math.round(natourEqUsd).toLocaleString('en-US');
- var bwid = 8 + amtTxt.length * 4.4;
+ // Natour at the door
+ if (o.natourFigure) {
  s += '<g transform="translate(214 0)">';
+ if (o.natourAmt) {
+ var bwid = 8 + o.natourAmt.length * 4.4;
  s += '<g class="bh-bob"><rect x="17" y="199" width="' + heroR(bwid) + '" height="10" rx="5" fill="#FFFFFF" style="stroke:#F59E0B;stroke-width:1"/>';
- s += '<text x="' + heroR(17 + bwid / 2) + '" y="206.3" style="font-size:6px;font-weight:800;fill:#7A4A00;text-anchor:middle">' + amtTxt + '</text></g>';
+ s += '<text x="' + heroR(17 + bwid / 2) + '" y="206.3" style="font-size:6px;font-weight:800;fill:#7A4A00;text-anchor:middle">' + esc(o.natourAmt) + '</text></g>';
+ }
  s += '<circle cx="9" cy="203" r="4" fill="#F1CBA6"/><path d="M4.8 202 Q 9 196.8 13.2 202 L 15 202.3 L 13.2 203 Z" fill="#F59E0B"/>';
  s += '<path d="M3.5 226 Q 3.5 208 9 208 Q 14.5 208 14.5 226 Z" fill="#F59E0B"/>';
  s += '</g>';
@@ -1633,8 +1768,90 @@ function buildingHeroHtml(statuses, natourEqUsd, dueRm) {
 
  s += '</svg>';
 
- var cls = 'bh ' + ph.key + (dueRm ? ' elev' : '');
- return '<div class="' + cls + '">' + s + '<div class="bh-chip" id="bh-time"><i></i><span>' + esc(ph.chip) + '</span></div></div>';
+ var cls = 'bh ' + ph.key + (o.coreGlow ? ' elev' : '') + (o.dropsOn ? ' drops' : '') + (o.extraCls ? ' ' + o.extraCls : '');
+ return '<div class="' + cls + '">' + s + (o.chip ? '<div class="bh-chip" id="bh-time"><i></i><span>' + esc(o.chip) + '</span></div>' : '') + '</div>';
+}
+
+/* Home screen: the scene driven by real data and the real clock. */
+function buildingHeroHtml(statuses, natourEqUsd, dueRm) {
+ var ph = heroPhase(new Date());
+ HERO_LAST_PHASE = ph.key + '|' + ph.label;
+ var reveal = HERO_REVEAL;
+ HERO_REVEAL = false;
+ var wins = statuses.map(function(st) {
+ var label = st.a.code + ' · ' + (st.owes ? t('still owes', 'لم يسدد بعد') : t('paid', 'مسدد'));
+ return { state: st.owes ? 'owes' : 'paid', label: label, onclick: 'heroWinTap(' + jsArg(st.a.id) + ')' };
+ });
+ return buildBuildingScene({
+ phase: ph, wins: wins, interactive: true, idp: 'hm',
+ signText: DB.settings.bldEn,
+ chip: ph.chip,
+ natourFigure: natourEqUsd >= 1,
+ natourAmt: natourEqUsd >= 1 ? '$' + Math.round(natourEqUsd).toLocaleString('en-US') : null,
+ coreGlow: !!dueRm,
+ extraCls: reveal ? 'reveal' : ''
+ });
+}
+
+/* Onboarding: just the building and what you add to it, lighting up step by step. */
+function obSceneHtml(noPop) {
+ var login = OB.step === 2 && OB.role === 'col';
+ var k = login ? 1 : OB.step;
+ var n = Math.max(1, Math.min(40, Number(OB.unitCount) || 1));
+ var frac = { 1: 0, 2: 0, 3: 0.1, 4: 0.2, 5: 0.35, 6: 0.5, 7: 0.65, 8: 0.8, 9: 0.9, 10: 1 }[k] || 0;
+ var litN = Math.round(frac * n);
+ var wins = [];
+ for (var i = 0; i < n; i++) wins.push({ state: i < litN ? 'paid' : 'closed' });
+ var existing = OB.balMode === 'existing';
+ var safe = k >= 3 ? {
+ split: OB.curMode === 'split',
+ usdH: existing ? Math.min(22, 4 + (Number(OB.initUsd) || 0) / 30) : 2,
+ lbpH: existing ? Math.min(22, 4 + (Number(OB.initLbp) || 0) / 1500000) : 2
+ } : null;
+ var fixedOn = OB.useMaint || OB.natFeeMode === 'separate';
+ return buildBuildingScene({
+ phase: { key: 'day', sunX: 0, sunY: 0 },
+ bare: true,
+ wins: wins,
+ signText: OB.bldEn || 'Building',
+ mgrFigure: !login && (k >= 2 || OB.role !== 'col'),
+ natourFigure: login || (k === 1 && OB.role === 'col') || k === 10,
+ coreGlow: k >= 8 && OB.remElev,
+ solar: k < 8 || OB.remSolar,
+ safe: safe,
+ fixedStream: k >= 5 && !!safe && fixedOn,
+ supStream: k >= 7 && OB.useSuppliers,
+ drops: k === 6 && OB.useWater,
+ dropsOn: k === 6 && OB.useWater && Number(OB.waterTotalAmt) > 0,
+ extraCls: 'studio bh-bare bh-ob' + (noPop ? ' nopop' : ''),
+ idp: 'ob'
+ });
+}
+
+/* Confetti shower used when setup finishes. */
+function launchConfetti() {
+ var layer = document.createElement('div');
+ layer.className = 'cf-layer';
+ var colors = ['#FFC857', '#5B4CF5', '#10B981', '#3B9EFF', '#F59E0B', '#FF6B8A', '#8B7BFF'];
+ var html = '';
+ for (var i = 0; i < 70; i++) {
+ var left = Math.random() * 100, dur = 2.2 + Math.random() * 1.8, delay = Math.random() * 0.9;
+ html += '<i style="left:' + left.toFixed(1) + '%;background:' + colors[i % colors.length] + ';animation-duration:' + dur.toFixed(2) + 's;animation-delay:' + delay.toFixed(2) + 's;transform:rotate(' + Math.round(Math.random() * 360) + 'deg)"></i>';
+ }
+ layer.innerHTML = html;
+ document.body.appendChild(layer);
+ setTimeout(function() { if (layer.parentNode) layer.parentNode.removeChild(layer); }, 4800);
+}
+
+/* Close the wizard and reveal the Home screen: the sky and city fade in around the building. */
+function obRevealHome() {
+ closeModal('onboard-modal');
+ TAB = 'dash';
+ CYCLE_DETAIL_MODE = false;
+ HERO_REVEAL = true;
+ setRole('mgr');
+ window.scrollTo(0, 0);
+ launchConfetti();
 }
 
 /* Keep the sky in step with the clock while the Home screen is open. */
@@ -2786,6 +3003,8 @@ function updateObSplitPreview() {
  var units = Math.max(1, Number(OB.unitCount) || 1);
  var total = Number(OB.waterTotalAmt) || 0;
  var share = getObSharePerApt();
+ var obScene = document.querySelector('.bh-ob');
+ if (obScene) obScene.classList.toggle('drops', total > 0);
  if (total <= 0) {
  el.style.background = 'var(--card2)';
  el.style.color = 'var(--mut)';
@@ -2800,197 +3019,202 @@ function updateObSplitPreview() {
  }
 }
 
+/* ---- Full-screen onboarding: one question per screen, no scrolling ---- */
+var OB_TOTAL = 10;
+
+function obGo(n) { OB.step = n; renderOnboardingModalContent(); }
+function obSet(k, v) {
+ OB[k] = v;
+ if (k === 'curMode') OB.waterCur = v === 'split' ? 'LBP' : 'USD';
+ if (k === 'natFeeMode') OB.useNatFee = v === 'separate';
+ renderOnboardingModalContent();
+}
+function obToggle(k) { OB[k] = !OB[k]; renderOnboardingModalContent(); }
+function obBump(k, d, min, max) { OB[k] = Math.max(min, Math.min(max, (Number(OB[k]) || 0) + d)); renderOnboardingModalContent(); }
+function obRefreshScene() {
+ var st = document.getElementById('ob-stage');
+ if (st) st.innerHTML = obSceneHtml(true);
+}
+
+function obCard(on, onclick, icon, title, sub) {
+ return '<button type="button" class="ob-card' + (on ? ' on' : '') + '" aria-pressed="' + (on ? 'true' : 'false') + '" onclick="' + onclick + '">'
+ + '<span class="ic">' + icon + '</span><span><b>' + title + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span></button>';
+}
+function obStepperRow(title, sub, valTxt, minusJs, plusJs, label) {
+ return '<div class="ob-row"><span><b>' + title + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span>'
+ + '<span class="ob-stepper"><button type="button" aria-label="' + esc(t('Less ', 'أقل ') + label) + '" onclick="' + minusJs + '">−</button><span dir="ltr">' + valTxt + '</span>'
+ + '<button type="button" aria-label="' + esc(t('More ', 'أكثر ') + label) + '" onclick="' + plusJs + '">+</button></span></div>';
+}
+function obSwitchRow(on, onclick, title, sub, badge) {
+ return '<button type="button" class="ob-row" aria-pressed="' + (on ? 'true' : 'false') + '" onclick="' + onclick + '"><span><b>' + title + (badge || '') + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span><span class="ob-sw' + (on ? ' on' : '') + '"></span></button>';
+}
+
 function renderOnboardingModalContent() {
- var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
- h += '<span class="top-brand">💧 BINAYATI · بنايتي</span>';
- h += '<div style="display:flex;gap:6px"><button class="btn-edit" style="padding:4px 10px" onclick="toggleLang();renderOnboardingModalContent()">' + (LANG === 'ar' ? 'English' : 'العربية') + '</button>';
- h += '<button class="btn-del" style="padding:4px 9px" onclick="closeModal(\'onboard-modal\')">✕</button></div></div>';
+ var step = OB.step;
+ var login = step === 2 && OB.role === 'col';
+ var J = jsArg;
+ var body = '', back = '', next = '';
 
- h += '<div class="step-dots">';
- [1, 2, 3, 4, 5, 6, 7].forEach(function(n) { h += '<div class="step-dot' + (n <= OB.step ? ' on' : '') + '"></div>'; });
- h += '</div>';
-
- if (OB.step === 1) {
- h += '<div class="ob-hero-title">' + t('Manage your building,', 'أدر بنايتك بكل سهولة') + '<span>' + t('Effortlessly', 'وبكل شفافية') + '</span></div>';
- h += '<p class="subtext" style="text-align:center">' + t('Simple building safe tracking, monthly apartment bills, and 1-tap WhatsApp receipts.', 'متابعة واضحة لصندوق البناية، الفواتير الشهرية، وإيصالات واتساب بضغطة زر.') + '</p>';
- h += getObSvgIllustration(1);
- h += '<div class="choice-card' + (OB.role === 'mgr' ? ' on' : '') + '" onclick="OB.role=\'mgr\';renderOnboardingModalContent()">';
- h += '<span style="font-size:24px">👨‍💼</span><div><b>' + t('I Manage the Building (Syndic)', 'أنا مدير البناية (Syndic)') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Set up my building, safe, and monthly bills.', 'إعداد البناية وصندوق الأموال والفواتير الشهرية.') + '</div></div></div>';
- h += '<div class="choice-card' + (OB.role === 'col' ? ' on' : '') + '" onclick="OB.role=\'col\';renderOnboardingModalContent()">';
- h += '<span style="font-size:24px">👷‍♂️</span><div><b>' + t('I Collect Payments (Natour)', 'أنا الناطور / المحصّل') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Log in with my phone number & 6-digit PIN.', 'الدخول عبر رقم الهاتف والرمز السري.') + '</div></div></div>';
- h += '<button class="ob-pill-btn" style="margin-top:10px" onclick="OB.step=2;renderOnboardingModalContent()">' + t('Get Started →', 'ابدأ الآن ←') + '</button>';
+ if (step === 1) {
+ body += '<h2 class="ob-title">' + t('Let’s light up your building', 'لنُضئ بنايتك') + '</h2>';
+ body += '<p class="ob-sub">' + t('Setup takes about two minutes. Who’s setting it up?', 'الإعداد يستغرق دقيقتين تقريباً. من يقوم بالإعداد؟') + '</p>';
+ body += obCard(OB.role === 'mgr', 'obSet(' + J('role') + ',' + J('mgr') + ')', '🏢', t('I manage the building', 'أنا مدير البناية'), t('Apartments, the building safe and monthly bills', 'الشقق وصندوق البناية والفواتير الشهرية'));
+ body += obCard(OB.role === 'col', 'obSet(' + J('role') + ',' + J('col') + ')', '👷‍♂️', t('I collect payments (Natour)', 'أنا الناطور / المحصّل'), t('Sign in with your phone and 6-digit PIN', 'الدخول برقم الهاتف والرمز السري'));
+ next = '<button type="button" class="ob-next" onclick="obGo(2)">' + (OB.role === 'col' ? t('Continue to sign in →', 'متابعة لتسجيل الدخول ←') : t('Get started →', 'ابدأ الآن ←')) + '</button>';
  }
- else if (OB.step === 2 && OB.role === 'col') {
- h += '<h3>🔐 ' + t('Natour Secure Login', 'دخول الناطور الآمن') + '</h3>';
- h += '<p class="subtext">' + t('Enter your WhatsApp phone number and the 6-digit PIN shared by your Building Manager.', 'أدخل رقم هاتفك والرمز السري المكون من 6 أرقام المرسل من مدير البناية.') + '</p>';
- h += '<div style="margin-bottom:10px"><label style="font-size:12px;color:var(--mut)">' + t('Your WhatsApp Phone', 'رقم هاتفك (واتساب)') + '</label><input type="text" id="ob-login-ph" dir="ltr" value="" style="margin-top:4px"></div>';
- h += '<div style="margin-bottom:16px"><label style="font-size:12px;color:var(--mut)">' + t('6-Digit Security PIN', 'رمز الأمان (6 أرقام)') + '</label><input type="text" id="ob-login-pin" dir="ltr" value="" style="margin-top:4px;font-size:18px;letter-spacing:3px;font-weight:800;color:var(--acc)"></div>';
- h += '<div class="form-row"><button class="btn-edit" style="padding:12px 16px" onclick="OB.step=1;renderOnboardingModalContent()">' + t('← Back', '→ رجوع') + '</button>';
- h += '<button class="ob-pill-btn" style="flex:1" onclick="verifyNatourPinLogin()">' + t('Open My Checklist →', 'فتح قائمة التحصيل ←') + '</button></div>';
+ else if (login) {
+ body += '<h2 class="ob-title">' + t('Natour sign in', 'دخول الناطور') + '</h2>';
+ body += '<p class="ob-sub">' + t('Use the WhatsApp number and 6-digit PIN your building manager sent you.', 'استخدم رقم الواتساب والرمز السري الذي أرسله لك مدير البناية.') + '</p>';
+ body += '<div><label class="ob-lbl" for="ob-login-ph">' + t('Your WhatsApp number', 'رقم هاتفك (واتساب)') + '</label><input type="text" id="ob-login-ph" dir="ltr" inputmode="tel" placeholder="961 70 123 456"></div>';
+ body += '<div><label class="ob-lbl" for="ob-login-pin">' + t('6-digit PIN', 'الرمز السري (6 أرقام)') + '</label><input type="text" id="ob-login-pin" dir="ltr" inputmode="numeric" maxlength="6" placeholder="••••••" style="font-size:18px;letter-spacing:4px;font-weight:800;color:var(--acc)"></div>';
+ back = '<button type="button" class="ob-back" onclick="obGo(1)">' + t('Back', 'رجوع') + '</button>';
+ next = '<button type="button" class="ob-next" onclick="verifyNatourPinLogin()">' + t('Open my checklist →', 'فتح قائمة التحصيل ←') + '</button>';
  }
- else if (OB.step === 2) {
- h += '<div class="ob-hero-title">' + t('About your', 'معلومات') + '<span>' + t('Building', 'البناية والشقق') + '</span></div>';
- h += getObSvgIllustration(2);
- h += '<div class="two-col-grid" style="margin-bottom:12px">';
- h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Building Name (EN)', 'اسم البناية (EN)') + '</label><input type="text" value="' + esc(OB.bldEn) + '" oninput="OB.bldEn=this.value"></div>';
- h += '<div><label style="font-size:11.5px;color:var(--mut)">' + t('Building Name (AR)', 'اسم البناية (AR)') + '</label><input type="text" dir="rtl" value="' + esc(OB.bldAr) + '" oninput="OB.bldAr=this.value"></div>';
- h += '</div>';
- h += '<div style="padding:12px 14px;background:var(--card2);border:1px solid var(--line);border-radius:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">';
- h += '<div><b>🏢 ' + t('Number of Apartments', 'عدد الشقق في البناية') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('You can edit names & codes anytime', 'يمكنك تعديل الأسماء والأرقام لاحقاً') + '</div></div>';
- h += '<div style="display:flex;align-items:center;gap:10px"><button class="btn-edit" style="width:34px;height:34px;justify-content:center;font-size:18px" onclick="OB.unitCount=Math.max(1,OB.unitCount-1);renderOnboardingModalContent()">−</button>';
- h += '<b style="font-size:18px;min-width:22px;text-align:center">' + OB.unitCount + '</b>';
- h += '<button class="btn-edit" style="width:34px;height:34px;justify-content:center;font-size:18px" onclick="OB.unitCount=Math.min(40,OB.unitCount+1);renderOnboardingModalContent()">+</button></div></div>';
- h += '<div class="form-row"><button class="btn-edit" style="padding:12px 16px" onclick="OB.step=1;renderOnboardingModalContent()">' + t('← Back', '→ رجوع') + '</button>';
- h += '<button class="ob-pill-btn" style="flex:1" onclick="OB.step=3;renderOnboardingModalContent()">' + t('Next →', 'التالي ←') + '</button></div>';
+ else if (step === 2) {
+ body += '<h2 class="ob-title">' + t('Your building', 'بنايتك') + '</h2>';
+ body += '<p class="ob-sub">' + t('The name goes on the sign. Add apartments and watch it grow.', 'الاسم يظهر على اللافتة. أضف الشقق وشاهد البناية تكبر.') + '</p>';
+ body += '<div class="two-col-grid">';
+ body += '<div><label class="ob-lbl" for="ob-bld-en">' + t('Name (English)', 'الاسم (إنجليزي)') + '</label><input type="text" id="ob-bld-en" value="' + esc(OB.bldEn) + '" oninput="OB.bldEn=this.value;var sg=document.getElementById(' + J('ob-sign') + ');if(sg)sg.textContent=(this.value||' + J('Building') + ').toUpperCase().slice(0,12)"></div>';
+ body += '<div><label class="ob-lbl" for="ob-bld-ar">' + t('Name (Arabic)', 'الاسم (عربي)') + '</label><input type="text" id="ob-bld-ar" dir="rtl" value="' + esc(OB.bldAr) + '" oninput="OB.bldAr=this.value"></div>';
+ body += '</div>';
+ body += obStepperRow(t('Apartments', 'عدد الشقق'), t('You can rename them later', 'يمكنك تعديل الأسماء لاحقاً'), OB.unitCount, 'obBump(' + J('unitCount') + ',-1,1,40)', 'obBump(' + J('unitCount') + ',1,1,40)', t('apartments', 'شقق'));
+ back = '<button type="button" class="ob-back" onclick="obGo(1)">' + t('Back', 'رجوع') + '</button>';
+ next = '<button type="button" class="ob-next" onclick="obGo(3)">' + t('Continue →', 'التالي ←') + '</button>';
  }
- else if (OB.step === 3) {
- h += '<div class="ob-hero-title">' + t('Building Safe', 'عملة صندوق') + '<span>' + t('Currency', 'البناية') + '</span></div>';
- h += '<p class="subtext" style="text-align:center">' + t('How do you keep your building\'s collected money?', 'كيف تحتفظ بالأموال المجموعة في صندوق البناية؟') + '</p>';
- h += getObSvgIllustration(3);
- h += '<div class="choice-card' + (OB.curMode === 'single' ? ' on' : '') + '" onclick="OB.curMode=\'single\';OB.waterCur=\'USD\';renderOnboardingModalContent()">';
- h += '<span style="font-size:24px">💵</span><div><b>' + t('USD Only ($) — Recommended', 'بالدولار فقط ($) — الأسهل') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Keep one simple USD balance. Any LBP bill is automatically converted.', 'رصيد واحد واضح بالدولار، وأي فاتورة بالليرة تُحوّل تلقائياً.') + '</div></div></div>';
- h += '<div class="choice-card' + (OB.curMode === 'split' ? ' on' : '') + '" onclick="OB.curMode=\'split\';OB.waterCur=\'LBP\';renderOnboardingModalContent()">';
- h += '<span style="font-size:24px">🇱🇧</span><div><b>' + t('Both USD ($) & Lebanese Lira (ل.ل.)', 'دولار ($) وليرة لبنانية (ل.ل.) معاً') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Track physical USD cash and LBP cash separately.', 'متابعة الكاش بالدولار والكاش بالليرة كلٌ على حدة.') + '</div></div></div>';
- h += '<div style="margin:10px 0 14px"><label style="font-size:11.5px;color:var(--mut)">' + t('Exchange Rate for LBP Bills (LBP per $1)', 'سعر صرف الدولار للفواتير بالليرة') + '</label>';
- h += '<input type="number" dir="ltr" value="' + OB.rate + '" oninput="OB.rate=Number(this.value)||89500" style="margin-top:4px"></div>';
- h += '<div class="form-row"><button class="btn-edit" style="padding:12px 16px" onclick="OB.step=2;renderOnboardingModalContent()">' + t('← Back', '→ رجوع') + '</button>';
- h += '<button class="ob-pill-btn" style="flex:1" onclick="OB.step=4;renderOnboardingModalContent()">' + t('Next →', 'التالي ←') + '</button></div>';
+ else if (step === 3) {
+ body += '<h2 class="ob-title">' + t('The building safe', 'صندوق البناية') + '</h2>';
+ body += '<p class="ob-sub">' + t('Which currency does the safe hold?', 'بأي عملة تحتفظ بأموال البناية؟') + '</p>';
+ body += obCard(OB.curMode === 'single', 'obSet(' + J('curMode') + ',' + J('single') + ')', '💵', t('USD only — recommended', 'بالدولار فقط — الأسهل'), t('One simple balance. Lira bills are converted for you.', 'رصيد واحد بسيط، وفواتير الليرة تُحوّل تلقائياً.'));
+ body += obCard(OB.curMode === 'split', 'obSet(' + J('curMode') + ',' + J('split') + ')', '🇱🇧', t('USD and Lebanese Lira', 'دولار وليرة لبنانية'), t('Track dollar cash and lira cash separately.', 'متابعة الكاش بالدولار والليرة كلٌ على حدة.'));
+ if (OB.curMode === 'split') {
+ body += '<div><label class="ob-lbl" for="ob-rate">' + t('Exchange rate (LBP per $1)', 'سعر الصرف (ليرة لكل دولار)') + '</label><input type="number" id="ob-rate" dir="ltr" inputmode="numeric" value="' + OB.rate + '" oninput="OB.rate=Number(this.value)||89500"></div>';
  }
- else if (OB.step === 4) {
- h += '<div class="ob-hero-title">' + t('Money in the Safe', 'المبلغ الموجود في') + '<span>' + t('Today', 'الصندوق اليوم') + '</span></div>';
- h += '<p class="subtext" style="text-align:center">' + t('Do you already have building money saved from previous months?', 'هل يوجد حالياً مبلغ سابق محفوظ في صندوق البناية؟') + '</p>';
- h += '<div class="choice-card' + (OB.balMode === 'zero' ? ' on' : '') + '" onclick="OB.balMode=\'zero\';renderOnboardingModalContent()">';
- h += '<span style="font-size:22px">✨</span><div><b>' + t('Start Fresh from $0', 'البدء من الصفر ($0)') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Begin tracking with a clean slate starting this month.', 'بدء الحسابات من الصفر اعتباراً من هذا الشهر.') + '</div></div></div>';
- h += '<div class="choice-card' + (OB.balMode === 'existing' ? ' on' : '') + '" onclick="OB.balMode=\'existing\';renderOnboardingModalContent()">';
- h += '<span style="font-size:22px">💼</span><div><b>' + t('We Already Have Money in the Safe', 'يوجد مبلغ حالي في الصندوق') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Enter the starting amount currently in your box.', 'أدخل المبلغ الموجود حالياً في الصندوق.') + '</div></div></div>';
+ back = '<button type="button" class="ob-back" onclick="obGo(2)">' + t('Back', 'رجوع') + '</button>';
+ next = '<button type="button" class="ob-next" onclick="obGo(4)">' + t('Continue →', 'التالي ←') + '</button>';
+ }
+ else if (step === 4) {
+ body += '<h2 class="ob-title">' + t('Money in the safe today', 'المبلغ في الصندوق اليوم') + '</h2>';
+ body += '<p class="ob-sub">' + t('Is there building money saved from before?', 'هل يوجد مبلغ محفوظ للبناية من قبل؟') + '</p>';
+ body += obCard(OB.balMode === 'zero', 'obSet(' + J('balMode') + ',' + J('zero') + ')', '✨', t('Start from $0', 'البدء من الصفر'), t('A clean slate from this month.', 'بداية جديدة من هذا الشهر.'));
+ body += obCard(OB.balMode === 'existing', 'obSet(' + J('balMode') + ',' + J('existing') + ')', '💼', t('There’s money in it', 'يوجد مبلغ في الصندوق'), t('Enter what’s in the safe right now.', 'أدخل المبلغ الموجود حالياً.'));
  if (OB.balMode === 'existing') {
- h += '<div style="margin:10px 0;padding:14px;background:var(--soft);border-radius:16px">';
- if (OB.curMode === 'single') {
- h += '<label style="font-size:12px;font-weight:700;color:var(--acc)">' + t('Current Safe Balance ($ USD)', 'المبلغ الحالي في الصندوق بالدولار ($)') + '</label>';
- h += '<input type="number" dir="ltr" value="' + OB.initUsd + '" oninput="OB.initUsd=Number(this.value)||0" style="margin-top:6px;background:#fff">';
- } else {
- h += '<div class="two-col-grid">';
- h += '<div><label style="font-size:11.5px;font-weight:700;color:var(--acc)">' + t('USD Cash ($)', 'الكاش بالدولار ($)') + '</label><input type="number" dir="ltr" value="' + OB.initUsd + '" oninput="OB.initUsd=Number(this.value)||0" style="margin-top:4px;background:#fff"></div>';
- h += '<div><label style="font-size:11.5px;font-weight:700;color:var(--acc)">' + t('LBP Cash (ل.ل.)', 'الكاش بالليرة (ل.ل.)') + '</label><input type="number" dir="ltr" value="' + OB.initLbp + '" oninput="OB.initLbp=Number(this.value)||0" style="margin-top:4px;background:#fff"></div>';
- h += '</div>';
+ body += '<div class="two-col-grid"' + (OB.curMode === 'split' ? '' : ' style="grid-template-columns:1fr"') + '>';
+ body += '<div><label class="ob-lbl" for="ob-init-usd">' + t('USD cash ($)', 'الكاش بالدولار ($)') + '</label><input type="number" id="ob-init-usd" dir="ltr" inputmode="decimal" value="' + OB.initUsd + '" oninput="OB.initUsd=Number(this.value)||0;obRefreshScene()"></div>';
+ if (OB.curMode === 'split') body += '<div><label class="ob-lbl" for="ob-init-lbp">' + t('Lira cash (LBP)', 'الكاش بالليرة') + '</label><input type="number" id="ob-init-lbp" dir="ltr" inputmode="numeric" value="' + OB.initLbp + '" oninput="OB.initLbp=Number(this.value)||0;obRefreshScene()"></div>';
+ body += '</div>';
  }
- h += '</div>';
+ back = '<button type="button" class="ob-back" onclick="obGo(3)">' + t('Back', 'رجوع') + '</button>';
+ next = '<button type="button" class="ob-next" onclick="obGo(5)">' + t('Continue →', 'التالي ←') + '</button>';
  }
- h += '<div class="form-row" style="margin-top:16px"><button class="btn-edit" style="padding:12px 16px" onclick="OB.step=3;renderOnboardingModalContent()">' + t('← Back', '→ رجوع') + '</button>';
- h += '<button class="ob-pill-btn" style="flex:1" onclick="OB.step=5;renderOnboardingModalContent()">' + t('Next →', 'التالي ←') + '</button></div>';
- }
- else if (OB.step === 5) {
- h += '<div class="ob-hero-title">' + t('Monthly Apartment', 'المستحقات الشهرية') + '<span>' + t('Payments', 'على الشقق') + '</span></div>';
- h += '<p class="subtext" style="text-align:center">' + t('We organize building collections into 3 clear categories so your Building Safe stays 100% accurate:', 'نُقسّم مستحقات الشقق إلى 3 فئات واضحة لضمان دقة صندوق البناية:') + '</p>';
-
- h += '<div style="font-size:11px;font-weight:800;color:var(--acc);text-transform:uppercase;margin:8px 0 6px">1️⃣ ' + t('Fixed Monthly Dues (Every Month)', '١. الرسوم الشهرية الثابتة (تتكرر كل شهر)') + '</div>';
- h += '<div class="choice-card' + (OB.useMaint ? ' on' : '') + '" style="flex-direction:column;align-items:stretch">';
- h += '<label style="display:flex;align-items:center;gap:10px;cursor:pointer"><input type="checkbox" style="width:19px;height:19px" ' + (OB.useMaint ? 'checked' : '') + ' onchange="OB.useMaint=this.checked;renderOnboardingModalContent()"><div><b>🛠️ ' + t('Fixed Building Maintenance', 'رسم صيانة المبنى الثابت') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Flat monthly fee per apartment for general upkeep (elevator, stairs, lights)', 'مبلغ شهري ثابت لكل شقة للصيانة العامة والمصعد والدرج') + '</div></div></label>';
- if (OB.useMaint) {
- h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)"><span style="font-size:12px;font-weight:700">' + t('Maintenance per apartment ($):', 'الصيانة لكل شقة ($):') + '</span><input type="number" value="' + OB.maintAmt + '" oninput="OB.maintAmt=Number(this.value)||0" style="width:95px;text-align:center;background:#fff"></div>';
- }
-
- h += '<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">';
- h += '<div style="font-size:12px;font-weight:800;margin-bottom:6px">👷‍♂️ ' + t('How do you handle the Natour / Collector fee?', 'كيف يتم احتساب أتعاب الناطور الشهري؟') + '</div>';
- h += '<div class="seg-bar" style="margin-bottom:8px">';
- h += '<button type="button" class="' + (OB.natFeeMode === 'separate' ? 'on' : '') + '" onclick="OB.natFeeMode=\'separate\';OB.useNatFee=true;renderOnboardingModalContent()">' + t('+ Separate Fee', '+ رسم منفصل') + '</button>';
- h += '<button type="button" class="' + (OB.natFeeMode === 'included' ? 'on' : '') + '" onclick="OB.natFeeMode=\'included\';OB.useNatFee=false;renderOnboardingModalContent()">' + t('Included in Maint.', 'مشمول بالصيانة') + '</button>';
- h += '<button type="button" class="' + (OB.natFeeMode === 'none' ? 'on' : '') + '" onclick="OB.natFeeMode=\'none\';OB.useNatFee=false;renderOnboardingModalContent()">' + t('No Natour Fee', 'لا يوجد') + '</button>';
- h += '</div>';
-
+ else if (step === 5) {
+ var each = (OB.useMaint ? Number(OB.maintAmt) || 0 : 0) + (OB.natFeeMode === 'separate' ? Number(OB.natFeeAmt) || 0 : 0);
+ body += '<h2 class="ob-title">' + t('Fixed monthly dues', 'الرسوم الشهرية الثابتة') + '</h2>';
+ body += '<p class="ob-sub">' + t('Every apartment pays these each month. They flow into the safe.', 'تدفعها كل شقة شهرياً وتذهب إلى صندوق البناية.') + '</p>';
+ body += obStepperRow(t('Maintenance', 'الصيانة'), t('Per apartment, per month', 'لكل شقة شهرياً'), '$' + OB.maintAmt, 'obBump(' + J('maintAmt') + ',-5,0,500)', 'obBump(' + J('maintAmt') + ',5,0,500)', t('maintenance', 'الصيانة'));
+ body += '<div><span class="ob-lbl">' + t('Natour fee', 'أتعاب الناطور') + '</span><div class="seg-bar">';
+ [['separate', t('Separate fee', 'رسم منفصل')], ['included', t('In maintenance', 'ضمن الصيانة')], ['none', t('No fee', 'لا يوجد')]].forEach(function(o) {
+ body += '<button type="button" class="' + (OB.natFeeMode === o[0] ? 'on' : '') + '" onclick="obSet(' + J('natFeeMode') + ',' + J(o[0]) + ')">' + o[1] + '</button>';
+ });
+ body += '</div></div>';
  if (OB.natFeeMode === 'separate') {
- h += '<div style="display:flex;align-items:center;justify-content:space-between;background:#fff;padding:8px 10px;border-radius:12px;border:1px solid var(--line)"><span style="font-size:12px;font-weight:700">' + t('Extra Natour fee per apt ($):', 'أتعاب الناطور لكل شقة ($):') + '</span><input type="number" value="' + OB.natFeeAmt + '" oninput="OB.natFeeAmt=Number(this.value)||0" style="width:90px;text-align:center;background:var(--card2)"></div>';
- h += '<div style="font-size:11px;color:var(--acc);font-weight:700;margin-top:5px">👉 ' + t('Each apartment pays $' + (Number(OB.maintAmt || 0) + Number(OB.natFeeAmt || 0)) + '/mo fixed total ($' + OB.maintAmt + ' Maint. + $' + OB.natFeeAmt + ' Natour).', 'تدفع كل شقة $' + (Number(OB.maintAmt || 0) + Number(OB.natFeeAmt || 0)) + ' شهرياً ($' + OB.maintAmt + ' صيانة + $' + OB.natFeeAmt + ' ناطور).') + '</div>';
+ body += obStepperRow(t('Natour fee', 'أتعاب الناطور'), t('Per apartment, per month', 'لكل شقة شهرياً'), '$' + OB.natFeeAmt, 'obBump(' + J('natFeeAmt') + ',-5,0,200)', 'obBump(' + J('natFeeAmt') + ',5,0,200)', t('Natour fee', 'أتعاب الناطور'));
  } else if (OB.natFeeMode === 'included') {
- h += '<div style="font-size:11.5px;color:var(--ok);font-weight:700">✓ ' + t('Residents only see Building Maintenance ($' + OB.maintAmt + ') on their bill. You pay the Natour out of the Building Safe.', 'يظهر للسكان بند صيانة المبنى ($' + OB.maintAmt + ') فقط، وتُدفع أتعاب الناطور من الصندوق.') + '</div>';
+ body += '<div class="ob-note">' + t('Residents only see maintenance. You pay the Natour from the safe.', 'يظهر للسكان بند الصيانة فقط، وتُدفع أتعاب الناطور من الصندوق.') + '</div>';
  }
- h += '</div></div>';
-
- h += '<div style="font-size:11px;font-weight:800;color:var(--warn);text-transform:uppercase;margin:12px 0 6px">2️⃣ ' + t('Variable Shared Bills (Split Across Units)', '٢. فواتير مشتركة متغيرة (تقسّم على الشقق)') + '</div>';
- h += '<div class="choice-card' + (OB.useWater ? ' on' : '') + '" style="flex-direction:column;align-items:stretch">';
- h += '<label style="display:flex;align-items:center;gap:10px;cursor:pointer"><input type="checkbox" style="width:19px;height:19px" ' + (OB.useWater ? 'checked' : '') + ' onchange="OB.useWater=this.checked;renderOnboardingModalContent()"><div><b>➗ ' + t('Shared Utilities & Split Repairs', 'فواتير الخدمات والأعطال المشتركة') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('For variable bills not covered by fixed maintenance — enter the total bill and we split it equally across your ' + OB.unitCount + ' apartments:', 'للفواتير المتغيرة غير المشمولة بالصيانة الثابتة — أدخل إجمالي الفاتورة وسنقسمها بالتساوي على الشقق الـ ' + OB.unitCount + ':') + '</div></div></label>';
-
- var exPills = [
- { val: 'Water Bill|فاتورة المياه', ico: '💧', en: 'Water Bill', ar: 'فاتورة المياه' },
- { val: 'Water Tanker Fill|نقلة صهريج مياه', ico: '🚛', en: 'Water Tanker Fill', ar: 'نقلة صهريج مياه' },
- { val: 'Shared Generator Fuel|مازوت المولد المشترك', ico: '⚡', en: 'Shared Generator Diesel', ar: 'مازوت مولد البناية' },
- { val: 'Elevator Repair Share|حصة تصليح المصعد', ico: '🛗', en: 'Elevator / Pump Repair', ar: 'تصليح مصعد أو مضخة' }
- ];
- h += '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">';
- exPills.forEach(function(p) {
- var activePill = OB.sharedPreset === p.val;
- h += '<button type="button" onclick="OB.useWater=true;OB.sharedPreset=\'' + p.val + '\';renderOnboardingModalContent()" style="font-size:10.5px;background:' + (activePill ? 'var(--acc)' : '#fff') + ';color:' + (activePill ? '#fff' : 'var(--ink)') + ';border:1px solid ' + (activePill ? 'var(--acc)' : 'var(--line)') + ';padding:4px 9px;border-radius:999px;font-weight:700">' + p.ico + ' ' + t(p.en, p.ar) + '</button>';
- });
- h += '</div>';
-
+ body += '<div class="ob-note">' + t('Each apartment pays $' + each + ' a month.', 'تدفع كل شقة $' + each + ' شهرياً.') + '</div>';
+ back = '<button type="button" class="ob-back" onclick="obGo(4)">' + t('Back', 'رجوع') + '</button>';
+ next = '<button type="button" class="ob-next" onclick="obGo(6)">' + t('Continue →', 'التالي ←') + '</button>';
+ }
+ else if (step === 6) {
+ body += '<h2 class="ob-title">' + t('Shared bills', 'الفواتير المشتركة') + '</h2>';
+ body += '<p class="ob-sub">' + t('Enter a bill’s total and we split it across your ' + OB.unitCount + ' apartments.', 'أدخل إجمالي الفاتورة وسنقسمها على الشقق الـ ' + OB.unitCount + '.') + '</p>';
+ body += obSwitchRow(OB.useWater, 'obToggle(' + J('useWater') + ')', t('Split shared bills', 'تقسيم الفواتير المشتركة'), '');
  if (OB.useWater) {
- h += '<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">';
- h += '<div style="font-size:11.5px;font-weight:700;color:var(--ink);margin-bottom:6px">' + t('Optional: Have a shared bill to split in your first month? (Leave 0 to add later)', 'اختياري: هل لديك فاتورة مشتركة لتقسيمها في الشهر الأول؟ (اتركها 0 لإضافتها لاحقاً)') + '</div>';
- h += '<select onchange="OB.sharedPreset=this.value" style="margin-bottom:8px;background:#fff;font-size:12.5px;padding:8px 10px">'
- + '<option value="Water Bill|فاتورة المياه"' + (OB.sharedPreset === 'Water Bill|فاتورة المياه' ? ' selected' : '') + '>💧 ' + t('Water Bill · فاتورة المياه', 'فاتورة المياه · Water Bill') + '</option>'
- + '<option value="Water Tanker Fill|نقلة صهريج مياه"' + (OB.sharedPreset === 'Water Tanker Fill|نقلة صهريج مياه' ? ' selected' : '') + '>🚛 ' + t('Water Tanker Fill · نقلة صهريج مياه', 'نقلة صهريج مياه · Water Tanker') + '</option>'
- + '<option value="Shared Generator Fuel|مازوت المولد المشترك"' + (OB.sharedPreset === 'Shared Generator Fuel|مازوت المولد المشترك' ? ' selected' : '') + '>⚡ ' + t('Shared Generator Fuel · مازوت المولد المشترك', 'مازوت المولد المشترك · Generator Fuel') + '</option>'
- + '<option value="Elevator Repair Share|حصة تصليح المصعد"' + (OB.sharedPreset === 'Elevator Repair Share|حصة تصليح المصعد' ? ' selected' : '') + '>🛗 ' + t('Elevator Repair Share · حصة تصليح المصعد', 'حصة تصليح المصعد · Elevator Repair') + '</option>'
- + '<option value="Water Pump Repair|تصليح مضخة المياه"' + (OB.sharedPreset === 'Water Pump Repair|تصليح مضخة المياه' ? ' selected' : '') + '>🔧 ' + t('Water Pump Repair · تصليح مضخة المياه', 'تصليح مضخة المياه · Pump Repair') + '</option>'
- + '</select>';
- h += '<label style="font-size:11px;color:var(--mut);font-weight:700;display:block;margin-bottom:4px">' + t('Total Bill Amount (for the whole building):', 'إجمالي قيمة الفاتورة (للبناية كاملة):') + '</label>';
- h += '<div class="amt-cur-grid"><input type="number" value="' + OB.waterTotalAmt + '" placeholder="0" oninput="OB.waterTotalAmt=Number(this.value)||0;updateObSplitPreview()" style="background:#fff"><select onchange="OB.waterCur=this.value;updateObSplitPreview()" style="background:#fff"><option value="USD"' + (OB.waterCur === 'USD' ? ' selected' : '') + '>USD ($)</option><option value="LBP"' + (OB.waterCur === 'LBP' ? ' selected' : '') + '>LBP (ل.ل.)</option></select></div>';
- h += '<div id="ob-split-preview" style="margin-top:8px;padding:8px 11px;border-radius:11px;font-size:11.5px;font-weight:700;transition:all .15s"></div>';
- h += '</div>';
- }
- h += '</div>';
-
- h += '<div style="font-size:11px;font-weight:800;color:var(--purp);text-transform:uppercase;margin:12px 0 6px">3️⃣ ' + t('Outside Supplier Subscriptions (Pass-Through)', '٣. اشتراكات الموردين الخاصة (خارج صندوق البناية)') + '</div>';
- h += '<label class="choice-card' + (OB.useSuppliers ? ' on' : '') + '"><input type="checkbox" style="width:19px;height:19px" ' + (OB.useSuppliers ? 'checked' : '') + ' onchange="OB.useSuppliers=this.checked;renderOnboardingModalContent()"><div><b>🔌 ' + t('Private Moteur, Internet & Dish (Via Natour)', 'الموتور الخاص والإنترنت والدش (عبر الناطور)') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Each unit pays its own meter/subscription. Collected by the Natour in a separate Supplier Pocket so it NEVER mixes with your Building Safe!', 'كل شقة تدفع حسب عدادها أو اشتراكها. يجمعها الناطور في جيب مستقل لتسليمها للموردين دون أن تختلط بصندوق البناية!') + '</div></div></label>';
-
- h += '<div class="form-row" style="margin-top:12px"><button class="btn-edit" style="padding:12px 16px" onclick="OB.step=4;renderOnboardingModalContent()">' + t('← Back', '→ رجوع') + '</button>';
- h += '<button class="ob-pill-btn" style="flex:1" onclick="OB.step=6;renderOnboardingModalContent()">' + t('Next: Reminders →', 'التالي: التذكيرات ←') + '</button></div>';
- }
- else if (OB.step === 6) {
- h += '<div class="ob-hero-title">' + t('Smart Maintenance', 'تذكيرات الصيانة') + '<span>' + t('Reminders', 'ومهام الناطور') + '</span></div>';
- h += '<p class="subtext" style="text-align:center">' + t('Pick the reminders you want active. Natour tasks appear directly on his phone to tick off!', 'اختر التذكيرات المناسبة لبنايتك. مهام الناطور تظهر مباشرة على هاتفه ليؤكد إنجازها!') + '</p>';
- h += '<div style="font-size:11.5px;font-weight:800;color:var(--acc);text-transform:uppercase;margin:8px 0 6px">🏢 ' + t('Building Reminders (For Manager)', 'تذكيرات عامة للبناية (للمدير)') + '</div>';
- h += '<label class="choice-card' + (OB.remPest ? ' on' : '') + '"><input type="checkbox" style="width:19px;height:19px" ' + (OB.remPest ? 'checked' : '') + ' onchange="OB.remPest=this.checked;renderOnboardingModalContent()"><div><b>🐜 ' + t('Pest Control & Fumigation', 'رش مبيدات وحشرات للبناية') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Every 6 Months · Building common areas', 'كل 6 أشهر · مداخل ومناور البناية') + '</div></div></label>';
- h += '<label class="choice-card' + (OB.remElev ? ' on' : '') + '"><input type="checkbox" style="width:19px;height:19px" ' + (OB.remElev ? 'checked' : '') + ' onchange="OB.remElev=this.checked;renderOnboardingModalContent()"><div><b>🛗 ' + t('Elevator & Generator Service Check', 'فحص وصيانة المصعد وغيار زيت المولد') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Monthly safety & oil check reminder', 'تذكير شهري للصيانة الدورية') + '</div></div></label>';
- h += '<div style="font-size:11.5px;font-weight:800;color:var(--ok);text-transform:uppercase;margin:12px 0 6px">👷‍♂️ ' + t('Natour Checklist Tasks (Sent to His Phone)', 'مهام دورية للناطور (تظهر على هاتفه)') + '</div>';
- h += '<label class="choice-card' + (OB.remTrash ? ' on' : '') + '"><input type="checkbox" style="width:19px;height:19px" ' + (OB.remTrash ? 'checked' : '') + ' onchange="OB.remTrash=this.checked;renderOnboardingModalContent()"><div><b>🗑️ ' + t('Wash Trash Bins & Building Entrance', 'غسيل مستوعبات النفايات ومدخل البناية') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Weekly task for Natour to tick when done', 'مهمة أسبوعية يؤشر عليها الناطور عند إنجازها') + '</div></div></label>';
- h += '<label class="choice-card' + (OB.remSolar ? ' on' : '') + '"><input type="checkbox" style="width:19px;height:19px" ' + (OB.remSolar ? 'checked' : '') + ' onchange="OB.remSolar=this.checked;renderOnboardingModalContent()"><div><b>☀️ ' + t('Wipe Dust off Solar Panels & Clear Drains', 'تنظيف ألواح الطاقة ومصارف المطر') + '</b><div style="font-size:11.5px;color:var(--mut)">' + t('Monthly task on Natour\'s phone', 'مهمة شهرية على هاتف الناطور') + '</div></div></label>';
- h += '<div style="margin:12px 0"><label style="font-size:12px;font-weight:700;color:var(--mut)">📅 ' + t('Which month are we starting with?', 'بأي شهر تحصيل نبدأ الآن؟') + '</label>';
- h += '<div class="two-col-grid" style="grid-template-columns:2fr 1fr;margin-top:4px">';
- h += '<select onchange="OB.startMon=this.value">';
- MONTHS_EN.forEach(function(m, i) {
- h += '<option value="' + m + '"' + (m === OB.startMon ? ' selected' : '') + '>' + m + ' · ' + MONTHS_AR[i] + '</option>';
+ var presets = [
+ ['Water Bill|فاتورة المياه', '💧', t('Water bill', 'فاتورة المياه')],
+ ['Water Tanker Fill|نقلة صهريج مياه', '🚛', t('Water tanker', 'صهريج مياه')],
+ ['Shared Generator Fuel|مازوت المولد المشترك', '⚡', t('Generator diesel', 'مازوت المولد')],
+ ['Elevator Repair Share|حصة تصليح المصعد', '🛗', t('Elevator repair', 'تصليح المصعد')],
+ ['Water Pump Repair|تصليح مضخة المياه', '🔧', t('Pump repair', 'تصليح المضخة')]
+ ];
+ body += '<div class="ob-pills">';
+ presets.forEach(function(p) {
+ body += '<button type="button" class="ob-pill' + (OB.sharedPreset === p[0] ? ' on' : '') + '" onclick="obSet(' + J('sharedPreset') + ',' + J(p[0]) + ')">' + p[1] + ' ' + p[2] + '</button>';
  });
- h += '</select>';
- h += '<select onchange="OB.startYr=this.value"><option value="2026"' + (OB.startYr === '2026' ? ' selected' : '') + '>2026</option><option value="2027"' + (OB.startYr === '2027' ? ' selected' : '') + '>2027</option></select>';
- h += '</div></div>';
- h += '<div class="form-row"><button class="btn-edit" style="padding:12px 16px" onclick="OB.step=5;renderOnboardingModalContent()">' + t('← Back', '→ رجوع') + '</button>';
- h += '<button class="ob-pill-btn" style="flex:1" onclick="applyOnboardingAndShowCongrats()">🎉 ' + t('Create First Month →', 'إنشاء الشهر الأول ←') + '</button></div>';
+ body += '</div>';
+ body += '<div><label class="ob-lbl" for="ob-water-total">' + t('First month’s total (optional)', 'إجمالي الشهر الأول (اختياري)') + '</label>';
+ body += '<div class="amt-cur-grid"><input type="number" id="ob-water-total" dir="ltr" inputmode="decimal" value="' + (OB.waterTotalAmt || '') + '" placeholder="0" oninput="OB.waterTotalAmt=Number(this.value)||0;updateObSplitPreview()">';
+ body += '<select aria-label="' + esc(t('Currency', 'العملة')) + '" onchange="OB.waterCur=this.value;updateObSplitPreview()"><option value="USD"' + (OB.waterCur === 'USD' ? ' selected' : '') + '>USD ($)</option><option value="LBP"' + (OB.waterCur === 'LBP' ? ' selected' : '') + '>LBP (ل.ل.)</option></select></div></div>';
+ body += '<div id="ob-split-preview" class="ob-note"></div>';
  }
- else if (OB.step === 7) {
- var firstM = OB.startMon + ' ' + OB.startYr;
- h += '<div style="text-align:center;font-size:32px;margin-bottom:2px">🎉</div>';
- h += '<div class="ob-hero-title">' + t('Congrats! ' + firstM, 'مبروك! تم إنشاء') + '<span>' + t('is Ready!', dispCycleName(firstM, 'ar')) + '</span></div>';
- h += '<p class="subtext" style="text-align:center">' + t('Now invite your Natour to collect payments. Here is a preview of what his phone screen looks like:', 'الآن يمكنك دعوة الناطور لبدء التحصيل. هكذا ستبدو شاشة التحصيل البسيطة على هاتفه:') + '</p>';
- h += '<div class="mini-phone"><div class="mini-phone-notch"></div>';
- h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b style="font-size:12px;color:var(--acc)">👷‍♂️ ' + esc(OB.bldEn) + ' · Natour Screen</b><span style="font-size:10.5px;background:var(--okbg);color:var(--ok);padding:2px 7px;border-radius:999px;font-weight:800">100% Arabic / EN</span></div>';
- h += '<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:6px">';
- h += '<div style="display:flex;justify-content:space-between;font-size:12px"><b>SS2R · أحمد الخطيب</b><span style="color:var(--ok);font-weight:800">🧾 إيصال واتساب</span></div>';
- h += '<div style="display:flex;gap:5px;margin-top:6px"><span style="font-size:10.5px;background:var(--okbg);color:var(--ok);padding:3px 8px;border-radius:999px;font-weight:700">✓ صيانة $' + OB.maintAmt + '</span><span style="font-size:10.5px;background:var(--okbg);color:var(--ok);padding:3px 8px;border-radius:999px;font-weight:700">✓ ناطور $' + OB.natFeeAmt + '</span></div>';
- h += '</div>';
- h += '<div style="font-size:11px;color:var(--mut);line-height:1.4">• ' + t('He taps chips to mark cash collected.', 'يضغط على الرسوم لتأكيد قبض الكاش.') + '<br>• ' + t('He taps 📣 to send WhatsApp invoices & 🧾 receipts.', 'يرسل مطالبات وإيصالات واتساب للسكان بضغطة زر.') + '<br>• ' + t('He ticks off his weekly maintenance tasks.', 'يؤشر على مهام التنظيف والصيانة عند إنجازها.') + '</div>';
- h += '</div>';
- h += '<div class="two-col-grid" style="margin-bottom:8px">';
- h += '<div><label style="font-size:11px;color:var(--mut)">' + t('Natour Name (EN)', 'اسم الناطور (EN)') + '</label><input type="text" value="' + esc(OB.natNameEn) + '" oninput="OB.natNameEn=this.value"></div>';
- h += '<div><label style="font-size:11px;color:var(--mut)">' + t('Natour Name (AR)', 'اسم الناطور (AR)') + '</label><input type="text" dir="rtl" value="' + esc(OB.natNameAr) + '" oninput="OB.natNameAr=this.value"></div>';
- h += '</div>';
- h += '<div style="margin-bottom:12px"><label style="font-size:11px;color:var(--mut)">' + t('Natour WhatsApp Number (to send him the app & PIN)', 'رقم واتساب الناطور (لإرسال رابط التطبيق والرمز)') + '</label>';
- h += '<input type="text" dir="ltr" value="' + esc(OB.natPhone) + '" oninput="OB.natPhone=this.value" placeholder="96170123456" style="margin-top:4px"></div>';
- h += '<button class="ob-pill-btn" style="background:var(--ok);margin-bottom:8px" onclick="finishOnboardingAndShareWa()">📲 ' + t('Share App & PIN with Natour via WhatsApp', 'إرسال رابط التطبيق للناطور عبر واتساب') + '</button>';
- h += '<button style="width:100%;padding:10px;background:transparent;color:var(--mut);font-size:12.5px" onclick="finishOnboardingSkipWa()">' + t('Skip for now — Open my building dashboard →', 'تخطي الآن — فتح لوحة تحكم البناية ←') + '</button>';
+ back = '<button type="button" class="ob-back" onclick="obGo(5)">' + t('Back', 'رجوع') + '</button>';
+ next = '<button type="button" class="ob-next" onclick="obGo(7)">' + t('Continue →', 'التالي ←') + '</button>';
  }
+ else if (step === 7) {
+ body += '<h2 class="ob-title">' + t('Moteur, internet & dish', 'الموتور والإنترنت والدش') + '</h2>';
+ body += '<p class="ob-sub">' + t('Each apartment pays its own subscription. The Natour collects it for the suppliers, and it never touches the safe.', 'كل شقة تدفع اشتراكها الخاص. يجمعه الناطور لأصحاب الاشتراكات دون أن يدخل صندوق البناية.') + '</p>';
+ body += obSwitchRow(OB.useSuppliers, 'obToggle(' + J('useSuppliers') + ')', t('Collect supplier subscriptions', 'تحصيل اشتراكات الموردين'), t('Kept in a separate supplier pocket', 'تُحفظ في جيب منفصل للموردين'));
+ body += '<div class="ob-note">' + t('Watch the orange line: it goes around the safe, straight to the supplier.', 'لاحظ الخط البرتقالي: يمر حول الصندوق مباشرةً إلى المورّد.') + '</div>';
+ back = '<button type="button" class="ob-back" onclick="obGo(6)">' + t('Back', 'رجوع') + '</button>';
+ next = '<button type="button" class="ob-next" onclick="obGo(8)">' + t('Continue →', 'التالي ←') + '</button>';
+ }
+ else if (step === 8) {
+ var nat = '<span class="ob-badge nat">' + t('Natour', 'الناطور') + '</span>';
+ var you = '<span class="ob-badge you">' + t('You', 'أنت') + '</span>';
+ body += '<h2 class="ob-title">' + t('Reminders', 'التذكيرات') + '</h2>';
+ body += '<p class="ob-sub">' + t('Natour tasks go straight to his phone.', 'مهام الناطور تظهر مباشرة على هاتفه.') + '</p>';
+ body += obSwitchRow(OB.remElev, 'obToggle(' + J('remElev') + ')', t('Elevator & generator check', 'فحص المصعد والمولد'), t('Monthly · the core glows when due', 'شهرياً · يضيء قلب البناية عند الاستحقاق'), you);
+ body += obSwitchRow(OB.remPest, 'obToggle(' + J('remPest') + ')', t('Pest control', 'رش المبيدات'), t('Every 6 months', 'كل 6 أشهر'), you);
+ body += obSwitchRow(OB.remTrash, 'obToggle(' + J('remTrash') + ')', t('Wash bins & entrance', 'غسيل المستوعبات والمدخل'), t('Weekly', 'أسبوعياً'), nat);
+ body += obSwitchRow(OB.remSolar, 'obToggle(' + J('remSolar') + ')', t('Clean solar panels & drains', 'تنظيف ألواح الطاقة والمصارف'), t('Monthly', 'شهرياً'), nat);
+ back = '<button type="button" class="ob-back" onclick="obGo(7)">' + t('Back', 'رجوع') + '</button>';
+ next = '<button type="button" class="ob-next" onclick="obGo(9)">' + t('Continue →', 'التالي ←') + '</button>';
+ }
+ else if (step === 9) {
+ var each9 = (OB.useMaint ? Number(OB.maintAmt) || 0 : 0) + (OB.natFeeMode === 'separate' ? Number(OB.natFeeAmt) || 0 : 0);
+ body += '<h2 class="ob-title">' + t('First month', 'الشهر الأول') + '</h2>';
+ body += '<p class="ob-sub">' + t('Which month do we start collecting?', 'بأي شهر نبدأ التحصيل؟') + '</p>';
+ body += '<div class="two-col-grid" style="grid-template-columns:2fr 1fr">';
+ body += '<select aria-label="' + esc(t('Month', 'الشهر')) + '" onchange="OB.startMon=this.value">';
+ MONTHS_EN.forEach(function(m, i) { body += '<option value="' + m + '"' + (m === OB.startMon ? ' selected' : '') + '>' + (LANG === 'ar' ? MONTHS_AR[i] : m) + '</option>'; });
+ body += '</select>';
+ body += '<select aria-label="' + esc(t('Year', 'السنة')) + '" onchange="OB.startYr=this.value"><option value="2026"' + (OB.startYr === '2026' ? ' selected' : '') + '>2026</option><option value="2027"' + (OB.startYr === '2027' ? ' selected' : '') + '>2027</option></select>';
+ body += '</div>';
+ body += '<div class="ob-recap">';
+ body += '<div><span>' + t('Building', 'البناية') + '</span><b>' + esc(OB.bldEn || '') + ' · ' + OB.unitCount + ' ' + t('apartments', 'شقق') + '</b></div>';
+ body += '<div><span>' + t('Safe', 'الصندوق') + '</span><b>' + (OB.curMode === 'split' ? t('USD + Lira', 'دولار + ليرة') : t('USD only', 'دولار فقط')) + '</b></div>';
+ body += '<div><span>' + t('Each apartment', 'كل شقة') + '</span><b dir="ltr">$' + each9 + t('/mo', ' شهرياً') + '</b></div>';
+ body += '</div>';
+ back = '<button type="button" class="ob-back" onclick="obGo(8)">' + t('Back', 'رجوع') + '</button>';
+ next = '<button type="button" class="ob-next" onclick="applyOnboardingAndShowCongrats()">' + t('Create my building ✨', 'إنشاء البناية ✨') + '</button>';
+ }
+ else {
+ body += '<h2 class="ob-title">' + esc(OB.bldEn || t('Your building', 'بنايتك')) + ' ' + t('is ready', 'جاهزة') + '</h2>';
+ body += '<p class="ob-sub">' + t('Last thing: invite your Natour so he can start collecting.', 'آخر خطوة: ادعُ الناطور ليبدأ التحصيل.') + '</p>';
+ body += '<div class="two-col-grid">';
+ body += '<div><label class="ob-lbl" for="ob-nat-en">' + t('Natour name (English)', 'اسم الناطور (إنجليزي)') + '</label><input type="text" id="ob-nat-en" value="' + esc(OB.natNameEn) + '" oninput="OB.natNameEn=this.value"></div>';
+ body += '<div><label class="ob-lbl" for="ob-nat-ar">' + t('Natour name (Arabic)', 'اسم الناطور (عربي)') + '</label><input type="text" id="ob-nat-ar" dir="rtl" value="' + esc(OB.natNameAr) + '" oninput="OB.natNameAr=this.value"></div>';
+ body += '</div>';
+ body += '<div><label class="ob-lbl" for="ob-nat-ph">' + t('His WhatsApp number', 'رقم واتساب الناطور') + '</label><input type="text" id="ob-nat-ph" dir="ltr" inputmode="tel" value="' + esc(OB.natPhone) + '" placeholder="96170123456" oninput="OB.natPhone=this.value"></div>';
+ back = '<button type="button" class="ob-back" onclick="finishOnboardingSkipWa()">' + t('Skip', 'تخطي') + '</button>';
+ next = '<button type="button" class="ob-next green" onclick="finishOnboardingAndShareWa()">📲 ' + t('Invite on WhatsApp', 'دعوة عبر واتساب') + '</button>';
+ }
+
+ var h = '<div class="ob-screen">';
+ h += '<div class="ob-top"><span class="top-brand">💧 BINAYATI · بنايتي</span><div style="display:flex;gap:6px">';
+ h += '<button type="button" class="btn-edit" style="padding:5px 11px" onclick="toggleLang();renderOnboardingModalContent()">' + (LANG === 'ar' ? 'English' : 'العربية') + '</button>';
+ h += '<button type="button" class="btn-del" style="padding:5px 10px" aria-label="' + esc(t('Close', 'إغلاق')) + '" onclick="closeModal(' + J('onboard-modal') + ')">✕</button></div></div>';
+ if (!login) {
+ h += '<div class="ob-progress" aria-label="' + esc(t('Step ' + step + ' of ' + OB_TOTAL, 'الخطوة ' + step + ' من ' + OB_TOTAL)) + '">';
+ for (var i = 1; i <= OB_TOTAL; i++) h += '<i class="' + (i <= step ? 'on' : '') + '"></i>';
+ h += '</div>';
+ }
+ h += '<div class="ob-stage" id="ob-stage">' + obSceneHtml(false) + '</div>';
+ h += '<div class="ob-body">' + body + '</div>';
+ h += '<div class="ob-foot">' + back + next + '</div>';
+ h += '</div>';
  document.getElementById('onboard-content').innerHTML = h;
- if (OB.step === 5 && OB.useWater) updateObSplitPreview();
+ if (step === 6 && OB.useWater) updateObSplitPreview();
 }
 
 function applyOnboardingAndShowCongrats() {
@@ -3052,7 +3276,7 @@ function applyOnboardingAndShowCongrats() {
  DB.reminders = rems;
 
  saveDB();
- OB.step = 7;
+ OB.step = 10;
  renderOnboardingModalContent();
 }
 
@@ -3068,14 +3292,12 @@ function finishOnboardingAndShareWa() {
  var magicUrl = 'https://binayati.app/c/' + DB.settings.collectorToken;
  var msg = '👷‍♂️ مرحباً ' + DB.settings.collectorAr + '، تم تجهيز شهر ' + dispCycleName(SELECTED_MONTH, 'ar') + ' لبناية ' + DB.settings.bldAr + ' على تطبيق بنايتي:\n' + magicUrl + '\n\nرمز الدخول السري (PIN): *' + DB.settings.collectorPin + '*';
  window.open('https://wa.me/' + String(DB.settings.collectorPhone).replace(/\D/g, '') + '?text=' + encodeURIComponent(msg), '_blank');
- closeModal('onboard-modal');
- setRole('mgr');
+ obRevealHome();
 }
 
 function finishOnboardingSkipWa() {
  saveOnboardingNatour();
- closeModal('onboard-modal');
- setRole('mgr');
+ obRevealHome();
  showToast(t('Welcome to Binayati!', 'أهلاً بك في بنايتي!'));
 }
 
@@ -3363,3 +3585,5 @@ render();
 </script>
 </body>
 </html>
+
+</body></html>

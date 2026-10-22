@@ -1190,7 +1190,7 @@ function niceError(e) {
   var m = (e && (e.message || e.error_description)) || String(e);
   if (/Failed to fetch|NetworkError|Load failed|fetch failed/i.test(m)) return t('No connection to the server. Check your internet and try again.', 'لا اتصال بالخادم. تحقق من الإنترنت وحاول مجدداً.');
   if (/row-level security|permission denied/i.test(m)) return t('Your role can\'t do that', 'دورك لا يسمح بذلك');
-  if (/Invalid login credentials/i.test(m)) return t('Wrong email or password', 'البريد أو كلمة المرور خطأ');
+  if (/Invalid login credentials/i.test(m)) return t('Wrong username or password', 'اسم المستخدم أو كلمة المرور خطأ');
   if (/already registered|already been registered/i.test(m)) return t('There is already an account with this email. Sign in instead.', 'يوجد حساب بهذا البريد. سجّل الدخول.');
   if (/email.*invalid|invalid.*email/i.test(m)) return t('That email address isn\'t accepted. Check it for typos.', 'هذا البريد غير مقبول. تحقق منه.');
   if (/Email not confirmed/i.test(m)) return t('Confirm your email first: open the link we sent you.', 'أكّد بريدك أولاً من الرابط المرسل.');
@@ -1282,10 +1282,18 @@ var LOCAL_RPC = {
 /* ---------------------------------------------------------------------------
    Cloud: sign in, load, live updates
    --------------------------------------------------------------------------- */
+/* People sign in with a username (no email needed) or an email. Usernames map to a
+   placeholder address on binayati.local that never receives mail. */
+function isEmail(u) { return String(u || '').indexOf('@') > 0; }
+function cleanUsername(u) { return String(u || '').trim().toLowerCase(); }
 function usernameToEmail(u) {
-  u = String(u || '').trim().toLowerCase();
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(u)) throw new Error(t('Enter a valid email address', 'أدخل بريداً إلكترونياً صحيحاً'));
-  return u;
+  u = cleanUsername(u);
+  if (isEmail(u)) {
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(u)) throw new Error(t('Enter a valid email address', 'أدخل بريداً إلكترونياً صحيحاً'));
+    return u;
+  }
+  if (!/^[a-z0-9][a-z0-9._-]{2,29}$/.test(u)) throw new Error(t('Usernames are 3 to 30 letters or numbers, no spaces', 'اسم المستخدم من 3 إلى 30 حرفاً أو رقماً بلا مسافات'));
+  return u + '@binayati.local';
 }
 function cloudSession() {
   return SB.auth.getSession().then(function(r) { return r.data && r.data.session; });
@@ -1297,7 +1305,23 @@ function cloudSignIn(username, password) {
   });
 }
 function cloudSignUp(username, password, name) {
-  return SB.auth.signUp({ email: usernameToEmail(username), password: password, options: { data: { name: name } } }).then(function(r) {
+  var email = usernameToEmail(username);
+  if (!isEmail(username)) {
+    var c = cfg();
+    return fetch(c.url + '/functions/v1/username-signup', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', apikey: c.key },
+      body: JSON.stringify({ username: cleanUsername(username), password: password, name: name })
+    }).then(function(r) { return r.json().catch(function() { return {}; }); }, function() {
+      throw new Error(t('No connection to the server. Check your internet and try again.', 'لا اتصال بالخادم. تحقق من الإنترنت وحاول مجدداً.'));
+    }).then(function(res) {
+      if (res.error === 'taken') throw new Error(t('That username is taken. Try another, or sign in.', 'اسم المستخدم مستعمل. جرّب غيره أو سجّل الدخول.'));
+      if (res.error === 'weak_password') throw new Error(t('Password must be at least 6 characters', 'كلمة المرور 6 أحرف على الأقل'));
+      if (res.error === 'bad_username') throw new Error(t('Usernames are 3 to 30 letters or numbers, no spaces', 'اسم المستخدم من 3 إلى 30 حرفاً أو رقماً بلا مسافات'));
+      if (!res.ok) throw new Error(t('Couldn\'t create the account. Try again.', 'تعذّر إنشاء الحساب. حاول مجدداً.'));
+      return cloudSignIn(username, password);
+    });
+  }
+  return SB.auth.signUp({ email: email, password: password, options: { data: { name: name } } }).then(function(r) {
     if (r.error) throw new Error(niceError(r.error));
     if (!r.data.session) { var e = new Error(t('Almost there: open the confirmation link we just emailed you, then come back and sign in.', 'تقريباً: افتح رابط التأكيد الذي أرسلناه لبريدك ثم عد وسجّل الدخول.')); e.confirm = true; throw e; }
     return r.data.session;
@@ -2847,7 +2871,7 @@ function loadSample() {
 }
 
 /* ---------------------------------------------------------------------------
-   Accounts (cloud only). Email and password.
+   Accounts (cloud only). A username, or an email if they prefer.
    --------------------------------------------------------------------------- */
 function renderAuth() {
   var a = UI.auth || { mode: 'in' };
@@ -2858,7 +2882,8 @@ function renderAuth() {
   if (a.invite) h += '<h1>' + esc(t('Join ' + a.invite.building, 'انضم إلى ' + (a.invite.building_ar || a.invite.building))) + '</h1><p class="sub">' + esc(t('You were invited as ' + roleLabel(a.invite.role).toLowerCase() + '.', 'دُعيت ك' + roleLabel(a.invite.role) + '.')) + '</p>';
   else h += '<h1>' + esc(up ? t('Create your account', 'أنشئ حسابك') : t('Welcome back', 'أهلاً بعودتك')) + '</h1>';
   if (up) h += '<label class="field"><span>' + esc(t('Your name', 'اسمك')) + '</span><input class="input" id="au-name" value="' + esc(a.name || (a.invite && a.invite.display_name) || '') + '" autocomplete="name"></label>';
-  h += '<label class="field"><span>' + esc(t('Email', 'البريد الإلكتروني')) + '</span><input class="input" id="au-user" type="email" inputmode="email" autocapitalize="none" autocomplete="email" dir="ltr" placeholder="' + esc(t('you@example.com', 'you@example.com')) + '"' + (up ? '' : ' data-autofocus') + '></label>';
+  h += '<label class="field"><span>' + esc(t('Username or email', 'اسم المستخدم أو البريد')) + '</span><input class="input" id="au-user" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" dir="ltr" placeholder="' + esc(t('e.g. anas', 'مثلاً anas')) + '"' + (up ? '' : ' data-autofocus') + '></label>';
+  if (up) h += '<div class="hint">' + esc(t('No email needed: pick any username, like anas or abuali.', 'لا حاجة لبريد: اختر أي اسم مستخدم مثل anas أو abuali.')) + '</div>';
   h += '<label class="field"><span>' + esc(t('Password', 'كلمة المرور')) + '</span><input class="input" id="au-pass" type="password" autocomplete="' + (up ? 'new-password' : 'current-password') + '" onkeydown="if(event.key===\'Enter\')authGo()"></label>';
   h += '<div id="ob-err" class="err"></div></div>';
   h += '<div class="ob-foot"><button class="btn pri block" id="au-go" onclick="authGo()">' + esc(up ? t('Create account', 'أنشئ الحساب') : t('Sign in', 'دخول')) + '</button>';
@@ -2873,7 +2898,7 @@ function authGo() {
   var a = UI.auth, up = a.mode === 'up';
   var user = val('au-user').trim(), pass = val('au-pass'), name = up ? val('au-name').trim() : '';
   var err = document.getElementById('ob-err');
-  if (!user || !pass) { err.textContent = t('Enter your email and a password', 'أدخل بريدك وكلمة مرور'); return; }
+  if (!user || !pass) { err.textContent = t('Enter a username and a password', 'أدخل اسم المستخدم وكلمة مرور'); return; }
   if (up && !name) { err.textContent = t('Enter your name', 'أدخل اسمك'); return; }
   var btn = document.getElementById('au-go'); btn.disabled = true;
   if (up) a.name = name;

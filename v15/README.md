@@ -3,8 +3,9 @@
 One file, `index.html`. It is already connected to your Supabase project **BINAYATI**, and the database (tables, security rules, audit log, functions) is installed there.
 
 ## Before the first sign-up (2 minutes)
-1. Supabase → **Authentication → Sign In / Providers → Email** → turn **off "Confirm email"**.
-   Accounts use a username and password (no real email address), so confirmation emails would bounce.
+1. Accounts use an email and password. Supabase → **Authentication → Sign In / Providers → Email** → "Confirm email":
+   - **Off** (simplest): people are in straight away.
+   - **On**: they must click a link first, and Supabase's free mail sender only sends a handful of emails per hour.
 2. Host `index.html` somewhere with a public address, for example GitHub Pages or Netlify Drop.
    Residents' links and invites point to wherever the file lives. If the address differs from where you open it, put it in `publicUrl` at the top of the file.
 

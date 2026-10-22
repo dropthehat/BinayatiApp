@@ -1190,8 +1190,10 @@ function niceError(e) {
   var m = (e && (e.message || e.error_description)) || String(e);
   if (/Failed to fetch|NetworkError|Load failed|fetch failed/i.test(m)) return t('No connection to the server. Check your internet and try again.', 'لا اتصال بالخادم. تحقق من الإنترنت وحاول مجدداً.');
   if (/row-level security|permission denied/i.test(m)) return t('Your role can\'t do that', 'دورك لا يسمح بذلك');
-  if (/Invalid login credentials/i.test(m)) return t('Wrong username or password', 'اسم المستخدم أو كلمة المرور خطأ');
-  if (/already registered|already been registered/i.test(m)) return t('That username is taken', 'اسم المستخدم مستعمل');
+  if (/Invalid login credentials/i.test(m)) return t('Wrong email or password', 'البريد أو كلمة المرور خطأ');
+  if (/already registered|already been registered/i.test(m)) return t('There is already an account with this email. Sign in instead.', 'يوجد حساب بهذا البريد. سجّل الدخول.');
+  if (/email.*invalid|invalid.*email/i.test(m)) return t('That email address isn\'t accepted. Check it for typos.', 'هذا البريد غير مقبول. تحقق منه.');
+  if (/Email not confirmed/i.test(m)) return t('Confirm your email first: open the link we sent you.', 'أكّد بريدك أولاً من الرابط المرسل.');
   if (/Password should be/i.test(m)) return t('Password must be at least 6 characters', 'كلمة المرور 6 أحرف على الأقل');
   if (/schema cache|does not exist/i.test(m)) return t('The server isn\'t set up yet: run schema.sql in Supabase', 'الخادم غير مُعد بعد: شغّل schema.sql في Supabase');
   return m;
@@ -1282,8 +1284,8 @@ var LOCAL_RPC = {
    --------------------------------------------------------------------------- */
 function usernameToEmail(u) {
   u = String(u || '').trim().toLowerCase();
-  if (u.indexOf('@') > 0) return u;
-  return u.replace(/[^a-z0-9._-]/g, '') + '@users.binayati.app';
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(u)) throw new Error(t('Enter a valid email address', 'أدخل بريداً إلكترونياً صحيحاً'));
+  return u;
 }
 function cloudSession() {
   return SB.auth.getSession().then(function(r) { return r.data && r.data.session; });
@@ -1297,8 +1299,7 @@ function cloudSignIn(username, password) {
 function cloudSignUp(username, password, name) {
   return SB.auth.signUp({ email: usernameToEmail(username), password: password, options: { data: { name: name } } }).then(function(r) {
     if (r.error) throw new Error(niceError(r.error));
-    if (!r.data.session) throw new Error(t('Account created, but Supabase wants email confirmation. Turn off "Confirm email" in Supabase → Authentication → Providers → Email, then sign in.',
-                                           'تم إنشاء الحساب لكن Supabase يطلب تأكيد البريد. أوقف "Confirm email" ثم سجّل الدخول.'));
+    if (!r.data.session) { var e = new Error(t('Almost there: open the confirmation link we just emailed you, then come back and sign in.', 'تقريباً: افتح رابط التأكيد الذي أرسلناه لبريدك ثم عد وسجّل الدخول.')); e.confirm = true; throw e; }
     return r.data.session;
   });
 }
@@ -2846,7 +2847,7 @@ function loadSample() {
 }
 
 /* ---------------------------------------------------------------------------
-   Accounts (cloud only). Usernames, no email needed.
+   Accounts (cloud only). Email and password.
    --------------------------------------------------------------------------- */
 function renderAuth() {
   var a = UI.auth || { mode: 'in' };
@@ -2857,7 +2858,7 @@ function renderAuth() {
   if (a.invite) h += '<h1>' + esc(t('Join ' + a.invite.building, 'انضم إلى ' + (a.invite.building_ar || a.invite.building))) + '</h1><p class="sub">' + esc(t('You were invited as ' + roleLabel(a.invite.role).toLowerCase() + '.', 'دُعيت ك' + roleLabel(a.invite.role) + '.')) + '</p>';
   else h += '<h1>' + esc(up ? t('Create your account', 'أنشئ حسابك') : t('Welcome back', 'أهلاً بعودتك')) + '</h1>';
   if (up) h += '<label class="field"><span>' + esc(t('Your name', 'اسمك')) + '</span><input class="input" id="au-name" value="' + esc(a.name || (a.invite && a.invite.display_name) || '') + '" autocomplete="name"></label>';
-  h += '<label class="field"><span>' + esc(t('Username', 'اسم المستخدم')) + '</span><input class="input" id="au-user" autocapitalize="none" autocomplete="username" placeholder="' + esc(t('e.g. carl', 'مثلاً carl')) + '"' + (up ? '' : ' data-autofocus') + '></label>';
+  h += '<label class="field"><span>' + esc(t('Email', 'البريد الإلكتروني')) + '</span><input class="input" id="au-user" type="email" inputmode="email" autocapitalize="none" autocomplete="email" dir="ltr" placeholder="' + esc(t('you@example.com', 'you@example.com')) + '"' + (up ? '' : ' data-autofocus') + '></label>';
   h += '<label class="field"><span>' + esc(t('Password', 'كلمة المرور')) + '</span><input class="input" id="au-pass" type="password" autocomplete="' + (up ? 'new-password' : 'current-password') + '" onkeydown="if(event.key===\'Enter\')authGo()"></label>';
   h += '<div id="ob-err" class="err"></div></div>';
   h += '<div class="ob-foot"><button class="btn pri block" id="au-go" onclick="authGo()">' + esc(up ? t('Create account', 'أنشئ الحساب') : t('Sign in', 'دخول')) + '</button>';
@@ -2872,17 +2873,22 @@ function authGo() {
   var a = UI.auth, up = a.mode === 'up';
   var user = val('au-user').trim(), pass = val('au-pass'), name = up ? val('au-name').trim() : '';
   var err = document.getElementById('ob-err');
-  if (!user || !pass) { err.textContent = t('Enter a username and password', 'أدخل اسم المستخدم وكلمة المرور'); return; }
+  if (!user || !pass) { err.textContent = t('Enter your email and a password', 'أدخل بريدك وكلمة مرور'); return; }
   if (up && !name) { err.textContent = t('Enter your name', 'أدخل اسمك'); return; }
   var btn = document.getElementById('au-go'); btn.disabled = true;
-  (up ? cloudSignUp(user, pass, name) : cloudSignIn(user, pass)).then(function() {
+  if (up) a.name = name;
+  Promise.resolve().then(function() { return up ? cloudSignUp(user, pass, name) : cloudSignIn(user, pass); }).then(function() {
     if (a.invite) return rpc('join_building', { p_code: a.invite.code, p_display_name: name || a.invite.display_name }).then(function(bid) {
       history.replaceState(null, '', location.pathname);
       return openBuilding(bid).then(function() { UI.screen = 'app'; UI.tab = 'home'; HERO_REVEAL = true; render(); launchConfetti(); });
     });
-    if (OB) return finishSetup(name || user);
+    if (OB) return finishSetup(name || a.name || user.split('@')[0]);
     return afterSignIn();
-  }).catch(function(e) { btn.disabled = false; err.textContent = e.message; });
+  }).catch(function(e) {
+    btn.disabled = false;
+    if (e.confirm) { a.mode = 'in'; render(); var el = document.getElementById('ob-err'); if (el) { el.style.color = 'var(--ok)'; el.textContent = e.message; } var u = document.getElementById('au-user'); if (u) u.value = user; return; }
+    err.textContent = e.message;
+  });
 }
 function signOut() {
   SB.auth.signOut().then(function() { try { localStorage.removeItem('bny15_last'); } catch (e) {} location.href = location.pathname; });

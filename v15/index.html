@@ -370,6 +370,12 @@ a.btn { text-decoration: none; }
 .cf-layer { position: fixed; inset: 0; pointer-events: none; z-index: 400; overflow: hidden; }
 .cf-layer i { position: absolute; top: -24px; width: 8px; height: 13px; border-radius: 2px; animation-name: cfFall; animation-timing-function: cubic-bezier(.25,.6,.4,1); animation-fill-mode: forwards; }
 @keyframes cfFall { to { transform: translateY(112vh) rotate(560deg); } }
+/* Underground floors */
+.bh.day { --earth:#C9AE8A; --base:#DCCDB3; --strata:#A88B66; }
+.bh.dusk { --earth:#B9958A; --base:#D9C2B2; --strata:#9A7A70; }
+.bh.eve { --earth:#5C4A68; --base:#7A6B8E; --strata:#47395A; }
+.bh.night { --earth:#2E2A58; --base:#4A5796; --strata:#24204A; }
+.bh-earth{fill:var(--earth)} .bh-base{fill:var(--base)} .bh-strata{fill:none;stroke:var(--strata);stroke-width:.6;opacity:.6}
 
 </style>
 </head>
@@ -750,6 +756,40 @@ var CATS = {
 function catIcon(k) { return (CATS[k] || CATS.other)[0]; }
 function catName(k) { var c = CATS[k] || CATS.other; return LANG === 'ar' ? c[2] : c[1]; }
 
+/* ---------------------------------------------------------------------------
+   Which floor an apartment is on, read from its code:
+   SS1A / SS2 / -1 → underground, G / GF / 0 → ground, 2B / 12 / 201 → that floor.
+   --------------------------------------------------------------------------- */
+function unitLevel(code) {
+  var c = String(code || '').trim().toUpperCase().replace(/\s+/g, '');
+  var m;
+  if ((m = c.match(/^SS(\d*)/))) return -(Number(m[1]) || 1);
+  if ((m = c.match(/^-(\d+)/))) return -Number(m[1]);
+  if (/^(G|RDC|0)/.test(c)) return 0;
+  if ((m = c.match(/^(\d+)/))) { var v = Number(m[1]); return m[1].length >= 3 ? Math.floor(v / 100) : v; }
+  return null;
+}
+/* Group scene windows into floors. items: [{code, win}]. Returns null when codes don't say. */
+function levelsFor(items) {
+  var known = items.filter(function(x) { return unitLevel(x.code) != null; });
+  if (!items.length || known.length < items.length / 2) return null;
+  var by = {};
+  items.forEach(function(x) {
+    var lv = unitLevel(x.code);
+    if (lv == null) lv = 1;
+    (by[lv] = by[lv] || []).push(x);
+  });
+  return Object.keys(by).map(function(k) {
+    var row = by[k].sort(function(a, b) { return String(a.code).localeCompare(String(b.code), 'en', { numeric: true }); });
+    // more than 6 on one floor: split into extra rows above so nothing is hidden
+    return { lv: Number(k), wins: row.map(function(x) { return x.win; }) };
+  }).reduce(function(out, r) {
+    if (r.wins.length <= 6) { out.push(r); return out; }
+    for (var i = 0; i < r.wins.length; i += 6) out.push({ lv: r.lv + i / 600, wins: r.wins.slice(i, i + 6) });
+    return out;
+  }, []);
+}
+
 /* Living building scene — carried over from V13 (windows = who paid, sky = real time of day). */
 function sunTimesLocal(d) {
  var lat = 33.89, lon = 35.5;
@@ -793,19 +833,36 @@ function heroRailPath(x, w, y1, y2) {
 function buildBuildingScene(o) {
  var P = o.idp || 'bh';
  var ph = o.phase;
- var n = o.wins.length;
- var cols = n <= 12 ? 2 : 4;
- var floors = Math.max(1, Math.ceil(n / cols));
- var fh = floors <= 5 ? 28 : Math.max(14, Math.floor(150 / floors));
- var bw = cols === 2 ? 150 : 220;
+ /* Rows of windows. o.levels = [{lv, wins}] with lv 1, 2… above ground, 0 = ground floor,
+    -1, -2… underground (SS1, SS2). Without levels, windows fill rows of 2 or 4. */
+ var levels = o.levels;
+ if (!levels) {
+   var lc = o.wins.length <= 12 ? 2 : 4;
+   levels = [];
+   for (var li = 0; li < o.wins.length; li += lc) levels.push({ lv: li / lc + 1, wins: o.wins.slice(li, li + lc) });
+ }
+ var upRows = levels.filter(function(r) { return r.lv >= 0; }).sort(function(a, b) { return a.lv - b.lv; });
+ var downRows = levels.filter(function(r) { return r.lv < 0; }).sort(function(a, b) { return b.lv - a.lv; });
+ if (!upRows.length) upRows = [{ lv: 1, wins: [] }];
+ var maxPer = 1;
+ levels.forEach(function(r) { maxPer = Math.max(maxPer, r.wins.length); });
+ maxPer = Math.min(6, maxPer);
+ var cols = maxPer;
+ var single = maxPer === 1;
+ var even = !single && maxPer % 2 === 1;  // 3 or 5 per floor: spread evenly, no stairwell in the middle
+ var floors = upRows.length, basements = downRows.length, rowsN = floors + basements;
+ var fh = rowsN <= 5 ? 28 : Math.max(14, Math.floor(150 / rowsN));
+ var bw = maxPer <= 2 ? 150 : maxPer === 3 ? 196 : maxPer === 4 ? 220 : 250;
  var bx = 183 - bw / 2, bx2 = bx + bw;
  var lobbyTop = 197, top = lobbyTop - floors * fh;
- var perSide = cols / 2, gapW = 6;
+ var perSide = Math.ceil(maxPer / 2), gapW = 6;
  var perHalf = (bw - 24 - 26) / 2;
- var ww = (perHalf - (perSide - 1) * gapW) / perSide;
+ var ww = single ? perHalf : even ? (bw - 24 - (maxPer - 1) * gapW) / maxPer : (perHalf - (perSide - 1) * gapW) / perSide;
  var wh = fh * 0.61;
+ var bH = basements ? basements * fh + 6 : 0;
+ var n = o.wins ? o.wins.length : 0;
 
- var vb = o.bare ? (bx - 66) + ' ' + (top - 42) + ' ' + (bw + 132) + ' ' + (240 - (top - 42)) : '0 0 366 256';
+ var vb = o.bare ? (bx - 66) + ' ' + (top - 42) + ' ' + (bw + 132) + ' ' + (240 - (top - 42) + bH) : '0 ' + (basements ? bH : 0) + ' 366 256';
  var s = '<svg class="bh-art" viewBox="' + vb + '" preserveAspectRatio="' + (o.bare ? 'xMidYMax meet' : 'xMidYMid slice') + '" xmlns="http://www.w3.org/2000/svg" aria-hidden="' + (o.interactive ? 'false' : 'true') + '">';
  s += '<defs>';
  s += '<linearGradient id="' + P + 'Sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sky1)"/><stop offset="0.55" style="stop-color:var(--sky2)"/><stop offset="1" style="stop-color:var(--sky3)"/></linearGradient>';
@@ -823,7 +880,7 @@ function buildBuildingScene(o) {
  if (!o.bare) {
  s += '<g class="bh-bg">';
  // Sky, sun / moon, stars, clouds
- s += '<rect width="366" height="256" fill="url(#' + P + 'Sky)"/>';
+ s += '<rect width="366" height="' + (256 + bH) + '" fill="url(#' + P + 'Sky)"/>';
  s += '<g class="bh-sun"><circle cx="' + heroR(ph.sunX) + '" cy="' + heroR(ph.sunY) + '" r="40" fill="url(#' + P + 'SunGlow)"/><circle cx="' + heroR(ph.sunX) + '" cy="' + heroR(ph.sunY) + '" r="14" style="fill:var(--sun)"/></g>';
  s += '<g class="bh-moon"><circle cx="314" cy="40" r="34" fill="url(#' + P + 'SunGlow)"/><circle cx="314" cy="40" r="12" fill="#F7F1DE"/><circle cx="310" cy="37" r="2.6" fill="#E6DDC2"/><circle cx="318" cy="44" r="1.8" fill="#E6DDC2"/></g>';
  [[90,18],[140,40],[190,14],[236,34],[280,12],[322,76],[112,62],[300,90],[24,84],[166,74],[60,30],[250,58]].forEach(function(p, i) {
@@ -903,41 +960,64 @@ function buildBuildingScene(o) {
  // Floors: building core, slabs, AC units
  for (var f = 0; f < floors; f++) {
  var ft = lobbyTop - (f + 1) * fh;
- s += '<rect class="bh-core" x="178" y="' + heroR(ft + fh * 0.25) + '" width="10" height="' + heroR(fh * 0.46) + '" rx="0.6"/>';
+ if (!single && !even) s += '<rect class="bh-core" x="178" y="' + heroR(ft + fh * 0.25) + '" width="10" height="' + heroR(fh * 0.46) + '" rx="0.6"/>';
  s += '<rect class="bh-slab" x="' + (bx - 4) + '" y="' + heroR(ft + fh * 0.89) + '" width="' + (bw + 8) + '" height="' + heroR(Math.max(2, fh * 0.1)) + '"/>';
  s += '<rect class="bh-slabEdge" x="' + (bx - 4) + '" y="' + heroR(ft + fh * 0.89 + Math.max(2, fh * 0.1)) + '" width="' + (bw + 8) + '" height="0.8"/>';
  if (f % 2 === 1) s += '<rect class="bh-ac" x="' + (bx2 - 9) + '" y="' + heroR(ft + fh * 0.5) + '" width="8" height="5" rx="0.6"/>';
  }
 
+ // Underground floors (SS1, SS2…): a cut-away below the pavement
+ if (basements) {
+   var ex0 = o.bare ? bx - 40 : 0, ex1 = o.bare ? bx2 + 40 : 366;
+   s += '<rect class="bh-earth" x="' + ex0 + '" y="231" width="' + (ex1 - ex0) + '" height="' + (bH + 30) + '"' + (o.bare ? ' rx="6"' : '') + '/>';
+   for (var sy = 240; sy < 231 + bH + 30; sy += 9) s += '<path class="bh-strata" d="M' + ex0 + ' ' + sy + ' Q ' + ((ex0 + ex1) / 2) + ' ' + (sy + 3) + ' ' + ex1 + ' ' + sy + '"/>';
+   s += '<rect class="bh-base" x="' + bx + '" y="231" width="' + bw + '" height="' + bH + '"/>';
+   for (var bi = 0; bi < basements; bi++) {
+     var bt = 231 + bi * fh;
+     s += '<rect class="bh-slab" x="' + bx + '" y="' + heroR(bt + fh - 1.5) + '" width="' + bw + '" height="1.5"/>';
+   }
+   s += '<text x="' + (bx2 + 6) + '" y="' + (240) + '" style="font-size:5px;font-weight:800;fill:var(--strata)">SS</text>';
+ }
+
  // Windows (one per apartment) + railings
- var rails = '';
- for (var i = 0; i < floors * cols; i++) {
- var w = o.wins[i];
- if (!w) continue;
- var fl = Math.floor(i / cols), k = i % cols;
- var ft2 = lobbyTop - (fl + 1) * fh;
- var half = k < perSide ? 0 : 1, kk = k % perSide;
- var x = heroR((half === 0 ? bx + 12 : 183 + 13) + kk * (ww + gapW));
- var y = heroR(ft2 + fh * 0.21);
- rails += heroRailPath(x, ww, ft2 + fh * 0.64, ft2 + fh * 0.89);
- var lit = w.state === 'paid';
- if (w.onclick) {
- s += '<g class="bh-win" role="button" tabindex="0" aria-label="' + esc(w.label || '') + '" onclick="' + w.onclick + '" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();' + w.onclick + '}">';
- if (w.label) s += '<title>' + esc(w.label) + '</title>';
- } else {
- s += '<g class="bh-win-static">';
+ var rails = '', wi = 0;
+ function winX(j, k) {
+   if (single) return 183 - ww / 2;
+   if (even) return bx + 12 + (j + (maxPer - k) / 2) * (ww + gapW);
+   var L = Math.ceil(k / 2), half = j < L ? 0 : 1, kk = half ? j - L : j;
+   return (half === 0 ? bx + 12 : 183 + 13) + kk * (ww + gapW);
  }
- if (lit) s += '<rect class="bh-halo" x="' + x + '" y="' + y + '" width="' + heroR(ww) + '" height="' + heroR(wh) + '" fill="url(#' + P + 'Warm)" filter="url(#' + P + 'Glow)" opacity=".8"/>';
- s += '<rect class="bh-frame" x="' + heroR(x - 1.2) + '" y="' + heroR(y - 1.2) + '" width="' + heroR(ww + 2.4) + '" height="' + heroR(wh + 2.4) + '" rx="1" style="fill:var(--rail)"/>';
- s += '<rect x="' + x + '" y="' + y + '" width="' + heroR(ww) + '" height="' + heroR(wh) + '" ' + (lit ? 'fill="url(#' + P + 'Warm)"' : 'class="bh-glassOff"') + '/>';
- var shW = lit ? 3 : ww / 2;
- s += '<rect x="' + x + '" y="' + y + '" width="' + heroR(shW) + '" height="' + heroR(wh) + '" fill="url(#' + P + 'Slat)"/>';
- s += '<rect x="' + heroR(x + ww - shW) + '" y="' + y + '" width="' + heroR(shW) + '" height="' + heroR(wh) + '" fill="url(#' + P + 'Slat)"/>';
- s += '<rect class="bh-mull" x="' + heroR(x + ww / 2 - 0.6) + '" y="' + y + '" width="1.2" height="' + heroR(wh) + '"/>';
- if (w.state === 'owes') s += '<circle class="bh-dot" cx="' + heroR(x + ww - 4) + '" cy="' + heroR(y + 4) + '" r="2.6"/>';
- if (o.drops) s += '<circle class="bh-drop" cx="' + heroR(x + ww / 2) + '" cy="' + heroR(y - 1) + '" r="1.8" style="animation-delay:' + (i * 0.17).toFixed(2) + 's"/>';
- s += '</g>';
+ function drawWin(w, x, y, wh2) {
+   var lit = w.state === 'paid';
+   x = heroR(x); y = heroR(y);
+   if (w.onclick) {
+     s += '<g class="bh-win" role="button" tabindex="0" aria-label="' + esc(w.label || '') + '" onclick="' + w.onclick + '" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();' + w.onclick + '}">';
+     if (w.label) s += '<title>' + esc(w.label) + '</title>';
+   } else s += '<g class="bh-win-static">';
+   if (lit) s += '<rect class="bh-halo" x="' + x + '" y="' + y + '" width="' + heroR(ww) + '" height="' + heroR(wh2) + '" fill="url(#' + P + 'Warm)" filter="url(#' + P + 'Glow)" opacity=".8"/>';
+   s += '<rect class="bh-frame" x="' + heroR(x - 1.2) + '" y="' + heroR(y - 1.2) + '" width="' + heroR(ww + 2.4) + '" height="' + heroR(wh2 + 2.4) + '" rx="1" style="fill:var(--rail)"/>';
+   s += '<rect x="' + x + '" y="' + y + '" width="' + heroR(ww) + '" height="' + heroR(wh2) + '" ' + (lit ? 'fill="url(#' + P + 'Warm)"' : 'class="bh-glassOff"') + '/>';
+   var shW = lit ? 3 : ww / 2;
+   s += '<rect x="' + x + '" y="' + y + '" width="' + heroR(shW) + '" height="' + heroR(wh2) + '" fill="url(#' + P + 'Slat)"/>';
+   s += '<rect x="' + heroR(x + ww - shW) + '" y="' + y + '" width="' + heroR(shW) + '" height="' + heroR(wh2) + '" fill="url(#' + P + 'Slat)"/>';
+   s += '<rect class="bh-mull" x="' + heroR(x + ww / 2 - 0.6) + '" y="' + y + '" width="1.2" height="' + heroR(wh2) + '"/>';
+   if (w.state === 'owes') s += '<circle class="bh-dot" cx="' + heroR(x + ww - 4) + '" cy="' + heroR(y + 4) + '" r="2.6"/>';
+   if (o.drops) s += '<circle class="bh-drop" cx="' + heroR(x + ww / 2) + '" cy="' + heroR(y - 1) + '" r="1.8" style="animation-delay:' + (wi * 0.17).toFixed(2) + 's"/>';
+   s += '</g>';
+   wi++;
  }
+ upRows.forEach(function(row, fl) {
+   var ft2 = lobbyTop - (fl + 1) * fh;
+   row.wins.slice(0, 6).forEach(function(w, j) {
+     var x = winX(j, row.wins.length);
+     rails += heroRailPath(x, ww, ft2 + fh * 0.64, ft2 + fh * 0.89);
+     drawWin(w, x, ft2 + fh * 0.21, wh);
+   });
+ });
+ downRows.forEach(function(row, bi) {
+   var bt = 231 + bi * fh;
+   row.wins.slice(0, 6).forEach(function(w, j) { drawWin(w, winX(j, row.wins.length), bt + fh * 0.22, fh * 0.5); });
+ });
 
  // Lobby
  s += '<rect class="bh-lobby" x="' + bx + '" y="' + lobbyTop + '" width="' + bw + '" height="29"/>';
@@ -951,8 +1031,11 @@ function buildBuildingScene(o) {
 
  // Street
  if (!o.bare) {
- s += '<g class="bh-bg"><rect class="bh-side" x="0" y="226" width="366" height="7"/><rect class="bh-street" x="0" y="233" width="366" height="23"/>';
- for (var lx = 14; lx < 366; lx += 48) s += '<rect class="bh-lane" x="' + lx + '" y="245" width="16" height="1.4"/>';
+ s += '<g class="bh-bg"><rect class="bh-side" x="0" y="226" width="366" height="' + (basements ? 5 : 7) + '"/>';
+ if (!basements) {
+   s += '<rect class="bh-street" x="0" y="233" width="366" height="23"/>';
+   for (var lx = 14; lx < 366; lx += 48) s += '<rect class="bh-lane" x="' + lx + '" y="245" width="16" height="1.4"/>';
+ }
  s += '</g>';
  }
 
@@ -1520,11 +1603,12 @@ function heroHtml(cyc, opts) {
     return { state: state, label: lbl, onclick: opts.noTap ? null : 'openSheet(\'unit\',{id:' + jsArg(u.id) + '})' };
   });
   if (!wins.length) wins = [{ state: 'closed' }];
+  var levels = units.length ? levelsFor(units.map(function(u, i) { return { code: u.code, win: wins[i] }; })) : null;
   var cash = opts.noSafe ? null : cashState();
   var reveal = HERO_REVEAL; HERO_REVEAL = false;
   var safe = cash ? { split: true, usdH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.USD) / 40)), lbpH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.LBP) / 4e6)) } : null;
   var html = buildBuildingScene({
-    phase: ph, wins: wins, interactive: !opts.noTap, idp: opts.idp || 'hm', signText: S.building.name, chip: ph.chip,
+    phase: ph, wins: wins, levels: levels, interactive: !opts.noTap, idp: opts.idp || 'hm', signText: S.building.name, chip: ph.chip,
     safe: safe, coreGlow: openTasks().some(function(x) { return x.due_on && x.due_on <= todayIso(); }),
     extraCls: reveal ? 'reveal' : ''
   });
@@ -2725,10 +2809,13 @@ function welcomeLit() {
   var n = (Math.floor(Date.now() / 700) % 12);
   return Math.min(9, n);
 }
+/* n is a count, or a list of apartment codes so floors (and underground floors) are drawn right. */
 function obScene(lit, n, sign, celebrate, extra) {
+  var codes = Array.isArray(n) ? n : null, count = codes ? codes.length : n;
   var wins = [];
-  for (var i = 0; i < n; i++) wins.push({ state: i < lit ? 'paid' : 'closed' });
-  return buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, wins: wins, signText: sign || 'Building', idp: 'ob',
+  for (var i = 0; i < count; i++) wins.push({ state: i < lit ? 'paid' : 'closed' });
+  var levels = codes ? levelsFor(codes.map(function(c, i) { return { code: c, win: wins[i] }; })) : null;
+  return buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, wins: wins, levels: levels, signText: sign || 'Building', idp: 'ob',
                               safe: extra && extra.safe, solar: true, extraCls: 'studio bh-bare bh-ob nopop', celebrate: celebrate });
 }
 function tickWelcome() {
@@ -2741,25 +2828,26 @@ function tickWelcome() {
 }
 
 function startSetup() {
-  OB = { step: 1, name: '', nameAr: '', floors: 4, per: 2, fee: '', cur: 'USD', split: 'each', who: 'other', colName: '', openUsd: '', openLbp: '' };
+  OB = { step: 1, name: '', nameAr: '', floors: 4, per: 2, under: 0, fee: '', cur: 'USD', split: 'each', who: 'other', colName: '', openUsd: '', openLbp: '' };
   UI.screen = 'ob';
   render();
 }
 var OB_STEPS = 5;
 function obUnits() {
   var out = [], letters = 'ABCDEFGH';
-  for (var f = 1; f <= OB.floors; f++) for (var k = 0; k < OB.per; k++) out.push(OB.per === 1 ? String(f) : f + letters.charAt(k));
+  for (var b = OB.under || 0; b >= 1; b--) for (var k = 0; k < OB.per; k++) out.push(OB.per === 1 ? 'SS' + b : 'SS' + b + letters.charAt(k));
+  for (var f = 1; f <= OB.floors; f++) for (var k2 = 0; k2 < OB.per; k2++) out.push(OB.per === 1 ? String(f) : f + letters.charAt(k2));
   return out;
 }
 function renderOnboarding() {
-  var n = OB.floors * OB.per, step = OB.step;
+  var n = (OB.floors + (OB.under || 0)) * OB.per, step = OB.step;
   var lit = { 1: 0, 2: 0, 3: Math.round(n * 0.3), 4: Math.round(n * 0.6), 5: n, 6: n }[step] || 0;
   var safe = step >= 5 ? { split: true, usdH: Math.min(22, 4 + num(OB.openUsd) / 40), lbpH: Math.min(22, 4 + num(OB.openLbp) / 4e6) } : null;
   var h = '<div class="ob"><div class="ob-in">';
   h += '<div class="ob-top"><button class="iconbtn" onclick="obBack()" aria-label="' + esc(t('Back', 'رجوع')) + '">' + (LANG === 'ar' ? '›' : '‹') + '</button><div class="ob-dots">';
   for (var i = 1; i <= OB_STEPS; i++) h += '<i class="' + (i <= Math.min(step, OB_STEPS) ? 'on' : '') + '"></i>';
   h += '</div><button class="iconbtn" onclick="setLang()">' + (LANG === 'ar' ? 'EN' : 'ع') + '</button></div>';
-  h += '<div class="ob-stage">' + obScene(lit, Math.max(1, n), OB.name || t('Your building', 'بنايتك'), step === 6, { safe: safe }) + '</div>';
+  h += '<div class="ob-stage">' + obScene(lit, obUnits(), OB.name || t('Your building', 'بنايتك'), step === 6, { safe: safe }) + '</div>';
   h += '<div class="ob-body">';
   if (step === 1) {
     h += '<h1>' + esc(t('What\'s the building called?', 'ما اسم البناية؟')) + '</h1><p class="sub">' + esc(t('It goes on the sign and on every receipt.', 'يظهر على اللافتة وعلى كل إيصال.')) + '</p>';
@@ -2768,7 +2856,8 @@ function renderOnboarding() {
   } else if (step === 2) {
     h += '<h1>' + esc(t(n + ' apartments', n + ' شقق')) + '</h1><p class="sub">' + esc(t('Roughly is fine. You can rename, add shops or remove any later.', 'تقريباً يكفي. يمكنك التعديل وإضافة محلات لاحقاً.')) + '</p>';
     h += '<div class="ob-step"><div><b>' + esc(t('Floors', 'الطوابق')) + '</b></div><div class="stepper"><button onclick="obBump(\'floors\',-1)">−</button><span>' + OB.floors + '</span><button onclick="obBump(\'floors\',1)">+</button></div></div>';
-    h += '<div class="ob-step"><div><b>' + esc(t('Apartments per floor', 'شقق في الطابق')) + '</b><small>' + esc(obUnits().slice(0, 4).join(', ') + '…') + '</small></div><div class="stepper"><button onclick="obBump(\'per\',-1)">−</button><span>' + OB.per + '</span><button onclick="obBump(\'per\',1)">+</button></div></div>';
+    h += '<div class="ob-step"><div><b>' + esc(t('Apartments per floor', 'شقق في الطابق')) + '</b><small>' + esc(obUnits().filter(function(c) { return c.indexOf('SS') !== 0; }).slice(0, 4).join(', ') + '…') + '</small></div><div class="stepper"><button onclick="obBump(\'per\',-1)">−</button><span>' + OB.per + '</span><button onclick="obBump(\'per\',1)">+</button></div></div>';
+    h += '<div class="ob-step"><div><b>' + esc(t('Underground floors', 'طوابق سفلية')) + '</b><small>' + esc(OB.under ? obUnits().filter(function(c) { return c.indexOf('SS') === 0; }).slice(0, 3).join(', ') + (OB.under * OB.per > 3 ? '…' : '') : t('SS1, SS2… if any', 'SS1، SS2… إن وُجدت')) + '</small></div><div class="stepper"><button onclick="obBump(\'under\',-1)">−</button><span>' + (OB.under || 0) + '</span><button onclick="obBump(\'under\',1)">+</button></div></div>';
   } else if (step === 3) {
     h += '<h1>' + esc(t('The monthly fee', 'الرسم الشهري')) + '</h1><p class="sub">' + esc(t('What each apartment pays for upkeep. Bills, moteur and projects come later.', 'ما تدفعه كل شقة للصيانة. الفواتير والموتور والمشاريع لاحقاً.')) + '</p>';
     h += '<label class="field"><div class="money-in"><input class="input" id="ob-fee" inputmode="decimal" value="' + esc(OB.fee) + '" placeholder="20" oninput="OB.fee=this.value" data-autofocus><div class="seg"><button class="' + (OB.cur === 'USD' ? 'on' : '') + '" onclick="OB.cur=\'USD\';render()">USD</button><button class="' + (OB.cur === 'LBP' ? 'on' : '') + '" onclick="OB.cur=\'LBP\';render()">LBP</button></div></div></label>';
@@ -2797,7 +2886,13 @@ function obSign() {
   el.textContent = txt;
   if (txt.length > 8) { el.setAttribute('textLength', '38'); el.setAttribute('lengthAdjust', 'spacingAndGlyphs'); } else el.removeAttribute('textLength');
 }
-function obBump(k, d) { OB[k] = Math.max(1, Math.min(k === 'floors' ? 12 : 6, OB[k] + d)); if (OB.floors * OB.per > 48) OB[k] -= d; render(); }
+function obBump(k, d) {
+  var min = k === 'under' ? 0 : 1, max = k === 'floors' ? 12 : k === 'under' ? 3 : 6;
+  var was = OB[k] || 0;
+  OB[k] = Math.max(min, Math.min(max, was + d));
+  if ((OB.floors + (OB.under || 0)) * OB.per > 48) OB[k] = was;
+  render();
+}
 function obBack() { if (OB.step <= 1) { UI.screen = 'welcome'; render(); tickWelcome(); return; } OB.step--; render(); }
 function obNext() {
   var err = document.getElementById('ob-err');
@@ -2849,7 +2944,7 @@ function finishSetup(displayName) {
 
 /* A filled-in example so people can poke around before committing. */
 function loadSample() {
-  OB = { step: 6, name: 'Block C', nameAr: 'البلوك C', floors: 4, per: 2, fee: 20, cur: 'USD', split: 'each', who: 'other', colName: 'Anas', openUsd: 450, openLbp: 18000000 };
+  OB = { step: 6, name: 'Block C', nameAr: 'البلوك C', floors: 4, per: 2, under: 0, fee: 20, cur: 'USD', split: 'each', who: 'other', colName: 'Anas', openUsd: 450, openLbp: 18000000 };
   finishSetup('Carl').then(function() {
     var cyc = currentCycle(); if (!cyc) return;
     var us = activeUnits();
@@ -2877,7 +2972,7 @@ function renderAuth() {
   var a = UI.auth || { mode: 'in' };
   var up = a.mode === 'up';
   var h = '<div class="ob"><div class="ob-in"><div class="ob-top"><button class="iconbtn" onclick="authBack()">' + (LANG === 'ar' ? '›' : '‹') + '</button><span></span><button class="iconbtn" onclick="setLang()">' + (LANG === 'ar' ? 'EN' : 'ع') + '</button></div>';
-  h += '<div class="ob-stage" style="flex:0 1 200px">' + obScene(up ? 99 : 3, OB ? OB.floors * OB.per : (a.invite ? 6 : 8), OB ? OB.name : (a.invite ? a.invite.building : 'Binayati'), up && !!OB) + '</div>';
+  h += '<div class="ob-stage" style="flex:0 1 200px">' + obScene(up ? 99 : 3, OB ? obUnits() : (a.invite ? 6 : 8), OB ? OB.name : (a.invite ? a.invite.building : 'Binayati'), up && !!OB) + '</div>';
   h += '<div class="ob-body">';
   if (a.invite) h += '<h1>' + esc(t('Join ' + a.invite.building, 'انضم إلى ' + (a.invite.building_ar || a.invite.building))) + '</h1><p class="sub">' + esc(t('You were invited as ' + roleLabel(a.invite.role).toLowerCase() + '.', 'دُعيت ك' + roleLabel(a.invite.role) + '.')) + '</p>';
   else h += '<h1>' + esc(up ? t('Create your account', 'أنشئ حسابك') : t('Welcome back', 'أهلاً بعودتك')) + '</h1>';

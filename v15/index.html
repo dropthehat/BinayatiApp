@@ -398,6 +398,18 @@ a.btn { text-decoration: none; }
 .bh-sconce{fill:#3A3540} .bh-sconceGlow{fill:#FFD98A;opacity:.55}
 .bh.day .bh-sconceGlow{opacity:.25}
 
+/* Concrete underground + podium (v15.2) */
+.bh.day   { --conc:#C9C6C0; --base:#E2DFD9; --concDk:#A9A59E; --floorLine:#D2CEC7; --plinth:#E9E7E2; --plinthLip:#FFF3D0; }
+.bh.dusk  { --conc:#C4BCBA; --base:#DDD5D2; --concDk:#A39A98; --floorLine:#CEC5C2; --plinth:#E6DEDB; --plinthLip:#FFD9A0; }
+.bh.eve   { --conc:#8E8698; --base:#A59DAF; --concDk:#6E6678; --floorLine:#958D9F; --plinth:#B1A9BB; --plinthLip:#FFC979; }
+.bh.night { --conc:#5D6488; --base:#717A9E; --concDk:#454C70; --floorLine:#646C90; --plinth:#7D86AC; --plinthLip:#FFD27A; }
+.bh-concDk{fill:var(--concDk)} .bh-floorLine{fill:var(--floorLine)} .bh-plinth{fill:var(--plinth)} .bh-plinthHi{fill:#fff;opacity:.5}
+.bh-plinthLip{fill:var(--plinthLip);opacity:.55}
+.bh.day .bh-plinthLip{opacity:.35}
+/* Neighbours step back so our building leads */
+.bh:not(.bh-bare) .bh-neigh, .bh:not(.bh-bare) .bh-nline, .bh:not(.bh-bare) .bh-nw { opacity:.6 }
+.bh.day .bh-neigh{fill:#DCE1E8} .bh.day .bh-nline{fill:#CBD2DC} .bh.day .bh-nw{fill:#A9B7C8}
+
 </style>
 </head>
 <body>
@@ -1292,11 +1304,14 @@ function buildBuildingScene(o) {
    var ex0 = o.bare ? bx - 52 : 0, ex1 = o.bare ? bx2 + 52 : 366, eH = bH + 40;
    s += '<rect class="bh-earth" x="' + ex0 + '" y="229" width="' + (ex1 - ex0) + '" height="' + eH + '"' + (o.bare ? ' rx="8"' : '') + '/>';
    s += '<rect x="' + ex0 + '" y="229" width="' + (ex1 - ex0) + '" height="' + eH + '" fill="url(#' + P + 'Soil)"' + (o.bare ? ' rx="8"' : '') + '/>';
-   s += '<rect class="bh-conc" x="' + (bx - 3) + '" y="229" width="' + (bw + 6) + '" height="' + (bH + 4) + '" rx="1"/>';
-   s += '<rect class="bh-base" x="' + (bx - 1) + '" y="231" width="' + (bw + 2) + '" height="' + (bH - 0.5) + '"/>';
+   // concrete cut-away: thin grey shell, lighter back wall, slab per level
+   s += '<rect class="bh-conc" x="' + (bx - 6) + '" y="229" width="' + (bw + 12) + '" height="' + (bH + 4) + '"/>';
+   s += '<rect class="bh-base" x="' + (bx - 2.5) + '" y="231" width="' + (bw + 5) + '" height="' + (bH - 0.5) + '"/>';
+   s += '<rect class="bh-concDk" x="' + (bx - 6) + '" y="229" width="1" height="' + (bH + 4) + '"/><rect class="bh-concDk" x="' + (bx2 + 5) + '" y="229" width="1" height="' + (bH + 4) + '"/>';
    for (var bi = 0; bi < basements; bi++) {
      var bt = 231 + bi * fh;
-     s += '<rect class="bh-slab" x="' + (bx - 1) + '" y="' + heroR(bt + fh - 1.6) + '" width="' + (bw + 2) + '" height="1.6"/>';
+     if (bi > 0) s += '<rect class="bh-conc" x="' + (bx - 2.5) + '" y="' + heroR(bt - 1) + '" width="' + (bw + 5) + '" height="2.4"/>';
+     s += '<rect class="bh-floorLine" x="' + (bx - 2.5) + '" y="' + heroR(bt + fh - 2.6) + '" width="' + (bw + 5) + '" height="1.4"/>';
      var sc = (!single && !even) ? [181.5] : [];
      sc.push(bx + 2, bx2 - 5);
      sc.forEach(function(scx) {
@@ -1405,6 +1420,12 @@ function buildBuildingScene(o) {
  // Railings drawn over the windows
  if (rails) s += '<path class="bh-rail" d="' + rails + '" style="stroke-width:.6"/>';
  s += plants;
+ // Ground-floor plinth: a wide light slab with a soft lip, like a podium
+ if (basements) {
+   s += '<rect class="bh-plinthLip" x="' + (bx - 48) + '" y="228" width="' + (bw + 96) + '" height="2.2" rx="1.1"/>';
+   s += '<rect class="bh-plinth" x="' + (bx - 52) + '" y="223.5" width="' + (bw + 104) + '" height="5" rx=".6"/>';
+   s += '<rect class="bh-plinthHi" x="' + (bx - 52) + '" y="223.5" width="' + (bw + 104) + '" height=".8"/>';
+ }
  // Hedges along the pavement either side of the entrance
  [[bx - 46, bx - 6], [bx2 + 14, bx2 + 50]].forEach(function(seg, si) {
    if (!o.bare && !basements) return;

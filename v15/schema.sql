@@ -452,7 +452,7 @@ begin
   res := jsonb_build_object(
     'building', jsonb_build_object('id', b.id, 'name', b.name, 'name_ar', b.name_ar, 'settings', b.settings - 'notes'),
     'unit', to_jsonb(u) - 'resident_token' - 'phone',
-    'units', (select coalesce(jsonb_agg(jsonb_build_object('id', x.id, 'code', x.code, 'weight', x.weight, 'active', x.active, 'sort', x.sort)), '[]')
+    'units', (select coalesce(jsonb_agg(jsonb_build_object('id', x.id, 'code', x.code, 'weight', x.weight, 'active', x.active, 'sort', x.sort, 'created_at', x.created_at)), '[]')
                 from public.units x where x.building_id = b.id),
     'cycles', (select coalesce(jsonb_agg(to_jsonb(c)), '[]') from public.cycles c where c.building_id = b.id and c.published),
     'charges', (select coalesce(jsonb_agg(to_jsonb(ch)), '[]') from public.charges ch

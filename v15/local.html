@@ -376,6 +376,13 @@ a.btn { text-decoration: none; }
 .bh.eve { --earth:#5C4A68; --base:#7A6B8E; --strata:#47395A; }
 .bh.night { --earth:#2E2A58; --base:#4A5796; --strata:#24204A; }
 .bh-earth{fill:var(--earth)} .bh-base{fill:var(--base)} .bh-strata{fill:none;stroke:var(--strata);stroke-width:.6;opacity:.6}
+.bh.day { --earth:#4A3A2E; --grain:#6B5646; --conc:#E4E1DA; --base:#EFE6D6; }
+.bh.dusk { --earth:#3E302C; --grain:#5E4A42; --conc:#E2D8D2; --base:#EBDCCF; }
+.bh.eve { --earth:#271E28; --grain:#3E3140; --conc:#A79BB4; --base:#8E7E9E; }
+.bh.night { --earth:#16131E; --grain:#2A2434; --conc:#8C96C8; --base:#5E6DB0; }
+.bh-grain{fill:var(--grain)} .bh-conc{fill:var(--conc)} .bh-pot{fill:#8A5A3C}
+.bh-sconce{fill:#3A3540} .bh-sconceGlow{fill:#FFD98A;opacity:.55}
+.bh.day .bh-sconceGlow{opacity:.25}
 
 </style>
 </head>
@@ -509,17 +516,32 @@ function activeUnits() {
     return (a.sort || 0) - (b.sort || 0) || String(a.code).localeCompare(String(b.code), 'en', { numeric: true });
   });
 }
-function weightSum() { return activeUnits().reduce(function(s, u) { return s + num(u.weight == null ? 1 : u.weight); }, 0) || 1; }
+/* An apartment added later isn't billed for months before it existed. */
+function unitInCycle(u, cyc) {
+  if (!u || u.active === false) return false;
+  if (!cyc || !u.created_at) return true;
+  var made = dayKey(u.created_at);
+  if (cyc.kind === 'month' && cyc.period) return made.slice(0, 7) <= cyc.period;
+  return !cyc.created_at || made <= dayKey(cyc.created_at);
+}
+/* A shared bill is split among the apartments that existed when it was added. */
+function inSplit(u, ch) { return !ch || !ch.created_at || !u.created_at || u.created_at <= ch.created_at; }
+function weightSum(cyc, ch) {
+  return activeUnits().filter(function(u) { return unitInCycle(u, cyc) && inSplit(u, ch); })
+    .reduce(function(s, u) { return s + num(u.weight == null ? 1 : u.weight); }, 0) || 1;
+}
 
 /* What one apartment owes for one charge. */
 function dueFor(ch, u) {
   if (!u || u.active === false) return 0;
   var ov = ch.overrides || {};
   if (ov[u.id] != null && ov[u.id] !== '') return num(ov[u.id]);
+  var cyc = byId(S.cycles, ch.cycle_id);
+  if (!unitInCycle(u, cyc)) return 0;
   if (ch.pass_through || ch.split === 'custom') return 0;
   var w = num(u.weight == null ? 1 : u.weight);
   if (ch.split === 'weight') return round(num(ch.amount) * w, ch.cur);
-  if (ch.split === 'total') return round(num(ch.amount) * w / weightSum(), ch.cur);
+  if (ch.split === 'total') return inSplit(u, ch) ? round(num(ch.amount) * w / weightSum(cyc, ch), ch.cur) : 0;
   return num(ch.amount);
 }
 function chargesOf(cycleId) {
@@ -790,6 +812,140 @@ function levelsFor(items) {
   }, []);
 }
 
+/* ============================================================================
+   Ready-made lists, in English and Arabic, so filling things in is a pick
+   rather than typing. Amounts are only suggestions; everything stays editable.
+   split: each = same for every apartment, total = one bill shared by share,
+   custom = per subscriber.
+   ============================================================================ */
+var CHARGE_PRESETS = {
+  fixed: [
+    { g: ['Upkeep', 'الصيانة والتشغيل'], en: 'Building maintenance', ar: 'صيانة البناية', amt: 20, cur: 'USD', split: 'each' },
+    { g: ['Upkeep', 'الصيانة والتشغيل'], en: 'Staircase & common areas cleaning', ar: 'تنظيف الدرج والأقسام المشتركة', amt: 10, cur: 'USD', split: 'each' },
+    { g: ['Upkeep', 'الصيانة والتشغيل'], en: 'Elevator maintenance contract', ar: 'عقد صيانة المصعد', amt: 60, cur: 'USD', split: 'total' },
+    { g: ['Upkeep', 'الصيانة والتشغيل'], en: 'Water pump maintenance', ar: 'صيانة مضخة المياه', amt: 20, cur: 'USD', split: 'total' },
+    { g: ['Upkeep', 'الصيانة والتشغيل'], en: 'Garden care', ar: 'العناية بالحديقة', amt: 40, cur: 'USD', split: 'total' },
+    { g: ['Upkeep', 'الصيانة والتشغيل'], en: 'Garbage collection', ar: 'جمع النفايات', amt: 3, cur: 'USD', split: 'each' },
+    { g: ['Staff', 'الموظفون'], en: 'Natour (concierge) salary', ar: 'راتب الناطور', amt: 300, cur: 'USD', split: 'total' },
+    { g: ['Staff', 'الموظفون'], en: 'Security guard', ar: 'أجر الحارس', amt: 400, cur: 'USD', split: 'total' },
+    { g: ['Staff', 'الموظفون'], en: 'Cleaner', ar: 'أجر عامل التنظيف', amt: 100, cur: 'USD', split: 'total' },
+    { g: ['Power & water', 'الكهرباء والمياه'], en: 'Common areas electricity (EDL meter)', ar: 'كهرباء الأقسام المشتركة (عداد الدولة)', amt: 2000000, cur: 'LBP', split: 'total' },
+    { g: ['Power & water', 'الكهرباء والمياه'], en: 'Common areas generator subscription', ar: 'اشتراك المولد للأقسام المشتركة', amt: 40, cur: 'USD', split: 'total' },
+    { g: ['Power & water', 'الكهرباء والمياه'], en: 'Building generator diesel', ar: 'مازوت مولّد البناية', amt: 150, cur: 'USD', split: 'total' },
+    { g: ['Power & water', 'الكهرباء والمياه'], en: 'Water subscription (monthly share)', ar: 'اشتراك المياه (الحصة الشهرية)', amt: 1000000, cur: 'LBP', split: 'total' },
+    { g: ['Savings', 'الادخار'], en: 'Reserve fund', ar: 'صندوق الاحتياط', amt: 5, cur: 'USD', split: 'each' },
+    { g: ['Savings', 'الادخار'], en: 'Solar system installment', ar: 'قسط نظام الطاقة الشمسية', amt: 25, cur: 'USD', split: 'each' }
+  ],
+  due: [
+    { g: ['Water', 'المياه'], en: 'Water bill (Water Establishment)', ar: 'فاتورة مؤسسة المياه', amt: 10000000, cur: 'LBP', split: 'total' },
+    { g: ['Water', 'المياه'], en: 'Water tanker fill', ar: 'نقلة صهريج مياه', amt: 40, cur: 'USD', split: 'total' },
+    { g: ['Water', 'المياه'], en: 'Water tank cleaning', ar: 'تنظيف خزانات المياه', amt: 80, cur: 'USD', split: 'total' },
+    { g: ['Water', 'المياه'], en: 'Water pump repair', ar: 'تصليح مضخة المياه', amt: 60, cur: 'USD', split: 'total' },
+    { g: ['Power', 'الكهرباء'], en: 'EDL bill (common meter)', ar: 'فاتورة كهرباء الدولة (العداد المشترك)', amt: 3000000, cur: 'LBP', split: 'total' },
+    { g: ['Power', 'الكهرباء'], en: 'Generator diesel top-up', ar: 'تعبئة مازوت للمولّد', amt: 200, cur: 'USD', split: 'total' },
+    { g: ['Power', 'الكهرباء'], en: 'Generator repair', ar: 'تصليح المولّد', amt: 100, cur: 'USD', split: 'total' },
+    { g: ['Power', 'الكهرباء'], en: 'Solar batteries replacement', ar: 'تبديل بطاريات الطاقة الشمسية', amt: 600, cur: 'USD', split: 'total' },
+    { g: ['Repairs', 'التصليحات'], en: 'Elevator repair', ar: 'تصليح المصعد', amt: 150, cur: 'USD', split: 'total' },
+    { g: ['Repairs', 'التصليحات'], en: 'Plumbing repair', ar: 'تصليحات صحية', amt: 50, cur: 'USD', split: 'total' },
+    { g: ['Repairs', 'التصليحات'], en: 'Electrical repair', ar: 'تصليحات كهربائية', amt: 50, cur: 'USD', split: 'total' },
+    { g: ['Repairs', 'التصليحات'], en: 'Intercom or entrance door repair', ar: 'تصليح الإنترفون أو باب المدخل', amt: 60, cur: 'USD', split: 'total' },
+    { g: ['Repairs', 'التصليحات'], en: 'Garage gate repair', ar: 'تصليح باب الموقف', amt: 80, cur: 'USD', split: 'total' },
+    { g: ['Repairs', 'التصليحات'], en: 'Roof waterproofing', ar: 'عزل السطح', amt: 1500, cur: 'USD', split: 'total' },
+    { g: ['Repairs', 'التصليحات'], en: 'Painting common areas', ar: 'دهان الأقسام المشتركة', amt: 800, cur: 'USD', split: 'total' },
+    { g: ['Safety & admin', 'السلامة والإدارة'], en: 'Fire extinguishers refill', ar: 'تعبئة طفايات الحريق', amt: 60, cur: 'USD', split: 'total' },
+    { g: ['Safety & admin', 'السلامة والإدارة'], en: 'Pest control', ar: 'رش مبيدات', amt: 50, cur: 'USD', split: 'total' },
+    { g: ['Safety & admin', 'السلامة والإدارة'], en: 'Building insurance', ar: 'تأمين البناية', amt: 300, cur: 'USD', split: 'total' },
+    { g: ['Safety & admin', 'السلامة والإدارة'], en: 'Municipality fees (common parts)', ar: 'رسوم البلدية (الأقسام المشتركة)', amt: 5000000, cur: 'LBP', split: 'total' },
+    { g: ['Safety & admin', 'السلامة والإدارة'], en: 'Lawyer or syndicate fees', ar: 'أتعاب المحامي أو النقابة', amt: 100, cur: 'USD', split: 'total' },
+    { g: ['Other', 'أخرى'], en: 'Common light bulbs', ar: 'لمبات الأقسام المشتركة', amt: 20, cur: 'USD', split: 'total' },
+    { g: ['Other', 'أخرى'], en: 'Holiday decoration', ar: 'زينة الأعياد', amt: 50, cur: 'USD', split: 'total' }
+  ],
+  service: [
+    { g: ['Collected for a supplier', 'تُجمع لمورّد'], en: 'Private generator (moteur)', ar: 'اشتراك الموتور', cur: 'USD' },
+    { g: ['Collected for a supplier', 'تُجمع لمورّد'], en: 'Internet', ar: 'اشتراك الإنترنت', cur: 'USD' },
+    { g: ['Collected for a supplier', 'تُجمع لمورّد'], en: 'Satellite dish', ar: 'اشتراك الدش', cur: 'USD' },
+    { g: ['Collected for a supplier', 'تُجمع لمورّد'], en: 'Cable TV', ar: 'اشتراك الكابل', cur: 'USD' },
+    { g: ['Collected for a supplier', 'تُجمع لمورّد'], en: 'Drinking water delivery', ar: 'توصيل مياه الشرب', cur: 'USD' },
+    { g: ['Collected for a supplier', 'تُجمع لمورّد'], en: 'Cooking gas', ar: 'غاز الطبخ', cur: 'USD' },
+    { g: ['Collected for a supplier', 'تُجمع لمورّد'], en: 'Solar power share', ar: 'حصة الطاقة الشمسية', cur: 'USD' },
+    { g: ['Collected for a supplier', 'تُجمع لمورّد'], en: 'Parking space rent', ar: 'إيجار موقف السيارة', cur: 'USD' }
+  ]
+};
+
+var EXPENSE_PRESETS = [
+  { cat: 'gen', en: 'Generator diesel', ar: 'مازوت المولّد' },
+  { cat: 'gen', en: 'Generator oil & filters', ar: 'زيت وفلاتر المولّد' },
+  { cat: 'gen', en: 'Generator repair', ar: 'تصليح المولّد' },
+  { cat: 'elev', en: 'Elevator monthly service', ar: 'صيانة المصعد الشهرية' },
+  { cat: 'elev', en: 'Elevator repair', ar: 'تصليح المصعد' },
+  { cat: 'water', en: 'Water bill', ar: 'فاتورة المياه' },
+  { cat: 'water', en: 'Water tanker', ar: 'صهريج مياه' },
+  { cat: 'water', en: 'Water tank cleaning', ar: 'تنظيف خزانات المياه' },
+  { cat: 'water', en: 'Water pump repair', ar: 'تصليح مضخة المياه' },
+  { cat: 'clean', en: 'Cleaning supplies', ar: 'مواد تنظيف' },
+  { cat: 'clean', en: 'Garbage bags', ar: 'أكياس نفايات' },
+  { cat: 'clean', en: 'Pest control', ar: 'رش مبيدات' },
+  { cat: 'light', en: 'Light bulbs', ar: 'لمبات إنارة' },
+  { cat: 'light', en: 'EDL bill (common meter)', ar: 'فاتورة كهرباء الدولة (العداد المشترك)' },
+  { cat: 'light', en: 'Electrician', ar: 'كهربائي' },
+  { cat: 'repair', en: 'Plumber', ar: 'سنكري' },
+  { cat: 'repair', en: 'Locksmith / door repair', ar: 'تصليح أقفال وأبواب' },
+  { cat: 'repair', en: 'Intercom repair', ar: 'تصليح الإنترفون' },
+  { cat: 'repair', en: 'Painting', ar: 'دهان' },
+  { cat: 'repair', en: 'Roof waterproofing', ar: 'عزل السطح' },
+  { cat: 'repair', en: 'Fire extinguishers refill', ar: 'تعبئة طفايات الحريق' },
+  { cat: 'staff', en: 'Natour salary', ar: 'راتب الناطور' },
+  { cat: 'staff', en: 'Cleaner pay', ar: 'أجر عامل التنظيف' },
+  { cat: 'staff', en: 'Gardener', ar: 'جنيناتي' },
+  { cat: 'other', en: 'Building insurance', ar: 'تأمين البناية' },
+  { cat: 'other', en: 'Municipality fees', ar: 'رسوم البلدية' },
+  { cat: 'other', en: 'Transport / delivery', ar: 'نقل وتوصيل' }
+];
+
+var TASK_PRESETS = [
+  { g: ['Water', 'المياه'], en: 'Clean water tanks', ar: 'تنظيف خزانات المياه', rep: 'halfyear', who: 'collector' },
+  { g: ['Water', 'المياه'], en: 'Check the water pump', ar: 'فحص مضخة المياه', rep: 'monthly', who: 'collector' },
+  { g: ['Water', 'المياه'], en: 'Read the water meters', ar: 'قراءة عدادات المياه', rep: 'monthly', who: 'collector' },
+  { g: ['Water', 'المياه'], en: 'Order a water tanker', ar: 'طلب صهريج مياه', rep: 'none', who: 'manager' },
+  { g: ['Power', 'الكهرباء'], en: 'Generator oil change', ar: 'تغيير زيت المولّد', rep: 'monthly', who: 'collector' },
+  { g: ['Power', 'الكهرباء'], en: 'Top up generator diesel', ar: 'تعبئة مازوت المولّد', rep: 'weekly', who: 'collector' },
+  { g: ['Power', 'الكهرباء'], en: 'Dust the solar panels', ar: 'تنظيف ألواح الطاقة الشمسية', rep: 'monthly', who: 'collector' },
+  { g: ['Power', 'الكهرباء'], en: 'Replace burnt common lights', ar: 'تبديل اللمبات المحروقة', rep: 'monthly', who: 'collector' },
+  { g: ['Cleaning', 'التنظيف'], en: 'Clean the staircase', ar: 'تنظيف الدرج', rep: 'weekly', who: 'collector' },
+  { g: ['Cleaning', 'التنظيف'], en: 'Wash the trash bins', ar: 'غسل مستوعبات النفايات', rep: 'weekly', who: 'collector' },
+  { g: ['Cleaning', 'التنظيف'], en: 'Clean the entrance glass', ar: 'تنظيف زجاج المدخل', rep: 'weekly', who: 'collector' },
+  { g: ['Cleaning', 'التنظيف'], en: 'Clear roof drains before winter', ar: 'تنظيف مجاري السطح قبل الشتاء', rep: 'yearly', who: 'collector' },
+  { g: ['Cleaning', 'التنظيف'], en: 'Clean basement drains & light wells', ar: 'تنظيف مجاري الطابق السفلي والمناور', rep: 'quarterly', who: 'collector' },
+  { g: ['Cleaning', 'التنظيف'], en: 'Water the garden', ar: 'سقاية الحديقة', rep: 'weekly', who: 'collector' },
+  { g: ['Safety', 'السلامة'], en: 'Elevator service visit', ar: 'زيارة صيانة المصعد', rep: 'monthly', who: 'manager' },
+  { g: ['Safety', 'السلامة'], en: 'Elevator safety certificate', ar: 'شهادة سلامة المصعد', rep: 'yearly', who: 'manager' },
+  { g: ['Safety', 'السلامة'], en: 'Check fire extinguishers', ar: 'فحص طفايات الحريق', rep: 'yearly', who: 'manager' },
+  { g: ['Safety', 'السلامة'], en: 'Pest control', ar: 'رش مبيدات', rep: 'halfyear', who: 'manager' },
+  { g: ['Safety', 'السلامة'], en: 'Test the intercom & door lock', ar: 'فحص الإنترفون وقفل الباب', rep: 'quarterly', who: 'collector' },
+  { g: ['Admin', 'الإدارة'], en: 'Collect the monthly dues', ar: 'جمع المستحقات الشهرية', rep: 'monthly', who: 'collector' },
+  { g: ['Admin', 'الإدارة'], en: 'Share the monthly report', ar: 'مشاركة التقرير الشهري', rep: 'monthly', who: 'manager' },
+  { g: ['Admin', 'الإدارة'], en: 'Renew building insurance', ar: 'تجديد تأمين البناية', rep: 'yearly', who: 'manager' },
+  { g: ['Admin', 'الإدارة'], en: 'Pay the generator owner', ar: 'الدفع لصاحب المولّد', rep: 'monthly', who: 'manager' },
+  { g: ['Admin', 'الإدارة'], en: 'Residents\' meeting', ar: 'اجتماع السكان', rep: 'halfyear', who: 'manager' }
+];
+
+/* A <select> that lists presets grouped, each shown in both languages. */
+function presetSelect(id, list, onchange, label) {
+  var h = '<select class="input preset-pick" id="' + id + '" onchange="' + onchange + '"><option value="">' + esc(label || t('Pick from the list…', 'اختر من القائمة…')) + '</option>';
+  var group = null;
+  list.forEach(function(p, i) {
+    var gk = p.g ? p.g[0] : (p.cat ? catName(p.cat) : '');
+    if (gk !== group) {
+      if (group !== null) h += '</optgroup>';
+      group = gk;
+      h += '<optgroup label="' + esc(p.g ? (LANG === 'ar' ? p.g[1] + ' · ' + p.g[0] : p.g[0] + ' · ' + p.g[1]) : catIcon(p.cat) + ' ' + gk) + '">';
+    }
+    h += '<option value="' + i + '">' + esc(LANG === 'ar' ? p.ar + ' · ' + p.en : p.en + ' · ' + p.ar) + '</option>';
+  });
+  if (group !== null) h += '</optgroup>';
+  return h + '</select>';
+}
+
 /* Living building scene — carried over from V13 (windows = who paid, sky = real time of day). */
 function sunTimesLocal(d) {
  var lat = 33.89, lon = 35.5;
@@ -874,6 +1030,7 @@ function buildBuildingScene(o) {
  s += '<linearGradient id="' + P + 'TkB" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:#8FB6EC"/><stop offset="0.6" style="stop-color:#4F7FC8"/><stop offset="1" style="stop-color:#2E4F8C"/></linearGradient>';
  s += '<pattern id="' + P + 'Slat" width="4" height="3" patternUnits="userSpaceOnUse"><rect width="4" height="2" style="fill:var(--sh)"/><rect y="2" width="4" height="1" style="fill:var(--sl)"/></pattern>';
  s += '<filter id="' + P + 'Glow" x="-40%" y="-80%" width="180%" height="260%"><feGaussianBlur stdDeviation="2.6"/></filter>';
+ s += '<pattern id="' + P + 'Soil" width="11" height="9" patternUnits="userSpaceOnUse"><circle cx="2" cy="2.5" r=".55" class="bh-grain"/><circle cx="7.5" cy="6.5" r=".45" class="bh-grain"/><circle cx="9.5" cy="1.5" r=".35" class="bh-grain"/><circle cx="4" cy="7.5" r=".3" class="bh-grain"/></pattern>';
  s += '<filter id="' + P + 'Blur" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="5"/></filter>';
  s += '</defs>';
 
@@ -966,21 +1123,32 @@ function buildBuildingScene(o) {
  if (f % 2 === 1) s += '<rect class="bh-ac" x="' + (bx2 - 9) + '" y="' + heroR(ft + fh * 0.5) + '" width="8" height="5" rx="0.6"/>';
  }
 
- // Underground floors (SS1, SS2…): a cut-away below the pavement
+ // Underground floors (SS1, SS2…): a concrete box sunk into the soil, seen in cut-away
  if (basements) {
-   var ex0 = o.bare ? bx - 40 : 0, ex1 = o.bare ? bx2 + 40 : 366;
-   s += '<rect class="bh-earth" x="' + ex0 + '" y="231" width="' + (ex1 - ex0) + '" height="' + (bH + 30) + '"' + (o.bare ? ' rx="6"' : '') + '/>';
-   for (var sy = 240; sy < 231 + bH + 30; sy += 9) s += '<path class="bh-strata" d="M' + ex0 + ' ' + sy + ' Q ' + ((ex0 + ex1) / 2) + ' ' + (sy + 3) + ' ' + ex1 + ' ' + sy + '"/>';
-   s += '<rect class="bh-base" x="' + bx + '" y="231" width="' + bw + '" height="' + bH + '"/>';
+   var ex0 = o.bare ? bx - 52 : 0, ex1 = o.bare ? bx2 + 52 : 366, eH = bH + 40;
+   s += '<rect class="bh-earth" x="' + ex0 + '" y="229" width="' + (ex1 - ex0) + '" height="' + eH + '"' + (o.bare ? ' rx="8"' : '') + '/>';
+   s += '<rect x="' + ex0 + '" y="229" width="' + (ex1 - ex0) + '" height="' + eH + '" fill="url(#' + P + 'Soil)"' + (o.bare ? ' rx="8"' : '') + '/>';
+   s += '<rect class="bh-conc" x="' + (bx - 7) + '" y="228" width="' + (bw + 14) + '" height="' + (bH + 8) + '" rx="1"/>';
+   s += '<rect class="bh-base" x="' + (bx - 2) + '" y="231" width="' + (bw + 4) + '" height="' + (bH - 1) + '"/>';
    for (var bi = 0; bi < basements; bi++) {
      var bt = 231 + bi * fh;
-     s += '<rect class="bh-slab" x="' + bx + '" y="' + heroR(bt + fh - 1.5) + '" width="' + bw + '" height="1.5"/>';
+     s += '<rect class="bh-conc" x="' + (bx - 2) + '" y="' + heroR(bt + fh - 2.5) + '" width="' + (bw + 4) + '" height="2.5"/>';
+     var sc = (!single && !even) ? [181.5] : [];
+     sc.push(bx + 2, bx2 - 5);
+     sc.forEach(function(scx) {
+       s += '<circle class="bh-sconceGlow" cx="' + heroR(scx + 1.5) + '" cy="' + heroR(bt + fh * 0.36) + '" r="4.5" filter="url(#' + P + 'Glow)"/>';
+       s += '<rect class="bh-sconce" x="' + heroR(scx) + '" y="' + heroR(bt + fh * 0.3) + '" width="3" height="4" rx=".6"/>';
+     });
    }
-   s += '<text x="' + (bx2 + 6) + '" y="' + (240) + '" style="font-size:5px;font-weight:800;fill:var(--strata)">SS</text>';
  }
 
  // Windows (one per apartment) + railings
- var rails = '', wi = 0;
+ var rails = '', wi = 0, plants = '';
+ function plant(x, y) {
+   if (ww < 15 || fh < 18) return;
+   plants += '<rect class="bh-pot" x="' + heroR(x) + '" y="' + heroR(y - 2.4) + '" width="6" height="2.4" rx=".4"/>';
+   plants += '<circle class="bh-leaf" cx="' + heroR(x + 1.4) + '" cy="' + heroR(y - 3) + '" r="1.6"/><circle class="bh-leaf2" cx="' + heroR(x + 3.1) + '" cy="' + heroR(y - 3.9) + '" r="1.8"/><circle class="bh-leaf" cx="' + heroR(x + 4.7) + '" cy="' + heroR(y - 3) + '" r="1.5"/>';
+ }
  function winX(j, k) {
    if (single) return 183 - ww / 2;
    if (even) return bx + 12 + (j + (maxPer - k) / 2) * (ww + gapW);
@@ -1012,11 +1180,17 @@ function buildBuildingScene(o) {
      var x = winX(j, row.wins.length);
      rails += heroRailPath(x, ww, ft2 + fh * 0.64, ft2 + fh * 0.89);
      drawWin(w, x, ft2 + fh * 0.21, wh);
+     plant(x + 1, ft2 + fh * 0.64); plant(x + ww - 7, ft2 + fh * 0.64);
    });
  });
  downRows.forEach(function(row, bi) {
    var bt = 231 + bi * fh;
-   row.wins.slice(0, 6).forEach(function(w, j) { drawWin(w, winX(j, row.wins.length), bt + fh * 0.22, fh * 0.5); });
+   row.wins.slice(0, 6).forEach(function(w, j) {
+     var x = winX(j, row.wins.length);
+     drawWin(w, x, bt + fh * 0.16, fh * 0.56);
+     rails += heroRailPath(x, ww, bt + fh * 0.6, bt + fh * 0.88);
+     plant(x + 1, bt + fh * 0.6); plant(x + ww - 7, bt + fh * 0.6);
+   });
  });
 
  // Lobby
@@ -1041,6 +1215,15 @@ function buildBuildingScene(o) {
 
  // Railings drawn over the windows
  if (rails) s += '<path class="bh-rail" d="' + rails + '" style="stroke-width:.6"/>';
+ s += plants;
+ // Hedges along the pavement either side of the entrance
+ [[bx - 46, bx - 6], [bx2 + 14, bx2 + 50]].forEach(function(seg, si) {
+   if (!o.bare && !basements) return;
+   for (var hx = seg[0]; hx < seg[1]; hx += 5.5) {
+     var hr = 2.8 + ((hx * 7 + si * 3) % 5) * 0.35;
+     s += '<circle class="' + (Math.round(hx) % 2 ? 'bh-leaf' : 'bh-leaf2') + '" cx="' + heroR(hx) + '" cy="' + heroR(226 - hr * 0.6) + '" r="' + heroR(hr) + '"/>';
+   }
+ });
 
  // Left side: supplier box (Moteur / Internet) or a tree
  var tx = bx - 22;
@@ -2256,6 +2439,7 @@ SHEETS.expense = function(d) {
     Object.keys(CATS).forEach(function(k) { if (k === 'supplier') return; h += '<button class="chip' + (v.cat === k ? ' on' : '') + '" onclick="UI.sheet.data.cat=\'' + k + '\';keepExpense();render()">' + CATS[k][0] + ' ' + esc(catName(k)) + '</button>'; });
     h += '</div>';
   }
+  if (!sup && !e) h += '<label class="field"><span>' + esc(t('Common expenses', 'مصاريف شائعة')) + '</span>' + presetSelect('ex-pre', EXPENSE_PRESETS, 'expensePreset(this.value)') + '</label>';
   h += '<label class="field"><span>' + esc(t('What for', 'لماذا')) + '</span><input class="input" id="ex-title" value="' + esc(st.title != null ? st.title : v.title) + '" placeholder="' + esc(t('e.g. 200L diesel', 'مثلاً 200 ليتر مازوت')) + '"></label>';
   h += '<label class="field"><span>' + esc(t('Amount', 'المبلغ')) + '</span><div class="money-in"><input class="input" id="ex-amt" inputmode="decimal" value="' + esc(st.amount != null ? st.amount : v.amount) + '"><div class="seg"><button class="' + (v.cur === 'USD' ? 'on' : '') + '" onclick="keepExpense();UI.sheet.data.cur=\'USD\';render()">USD</button><button class="' + (v.cur === 'LBP' ? 'on' : '') + '" onclick="keepExpense();UI.sheet.data.cur=\'LBP\';render()">LBP</button></div></div></label>';
   if (isManager()) {
@@ -2272,6 +2456,14 @@ SHEETS.expense = function(d) {
   if (!e || isManager()) h += '<button class="btn pri" onclick="saveExpense(' + jsArg(e ? e.id : '') + ',' + jsArg(sup ? sup.id : '') + ')">' + esc(t('Save', 'حفظ')) + '</button>';
   return h + '</div>';
 };
+function expensePreset(i) {
+  if (i === '') return;
+  keepExpense();
+  var p = EXPENSE_PRESETS[i];
+  UI.sheet.data.title = LANG === 'ar' ? p.ar + ' · ' + p.en : p.en + ' · ' + p.ar;
+  UI.sheet.data.cat = p.cat;
+  render();
+}
 function keepExpense() {
   var d = UI.sheet.data;
   d.title = val('ex-title'); d.amount = val('ex-amt'); d.date = val('ex-date'); d.cyc = val('ex-cyc'); d.ref = val('ex-ref');
@@ -2328,7 +2520,8 @@ function renderBuilding() {
 
 /* ---------------- Apartments ---------------- */
 function renderUnitsSec() {
-  var h = '<div class="sec"><div class="sec-h"><h2>' + esc(t('Apartments', 'الشقق')) + '</h2><button onclick="openSheet(\'unitEdit\',{})">＋ ' + esc(t('Add', 'إضافة')) + '</button></div><div class="card list">';
+  var h = '<div class="sec"><button class="card li" style="border-radius:18px" onclick="openSheet(\'layout\',{})"><div class="ic">🏢</div><div class="grow"><b>' + esc(t('Floors & apartments per floor', 'الطوابق والشقق في كل طابق')) + '</b><small>' + esc(layoutSummary(currentLayout())) + '</small></div><span class="chev">›</span></button></div>';
+  h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Apartments', 'الشقق')) + '</h2><button onclick="openSheet(\'unitEdit\',{})">＋ ' + esc(t('Add', 'إضافة')) + '</button></div><div class="card list">';
   S.units.slice().sort(function(a, b) { return (a.sort || 0) - (b.sort || 0) || String(a.code).localeCompare(String(b.code), 'en', { numeric: true }); }).forEach(function(u) {
     h += '<button class="li" onclick="openSheet(\'unitEdit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(u.code) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc([u.phone || t('no phone', 'بلا هاتف'), num(u.weight) !== 1 ? t('share ×', 'حصة ×') + num(u.weight) : '', u.active === false ? t('inactive', 'غير فعّالة') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
   });
@@ -2442,6 +2635,7 @@ SHEETS.charge = function(d) {
   h += '<div class="seg" style="margin-top:8px">';
   ['fixed', 'due', 'service'].forEach(function(k) { h += '<button class="' + (kind === k ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.kind=\'' + k + '\';UI.sheet.data.split=null;render()">' + esc(LANG === 'ar' ? KIND_INFO[k][1] : KIND_INFO[k][0]) + '</button>'; });
   h += '</div><p class="hint">' + esc(LANG === 'ar' ? KIND_INFO[kind][3] : KIND_INFO[kind][2]) + '</p>';
+  h += '<label class="field"><span>' + esc(t('Common ones', 'الشائعة')) + '</span>' + presetSelect('c-pre', CHARGE_PRESETS[kind], 'chargePreset(this.value)') + '</label>';
   h += '<label class="field"><span>' + esc(t('Name', 'الاسم')) + '</span><input class="input" id="c-title" value="' + esc(st.title != null ? st.title : v.title) + '" placeholder="' + esc(kind === 'service' ? 'Moteur' : kind === 'due' ? t('Water bill', 'فاتورة المياه') : t('Maintenance', 'الصيانة')) + '"></label>';
   h += '<label class="field"><span>' + esc(t('Name in Arabic (optional)', 'الاسم بالعربية (اختياري)')) + '</span><input class="input" id="c-title-ar" dir="rtl" value="' + esc(st.title_ar != null ? st.title_ar : (v.title_ar || '')) + '"></label>';
   if (kind !== 'service') {
@@ -2463,6 +2657,15 @@ SHEETS.charge = function(d) {
   setTimeout(chargePreview, 0);
   return h;
 };
+function chargePreset(i) {
+  if (i === '') return;
+  keepCharge();
+  var d = UI.sheet.data, p = CHARGE_PRESETS[d.kind][i];
+  d.title = p.en; d.title_ar = p.ar; d.cur = p.cur;
+  if (p.amt != null) d.amount = p.amt;
+  if (d.kind !== 'service' && p.split) d.split = p.split;
+  render();
+}
 function keepCharge() {
   var d = UI.sheet.data;
   if (document.getElementById('c-title')) d.title = val('c-title');
@@ -2474,7 +2677,7 @@ function chargePreview() {
   var el = document.getElementById('c-prev');
   if (!el || !UI.sheet) return;
   var d = UI.sheet.data;
-  var tmp = { amount: num(d.amount), cur: d.cur, split: d.split, overrides: {}, pass_through: d.kind === 'service' };
+  var tmp = { amount: num(d.amount), cur: d.cur, split: d.split, overrides: {}, pass_through: d.kind === 'service', cycle_id: d.cycle || (byId(S.charges, d.id) || {}).cycle_id };
   var h = '';
   activeUnits().forEach(function(u) {
     var calc = dueFor(tmp, u), o = d.ov[u.id];
@@ -2629,16 +2832,13 @@ function renderTasksSec() {
   if (done.length) h += '<div class="daylbl">' + esc(t('Done', 'منجزة')) + '</div><div class="card">' + done.map(taskRow).join('') + '</div>';
   return h + '</div>';
 }
-var TASK_PRESETS = [['Clean water tanks', 'تنظيف خزانات المياه', 'halfyear'], ['Wash trash bins', 'غسل مستوعبات النفايات', 'weekly'], ['Elevator service', 'صيانة المصعد', 'monthly'],
-                    ['Check fire extinguishers', 'فحص طفايات الحريق', 'yearly'], ['Pest control', 'رش مبيدات', 'halfyear'], ['Dust solar panels', 'تنظيف ألواح الطاقة', 'monthly']];
+
 SHEETS.task = function(d) {
   var x = d.id ? byId(S.tasks, d.id) : null;
   var v = x || { title: '', title_ar: '', due_on: todayIso(), repeat: 'none', assignee: collectors().length ? 'collector' : 'manager' };
   var h = '<h3>' + esc(x ? t('Task', 'مهمة') : t('New task', 'مهمة جديدة')) + '</h3>';
   if (!x) {
-    h += '<div class="chips" style="padding:4px 0;flex-wrap:wrap">';
-    TASK_PRESETS.forEach(function(p, i) { h += '<button class="chip" onclick="taskPreset(' + i + ')">' + esc(LANG === 'ar' ? p[1] : p[0]) + '</button>'; });
-    h += '</div>';
+    h += '<label class="field"><span>' + esc(t('Common tasks', 'مهام شائعة')) + '</span>' + presetSelect('t-pre', TASK_PRESETS, 'taskPreset(this.value)') + '</label>';
   }
   h += '<label class="field"><span>' + esc(t('What', 'ماذا')) + '</span><input class="input" id="t-title" value="' + esc(L(v) || '') + '"></label>';
   h += '<div class="two"><label class="field"><span>' + esc(t('When', 'متى')) + '</span><input class="input" type="date" id="t-date" value="' + esc(v.due_on || '') + '"></label>';
@@ -2650,16 +2850,19 @@ SHEETS.task = function(d) {
   return h;
 };
 function taskPreset(i) {
+  if (i === '') return;
   var p = TASK_PRESETS[i];
-  document.getElementById('t-title').value = LANG === 'ar' ? p[1] : p[0];
-  document.getElementById('t-rep').value = p[2];
-  UI.sheet.data.preset = i;
+  document.getElementById('t-title').value = LANG === 'ar' ? p.ar : p.en;
+  document.getElementById('t-rep').value = p.rep;
+  if (p.who === 'manager' || collectors().length) document.getElementById('t-who').value = p.who;
+  UI.sheet.data.preset = Number(i);
 }
 function saveTask(id) {
   var title = val('t-title').trim();
   if (!title) return sheetErr(t('What needs doing?', 'ما المطلوب؟'));
   var p = UI.sheet.data.preset != null ? TASK_PRESETS[UI.sheet.data.preset] : null;
-  var row = { title: p && (title === p[0] || title === p[1]) ? p[0] : title, title_ar: p && (title === p[0] || title === p[1]) ? p[1] : (LANG === 'ar' ? title : null),
+  var same = p && (title === p.en || title === p.ar);
+  var row = { title: same ? p.en : title, title_ar: same ? p.ar : (LANG === 'ar' ? title : null),
               due_on: val('t-date') || null, repeat: val('t-rep'), assignee: val('t-who') };
   (id ? dbUpdate('tasks', id, row) : dbInsert('tasks', row)).then(function() { closeSheet(); }, function(e) { sheetErr(e.message); });
 }
@@ -2679,6 +2882,7 @@ function renderSettingsSec() {
   h += switchRow('show_who_paid', !!st.show_who_paid, t('Who has paid', 'من سدّد'), t('Light up neighbours\' windows on their page. Off keeps it private.', 'إظهار شبابيك الجيران المضاءة. الإيقاف يبقيها خاصة.'));
   h += '</div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Data', 'البيانات')) + '</h2></div><div class="card list">';
+  h += '<button class="li" onclick="openSheet(\'layout\',{})"><div class="ic">🏢</div><div class="grow"><b>' + esc(t('Floors & apartments', 'الطوابق والشقق')) + '</b><small>' + esc(layoutSummary(currentLayout())) + '</small></div><span class="chev">›</span></button>';
   h += '<button class="li" onclick="exportData()"><div class="ic">⬇︎</div><div class="grow"><b>' + esc(t('Download a copy', 'تنزيل نسخة')) + '</b><small>' + esc(t('Everything in this building, as a file', 'كل بيانات البناية في ملف')) + '</small></div></button>';
   h += '<button class="li" onclick="openSheet(\'server\')"><div class="ic">☁︎</div><div class="grow"><b>' + esc(t('Server', 'الخادم')) + '</b><small>' + esc(isCloud() ? t('Connected · syncing between phones', 'متصل · مزامنة بين الهواتف') : t('Not connected · this phone only', 'غير متصل · هذا الهاتف فقط')) + '</small></div><span class="chev">›</span></button>';
   h += '</div></div>';
@@ -2782,6 +2986,81 @@ function addPick(k) {
   openSheet(k, {});
 }
 
+
+/* ---------------- Building layout: fix floors after setup ---------------- */
+var LAYOUT_CODE = /^(SS\d+|\d+)[A-H]?$/;
+function currentLayout() {
+  var floors = 0, under = 0, per = 1, by = {};
+  activeUnits().forEach(function(u) {
+    var lv = unitLevel(u.code);
+    if (lv == null || lv === 0) return;
+    if (lv > 0) floors = Math.max(floors, lv); else under = Math.max(under, -lv);
+    by[lv] = (by[lv] || 0) + 1;
+    per = Math.max(per, by[lv]);
+  });
+  return { floors: Math.max(1, floors), per: Math.min(6, per), under: Math.min(3, under) };
+}
+function layoutSummary(l) {
+  return t(l.floors + ' floors × ' + l.per + (l.under ? ' · ' + l.under + ' underground' : ''), l.floors + ' طوابق × ' + l.per + (l.under ? ' · ' + l.under + ' سفلية' : ''));
+}
+function layoutPlan(l) {
+  var target = layoutCodes(l.floors, l.per, l.under), want = {};
+  target.forEach(function(c) { want[c] = 1; });
+  var byCode = {};
+  S.units.forEach(function(u) { byCode[String(u.code).toUpperCase()] = u; });
+  var add = [], revive = [], drop = [];
+  target.forEach(function(c) { var u = byCode[c]; if (!u) add.push(c); else if (u.active === false) revive.push(u); });
+  activeUnits().forEach(function(u) { var c = String(u.code).toUpperCase(); if (LAYOUT_CODE.test(c) && !want[c]) drop.push(u); });
+  return { target: target, add: add, revive: revive, drop: drop };
+}
+SHEETS.layout = function(d) {
+  if (!d.l) d.l = currentLayout();
+  var l = d.l, plan = layoutPlan(l);
+  var h = '<h3>' + esc(t('Floors & apartments', 'الطوابق والشقق')) + '</h3><p class="lead">' + esc(t('Fix the building if setup got it wrong. Apartments you renamed yourself are left alone.', 'صحّح البناية إذا أخطأ الإعداد. الشقق التي سمّيتها بنفسك لا تتغير.')) + '</p>';
+  h += '<div class="ob-stage" style="height:190px;padding:0">' + obScene(plan.target.length, plan.target, S.building.name, false) + '</div>';
+  [['floors', t('Floors', 'الطوابق'), 1, 12], ['per', t('Apartments per floor', 'شقق في الطابق'), 1, 6], ['under', t('Underground floors', 'طوابق سفلية'), 0, 3]].forEach(function(x) {
+    h += '<div class="ob-step"><div><b>' + esc(x[1]) + '</b></div><div class="stepper"><button onclick="layoutBump(\'' + x[0] + '\',-1,' + x[2] + ',' + x[3] + ')">−</button><span>' + l[x[0]] + '</span><button onclick="layoutBump(\'' + x[0] + '\',1,' + x[2] + ',' + x[3] + ')">+</button></div></div>';
+  });
+  var lines = [];
+  if (plan.add.length) lines.push(t('Adds ', 'يضيف ') + plan.add.join(', '));
+  if (plan.revive.length) lines.push(t('Brings back ', 'يعيد ') + plan.revive.map(function(u) { return u.code; }).join(', '));
+  if (plan.drop.length) {
+    var paid = plan.drop.filter(function(u) { return S.payments.some(function(p) { return p.unit_id === u.id && !p.voided_at; }); });
+    lines.push(t('Removes ', 'يحذف ') + plan.drop.map(function(u) { return u.code; }).join(', ') + (paid.length ? t(' (those with payments are kept as inactive)', ' (التي لها دفعات تبقى غير فعّالة)') : ''));
+  }
+  h += '<div class="card pad" style="margin-top:8px;font-size:13.5px">' + (lines.length ? lines.map(function(x) { return '<div style="padding:3px 0">' + esc(x) + '</div>'; }).join('') : '<span class="muted">' + esc(t('No change', 'لا تغيير')) + '</span>') + '</div>';
+  h += '<div id="sheet-err" class="err"></div><div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Cancel', 'إلغاء')) + '</button><button class="btn pri" ' + (lines.length ? '' : 'disabled ') + 'onclick="applyLayout()">' + esc(t('Apply', 'تطبيق')) + '</button></div>';
+  return h;
+};
+function layoutBump(k, dlt, min, max) {
+  var l = UI.sheet.data.l, was = l[k];
+  l[k] = Math.max(min, Math.min(max, was + dlt));
+  if ((l.floors + l.under) * l.per > 60) l[k] = was;
+  render();
+}
+function applyLayout() {
+  var plan = layoutPlan(UI.sheet.data.l), ops = Promise.resolve();
+  var base = S.units.length;
+  var rows = plan.add.map(function(c, i) { return { code: c, name: '', sort: base + i, weight: 1, lang: 'both', active: true, resident_token: token() }; });
+  if (rows.length) ops = ops.then(function() { return dbInsertMany('units', rows); });
+  plan.revive.forEach(function(u) { ops = ops.then(function() { return dbUpdate('units', u.id, { active: true }); }); });
+  plan.drop.forEach(function(u) {
+    var used = S.payments.some(function(p) { return p.unit_id === u.id; });
+    ops = ops.then(function() { return used ? dbUpdate('units', u.id, { active: false }) : dbDelete('units', u.id); });
+  });
+  // keep the list in building order: underground first, then floor by floor
+  ops.then(function() {
+    var all = S.units.slice().sort(function(a, b) {
+      var la = unitLevel(a.code), lb = unitLevel(b.code);
+      if (la == null) la = 99; if (lb == null) lb = 99;
+      return la - lb || String(a.code).localeCompare(String(b.code), 'en', { numeric: true });
+    });
+    var p2 = Promise.resolve();
+    all.forEach(function(u, i) { if (u.sort !== i) p2 = p2.then(function() { return dbUpdate('units', u.id, { sort: i }); }); });
+    return p2;
+  }).then(function() { closeSheet(); toast(t('Building updated', 'تم تحديث البناية')); }, function(e) { sheetErr(e.message); });
+}
+
 /* ============================================================================
    First run: show the building first, ask for an account last.
    Full screen, one idea per step, never scrolls.
@@ -2833,12 +3112,13 @@ function startSetup() {
   render();
 }
 var OB_STEPS = 5;
-function obUnits() {
+function layoutCodes(floors, per, under) {
   var out = [], letters = 'ABCDEFGH';
-  for (var b = OB.under || 0; b >= 1; b--) for (var k = 0; k < OB.per; k++) out.push(OB.per === 1 ? 'SS' + b : 'SS' + b + letters.charAt(k));
-  for (var f = 1; f <= OB.floors; f++) for (var k2 = 0; k2 < OB.per; k2++) out.push(OB.per === 1 ? String(f) : f + letters.charAt(k2));
+  for (var b = under || 0; b >= 1; b--) for (var k = 0; k < per; k++) out.push(per === 1 ? 'SS' + b : 'SS' + b + letters.charAt(k));
+  for (var f = 1; f <= floors; f++) for (var k2 = 0; k2 < per; k2++) out.push(per === 1 ? String(f) : f + letters.charAt(k2));
   return out;
 }
+function obUnits() { return layoutCodes(OB.floors, OB.per, OB.under || 0); }
 function renderOnboarding() {
   var n = (OB.floors + (OB.under || 0)) * OB.per, step = OB.step;
   var lit = { 1: 0, 2: 0, 3: Math.round(n * 0.3), 4: Math.round(n * 0.6), 5: n, 6: n }[step] || 0;

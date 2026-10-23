@@ -1300,7 +1300,7 @@ function buildBuildingScene(o) {
  // Floors: building core, slabs, AC units
  for (var f = 0; f < floors; f++) {
  var ft = lobbyTop - (f + 1) * fh;
- if (!single && !even) s += '<rect class="bh-core" x="178" y="' + heroR(ft + fh * 0.25) + '" width="10" height="' + heroR(fh * 0.46) + '" rx="0.6"/>';
+ if (!single && !even && !o.elevator) s += '<rect class="bh-core" x="178" y="' + heroR(ft + fh * 0.25) + '" width="10" height="' + heroR(fh * 0.46) + '" rx="0.6"/>';
  s += '<rect class="bh-slab" x="' + (bx - 4) + '" y="' + heroR(ft + fh * 0.89) + '" width="' + (bw + 8) + '" height="' + heroR(Math.max(2, fh * 0.1)) + '"/>';
  s += '<rect class="bh-slabEdge" x="' + (bx - 4) + '" y="' + heroR(ft + fh * 0.89 + Math.max(2, fh * 0.1)) + '" width="' + (bw + 8) + '" height="0.8"/>';
  if (f % 2 === 1) s += '<rect class="bh-ac" x="' + (bx2 - 9) + '" y="' + heroR(ft + fh * 0.5) + '" width="8" height="5" rx="0.6"/>';
@@ -1319,7 +1319,7 @@ function buildBuildingScene(o) {
      var bt = 231 + bi * fh;
      if (bi > 0) s += '<rect class="bh-conc" x="' + (bx - 2.5) + '" y="' + heroR(bt - 1) + '" width="' + (bw + 5) + '" height="2.4"/>';
      s += '<rect class="bh-floorLine" x="' + (bx - 2.5) + '" y="' + heroR(bt + fh - 2.6) + '" width="' + (bw + 5) + '" height="1.4"/>';
-     var sc = (!single && !even) ? [181.5] : [];
+     var sc = (!single && !even && !o.elevator) ? [181.5] : [];
      sc.push(bx + 2, bx2 - 5);
      sc.forEach(function(scx) {
        s += '<circle class="bh-sconceGlow" cx="' + heroR(scx + 1.5) + '" cy="' + heroR(bt + fh * 0.36) + '" r="3.2" filter="url(#' + P + 'Glow)"/>';
@@ -1405,29 +1405,9 @@ function buildBuildingScene(o) {
  });
 
  // Lobby
- s += '<rect class="bh-lobby" x="' + bx + '" y="' + lobbyTop + '" width="' + bw + '" height="29"/>';
- s += '<rect class="bh-parapet" x="156" y="199" width="54" height="3" rx="0.6"/>';
- s += '<rect class="bh-doorFrame" x="168" y="204.5" width="30" height="21.5"/><rect class="bh-doorGlass" x="169.5" y="206" width="27" height="20"/><rect class="bh-doorFrame" x="182.6" y="206" width="0.8" height="20"/>';
- var signTxt = String(o.signText || 'Building').toUpperCase().slice(0, 12);
- s += '<rect x="' + (bx + 6) + '" y="204" width="44" height="9" rx="1.5" fill="#FFF1D0"/>';
- s += '<text id="' + P + '-sign" x="' + (bx + 28) + '" y="210.6" style="font-size:5.2px;font-weight:800;letter-spacing:.5px;fill:#2B2858;text-anchor:middle"' + (signTxt.length > 8 ? ' textLength="38" lengthAdjust="spacingAndGlyphs"' : '') + '>' + esc(signTxt) + '</text>';
- s += '<rect x="158" y="220" width="6" height="6" rx="0.6" fill="#7A4E3A"/><ellipse class="bh-leaf" cx="161" cy="216.5" rx="4" ry="5"/>';
- s += '<rect x="202" y="220" width="6" height="6" rx="0.6" fill="#7A4E3A"/><ellipse class="bh-leaf" cx="205" cy="216.5" rx="4" ry="5"/>';
-
- // Street
- if (!o.bare) {
- s += '<g class="bh-bg"><rect class="bh-side" x="0" y="226" width="366" height="' + (basements ? 5 : 7) + '"/>';
- if (!basements) {
-   s += '<rect class="bh-street" x="0" y="233" width="366" height="23"/>';
-   for (var lx = 14; lx < 366; lx += 48) s += '<rect class="bh-lane" x="' + lx + '" y="245" width="16" height="1.4"/>';
- }
- s += '</g>';
- }
-
- // Railings drawn over the windows
  // Elevator: glass shaft on the side wall, cabin wanders between floors and rests
  if (o.elevator && fh >= 14) {
-   var shX = bx2 + 2, shTop = top + 8, shBot = basements ? 231 + basements * fh - 3 : 225;
+   var mid = !single && !even, shX = mid ? 179.75 : bx2 + 2, shTop = top + 8, shBot = basements ? 231 + basements * fh - 3 : 225;
    s += '<rect class="bh-shaft" x="' + heroR(shX) + '" y="' + heroR(shTop) + '" width="6.5" height="' + heroR(shBot - shTop) + '" rx=".8"/>';
    s += '<path class="bh-cable" d="M' + heroR(shX + 3.25) + ' ' + heroR(shTop) + 'V' + heroR(shBot) + '"/>';
    var cabH = Math.min(9, fh * 0.55);
@@ -1454,6 +1434,26 @@ function buildBuildingScene(o) {
    s += '<g class="bh-cab"><rect x="' + heroR(shX + 0.8) + '" y="0" width="4.9" height="' + heroR(cabH) + '" rx=".6"/><rect class="bh-cabLit" x="' + heroR(shX + 1.6) + '" y="1.2" width="3.3" height="' + heroR(cabH - 2.4) + '" rx=".4"/>';
    s += '<animateTransform attributeName="transform" type="translate" dur="' + heroR(tt) + 's" repeatCount="indefinite" calcMode="spline" keyTimes="' + times.map(function(x) { return (x / tt).toFixed(4); }).join(';') + '" keySplines="' + times.slice(1).map(function() { return '.45 0 .55 1'; }).join(';') + '" values="' + vals.map(function(v) { return '0 ' + v; }).join(';') + '"/></g>';
  }
+ s += '<rect class="bh-lobby" x="' + bx + '" y="' + lobbyTop + '" width="' + bw + '" height="29"/>';
+ s += '<rect class="bh-parapet" x="156" y="199" width="54" height="3" rx="0.6"/>';
+ s += '<rect class="bh-doorFrame" x="168" y="204.5" width="30" height="21.5"/><rect class="bh-doorGlass" x="169.5" y="206" width="27" height="20"/><rect class="bh-doorFrame" x="182.6" y="206" width="0.8" height="20"/>';
+ var signTxt = String(o.signText || 'Building').toUpperCase().slice(0, 12);
+ s += '<rect x="' + (bx + 6) + '" y="204" width="44" height="9" rx="1.5" fill="#FFF1D0"/>';
+ s += '<text id="' + P + '-sign" x="' + (bx + 28) + '" y="210.6" style="font-size:5.2px;font-weight:800;letter-spacing:.5px;fill:#2B2858;text-anchor:middle"' + (signTxt.length > 8 ? ' textLength="38" lengthAdjust="spacingAndGlyphs"' : '') + '>' + esc(signTxt) + '</text>';
+ s += '<rect x="158" y="220" width="6" height="6" rx="0.6" fill="#7A4E3A"/><ellipse class="bh-leaf" cx="161" cy="216.5" rx="4" ry="5"/>';
+ s += '<rect x="202" y="220" width="6" height="6" rx="0.6" fill="#7A4E3A"/><ellipse class="bh-leaf" cx="205" cy="216.5" rx="4" ry="5"/>';
+
+ // Street
+ if (!o.bare) {
+ s += '<g class="bh-bg"><rect class="bh-side" x="0" y="226" width="366" height="' + (basements ? 5 : 7) + '"/>';
+ if (!basements) {
+   s += '<rect class="bh-street" x="0" y="233" width="366" height="23"/>';
+   for (var lx = 14; lx < 366; lx += 48) s += '<rect class="bh-lane" x="' + lx + '" y="245" width="16" height="1.4"/>';
+ }
+ s += '</g>';
+ }
+
+ // Railings drawn over the windows
  if (rails) s += '<path class="bh-rail" d="' + rails + '" style="stroke-width:.6"/>';
  s += plants;
  // Ground-floor plinth: a wide light slab with a soft lip, like a podium

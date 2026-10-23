@@ -437,6 +437,10 @@ a.btn { text-decoration: none; }
 
 .bh-safeTap:focus{outline:none} .bh-safeTap:focus-visible .bh-safeBody{stroke:#5B4CF5;stroke-width:1}
 
+.bh-flip{opacity:0;transition:opacity .25s;pointer-events:none} .bh-win.flip .bh-flip{opacity:1}
+.bh-liftTap{cursor:pointer}
+.bh{touch-action:manipulation}
+
 </style>
 </head>
 <body>
@@ -1381,6 +1385,7 @@ function buildBuildingScene(o) {
  }
  var ww0 = ww;
  // Each side of the stairwell is filled edge to edge, so a side with fewer apartments gets wider ones.
+ function jsq(x) { return "'" + String(x).replace(/[^a-zA-Z0-9_ -]/g, '') + "'"; }
  function winX(j, k) {
    if (single) { ww = ww0; return 183 - ww / 2; }
    var L = Math.ceil(k / 2), half = j < L ? 0 : 1, n = half ? k - L : L, kk = half ? j - L : j;
@@ -1391,12 +1396,14 @@ function buildBuildingScene(o) {
    var lit = w.state === 'paid';
    x = heroR(x); y = heroR(y);
    if (w.onclick) {
-     s += '<g class="bh-win" role="button" tabindex="0" aria-label="' + esc(w.label || '') + '" onclick="' + w.onclick + '" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();' + w.onclick + '}">';
+     var fk = P + seed0 + '-' + wi;
+     s += '<g class="bh-win' + (WIN_FLIP[fk] ? ' flip' : '') + '" data-k="' + fk + '" data-go="' + w.onclick + '" role="button" tabindex="0" aria-label="' + esc(w.label || '') + '" onclick="winTap(this,event)" onkeydown=""if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();' + w.onclick + '}">';
      if (w.label) s += '<title>' + esc(w.label) + '</title>';
    } else s += '<g class="bh-win-static">';
    if (lit) s += '<rect class="bh-halo" x="' + x + '" y="' + y + '" width="' + heroR(ww) + '" height="' + heroR(wh2) + '" fill="url(#' + P + 'Warm)" filter="url(#' + P + 'Glow)" opacity=".8"/>';
    s += '<rect class="bh-frame" x="' + heroR(x - 1.2) + '" y="' + heroR(y - 1.2) + '" width="' + heroR(ww + 2.4) + '" height="' + heroR(wh2 + 2.4) + '" rx="1" style="fill:var(--rail)"/>';
    s += '<rect x="' + x + '" y="' + y + '" width="' + heroR(ww) + '" height="' + heroR(wh2) + '" ' + (lit ? 'fill="url(#' + P + 'Warm)"' : 'class="bh-glassOff"') + '/>';
+   if (w.onclick) s += '<rect x="' + x + '" y="' + y + '" width="' + heroR(ww) + '" height="' + heroR(wh2) + '" ' + (lit ? 'class="bh-flip bh-glassOff"' : 'class="bh-flip" fill="url(#' + P + 'Warm)"') + '/>';
    var cr = rnd(wi + 100), cc = CURT[Math.floor(rnd(wi + 200) * CURT.length)];
    var open = lit ? 0.12 + cr * 0.12 : 0.3 + cr * 0.2; // share of the pane each curtain covers
    var shW = ww * open, lop = lit ? 0.85 : 0.75;
@@ -1447,24 +1454,15 @@ function buildBuildingScene(o) {
      if (lv < 0) return 231 + (-lv) * fh - 2.6 - cabH;
      return 225 - cabH;
    }
-   var vals = [], times = [], tt = 0, cur = 0, k = 0;
-   function push(lv, wait) {
-     var y = heroR(stopY(lv)), travel = Math.abs(lv - cur) * 0.9;
-     if (vals.length) { tt += travel; vals.push(y); times.push(tt); }
-     else { vals.push(y); times.push(0); }
-     tt += wait; vals.push(y); times.push(tt); cur = lv;
-   }
-   push(0, 4);
-   for (k = 0; k < 7; k++) {
-     var lv = Math.floor(rnd(500 + k) * (floors + basements + 1)) - basements;
-     if (lv === cur) lv = cur === 0 ? floors : 0;
-     push(lv, 2 + rnd(600 + k) * 3);
-   }
-   push(0, 3 + rnd(700) * 5);
-   var y0 = vals[0];
-   if (mid) s += '<g clip-path="url(#' + P + 'Lift)"><g class="bh-cabMid"><rect class="bh-cabGlow" x="176" y="-4" width="14" height="' + heroR(cabH + 8) + '"/><rect class="bh-cabLit" x="178" y="0" width="10" height="' + heroR(cabH) + '"/><rect x="178" y="' + heroR(cabH - 1) + '" width="10" height="1" fill="#5A6070"/>';
-   else s += '<g class="bh-cab"><rect x="' + heroR(shX + 0.8) + '" y="0" width="4.9" height="' + heroR(cabH) + '" rx=".6"/><rect class="bh-cabLit" x="' + heroR(shX + 1.6) + '" y="1.2" width="3.3" height="' + heroR(cabH - 2.4) + '" rx=".4"/>';
-   s += '<animateTransform attributeName="transform" type="translate" dur="' + heroR(tt) + 's" repeatCount="indefinite" calcMode="spline" keyTimes="' + times.map(function(x) { return (x / tt).toFixed(4); }).join(';') + '" keySplines="' + times.slice(1).map(function() { return '.45 0 .55 1'; }).join(';') + '" values="' + vals.map(function(v) { return '0 ' + v; }).join(';') + '"/></g>' + (mid ? '</g>' : '');
+   // JS drives the cabin (see liftTick) so a tap can send it somewhere
+   var stops = [];
+   for (var lvv = -basements; lvv <= floors; lvv++) stops.push(lvv + ':' + heroR(stopY(lvv)));
+   var lkey = P + seed0;
+   var cabOpen = '<g class="bh-cabMove" data-key="' + esc(lkey) + '" data-stops="' + stops.join(',') + '" transform="translate(0 ' + heroR(LIFT[lkey] ? LIFT[lkey].y : stopY(0)) + ')">';
+   if (mid) s += '<g clip-path="url(#' + P + 'Lift)">' + cabOpen + '<rect class="bh-cabGlow" x="176" y="-4" width="14" height="' + heroR(cabH + 8) + '"/><rect class="bh-cabLit" x="178" y="0" width="10" height="' + heroR(cabH) + '"/><rect x="178" y="' + heroR(cabH - 1) + '" width="10" height="1" fill="#5A6070"/></g></g>';
+   else s += cabOpen + '<g class="bh-cab"><rect x="' + heroR(shX + 0.8) + '" y="0" width="4.9" height="' + heroR(cabH) + '" rx=".6"/><rect class="bh-cabLit" x="' + heroR(shX + 1.6) + '" y="1.2" width="3.3" height="' + heroR(cabH - 2.4) + '" rx=".4"/></g></g>';
+   // tap area over the shaft: tap a floor and the elevator goes there
+   s += '<rect class="bh-liftTap" x="' + heroR(mid ? 174 : shX - 2) + '" y="' + heroR(shTop - 4) + '" width="' + (mid ? 18 : 10.5) + '" height="' + heroR(shBot - shTop + 8) + '" fill="transparent" onclick="liftTap(event,this,' + jsq(lkey) + ')"/>';
  }
  s += '<rect class="bh-lobby" x="' + bx + '" y="' + lobbyTop + '" width="' + bw + '" height="29"/>';
  s += '<rect class="bh-parapet" x="156" y="199" width="54" height="3" rx="0.6"/>';
@@ -1540,7 +1538,7 @@ function buildBuildingScene(o) {
      // A grey safe set into the lobby wall. Closed by default; tap opens it to show the cash, tap again for the books.
      var sw = 30, shh = 24, nx = Math.max(213, bx2 - sw - 9), ny = 200;
      var u = Math.min(1, (o.safe.usdH - 2) / 20), l = Math.min(1, (o.safe.lbpH - 2) / 20);
-     var tapS = o.safe.tap ? ' role="button" tabindex="0" onclick="safeTap(this,event)" data-go="' + esc(o.safe.tap) + '"' : '';
+     var tapS = o.safe.tap ? ' role="button" tabindex="0" onclick="safeTap(this,event)" data-go="' + o.safe.tap + '"' : '';
      s += '<g class="bh-safe bh-safeTap' + (SAFE_OPEN ? ' open' : '') + '"' + tapS + '>';
      s += '<rect x="' + (nx + 3) + '" y="' + (ny + shh - 0.5) + '" width="5" height="2.4" rx=".6" class="bh-safeFoot"/><rect x="' + (nx + sw - 8) + '" y="' + (ny + shh - 0.5) + '" width="5" height="2.4" rx=".6" class="bh-safeFoot"/>';
      s += '<rect x="' + nx + '" y="' + ny + '" width="' + sw + '" height="' + shh + '" rx="3.4" class="bh-safeBody"/>';
@@ -1634,8 +1632,14 @@ function launchConfetti() {
  setTimeout(function() { if (layer.parentNode) layer.parentNode.removeChild(layer); }, 4800);
 }
 
-/* Safe in the lobby: first tap opens it, second tap goes to the books. */
-var SAFE_OPEN = false, SAFE_TIMER = null;
+/* Scene taps: one tap plays (light, safe door, elevator), two quick taps navigate. */
+var SAFE_OPEN = false, WIN_FLIP = {}, LIFT = {}, LAST_TAP = { el: null, t: 0 };
+function isDoubleTap(el) {
+  var now = Date.now(), d = LAST_TAP.el === el && now - LAST_TAP.t < 350;
+  LAST_TAP = d ? { el: null, t: 0 } : { el: el, t: now };
+  return d;
+}
+function runGo(el) { var g = el.getAttribute('data-go'); if (g) (new Function(g))(); }
 function safeShow(el, open) {
   el.classList.toggle('open', open);
   var o = el.querySelector('.bh-safeOpenG'), c = el.querySelector('.bh-safeClosedG');
@@ -1644,11 +1648,58 @@ function safeShow(el, open) {
 }
 function safeTap(el, ev) {
   if (ev) { ev.stopPropagation(); ev.preventDefault(); }
-  if (el.classList.contains('open')) { var g = el.getAttribute('data-go'); SAFE_OPEN = false; clearTimeout(SAFE_TIMER); if (g) (new Function(g))(); return; }
-  SAFE_OPEN = true; safeShow(el, true);
-  clearTimeout(SAFE_TIMER);
-  SAFE_TIMER = setTimeout(function() { SAFE_OPEN = false; document.querySelectorAll('.bh-safe').forEach(function(x) { safeShow(x, false); }); }, 5000);
+  if (isDoubleTap(el)) { SAFE_OPEN = true; safeShow(el, true); return runGo(el); }
+  SAFE_OPEN = !el.classList.contains('open');
+  safeShow(el, SAFE_OPEN);
 }
+function winTap(el, ev) {
+  if (ev) { ev.stopPropagation(); ev.preventDefault(); }
+  var k = el.getAttribute('data-k');
+  if (isDoubleTap(el)) { el.classList.toggle('flip'); WIN_FLIP[k] = el.classList.contains('flip'); return runGo(el); }
+  el.classList.toggle('flip'); WIN_FLIP[k] = el.classList.contains('flip');
+}
+/* Elevator: wanders on its own, and goes to the floor you tap. */
+function liftTap(ev, el, key) {
+  if (ev) { ev.stopPropagation(); ev.preventDefault(); }
+  var svg = el.ownerSVGElement, cab = svg && svg.querySelector('.bh-cabMove');
+  if (!cab) return;
+  var pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+  var y = pt.matrixTransform(svg.getScreenCTM().inverse()).y;
+  var stops = liftStops(cab), best = stops[0], st = LIFT[key];
+  stops.forEach(function(p) { if (Math.abs(p.y + 4 - y) < Math.abs(best.y + 4 - y)) best = p; });
+  if (st && Math.abs(st.y - best.y) < 0.5 && !st.moving) { var others = stops.filter(function(p) { return p !== best; }); best = others[Math.floor(Math.random() * others.length)] || best; }
+  liftGo(key, best.y, 1.2);
+}
+function liftStops(cab) { return cab.getAttribute('data-stops').split(',').map(function(p) { var a = p.split(':'); return { lv: +a[0], y: +a[1] }; }); }
+function liftGo(key, y, wait) {
+  var st = LIFT[key]; if (!st) return;
+  var dist = Math.abs(y - st.y);
+  st.from = st.y; st.to = y; st.t0 = performance.now(); st.dur = Math.max(400, dist * 45); st.moving = true; st.restUntil = 0; st.wait = wait;
+}
+function liftTick(now) {
+  document.querySelectorAll('.bh-cabMove').forEach(function(cab) {
+    var key = cab.getAttribute('data-key'), stops = liftStops(cab);
+    var st = LIFT[key];
+    if (!st) {
+      var lobby = stops.filter(function(p) { return p.lv === 0; })[0] || stops[0];
+      st = LIFT[key] = { y: lobby.y, moving: false, restUntil: now + 2500 + Math.random() * 3000 };
+    }
+    if (st.moving) {
+      var p = Math.min(1, (now - st.t0) / st.dur), e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      st.y = st.from + (st.to - st.from) * e;
+      if (p >= 1) { st.moving = false; st.restUntil = now + (st.wait || (2 + Math.random() * 4)) * 1000 + (Math.random() < .3 ? 6000 : 0); }
+    } else if (now > st.restUntil && stops.length > 1) {
+      var choices = stops.filter(function(q) { return Math.abs(q.y - st.y) > 0.5; });
+      var nx = choices[Math.floor(Math.random() * choices.length)];
+      if (Math.random() < .35) nx = stops.filter(function(q) { return q.lv === 0; })[0] || nx;
+      if (Math.abs(nx.y - st.y) < 0.5) nx = choices[0];
+      liftGo(key, nx.y, 0);
+    }
+    cab.setAttribute('transform', 'translate(0 ' + st.y.toFixed(2) + ')');
+  });
+  requestAnimationFrame(liftTick);
+}
+if (typeof requestAnimationFrame !== 'undefined' && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) requestAnimationFrame(liftTick);
 
 /* ============================================================================
    Data layer. Two backends with the same shape:

@@ -633,6 +633,8 @@ function chargesOf(cycleId) {
     return (ko[a.kind] - ko[b.kind]) || ((a.sort || 0) - (b.sort || 0)) || String(a.created_at || '').localeCompare(String(b.created_at || ''));
   });
 }
+/* " (120 kWh)" after a kWh-priced charge for one apartment */
+function kwhNote(ch, u) { var k = ch && ch.meter && u && ch.meter.kwh ? ch.meter.kwh[u.id] : null; return k != null ? ' (' + k + ' kWh)' : ''; }
 function chargeTotal(ch) { return activeUnits().reduce(function(s, u) { return s + dueFor(ch, u); }, 0); }
 
 function livePayments() { return S.payments.filter(function(p) { return !p.voided_at; }); }
@@ -2632,7 +2634,7 @@ function waText(u, cyc, lang) {
   function one(lg) {
     var T = function(en, ar) { return lg === 'ar' ? ar : en; };
     var lines = r.cells.map(function(x) {
-      var title = lg === 'ar' ? (x.ch.title_ar || x.ch.title) : x.ch.title;
+      var title = (lg === 'ar' ? (x.ch.title_ar || x.ch.title) : x.ch.title) + kwhNote(x.ch, u);
       return '• ' + title + ': ' + fmt(x.c.due, x.ch.cur) + (x.c.state === 'paid' ? ' ✅' : '');
     });
     var bname = lg === 'ar' ? (S.building.name_ar || S.building.name) : S.building.name;
@@ -3197,8 +3199,8 @@ function renderChargesSec() {
   else {
     h += '<div class="card list">';
     chs.forEach(function(ch) {
-      var how = ch.pass_through ? t('per subscriber', 'لكل مشترك') : ch.split === 'total' ? t('total split by share', 'المجموع مقسّم بالحصص') : ch.split === 'weight' ? t('each × share', 'لكل شقة × الحصة') : t('each apartment', 'لكل شقة');
-      h += '<button class="li" onclick="openSheet(\'charge\',{id:' + jsArg(ch.id) + '})"><div class="ic">' + (ch.kind === 'service' ? '↗' : ch.kind === 'due' ? '÷' : '↻') + '</div><div class="grow"><b>' + esc(L(ch)) + '</b><small>' + esc((LANG === 'ar' ? KIND_INFO[ch.kind][1] : KIND_INFO[ch.kind][0]) + ' · ' + how + (ch.block ? ' · ' + blockLabel(ch.block) : '')) + '</small></div><span class="amt">' + esc(ch.pass_through ? fmt(chargeTotal(ch), ch.cur) : ch.split === 'total' ? fmt(ch.amount, ch.cur) : fmt(ch.amount, ch.cur)) + '</span></button>';
+      var how = ch.meter ? fmt(ch.meter.rate, ch.cur) + ' / kWh' + (Object.keys(ch.meter.kwh || {}).length ? '' : ' · ' + t('readings missing', 'القراءات ناقصة')) : ch.pass_through ? t('per subscriber', 'لكل مشترك') : ch.split === 'total' ? t('total split by share', 'المجموع مقسّم بالحصص') : ch.split === 'weight' ? t('each × share', 'لكل شقة × الحصة') : t('each apartment', 'لكل شقة');
+      h += '<button class="li" onclick="openSheet(\'charge\',{id:' + jsArg(ch.id) + '})"><div class="ic">' + (ch.kind === 'service' ? '↗' : ch.kind === 'due' ? '÷' : '↻') + '</div><div class="grow"><b>' + esc(L(ch)) + '</b><small>' + esc((LANG === 'ar' ? KIND_INFO[ch.kind][1] : KIND_INFO[ch.kind][0]) + ' · ' + how + (ch.block ? ' · ' + blockLabel(ch.block) : '')) + '</small></div><span class="amt">' + esc(ch.pass_through || ch.meter ? fmt(chargeTotal(ch), ch.cur) : ch.split === 'total' ? fmt(ch.amount, ch.cur) : fmt(ch.amount, ch.cur)) + '</span></button>';
     });
     h += '</div>';
     var s = cycleSummary(cyc);
@@ -3212,7 +3214,9 @@ SHEETS.charge = function(d) {
   var st = d;
   var v = ch || { title: '', title_ar: '', kind: 'fixed', cur: 'USD', amount: '', split: 'each', overrides: {}, pass_through: false, recurring: true, cycle_id: d.cycle };
   var kind = st.kind || v.kind, cur = st.cur || v.cur, split = st.split || (kind === 'due' && !ch ? 'total' : v.split);
-  if (kind === 'service') split = 'custom';
+  var mt = st.meter !== undefined ? st.meter : (v.meter ? JSON.parse(JSON.stringify(v.meter)) : null);
+  if (kind === 'due') mt = null;
+  if (kind === 'service' || mt) split = 'custom';
   else if (split === 'custom') split = 'each';
   var ov = st.ov || Object.assign({}, v.overrides || {});
   var h = '<h3>' + esc(ch ? L(ch) : t('New charge', 'رسم جديد')) + '</h3>';
@@ -3226,7 +3230,12 @@ SHEETS.charge = function(d) {
     var cb = st.block != null ? st.block : (v.block || '');
     h += '<label class="field"><span>' + esc(t('Applies to', 'ينطبق على')) + '</span><select class="input" id="c-block" onchange="keepCharge();chargePreview()"><option value="">' + esc(t('Whole building (all blocks)', 'كل البناية (كل البلوكات)')) + '</option>' + blocks().map(function(b) { return '<option value="' + esc(b) + '"' + (cb === b ? ' selected' : '') + '>' + esc(blockLabel(b)) + '</option>'; }).join('') + '</select></label>';
   }
-  if (kind !== 'service') {
+  if (kind !== 'due') h += '<div class="switch-row"><div><b>' + esc(t('Priced by kWh', 'حسب الكيلوواط')) + '</b><small>' + esc(t('Generator with a meter per apartment: price × consumption', 'مولد بعداد لكل شقة: السعر × الاستهلاك')) + '</small></div><button class="sw' + (mt ? ' on' : '') + '" onclick="keepCharge();UI.sheet.data.meter=' + (mt ? 'null' : '{rate:\'\',fixed:\'\',kwh:{}}') + ';render()"></button></div>';
+  if (mt) {
+    h += '<div class="two"><label class="field"><span>' + esc(t('Price per kWh', 'سعر الكيلوواط')) + '</span><input class="input" id="m-rate" inputmode="decimal" value="' + esc(mt.rate) + '" placeholder="' + (cur === 'USD' ? '0.45' : '40000') + '" oninput="keepCharge();chargePreview()"></label>';
+    h += '<label class="field"><span>' + esc(t('Fixed fee (optional)', 'رسم ثابت (اختياري)')) + '</span><input class="input" id="m-fixed" inputmode="decimal" value="' + esc(mt.fixed) + '" placeholder="0" oninput="keepCharge();chargePreview()"></label></div>';
+    h += '<label class="field"><span>' + esc(t('Currency', 'العملة')) + '</span><div class="seg"><button class="' + (cur === 'USD' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.cur=\'USD\';render()">USD</button><button class="' + (cur === 'LBP' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.cur=\'LBP\';render()">LBP</button></div></label>';
+  } else if (kind !== 'service') {
     h += '<label class="field"><span>' + esc(t('How to split it', 'طريقة التقسيم')) + '</span><div class="seg">';
     [['each', t('Same for each', 'نفس المبلغ لكل شقة')], ['total', t('Split a total', 'تقسيم مبلغ كلي')], ['weight', t('Each × share', 'لكل شقة × الحصة')]].forEach(function(x) {
       h += '<button class="' + (split === x[0] ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.split=\'' + x[0] + '\';render()">' + esc(x[1]) + '</button>';
@@ -3236,12 +3245,13 @@ SHEETS.charge = function(d) {
   } else {
     h += '<label class="field"><span>' + esc(t('Currency', 'العملة')) + '</span><div class="seg"><button class="' + (cur === 'USD' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.cur=\'USD\';render()">USD</button><button class="' + (cur === 'LBP' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.cur=\'LBP\';render()">LBP</button></div></label>';
   }
-  h += '<div class="field"><span>' + esc(kind === 'service' ? t('What each subscriber pays (leave empty if not subscribed)', 'ما يدفعه كل مشترك (اتركه فارغاً لغير المشترك)') : t('Per apartment (type to change one)', 'لكل شقة (اكتب لتغيير واحدة)')) + '</span><div class="card" id="c-prev" style="padding:4px 12px"></div></div>';
+  if (mt) h += '<div class="field"><span>' + esc(t('kWh used this month (leave empty if not subscribed)', 'الاستهلاك هذا الشهر بالكيلوواط (فارغ لغير المشترك)')) + '</span><div class="card" id="c-prev" style="padding:4px 12px"></div></div>';
+  else h += '<div class="field"><span>' + esc(kind === 'service' ? t('What each subscriber pays (leave empty if not subscribed)', 'ما يدفعه كل مشترك (اتركه فارغاً لغير المشترك)') : t('Per apartment (type to change one)', 'لكل شقة (اكتب لتغيير واحدة)')) + '</span><div class="card" id="c-prev" style="padding:4px 12px"></div></div>';
   if (kind !== 'due') h += '<div class="switch-row"><div><b>' + esc(t('Repeat next month', 'كرّر الشهر القادم')) + '</b><small>' + esc(t('Copied when you open the next month', 'يُنسخ عند فتح الشهر التالي')) + '</small></div><button class="sw' + ((st.recurring != null ? st.recurring : v.recurring) ? ' on' : '') + '" id="c-rec" onclick="this.classList.toggle(\'on\');keepCharge()"></button></div>';
   h += '<div id="sheet-err" class="err"></div><div class="foot">';
   if (ch) h += '<button class="btn danger" onclick="deleteCharge(' + jsArg(ch.id) + ')">' + esc(t('Remove', 'حذف')) + '</button>';
   h += '<button class="btn sec" onclick="closeSheet()">' + esc(t('Cancel', 'إلغاء')) + '</button><button class="btn pri" onclick="saveCharge()">' + esc(t('Save', 'حفظ')) + '</button></div>';
-  UI.sheet.data.kind = kind; UI.sheet.data.cur = cur; UI.sheet.data.split = split; UI.sheet.data.ov = ov;
+  UI.sheet.data.kind = kind; UI.sheet.data.cur = cur; UI.sheet.data.split = split; UI.sheet.data.ov = ov; UI.sheet.data.meter = mt;
   setTimeout(chargePreview, 0);
   return h;
 };
@@ -3261,6 +3271,22 @@ function keepCharge() {
   if (document.getElementById('c-amt')) d.amount = val('c-amt');
   var r = document.getElementById('c-rec'); if (r) d.recurring = r.classList.contains('on');
   var cbk = document.getElementById('c-block'); if (cbk) d.block = cbk.value;
+  if (d.meter) { if (document.getElementById('m-rate')) d.meter.rate = val('m-rate'); if (document.getElementById('m-fixed')) d.meter.fixed = val('m-fixed'); }
+}
+/* kWh charge: each subscriber pays fixed + kWh × price; empty kWh = not subscribed */
+function meterAmount(m, kwh, cur) {
+  if (kwh === '' || kwh == null) return null;
+  return round(num(m.fixed) + num(kwh) * num(m.rate), cur);
+}
+function meterOverrides(m, cur) {
+  var ov = {};
+  Object.keys(m.kwh || {}).forEach(function(uid) { var a = meterAmount(m, m.kwh[uid], cur); if (a != null) ov[uid] = a; });
+  return ov;
+}
+function kwhSet(uid, v) {
+  var m = UI.sheet.data.meter; if (v === '') delete m.kwh[uid]; else m.kwh[uid] = num(v);
+  var a = meterAmount(m, m.kwh[uid], UI.sheet.data.cur), el = document.getElementById('kw-' + uid);
+  if (el) el.textContent = a == null ? '—' : fmt(a, UI.sheet.data.cur);
 }
 function chargePreview() {
   var el = document.getElementById('c-prev');
@@ -3268,6 +3294,14 @@ function chargePreview() {
   var d = UI.sheet.data;
   var tmp = { amount: num(d.amount), cur: d.cur, split: d.split, overrides: {}, pass_through: d.kind === 'service', cycle_id: d.cycle || (byId(S.charges, d.id) || {}).cycle_id, block: d.block != null ? d.block : (byId(S.charges, d.id) || {}).block };
   var h = '';
+  if (d.meter) {
+    activeUnits().filter(function(u) { return inBlock(u, tmp); }).forEach(function(u) {
+      var k = d.meter.kwh[u.id], a = meterAmount(d.meter, k, d.cur);
+      h += '<div class="kv" style="align-items:center;gap:8px"><span class="grow">' + esc(u.code + (unitName(u) ? ' · ' + unitName(u) : '')) + '</span><input class="input" style="max-width:86px;min-height:38px;padding:6px 10px;font-size:15px;text-align:end" inputmode="decimal" placeholder="kWh" value="' + esc(k != null ? k : '') + '" oninput="kwhSet(' + jsArg(u.id) + ',this.value)"><b id="kw-' + esc(u.id) + '" style="min-width:74px;text-align:end">' + esc(a == null ? '—' : fmt(a, d.cur)) + '</b></div>';
+    });
+    el.innerHTML = h || '<div class="muted">' + esc(t('Add apartments first', 'أضف الشقق أولاً')) + '</div>';
+    return;
+  }
   activeUnits().filter(function(u) { return inBlock(u, tmp); }).forEach(function(u) {
     var calc = dueFor(tmp, u), o = d.ov[u.id];
     h += '<div class="kv" style="align-items:center"><span>' + esc(u.code + (unitName(u) ? ' · ' + unitName(u) : '')) + '</span><input class="input" style="max-width:130px;min-height:38px;padding:6px 10px;font-size:15px;text-align:end" inputmode="decimal" placeholder="' + esc(d.kind === 'service' ? '—' : String(calc)) + '" value="' + esc(o != null ? o : '') + '" oninput="ovSet(' + jsArg(u.id) + ',this.value)"></div>';
@@ -3280,9 +3314,14 @@ function saveCharge() {
   var d = UI.sheet.data, ch = d.id ? byId(S.charges, d.id) : null;
   var row = { title: (d.title || '').trim(), title_ar: (d.title_ar || '').trim() || null, kind: d.kind, cur: d.cur, amount: d.kind === 'service' ? 0 : num(d.amount),
               split: d.split, overrides: d.ov || {}, pass_through: d.kind === 'service', block: (d.block != null ? d.block : (ch && ch.block)) || null, recurring: d.kind === 'due' ? false : (d.recurring != null ? d.recurring : true) };
+  if (d.meter) {
+    if (!(num(d.meter.rate) > 0)) return sheetErr(t('Enter the price per kWh', 'أدخل سعر الكيلوواط'));
+    row.meter = { rate: num(d.meter.rate), fixed: num(d.meter.fixed), kwh: d.meter.kwh || {} };
+    row.split = 'custom'; row.amount = 0; row.overrides = meterOverrides(row.meter, row.cur);
+  } else row.meter = null;
   if (!row.title) return sheetErr(t('Give it a name', 'أعطه اسماً'));
-  if (d.kind !== 'service' && !(row.amount > 0) && !Object.keys(row.overrides).length) return sheetErr(t('Enter an amount', 'أدخل المبلغ'));
-  if (d.kind === 'service' && !Object.keys(row.overrides).length) return sheetErr(t('Enter at least one subscriber', 'أدخل مشتركاً واحداً على الأقل'));
+  if (!d.meter && d.kind !== 'service' && !(row.amount > 0) && !Object.keys(row.overrides).length) return sheetErr(t('Enter an amount', 'أدخل المبلغ'));
+  if (!d.meter && d.kind === 'service' && !Object.keys(row.overrides).length) return sheetErr(t('Enter at least one subscriber', 'أدخل مشتركاً واحداً على الأقل'));
   if (!ch) { row.cycle_id = d.cycle || UI.cycleId; row.sort = chargesOf(row.cycle_id).length; }
   (ch ? dbUpdate('charges', ch.id, row) : dbInsert('charges', row)).then(function() { closeSheet(); toast(t('Saved', 'تم الحفظ')); }, function(e) { sheetErr(e.message); });
 }
@@ -3317,7 +3356,8 @@ function newMonth() {
   var cyc = { kind: 'month', period: period, title: periodLabel(period, 'en'), title_ar: periodLabel(period, 'ar'), published: true };
   dbInsert('cycles', cyc).then(function(c) {
     var rows = last ? chargesOf(last.id).filter(function(ch) { return ch.recurring; }).map(function(ch, i) {
-      return { cycle_id: cyc.id, kind: ch.kind, title: ch.title, title_ar: ch.title_ar, cur: ch.cur, amount: ch.amount, split: ch.split, overrides: ch.overrides || {}, pass_through: ch.pass_through, recurring: true, sort: i, block: ch.block || null };
+      return { cycle_id: cyc.id, kind: ch.kind, title: ch.title, title_ar: ch.title_ar, cur: ch.cur, amount: ch.amount, split: ch.split, overrides: ch.meter ? {} : (ch.overrides || {}), pass_through: ch.pass_through, recurring: true, sort: i, block: ch.block || null,
+               meter: ch.meter ? { rate: ch.meter.rate, fixed: ch.meter.fixed, kwh: {} } : null };
     }) : [];
     return dbInsertMany('charges', rows).then(function() {
       UI.cycleId = cyc.id; closeSheet();
@@ -4111,7 +4151,7 @@ function renderResident() {
   h += '<div class="sec"><div class="card pad"><div class="row between"><b style="font-size:16px">' + esc(cycleTitle(cyc)) + '</b>' + (r.state === 'paid' ? '<span class="receipt-stamp">✓ ' + esc(t('Paid', 'مسدد')) + '</span>' : '') + '</div>';
   r.cells.forEach(function(x) {
     var lastPay = x.c.payments[x.c.payments.length - 1];
-    h += '<div class="kv"><span>' + esc(L(x.ch)) + (x.c.state === 'paid' && lastPay ? '<br><small style="color:var(--ok)">✓ ' + esc(dateLabel(lastPay.received_at)) + '</small>' : '') + '</span><b>' + esc(fmt(x.c.due, x.ch.cur)) + '</b></div>';
+    h += '<div class="kv"><span>' + esc(L(x.ch) + kwhNote(x.ch, u)) + (x.c.state === 'paid' && lastPay ? '<br><small style="color:var(--ok)">✓ ' + esc(dateLabel(lastPay.received_at)) + '</small>' : '') + '</span><b>' + esc(fmt(x.c.due, x.ch.cur)) + '</b></div>';
   });
   if (!r.cells.length) h += '<div class="muted">' + esc(t('Nothing due this month', 'لا مستحقات هذا الشهر')) + '</div>';
   var owed = b.owed;
@@ -4661,7 +4701,7 @@ function aiReminder() {
   var d = UI.sheet.data, u = byId(S.units, d.u), cyc = byId(S.cycles, d.cyc) || currentCycle();
   var r = unitCycle(u, cyc), b = unitBalance(u, cyc), hist = unitHistory(u, cyc);
   var lang = u.lang || 'both';
-  var lines = r.cells.map(function(x) { return (lang === 'ar' ? (x.ch.title_ar || x.ch.title) : x.ch.title) + ': ' + fmt(x.c.due, x.ch.cur) + (x.c.state === 'paid' ? ' (paid)' : ''); });
+  var lines = r.cells.map(function(x) { return (lang === 'ar' ? (x.ch.title_ar || x.ch.title) : x.ch.title) + kwhNote(x.ch, u) + ': ' + fmt(x.c.due, x.ch.cur) + (x.c.state === 'paid' ? ' (paid)' : ''); });
   var left = fmtPair(r.allLeft);
   var body = { tone: d.tone, lang: lang, length: d.len === 'long' ? 'long' : 'short', building: lang === 'ar' ? (S.building.name_ar || S.building.name) : S.building.name, unit: u.code,
                name: lang === 'ar' ? (u.name_ar || u.name) : u.name, month: cycleTitle(cyc, lang === 'ar' ? 'ar' : 'en'), items: lines,

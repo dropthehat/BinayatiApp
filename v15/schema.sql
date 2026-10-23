@@ -587,3 +587,6 @@ alter table public.invites add column if not exists display_name_ar text;
 
 -- v15_15: public.receive_handover(p_building, p_collector, p_note): manager records cash received from a collector
 -- (confirms a waiting handover and sweeps anything newer into a confirmed one). Applied live.
+
+-- v15_16: charges.meter jsonb { rate, fixed, kwh:{unit_id:n} } for generators priced by kWh. Applied live.
+alter table public.charges add column if not exists meter jsonb;

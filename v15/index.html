@@ -454,6 +454,9 @@ a.btn { text-decoration: none; }
 .bh-chip{border:0;font-family:inherit;cursor:pointer;transition:opacity .2s,transform .2s;max-width:62%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bh-chip span{overflow:hidden;text-overflow:ellipsis}
 .bh-chip.swap{opacity:0;transform:translateY(-3px)}
+/* With an elevator, the middle windows are dark glass so the cabin light shows */
+.bh.lift .bh-core{fill:#263049;animation:none;stroke:rgba(0,0,0,.25);stroke-width:.4}
+.bh.night.lift .bh-core,.bh.eve.lift .bh-core{fill:#141A33}
 
 </style>
 </head>
@@ -1641,7 +1644,7 @@ function buildBuildingScene(o) {
 
  s += '</svg>';
 
- var cls = 'bh ' + ph.key + (o.coreGlow ? ' elev' : '') + (o.dropsOn ? ' drops' : '') + (o.extraCls ? ' ' + o.extraCls : '');
+ var cls = 'bh ' + ph.key + (o.elevator ? ' lift' : o.coreGlow ? ' elev' : '') + (o.dropsOn ? ' drops' : '') + (o.extraCls ? ' ' + o.extraCls : '');
  return '<div class="' + cls + (tower ? ' tower' : '') + '"' + (tower && !o.bare ? ' style="aspect-ratio:366/' + vbH + '"' : '') + '>' + s + (o.chip ? '<button class="bh-chip" id="bh-time" onclick="heroChipTap()"><i style="background:' + (o.chip.dot || '#F5A524') + '"></i><span>' + esc(o.chip.tx || o.chip) + '</span></button>' : '') + '</div>';
 }
 /* Confetti shower used when setup finishes. */

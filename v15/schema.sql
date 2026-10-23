@@ -556,3 +556,21 @@ $$;
 revoke all on function public.compound_buildings(uuid) from public, anon;
 grant execute on function public.compound_buildings(uuid) to authenticated;
 -- resident_view in section 5 also returns each unit's block (applied as migration v15_08).
+
+-- ---------------------------------------------------------------------------
+-- 8. Photos of receipts and transfer screenshots (private bucket, per building folder)
+-- ---------------------------------------------------------------------------
+alter table public.expenses add column if not exists photo_path text;
+alter table public.payments add column if not exists photo_path text;
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('receipts', 'receipts', false, 5242880, array['image/jpeg','image/png','image/webp'])
+on conflict (id) do nothing;
+drop policy if exists bny_receipts_read on storage.objects;
+drop policy if exists bny_receipts_add on storage.objects;
+drop policy if exists bny_receipts_del on storage.objects;
+create policy bny_receipts_read on storage.objects for select to authenticated
+  using (bucket_id = 'receipts' and private.is_member(((storage.foldername(name))[1])::uuid));
+create policy bny_receipts_add on storage.objects for insert to authenticated
+  with check (bucket_id = 'receipts' and private.is_member(((storage.foldername(name))[1])::uuid));
+create policy bny_receipts_del on storage.objects for delete to authenticated
+  using (bucket_id = 'receipts' and private.is_manager(((storage.foldername(name))[1])::uuid));

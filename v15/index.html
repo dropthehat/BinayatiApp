@@ -441,6 +441,9 @@ a.btn { text-decoration: none; }
 .bh-liftTap{cursor:pointer}
 .bh{touch-action:manipulation}
 
+/* Tower */
+.bh-blink{animation:bhBlink 2.4s steps(1) infinite} @keyframes bhBlink{0%{opacity:1}50%{opacity:.15}}
+
 </style>
 </head>
 <body>
@@ -1214,7 +1217,9 @@ function buildBuildingScene(o) {
  var single = maxPer === 1;
  var even = false;  // always split around a stairwell; with 3 or 5, the bigger side is on the left
  var floors = upRows.length, basements = downRows.length, rowsN = floors + basements;
- var fh = rowsN <= 5 ? 28 : Math.max(14, Math.floor(150 / rowsN));
+ // More than 5 floors above ground: a tower. Floors keep a readable height and the picture grows taller instead.
+ var tower = floors > 5;
+ var fh = tower ? Math.max(12, Math.min(22, Math.floor(340 / rowsN))) : rowsN <= 5 ? 28 : Math.max(14, Math.floor(150 / rowsN));
  var bw = maxPer <= 2 ? 150 : maxPer === 3 ? 196 : maxPer === 4 ? 220 : 250;
  var bx = 183 - bw / 2, bx2 = bx + bw;
  var lobbyTop = 197, top = lobbyTop - floors * fh;
@@ -1225,7 +1230,10 @@ function buildBuildingScene(o) {
  var bH = basements ? basements * fh + 6 : 0;
  var n = o.wins ? o.wins.length : 0;
 
- var vb = o.bare ? (bx - 66) + ' ' + (top - 42) + ' ' + (bw + 132) + ' ' + (240 - (top - 42) + bH) : '0 ' + (basements ? bH : 0) + ' 366 256';
+ var vbBot = (basements ? bH : 0) + 256, vbY = basements ? bH : 0;
+ if (tower) vbY = Math.max(vbBot - 440, Math.min(vbY, top - 60));
+ var vbH = vbBot - vbY;
+ var vb = o.bare ? (bx - 66) + ' ' + (top - 42) + ' ' + (bw + 132) + ' ' + (240 - (top - 42) + bH) : '0 ' + vbY + ' 366 ' + vbH;
  var s = '<svg class="bh-art" viewBox="' + vb + '" preserveAspectRatio="' + (o.bare ? 'xMidYMax meet' : 'xMidYMid slice') + '" xmlns="http://www.w3.org/2000/svg" aria-hidden="' + (o.interactive ? 'false' : 'true') + '">';
  s += '<defs>';
  s += '<linearGradient id="' + P + 'Sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sky1)"/><stop offset="0.55" style="stop-color:var(--sky2)"/><stop offset="1" style="stop-color:var(--sky3)"/></linearGradient>';
@@ -1244,7 +1252,7 @@ function buildBuildingScene(o) {
  if (!o.bare) {
  s += '<g class="bh-bg">';
  // Sky, sun / moon, stars, clouds
- s += '<rect width="366" height="' + (256 + bH) + '" fill="url(#' + P + 'Sky)"/>';
+ s += '<rect y="' + Math.min(0, vbY) + '" width="366" height="' + (256 + bH - Math.min(0, vbY)) + '" fill="url(#' + P + 'Sky)"/>';
  s += '<g class="bh-sun"><circle cx="' + heroR(ph.sunX) + '" cy="' + heroR(ph.sunY) + '" r="40" fill="url(#' + P + 'SunGlow)"/><circle cx="' + heroR(ph.sunX) + '" cy="' + heroR(ph.sunY) + '" r="14" style="fill:var(--sun)"/></g>';
  s += '<g class="bh-moon"><circle cx="314" cy="40" r="34" fill="url(#' + P + 'SunGlow)"/><circle cx="314" cy="40" r="12" fill="#F7F1DE"/><circle cx="310" cy="37" r="2.6" fill="#E6DDC2"/><circle cx="318" cy="44" r="1.8" fill="#E6DDC2"/></g>';
  [[90,18],[140,40],[190,14],[236,34],[280,12],[322,76],[112,62],[300,90],[24,84],[166,74],[60,30],[250,58]].forEach(function(p, i) {
@@ -1298,10 +1306,14 @@ function buildBuildingScene(o) {
  s += '<rect class="bh-parapet" x="' + (bx - 3) + '" y="' + (top - 6) + '" width="' + (bw + 6) + '" height="6"/>';
 
  // Roof: water tanks, dish, solar panels
- var tall = top < 52;
+ var tall = top < 52 && !tower;
+ if (tower) { // lift machine room and antenna on the roof
+   s += '<rect class="bh-parapet" x="171" y="' + (top - 17) + '" width="24" height="11"/><rect class="bh-shade" x="171" y="' + (top - 17) + '" width="24" height="2"/><rect class="bh-glassOff" x="177" y="' + (top - 13) + '" width="12" height="4" rx=".6"/>';
+   s += '<rect class="bh-pole" x="190" y="' + (top - 34) + '" width="1.2" height="18"/><circle cx="190.6" cy="' + (top - 34) + '" r="1.4" fill="#FF5A4A" class="bh-blink"/>';
+ }
  var tankX = tall ? Math.max(bx + 6, 140) : bx + 4;
  s += '<g transform="translate(' + tankX + ' ' + (top - 26) + ')"><rect class="bh-tankBase" x="0" y="16" width="34" height="4"/><rect x="2" y="2" width="14" height="15" rx="1" fill="url(#' + P + 'TkW)"/><ellipse cx="9" cy="2" rx="7" ry="2.2" fill="#F6F8FC"/><rect x="18" y="4" width="14" height="13" rx="1" fill="url(#' + P + 'TkB)"/><ellipse cx="25" cy="4" rx="7" ry="2.2" fill="#A9C7F2"/></g>';
- if (!tall || cols === 4) s += '<g transform="translate(' + (tall ? tankX + 50 : bx + 66) + ' ' + (top - 16) + ') rotate(-28)"><ellipse rx="6.5" ry="4.3" fill="#E3E8F2"/><ellipse cx="0.5" cy="0.4" rx="4.6" ry="2.8" fill="#C6CEDD"/></g>';
+ if (!tower && (!tall || cols === 4)) s += '<g transform="translate(' + (tall ? tankX + 50 : bx + 66) + ' ' + (top - 16) + ') rotate(-28)"><ellipse rx="6.5" ry="4.3" fill="#E3E8F2"/><ellipse cx="0.5" cy="0.4" rx="4.6" ry="2.8" fill="#C6CEDD"/></g>';
  if (o.solar !== false) {
  var py = top - 3;
  [bx2 - 72, bx2 - 36].forEach(function(px) {
@@ -1615,7 +1627,7 @@ function buildBuildingScene(o) {
  s += '</svg>';
 
  var cls = 'bh ' + ph.key + (o.coreGlow ? ' elev' : '') + (o.dropsOn ? ' drops' : '') + (o.extraCls ? ' ' + o.extraCls : '');
- return '<div class="' + cls + '">' + s + (o.chip ? '<div class="bh-chip" id="bh-time"><i></i><span>' + esc(o.chip) + '</span></div>' : '') + '</div>';
+ return '<div class="' + cls + (tower ? ' tower' : '') + '"' + (tower && !o.bare ? ' style="aspect-ratio:366/' + vbH + '"' : '') + '>' + s + (o.chip ? '<div class="bh-chip" id="bh-time"><i></i><span>' + esc(o.chip) + '</span></div>' : '') + '</div>';
 }
 /* Confetti shower used when setup finishes. */
 function launchConfetti() {

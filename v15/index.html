@@ -434,8 +434,7 @@ a.btn { text-decoration: none; }
 .bh-safeDialRing{fill:#7A7F88} .bh-safe .bh-safeDial{fill:#C4C8CF;stroke:none} .bh-safeKnob{fill:#4A4F58} .bh-safeTick{stroke:#E6E8EC;stroke-width:.35}
 .bh-safeBolt{fill:#6B7079} .bh-safe .bh-safeIn{fill:#2E3138} .bh-safe .bh-safeShelf{fill:#4A4F58}
 .bh-safe .bh-safeDoor{fill:#A2A7B0;stroke:#6B7079;stroke-width:.5}
-.bh-safeOpenG{opacity:0;transition:opacity .25s} .bh-safe.open .bh-safeOpenG{opacity:1}
-.bh-safeClosedG{transition:opacity .25s} .bh-safe.open .bh-safeClosedG{opacity:0}
+
 .bh-safeTap:focus{outline:none} .bh-safeTap:focus-visible .bh-safeBody{stroke:#5B4CF5;stroke-width:1}
 
 </style>
@@ -1519,7 +1518,7 @@ function buildBuildingScene(o) {
  // Right side: the building safe, or the street lamp
  function safeLabel() {
    var u = Math.max(0, Math.round(o.safe.usd || 0)), l = Math.max(0, o.safe.lbp || 0);
-   return '$' + u + (l >= 1e5 ? ' · ' + (l >= 1e6 ? Math.round(l / 1e6) + 'M' : Math.round(l / 1e3) + 'K') : '');
+   return '$' + u.toLocaleString('en-US');
  }
  // A little steel safe with its door ajar: green notes = dollars, blue = lira.
  function safeBox(w, h, scale) {
@@ -1542,11 +1541,11 @@ function buildBuildingScene(o) {
      var sw = 30, shh = 24, nx = Math.max(213, bx2 - sw - 9), ny = 200;
      var u = Math.min(1, (o.safe.usdH - 2) / 20), l = Math.min(1, (o.safe.lbpH - 2) / 20);
      var tapS = o.safe.tap ? ' role="button" tabindex="0" onclick="safeTap(this,event)" data-go="' + esc(o.safe.tap) + '"' : '';
-     s += '<g class="bh-safe bh-safeTap' + (window.SAFE_OPEN ? ' open' : '') + '"' + tapS + '>';
+     s += '<g class="bh-safe bh-safeTap' + (SAFE_OPEN ? ' open' : '') + '"' + tapS + '>';
      s += '<rect x="' + (nx + 3) + '" y="' + (ny + shh - 0.5) + '" width="5" height="2.4" rx=".6" class="bh-safeFoot"/><rect x="' + (nx + sw - 8) + '" y="' + (ny + shh - 0.5) + '" width="5" height="2.4" rx=".6" class="bh-safeFoot"/>';
      s += '<rect x="' + nx + '" y="' + ny + '" width="' + sw + '" height="' + shh + '" rx="3.4" class="bh-safeBody"/>';
      // inside (seen when open)
-     s += '<g class="bh-safeOpenG"><rect x="' + (nx + 2.5) + '" y="' + (ny + 2.5) + '" width="' + (sw - 5) + '" height="' + (shh - 5) + '" rx="1.4" class="bh-safeIn"/>';
+     s += '<g class="bh-safeOpenG" style="display:' + (SAFE_OPEN ? 'inline' : 'none') + '"><rect x="' + (nx + 2.5) + '" y="' + (ny + 2.5) + '" width="' + (sw - 5) + '" height="' + (shh - 5) + '" rx="1.4" class="bh-safeIn"/>';
      s += '<rect x="' + (nx + 2.5) + '" y="' + heroR(ny + shh / 2) + '" width="' + (sw - 5) + '" height=".9" class="bh-safeShelf"/>';
      function stacks(x0, yb, n, c1, c2) {
        var o2 = '';
@@ -1554,17 +1553,19 @@ function buildBuildingScene(o) {
        return o2;
      }
      var nU = Math.max(1, Math.round(u * 6)), nL = Math.max(1, Math.round(l * 6));
-     s += stacks(nx + 4, ny + shh / 2 - 0.2, Math.min(nU, 5), '#2BC48C', '#1E9E70');
-     s += stacks(nx + 15, ny + shh / 2 - 0.2, Math.min(nL, 5), '#5DB2FF', '#2F86E8');
-     s += stacks(nx + 4, ny + shh - 2.8, Math.max(0, nU - 5) + 2, '#2BC48C', '#1E9E70');
-     s += '<circle cx="' + (nx + 17) + '" cy="' + (ny + shh - 3.6) + '" r=".9" fill="#E8C77A"/><circle cx="' + (nx + 19) + '" cy="' + (ny + shh - 3.6) + '" r=".9" fill="#E8C77A"/><circle cx="' + (nx + 18) + '" cy="' + (ny + shh - 4.8) + '" r=".9" fill="#F2D68E"/>';
+     // dollars only: up to 4 stacks per shelf, filling the bottom shelf first
+     var piles = Math.max(1, Math.round(u * 8));
+     for (var pi = 0; pi < piles; pi++) {
+       var top2 = pi >= 4, col = pi % 4;
+       s += stacks(nx + 3.6 + col * 5.6, (top2 ? ny + shh / 2 - 0.2 : ny + shh - 2.8), 3 + (pi * 7 % 3), '#2BC48C', '#1E9E70').replace(/width="9"/g, 'width="4.8"');
+     }
      // door swung open to the right
      s += '<path d="M' + (nx + sw) + ' ' + (ny + 1) + ' L' + (nx + sw + 7) + ' ' + (ny - 1) + ' L' + (nx + sw + 7) + ' ' + (ny + shh + 1) + ' L' + (nx + sw) + ' ' + (ny + shh - 1) + ' Z" class="bh-safeDoor"/>';
      [0.3, 0.5, 0.7].forEach(function(f) { s += '<circle cx="' + (nx + sw + 3.6) + '" cy="' + heroR(ny + shh * f) + '" r=".8" class="bh-safeBolt"/>'; });
      s += '<rect x="' + (nx + 1) + '" y="' + (ny - 7) + '" width="' + (sw - 2) + '" height="5" rx="1" class="bh-brass"/><text x="' + (nx + sw / 2) + '" y="' + (ny - 3.3) + '" class="bh-brassTx" style="font-size:4px">' + esc(safeLabel()) + '</text></g>';
      // closed door
      var cx = nx + sw * 0.6, cy = ny + shh / 2;
-     s += '<g class="bh-safeClosedG"><rect x="' + (nx + 2.5) + '" y="' + (ny + 2.5) + '" width="' + (sw - 5) + '" height="' + (shh - 5) + '" rx="1.6" class="bh-safeFace"/>';
+     s += '<g class="bh-safeClosedG" style="display:' + (SAFE_OPEN ? 'none' : 'inline') + '"><rect x="' + (nx + 2.5) + '" y="' + (ny + 2.5) + '" width="' + (sw - 5) + '" height="' + (shh - 5) + '" rx="1.6" class="bh-safeFace"/>';
      s += '<rect x="' + (nx + sw - 1.4) + '" y="' + (ny + 4.5) + '" width="1.4" height="3.4" rx=".4" class="bh-safeBolt"/><rect x="' + (nx + sw - 1.4) + '" y="' + (ny + shh - 8) + '" width="1.4" height="3.4" rx=".4" class="bh-safeBolt"/>';
      s += '<circle cx="' + heroR(nx + 6.5) + '" cy="' + heroR(cy - 2.5) + '" r="1.1" class="bh-safeKnob"/><rect x="' + heroR(nx + 6) + '" y="' + heroR(cy - 2.5) + '" width="1" height="5" rx=".5" class="bh-safeKnob"/>';
      s += '<circle cx="' + heroR(cx) + '" cy="' + heroR(cy) + '" r="5" class="bh-safeDialRing"/><circle cx="' + heroR(cx) + '" cy="' + heroR(cy) + '" r="3.2" class="bh-safeDial"/><circle cx="' + heroR(cx) + '" cy="' + heroR(cy) + '" r="1.2" class="bh-safeKnob"/>';
@@ -1635,12 +1636,18 @@ function launchConfetti() {
 
 /* Safe in the lobby: first tap opens it, second tap goes to the books. */
 var SAFE_OPEN = false, SAFE_TIMER = null;
+function safeShow(el, open) {
+  el.classList.toggle('open', open);
+  var o = el.querySelector('.bh-safeOpenG'), c = el.querySelector('.bh-safeClosedG');
+  if (o) o.style.display = open ? 'inline' : 'none';
+  if (c) c.style.display = open ? 'none' : 'inline';
+}
 function safeTap(el, ev) {
-  if (ev) ev.stopPropagation();
-  if (el.classList.contains('open')) { var g = el.getAttribute('data-go'); SAFE_OPEN = false; if (g) (new Function(g))(); return; }
-  el.classList.add('open'); SAFE_OPEN = true;
+  if (ev) { ev.stopPropagation(); ev.preventDefault(); }
+  if (el.classList.contains('open')) { var g = el.getAttribute('data-go'); SAFE_OPEN = false; clearTimeout(SAFE_TIMER); if (g) (new Function(g))(); return; }
+  SAFE_OPEN = true; safeShow(el, true);
   clearTimeout(SAFE_TIMER);
-  SAFE_TIMER = setTimeout(function() { SAFE_OPEN = false; document.querySelectorAll('.bh-safe.open').forEach(function(x) { x.classList.remove('open'); }); }, 5000);
+  SAFE_TIMER = setTimeout(function() { SAFE_OPEN = false; document.querySelectorAll('.bh-safe').forEach(function(x) { safeShow(x, false); }); }, 5000);
 }
 
 /* ============================================================================

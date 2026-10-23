@@ -1292,26 +1292,43 @@ function buildBuildingScene(o) {
    var ex0 = o.bare ? bx - 52 : 0, ex1 = o.bare ? bx2 + 52 : 366, eH = bH + 40;
    s += '<rect class="bh-earth" x="' + ex0 + '" y="229" width="' + (ex1 - ex0) + '" height="' + eH + '"' + (o.bare ? ' rx="8"' : '') + '/>';
    s += '<rect x="' + ex0 + '" y="229" width="' + (ex1 - ex0) + '" height="' + eH + '" fill="url(#' + P + 'Soil)"' + (o.bare ? ' rx="8"' : '') + '/>';
-   s += '<rect class="bh-conc" x="' + (bx - 7) + '" y="228" width="' + (bw + 14) + '" height="' + (bH + 8) + '" rx="1"/>';
-   s += '<rect class="bh-base" x="' + (bx - 2) + '" y="231" width="' + (bw + 4) + '" height="' + (bH - 1) + '"/>';
+   s += '<rect class="bh-conc" x="' + (bx - 3) + '" y="229" width="' + (bw + 6) + '" height="' + (bH + 4) + '" rx="1"/>';
+   s += '<rect class="bh-base" x="' + (bx - 1) + '" y="231" width="' + (bw + 2) + '" height="' + (bH - 0.5) + '"/>';
    for (var bi = 0; bi < basements; bi++) {
      var bt = 231 + bi * fh;
-     s += '<rect class="bh-conc" x="' + (bx - 2) + '" y="' + heroR(bt + fh - 2.5) + '" width="' + (bw + 4) + '" height="2.5"/>';
+     s += '<rect class="bh-slab" x="' + (bx - 1) + '" y="' + heroR(bt + fh - 1.6) + '" width="' + (bw + 2) + '" height="1.6"/>';
      var sc = (!single && !even) ? [181.5] : [];
      sc.push(bx + 2, bx2 - 5);
      sc.forEach(function(scx) {
-       s += '<circle class="bh-sconceGlow" cx="' + heroR(scx + 1.5) + '" cy="' + heroR(bt + fh * 0.36) + '" r="4.5" filter="url(#' + P + 'Glow)"/>';
-       s += '<rect class="bh-sconce" x="' + heroR(scx) + '" y="' + heroR(bt + fh * 0.3) + '" width="3" height="4" rx=".6"/>';
+       s += '<circle class="bh-sconceGlow" cx="' + heroR(scx + 1.5) + '" cy="' + heroR(bt + fh * 0.36) + '" r="3.2" filter="url(#' + P + 'Glow)"/>';
+       s += '<rect class="bh-sconce" x="' + heroR(scx) + '" y="' + heroR(bt + fh * 0.3) + '" width="2" height="2.8" rx=".5"/>';
      });
    }
  }
 
  // Windows (one per apartment) + railings
  var rails = '', wi = 0, plants = '';
- function plant(x, y) {
+ // Same building always looks the same: variety is seeded from its name.
+ var seed0 = 0, nm = String(o.signText || o.name || 'b');
+ for (var ci = 0; ci < nm.length; ci++) seed0 = (seed0 * 31 + nm.charCodeAt(ci)) >>> 0;
+ function rnd(i) { var x = Math.sin((seed0 % 9973) * 0.37 + i * 12.9898) * 43758.5453; return x - Math.floor(x); }
+ var CURT = ['#7E9E86', '#C98B6B', '#8FA8C8', '#D9C48F', '#B98AA6', '#E9E2D2', '#6F8FA0', '#C2735F'];
+ var FLOW = ['#E86A7A', '#F2B441', '#FFFFFF', '#B07CD8', '#F28C38'];
+ function plant(x, y, k) {
    if (ww < 15 || fh < 18) return;
-   plants += '<rect class="bh-pot" x="' + heroR(x) + '" y="' + heroR(y - 2.4) + '" width="6" height="2.4" rx=".4"/>';
-   plants += '<circle class="bh-leaf" cx="' + heroR(x + 1.4) + '" cy="' + heroR(y - 3) + '" r="1.6"/><circle class="bh-leaf2" cx="' + heroR(x + 3.1) + '" cy="' + heroR(y - 3.9) + '" r="1.8"/><circle class="bh-leaf" cx="' + heroR(x + 4.7) + '" cy="' + heroR(y - 3) + '" r="1.5"/>';
+   var r = rnd(k), r2 = rnd(k + 0.5);
+   if (r < 0.22) return;
+   var pot = r2 < 0.5 ? '#8A5A3C' : r2 < 0.8 ? '#B8734E' : '#D8D2C4';
+   plants += '<rect x="' + heroR(x) + '" y="' + heroR(y - 2.4) + '" width="6" height="2.4" rx=".4" fill="' + pot + '"/>';
+   if (r < 0.45) { // tall cypress
+     plants += '<ellipse class="bh-leaf" cx="' + heroR(x + 3) + '" cy="' + heroR(y - 5.6) + '" rx="2" ry="3.6"/>';
+   } else if (r < 0.7) { // flowers
+     plants += '<circle class="bh-leaf2" cx="' + heroR(x + 1.6) + '" cy="' + heroR(y - 3.2) + '" r="1.5"/><circle class="bh-leaf" cx="' + heroR(x + 4.4) + '" cy="' + heroR(y - 3.2) + '" r="1.5"/>';
+     var fc = FLOW[Math.floor(r2 * FLOW.length)];
+     plants += '<circle cx="' + heroR(x + 1.4) + '" cy="' + heroR(y - 4.2) + '" r=".7" fill="' + fc + '"/><circle cx="' + heroR(x + 3.2) + '" cy="' + heroR(y - 4.7) + '" r=".7" fill="' + fc + '"/><circle cx="' + heroR(x + 4.8) + '" cy="' + heroR(y - 3.9) + '" r=".7" fill="' + fc + '"/>';
+   } else { // round bush
+     plants += '<circle class="bh-leaf" cx="' + heroR(x + 1.4) + '" cy="' + heroR(y - 3) + '" r="1.6"/><circle class="bh-leaf2" cx="' + heroR(x + 3.1) + '" cy="' + heroR(y - 3.9) + '" r="1.8"/><circle class="bh-leaf" cx="' + heroR(x + 4.7) + '" cy="' + heroR(y - 3) + '" r="1.5"/>';
+   }
  }
  function winX(j, k) {
    if (single) return 183 - ww / 2;
@@ -1329,9 +1346,17 @@ function buildBuildingScene(o) {
    if (lit) s += '<rect class="bh-halo" x="' + x + '" y="' + y + '" width="' + heroR(ww) + '" height="' + heroR(wh2) + '" fill="url(#' + P + 'Warm)" filter="url(#' + P + 'Glow)" opacity=".8"/>';
    s += '<rect class="bh-frame" x="' + heroR(x - 1.2) + '" y="' + heroR(y - 1.2) + '" width="' + heroR(ww + 2.4) + '" height="' + heroR(wh2 + 2.4) + '" rx="1" style="fill:var(--rail)"/>';
    s += '<rect x="' + x + '" y="' + y + '" width="' + heroR(ww) + '" height="' + heroR(wh2) + '" ' + (lit ? 'fill="url(#' + P + 'Warm)"' : 'class="bh-glassOff"') + '/>';
-   var shW = lit ? 3 : ww / 2;
-   s += '<rect x="' + x + '" y="' + y + '" width="' + heroR(shW) + '" height="' + heroR(wh2) + '" fill="url(#' + P + 'Slat)"/>';
-   s += '<rect x="' + heroR(x + ww - shW) + '" y="' + y + '" width="' + heroR(shW) + '" height="' + heroR(wh2) + '" fill="url(#' + P + 'Slat)"/>';
+   var cr = rnd(wi + 100), cc = CURT[Math.floor(rnd(wi + 200) * CURT.length)];
+   var open = lit ? 0.12 + cr * 0.12 : 0.3 + cr * 0.2; // share of the pane each curtain covers
+   var shW = ww * open, lop = lit ? 0.85 : 0.75;
+   if (rnd(wi + 300) < 0.18) { // some keep a roller blind half down instead
+     s += '<rect x="' + x + '" y="' + y + '" width="' + heroR(ww) + '" height="' + heroR(wh2 * (0.3 + cr * 0.3)) + '" fill="' + cc + '" opacity="' + lop + '"/>';
+   } else {
+     [x, heroR(x + ww - shW)].forEach(function(cx0) {
+       s += '<rect x="' + cx0 + '" y="' + y + '" width="' + heroR(shW) + '" height="' + heroR(wh2) + '" fill="' + cc + '" opacity="' + lop + '"/>';
+       s += '<path d="M' + heroR(cx0 + shW * 0.35) + ' ' + y + 'v' + heroR(wh2) + 'M' + heroR(cx0 + shW * 0.7) + ' ' + y + 'v' + heroR(wh2) + '" stroke="rgba(0,0,0,.13)" stroke-width=".5"/>';
+     });
+   }
    s += '<rect class="bh-mull" x="' + heroR(x + ww / 2 - 0.6) + '" y="' + y + '" width="1.2" height="' + heroR(wh2) + '"/>';
    if (w.state === 'owes') s += '<circle class="bh-dot" cx="' + heroR(x + ww - 4) + '" cy="' + heroR(y + 4) + '" r="2.6"/>';
    if (o.drops) s += '<circle class="bh-drop" cx="' + heroR(x + ww / 2) + '" cy="' + heroR(y - 1) + '" r="1.8" style="animation-delay:' + (wi * 0.17).toFixed(2) + 's"/>';
@@ -1344,7 +1369,7 @@ function buildBuildingScene(o) {
      var x = winX(j, row.wins.length);
      rails += heroRailPath(x, ww, ft2 + fh * 0.64, ft2 + fh * 0.89);
      drawWin(w, x, ft2 + fh * 0.21, wh);
-     plant(x + 1, ft2 + fh * 0.64); plant(x + ww - 7, ft2 + fh * 0.64);
+     plant(x + 1, ft2 + fh * 0.64, wi * 2); plant(x + ww - 7, ft2 + fh * 0.64, wi * 2 + 1);
    });
  });
  downRows.forEach(function(row, bi) {
@@ -1353,7 +1378,7 @@ function buildBuildingScene(o) {
      var x = winX(j, row.wins.length);
      drawWin(w, x, bt + fh * 0.16, fh * 0.56);
      rails += heroRailPath(x, ww, bt + fh * 0.6, bt + fh * 0.88);
-     plant(x + 1, bt + fh * 0.6); plant(x + ww - 7, bt + fh * 0.6);
+     plant(x + 1, bt + fh * 0.6, wi * 2); plant(x + ww - 7, bt + fh * 0.6, wi * 2 + 1);
    });
  });
 

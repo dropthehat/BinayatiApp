@@ -590,3 +590,5 @@ alter table public.invites add column if not exists display_name_ar text;
 
 -- v15_16: charges.meter jsonb { rate, fixed, kwh:{unit_id:n} } for generators priced by kWh. Applied live.
 alter table public.charges add column if not exists meter jsonb;
+
+-- v15_17: charges/expenses orig_amount, orig_cur, fx (original LBP kept when the books are in dollars). Applied live.

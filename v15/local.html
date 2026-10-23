@@ -535,10 +535,25 @@ function fmt(amt, cur) {
     if (n >= 1e6 && n % 1e5 === 0) return sign + (n / 1e6).toLocaleString('en-US', { maximumFractionDigits: 1 }) + 'M LBP';
     return sign + Math.round(n).toLocaleString('en-US') + ' LBP';
   }
-  return sign + '$' + (Math.round(n * 100) / 100).toLocaleString('en-US', { maximumFractionDigits: 2 });
+  var r2 = Math.round(n * 100) / 100;
+  return sign + '$' + r2.toLocaleString('en-US', { minimumFractionDigits: r2 % 1 ? 2 : 0, maximumFractionDigits: 2 });
 }
+/* One reference currency: when on, LBP charges and expenses are converted to USD as they're saved,
+   and every two-currency total is shown as a single dollar figure. */
+function baseUsd() { return setting('base_cur') === 'USD'; }
+function toBase(tbl, row) {
+  if (!baseUsd() || (tbl !== 'charges' && tbl !== 'expenses') || row.cur !== 'LBP') return row;
+  var r = rate(), cv = function(v) { return Math.round(num(v) / r * 100) / 100; };
+  row.orig_amount = num(row.amount); row.orig_cur = 'LBP'; row.fx = r;
+  row.amount = cv(row.amount); row.cur = 'USD';
+  if (row.overrides) { var o = {}; Object.keys(row.overrides).forEach(function(k) { o[k] = cv(row.overrides[k]); }); row.overrides = o; }
+  if (row.meter) row.meter = Object.assign({}, row.meter, { rate: Math.round(num(row.meter.rate) / r * 10000) / 10000, fixed: cv(row.meter.fixed) });
+  return row;
+}
+function origNote(x) { return x && x.orig_cur === 'LBP' && x.orig_amount ? ' (' + fmt(x.orig_amount, 'LBP') + ')' : ''; }
 /* A two-currency pair {USD, LBP} as text, skipping zero sides. */
 function fmtPair(p, zeroCur) {
+  if (baseUsd()) return fmt((p.USD || 0) + (p.LBP || 0) / rate(), 'USD');
   var parts = [];
   if (!tiny(p.USD || 0, 'USD')) parts.push(fmt(p.USD, 'USD'));
   if (!tiny(p.LBP || 0, 'LBP')) parts.push(fmt(p.LBP, 'LBP'));
@@ -1837,6 +1852,7 @@ function applyLocal(tbl, op, row) {
 }
 
 function dbInsert(tbl, row) {
+  toBase(tbl, row);
   row.id = row.id || uuid();
   if (tbl !== 'buildings' && !row.building_id) row.building_id = S.building.id;
   if (!row.created_at && tbl !== 'payments') row.created_at = nowIso();
@@ -1854,6 +1870,7 @@ function dbInsert(tbl, row) {
   }, function(e) { S[tbl] = S[tbl].filter(function(r) { return r.id !== row.id; }); S._rev++; render(); throw e; });
 }
 function dbInsertMany(tbl, rows) {
+  rows.forEach(function(r) { toBase(tbl, r); });
   rows.forEach(function(r) { r.id = r.id || uuid(); if (!r.building_id) r.building_id = S.building.id; if (!r.created_at && tbl !== 'payments') r.created_at = nowIso(); });
   if (!isCloud()) {
     var db = localLoad();
@@ -1866,6 +1883,7 @@ function dbInsertMany(tbl, rows) {
   return cloudCall(SB.from(tbl).insert(rows)).then(function() { return rows; }, function(e) { reloadBuilding(); throw e; });
 }
 function dbUpdate(tbl, id, patch) {
+  if (patch.cur === 'LBP') toBase(tbl, patch);
   var row = Object.assign({ id: id }, patch);
   if (!isCloud()) {
     var db = localLoad();
@@ -2396,6 +2414,7 @@ function renderHomeManager() {
 }
 function fmtPairBig(p) {
   var u = p.USD || 0, l = p.LBP || 0;
+  if (baseUsd()) return esc(fmt(u + l / rate(), 'USD'));
   if (tiny(l, 'LBP')) return esc(fmt(u, 'USD'));
   if (tiny(u, 'USD')) return esc(fmt(l, 'LBP'));
   return esc(fmt(u, 'USD')) + '<small>+ ' + esc(fmt(l, 'LBP')) + '</small>';
@@ -2752,7 +2771,7 @@ function ledger(cycleId) {
   liveExpenses().forEach(function(e) {
     if (cycleId && e.cycle_id !== cycleId && !(e.charge_id && cycCharges[e.charge_id])) return;
     out.push({ kind: 'out', icon: catIcon(e.charge_id ? 'supplier' : e.cat), at: (e.spent_on === dayKey(e.created_at) ? e.created_at : e.spent_on + 'T12:00:00'), amount: num(e.amount), cur: e.cur,
-               title: e.title, sub: catName(e.charge_id ? 'supplier' : e.cat) + ' · ' + (e.paid_from === 'collector' ? t('paid by ', 'دفعه ') + memberName(e.paid_by) : t('from the safe', 'من الصندوق')) + (e.ref ? ' · #' + e.ref : ''),
+               title: e.title, sub: catName(e.charge_id ? 'supplier' : e.cat) + ' · ' + (e.paid_from === 'collector' ? t('paid by ', 'دفعه ') + memberName(e.paid_by) : t('from the safe', 'من الصندوق')) + (e.ref ? ' · #' + e.ref : '') + origNote(e),
                onclick: isManager() || e.paid_by === (S.me && S.me.id) ? 'openSheet(\'expense\',{id:' + jsArg(e.id) + '})' : '' });
   });
   if (!cycleId) S.handovers.forEach(function(ho) {
@@ -3200,7 +3219,7 @@ function renderChargesSec() {
     h += '<div class="card list">';
     chs.forEach(function(ch) {
       var how = ch.meter ? fmt(ch.meter.rate, ch.cur) + ' / kWh' + (Object.keys(ch.meter.kwh || {}).length ? '' : ' · ' + t('readings missing', 'القراءات ناقصة')) : ch.pass_through ? t('per subscriber', 'لكل مشترك') : ch.split === 'total' ? t('total split by share', 'المجموع مقسّم بالحصص') : ch.split === 'weight' ? t('each × share', 'لكل شقة × الحصة') : t('each apartment', 'لكل شقة');
-      h += '<button class="li" onclick="openSheet(\'charge\',{id:' + jsArg(ch.id) + '})"><div class="ic">' + (ch.kind === 'service' ? '↗' : ch.kind === 'due' ? '÷' : '↻') + '</div><div class="grow"><b>' + esc(L(ch)) + '</b><small>' + esc((LANG === 'ar' ? KIND_INFO[ch.kind][1] : KIND_INFO[ch.kind][0]) + ' · ' + how + (ch.block ? ' · ' + blockLabel(ch.block) : '')) + '</small></div><span class="amt">' + esc(ch.pass_through || ch.meter ? fmt(chargeTotal(ch), ch.cur) : ch.split === 'total' ? fmt(ch.amount, ch.cur) : fmt(ch.amount, ch.cur)) + '</span></button>';
+      h += '<button class="li" onclick="openSheet(\'charge\',{id:' + jsArg(ch.id) + '})"><div class="ic">' + (ch.kind === 'service' ? '↗' : ch.kind === 'due' ? '÷' : '↻') + '</div><div class="grow"><b>' + esc(L(ch)) + '</b><small>' + esc((LANG === 'ar' ? KIND_INFO[ch.kind][1] : KIND_INFO[ch.kind][0]) + ' · ' + how + (ch.block ? ' · ' + blockLabel(ch.block) : '') + origNote(ch)) + '</small></div><span class="amt">' + esc(ch.pass_through || ch.meter ? fmt(chargeTotal(ch), ch.cur) : ch.split === 'total' ? fmt(ch.amount, ch.cur) : fmt(ch.amount, ch.cur)) + '</span></button>';
     });
     h += '</div>';
     var s = cycleSummary(cyc);
@@ -3508,6 +3527,7 @@ function renderSettingsSec() {
   h += '<label class="field"><span>' + esc(t('Safe at the start (LBP)', 'الصندوق عند البدء (ل.ل)')) + '</span><input class="input" id="s-ol" inputmode="numeric" value="' + esc(st.opening_lbp || 0) + '"></label></div>';
   h += '<button class="btn pri block" style="margin-top:14px" onclick="saveSettings()">' + esc(t('Save', 'حفظ')) + '</button></div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('The building', 'البناية')) + '</h2></div><div class="card pad">';
+  h += switchRow('base_cur_usd', setting('base_cur') === 'USD', t('Keep the books in dollars', 'الحسابات بالدولار'), t('Bills entered in LBP are converted at your dollar rate when saved. Totals show in $ only.', 'الفواتير بالليرة تُحوَّل بسعر الدولار عند الحفظ، والمجاميع بالدولار فقط.'));
   h += switchRow('elevator', !!st.elevator, t('Has an elevator', 'فيها مصعد'), t('Shown on the building picture, going up and down', 'يظهر في صورة البناية صاعداً ونازلاً'));
   h += '</div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('What residents see', 'ما يراه السكان')) + '</h2></div><div class="card pad">';
@@ -3525,7 +3545,7 @@ function switchRow(key, on, title, sub) {
   return '<div class="switch-row"><div><b>' + esc(title) + '</b><small>' + esc(sub) + '</small></div><button class="sw' + (on ? ' on' : '') + '" onclick="toggleSetting(\'' + key + '\',' + !on + ')"></button></div>';
 }
 function toggleSetting(k, v) {
-  var st = Object.assign({}, S.building.settings || {}); st[k] = v;
+  var st = Object.assign({}, S.building.settings || {}); if (k === 'base_cur_usd') { k = 'base_cur'; v = v ? 'USD' : null; } st[k] = v;
   dbUpdate('buildings', S.building.id, { settings: st }).then(render, fail);
   S.building.settings = st; render();
 }

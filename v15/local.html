@@ -545,14 +545,32 @@ function fmt(amt, cur) {
 function baseUsd() { return setting('base_cur') === 'USD'; }
 function toBase(tbl, row) {
   if (!baseUsd() || (tbl !== 'charges' && tbl !== 'expenses') || row.cur !== 'LBP') return row;
-  var r = rate(), cv = function(v) { return Math.round(num(v) / r * 100) / 100; };
+  var r = num(row.fx) || rate(), cv = function(v) { return Math.round(num(v) / r * 100) / 100; };
   row.orig_amount = num(row.amount); row.orig_cur = 'LBP'; row.fx = r;
   row.amount = cv(row.amount); row.cur = 'USD';
   if (row.overrides) { var o = {}; Object.keys(row.overrides).forEach(function(k) { o[k] = cv(row.overrides[k]); }); row.overrides = o; }
   if (row.meter) row.meter = Object.assign({}, row.meter, { rate: Math.round(num(row.meter.rate) / r * 10000) / 10000, fixed: cv(row.meter.fixed) });
   return row;
 }
-function origNote(x) { return x && x.orig_cur === 'LBP' && x.orig_amount ? ' (' + fmt(x.orig_amount, 'LBP') + ')' : ''; }
+function fxText(v) { return '@ ' + Math.round(num(v)).toLocaleString('en-US'); }
+function origNote(x) {
+  if (!x) return '';
+  if (x.orig_cur === 'LBP' && x.orig_amount) return ' (' + fmt(x.orig_amount, 'LBP') + ' ' + fxText(x.fx || rate()) + ')';
+  if (x.cur === 'LBP' && x.fx) return ' · ' + fxText(x.fx);
+  return '';
+}
+/* Exchange-rate box shown under an LBP amount: suppliers often use their own rate. */
+function fxField(id, cur, val0, amtId) {
+  if (cur !== 'LBP') return '';
+  var v = val0 || rate();
+  setTimeout(function() { fxHint(id, amtId); var a = document.getElementById(amtId); if (a && !a._fx) { a._fx = 1; a.addEventListener('input', function() { fxHint(id, amtId); }); } }, 0);
+  return '<label class="field"><span>' + esc(t('Exchange rate (LBP per $1)', 'سعر الصرف (ليرة لكل دولار)')) + '</span><input class="input" id="' + id + '" inputmode="numeric" value="' + esc(v) + '" oninput="fxHint(\'' + id + '\',\'' + amtId + '\')"><small class="hint" id="' + id + '-h"></small></label>';
+}
+function fxHint(id, amtId) {
+  var el = document.getElementById(id + '-h'), a = document.getElementById(amtId), r = num(val(id));
+  if (!el) return;
+  el.textContent = a && num(a.value) > 0 && r > 0 ? '= ' + fmt(num(a.value) / r, 'USD') + (Math.round(r) !== Math.round(rate()) ? t(' · building rate is ', ' · سعر البناية ') + Math.round(rate()).toLocaleString('en-US') : '') : '';
+}
 /* A two-currency pair {USD, LBP} as text, skipping zero sides. */
 function fmtPair(p, zeroCur) {
   if (baseUsd()) return fmt((p.USD || 0) + (p.LBP || 0) / rate(), 'USD');
@@ -3049,6 +3067,7 @@ SHEETS.expense = function(d) {
   if (!sup && !e) h += '<label class="field"><span>' + esc(t('Common expenses', 'مصاريف شائعة')) + '</span>' + presetSelect('ex-pre', EXPENSE_PRESETS, 'expensePreset(this.value)') + '</label>';
   h += '<label class="field"><span>' + esc(t('What for', 'لماذا')) + '</span><input class="input" id="ex-title" value="' + esc(st.title != null ? st.title : v.title) + '" placeholder="' + esc(t('e.g. 200L diesel', 'مثلاً 200 ليتر مازوت')) + '"></label>';
   h += '<label class="field"><span>' + esc(t('Amount', 'المبلغ')) + '</span><div class="money-in"><input class="input" id="ex-amt" inputmode="decimal" value="' + esc(st.amount != null ? st.amount : v.amount) + '"><div class="seg"><button class="' + (v.cur === 'USD' ? 'on' : '') + '" onclick="keepExpense();UI.sheet.data.cur=\'USD\';render()">USD</button><button class="' + (v.cur === 'LBP' ? 'on' : '') + '" onclick="keepExpense();UI.sheet.data.cur=\'LBP\';render()">LBP</button></div></div></label>';
+  h += fxField('ex-fx', v.cur, st.fx || v.fx || (v.orig_cur === 'LBP' ? v.fx : null), 'ex-amt');
   if (isManager()) {
     h += '<label class="field"><span>' + esc(t('Paid from', 'دُفع من')) + '</span><div class="seg"><button class="' + (v.paid_from === 'safe' ? 'on' : '') + '" onclick="keepExpense();UI.sheet.data.from=\'safe\';render()">' + esc(t('The safe', 'الصندوق')) + '</button>';
     if (collectors().length) h += '<button class="' + (v.paid_from === 'collector' ? 'on' : '') + '" onclick="keepExpense();UI.sheet.data.from=\'collector\';render()">' + esc(t(collectorLabel() + '\'s pocket', 'جيب ' + collectorLabel())) + '</button>';
@@ -3073,6 +3092,7 @@ function expensePreset(i) {
 }
 function keepExpense() {
   var d = UI.sheet.data;
+  if (document.getElementById('ex-fx')) d.fx = val('ex-fx');
   d.title = val('ex-title'); d.amount = val('ex-amt'); d.date = val('ex-date'); d.cyc = val('ex-cyc'); d.ref = val('ex-ref');
 }
 function saveExpense(id, supId) {
@@ -3082,6 +3102,7 @@ function saveExpense(id, supId) {
   var row = { title: (d.title || '').trim(), amount: num(d.amount), cur: d.cur || (e && e.cur) || (supId ? byId(S.charges, supId).cur : 'USD'), cat: cat,
               spent_on: d.date || todayIso(), cycle_id: d.cyc || null, ref: d.ref || null,
               paid_from: isManager() ? (d.from || (e && e.paid_from) || 'safe') : 'collector' };
+  if (row.cur === 'LBP') row.fx = num(d.fx) || rate();
   if (!row.title) return sheetErr(t('Say what it was for', 'اذكر السبب'));
   if (!(row.amount > 0)) return sheetErr(t('Enter an amount', 'أدخل المبلغ'));
   if (supId) row.charge_id = supId;
@@ -3280,6 +3301,7 @@ SHEETS.charge = function(d) {
   } else {
     h += '<label class="field"><span>' + esc(t('Currency', 'العملة')) + '</span><div class="seg"><button class="' + (cur === 'USD' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.cur=\'USD\';render()">USD</button><button class="' + (cur === 'LBP' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.cur=\'LBP\';render()">LBP</button></div></label>';
   }
+  h += fxField('c-fx', cur, st.fx || v.fx, mt ? 'm-rate' : 'c-amt');
   if (mt) h += '<div class="field"><span>' + esc(t('kWh used this month (leave empty if not subscribed)', 'الاستهلاك هذا الشهر بالكيلوواط (فارغ لغير المشترك)')) + '</span><div class="card" id="c-prev" style="padding:4px 12px"></div></div>';
   else h += '<div class="field"><span>' + esc(kind === 'service' ? t('What each subscriber pays (leave empty if not subscribed)', 'ما يدفعه كل مشترك (اتركه فارغاً لغير المشترك)') : t('Per apartment (type to change one)', 'لكل شقة (اكتب لتغيير واحدة)')) + '</span><div class="card" id="c-prev" style="padding:4px 12px"></div></div>';
   if (kind !== 'due') h += '<div class="switch-row"><div><b>' + esc(t('Repeat next month', 'كرّر الشهر القادم')) + '</b><small>' + esc(t('Copied when you open the next month', 'يُنسخ عند فتح الشهر التالي')) + '</small></div><button class="sw' + ((st.recurring != null ? st.recurring : v.recurring) ? ' on' : '') + '" id="c-rec" onclick="this.classList.toggle(\'on\');keepCharge()"></button></div>';
@@ -3306,6 +3328,7 @@ function keepCharge() {
   if (document.getElementById('c-amt')) d.amount = val('c-amt');
   var r = document.getElementById('c-rec'); if (r) d.recurring = r.classList.contains('on');
   var cbk = document.getElementById('c-block'); if (cbk) d.block = cbk.value;
+  if (document.getElementById('c-fx')) d.fx = val('c-fx');
   if (d.meter) { if (document.getElementById('m-rate')) d.meter.rate = val('m-rate'); if (document.getElementById('m-fixed')) d.meter.fixed = val('m-fixed'); }
 }
 /* kWh charge: each subscriber pays fixed + kWh × price; empty kWh = not subscribed */
@@ -3354,6 +3377,7 @@ function saveCharge() {
     row.meter = { rate: num(d.meter.rate), fixed: num(d.meter.fixed), kwh: d.meter.kwh || {} };
     row.split = 'custom'; row.amount = 0; row.overrides = meterOverrides(row.meter, row.cur);
   } else row.meter = null;
+  if (row.cur === 'LBP') row.fx = num(d.fx) || rate();
   if (!row.title) return sheetErr(t('Give it a name', 'أعطه اسماً'));
   if (!d.meter && d.kind !== 'service' && !(row.amount > 0) && !Object.keys(row.overrides).length) return sheetErr(t('Enter an amount', 'أدخل المبلغ'));
   if (!d.meter && d.kind === 'service' && !Object.keys(row.overrides).length) return sheetErr(t('Enter at least one subscriber', 'أدخل مشتركاً واحداً على الأقل'));

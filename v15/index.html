@@ -1361,12 +1361,13 @@ function buildBuildingScene(o) {
      plants += '<circle class="bh-leaf" cx="' + heroR(x + 1.4) + '" cy="' + heroR(y - 3) + '" r="1.6"/><circle class="bh-leaf2" cx="' + heroR(x + 3.1) + '" cy="' + heroR(y - 3.9) + '" r="1.8"/><circle class="bh-leaf" cx="' + heroR(x + 4.7) + '" cy="' + heroR(y - 3) + '" r="1.5"/>';
    }
  }
+ var ww0 = ww;
+ // Each side of the stairwell is filled edge to edge, so a side with fewer apartments gets wider ones.
  function winX(j, k) {
-   if (single) return 183 - ww / 2;
-   if (even) return bx + 12 + (j + (maxPer - k) / 2) * (ww + gapW);
-   var L = Math.ceil(k / 2), half = j < L ? 0 : 1, kk = half ? j - L : j;
-   if (half) return bx2 - 12 - (k - L) * (ww + gapW) + gapW + kk * (ww + gapW);
-   return bx + 12 + kk * (ww + gapW);
+   if (single) { ww = ww0; return 183 - ww / 2; }
+   var L = Math.ceil(k / 2), half = j < L ? 0 : 1, n = half ? k - L : L, kk = half ? j - L : j;
+   ww = (perHalf - (n - 1) * gapW) / n;
+   return (half ? 183 + 13 : bx + 12) + kk * (ww + gapW);
  }
  function drawWin(w, x, y, wh2) {
    var lit = w.state === 'paid';

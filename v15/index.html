@@ -1953,6 +1953,28 @@ var LOCAL_RPC = {
     S._rev++; localSave();
     return h.id;
   },
+  receive_handover: function(a) {
+    var db = localLoad(), now = nowIso(), col = a.p_collector, hid = null;
+    S.handovers.forEach(function(h) {
+      if (h.collector_id === col && h.status === 'pending') {
+        var patch = { status: 'confirmed', resolved_by: S.me.id, resolved_at: now };
+        Object.assign(h, patch); var x = byId(db.handovers, h.id); if (x && x !== h) Object.assign(x, patch);
+        localEvent('handovers', 'update', h); hid = h.id;
+      }
+    });
+    var pays = S.payments.filter(function(p) { return p.channel === 'collector' && p.received_by === col && !p.handover_id && !p.voided_at; });
+    var exps = S.expenses.filter(function(e) { return e.paid_from === 'collector' && e.paid_by === col && !e.handover_id && !e.voided_at; });
+    var u = 0, l = 0;
+    pays.forEach(function(p) { if (p.cur === 'USD') u += num(p.amount); else l += num(p.amount); });
+    exps.forEach(function(e) { if (e.cur === 'USD') u -= num(e.amount); else l -= num(e.amount); });
+    if (!u && !l) { if (hid) { S._rev++; localSave(); return hid; } throw new Error(t('Nothing to receive', 'لا شيء للاستلام')); }
+    var h = { id: uuid(), building_id: S.building.id, collector_id: col, usd: u, lbp: l, note: a.p_note || null, status: 'confirmed', created_at: now, resolved_by: S.me.id, resolved_at: now };
+    db.handovers.push(h); applyLocal('handovers', 'insert', h); localEvent('handovers', 'insert', h);
+    pays.forEach(function(p) { p.handover_id = h.id; var x = byId(db.payments, p.id); if (x) x.handover_id = h.id; });
+    exps.forEach(function(e) { e.handover_id = h.id; var x = byId(db.expenses, e.id); if (x) x.handover_id = h.id; });
+    S._rev++; localSave();
+    return h.id;
+  },
   resolve_handover: function(a) {
     var db = localLoad(), h = byId(db.handovers, a.p_handover), hs = byId(S.handovers, a.p_handover);
     if (!h || h.status !== 'pending') throw new Error(t('Already resolved', 'تمت المعالجة'));
@@ -2658,7 +2680,9 @@ function renderMoney() {
   h += tile(t('With collectors', 'مع الجباة'), fmtPairBig(cash.withCollector), Object.keys(cash.pockets).filter(function(k) { return pairUsd(cash.pockets[k]) > 0.005; }).map(function(k) { return memberName(k) + ' ' + fmtPair(cash.pockets[k]); }).join(' · ') || t('Nothing outstanding', 'لا شيء معلّق'), '', 'var(--warn)');
   if (pairUsd(cash.supplier) > 0.005) h += tile(t('Of which for suppliers', 'منها للموردين'), fmtPairBig(cash.supplier), t('Moteur, internet… not building money', 'موتور، إنترنت… ليست أموال البناية'), '', 'var(--info)');
   h += tile(t('Building money', 'أموال البناية'), fmtPairBig(cash.building), t('Safe + collectors − suppliers', 'الصندوق + الجباة − الموردين'), '', 'var(--acc)', 'wide');
-  h += '</div></div>';
+  h += '</div>';
+  if (isManager() && collectorsHolding().length) h += '<button class="btn sec block" style="margin-top:10px" onclick="openSheet(\'handrecv\',{})">⇄ ' + esc(t('Received cash from a collector', 'استلمت نقداً من الجابي')) + '</button>';
+  h += '</div>';
 
   // Supplier pass-through to settle
   var cyc = currentCycle();
@@ -2792,6 +2816,7 @@ function eventText(e) {
       return t(who + ' edited the expense ' + d.title, who + ' عدّل المصروف ' + d.title);
     case 'handovers':
       var amt = fmtPair({ USD: num(d.usd), LBP: num(d.lbp) });
+      if (e.action === 'insert' && d.status === 'confirmed') { var cn = memberName(d.collector_id); return t(who + ' received ' + amt + ' from ' + cn, who + ' استلم ' + amt + ' من ' + cn); }
       if (e.action === 'insert') return t(who + ' handed over ' + amt, who + ' سلّم ' + amt);
       if (d.status === 'confirmed') return t(who + ' confirmed receiving ' + amt, who + ' أكّد استلام ' + amt);
       if (d.status === 'rejected') return t(who + ' said the handover of ' + amt + ' did not arrive', who + ' أفاد بعدم وصول ' + amt);
@@ -2851,6 +2876,30 @@ SHEETS.handover = function(d) {
   h += '<div id="sheet-err" class="err"></div><div class="foot"><button class="btn danger" onclick="resolveHandover(' + jsArg(ho.id) + ',false)">' + esc(t('Didn\'t get it', 'لم أستلم')) + '</button><button class="btn ok" onclick="resolveHandover(' + jsArg(ho.id) + ',true)">' + esc(t('Received, put in safe', 'استلمت، للصندوق')) + '</button></div>';
   return h;
 };
+/* Manager: "I received cash from the collector" even if he didn't start a handover. */
+function collectorsHolding() {
+  var cash = cashState();
+  return Object.keys(cash.pockets).filter(function(k) { return pairUsd(cash.pockets[k]) > 0.005 || cash.pockets[k].pendingId; }).map(function(k) { return { id: k, p: cash.pockets[k] }; });
+}
+SHEETS.handrecv = function(d) {
+  var list = collectorsHolding();
+  var h = '<h3>' + esc(t('Cash received from a collector', 'استلمت نقداً من الجابي')) + '</h3><p class="lead">' + esc(t('Everything they hold goes into the safe. They see it in their history.', 'كل ما معه ينتقل إلى الصندوق، ويراه في سجله.')) + '</p>';
+  if (!list.length) return h + '<div class="card pad muted">' + esc(t('No collector is holding cash right now.', 'لا يوجد نقد مع أي جابٍ الآن.')) + '</div><div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Close', 'إغلاق')) + '</button></div>';
+  var sel = d.uid || list[0].id;
+  h += '<div class="card list">' + list.map(function(x) {
+    return '<button class="li' + (x.id === sel ? ' on' : '') + '" onclick="UI.sheet.data.uid=' + jsArg(x.id) + ';render()"><div class="ic">' + (x.id === sel ? '●' : '○') + '</div><div class="grow"><b>' + esc(memberName(x.id)) + '</b><small>' + esc(x.p.pendingId ? t('Includes a handover waiting for you', 'يشمل تسليماً بانتظارك') : t('Didn\'t send a handover', 'لم يرسل تسليماً')) + '</small></div><span class="amt">' + esc(fmtPair(x.p)) + '</span></button>';
+  }).join('') + '</div>';
+  h += '<label class="field"><span>' + esc(t('Note (optional)', 'ملاحظة (اختياري)')) + '</span><input class="input" id="hr-note" placeholder="' + esc(t('e.g. Got it at the lobby', 'مثلاً استلمته في المدخل')) + '"></label>';
+  var pk = (list.filter(function(x) { return x.id === sel; })[0] || list[0]).p;
+  h += '<div id="sheet-err" class="err"></div><div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Cancel', 'إلغاء')) + '</button><button class="btn ok" onclick="receiveHandover(' + jsArg(sel) + ')">' + esc(t('Received ' + fmtPair(pk) + ', put in safe', 'استلمت ' + fmtPair(pk) + '، للصندوق')) + '</button></div>';
+  return h;
+};
+function receiveHandover(uid) {
+  rpc('receive_handover', { p_building: S.building.id, p_collector: uid, p_note: val('hr-note') || null }).then(function() {
+    if (isCloud()) reloadBuilding();
+    closeSheet(); toast(t('In the safe ✓', 'في الصندوق ✓'));
+  }, function(e) { sheetErr(e.message); });
+}
 function resolveHandover(id, ok) {
   rpc('resolve_handover', { p_handover: id, p_accept: ok }).then(function() {
     if (isCloud()) reloadBuilding();
@@ -3524,6 +3573,7 @@ SHEETS.add = function() {
     if (aiReady()) items.push(['scanexp', '🧾', t('Scan a receipt', 'امسح إيصالاً'), t('Photo of an invoice becomes an expense', 'صورة الفاتورة تصبح مصروفاً')]);
     items.push(['charge', '🧾', t('Add a charge', 'أضف رسماً'), t('A bill to split, a fee, a supplier service', 'فاتورة، رسم، خدمة مورّد')]);
     items.push(['month', '📅', t('Open the next month', 'افتح الشهر التالي'), t('Copies the repeating charges', 'ينسخ الرسوم المتكررة')]);
+    if (collectorsHolding().length) items.push(['handrecv', '⇄', t('Cash received from a collector', 'استلمت نقداً من الجابي'), t('Even if they didn\'t send a handover', 'حتى لو لم يرسل تسليماً')]);
     items.push(['project', '◆', t('New project', 'مشروع جديد'), t('Solar, elevator, painting…', 'طاقة شمسية، مصعد، دهان…')]);
     items.push(['task', '✅', t('Add a task', 'أضف مهمة'), t('Reminders that repeat', 'تذكيرات متكررة')]);
   } else {

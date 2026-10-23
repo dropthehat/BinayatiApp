@@ -584,3 +584,6 @@ alter table public.invites add column if not exists display_name_ar text;
 -- v15_12–14: shared demo accounts demo-manager / demo-collector (password binayati-demo)
 -- and public.demo_reset(), which builds a fresh "Demo Arz" building (12 apartments, Sep+Oct,
 -- handovers, expenses, tasks) and moves the two demo members onto it. Applied live as migrations.
+
+-- v15_15: public.receive_handover(p_building, p_collector, p_note): manager records cash received from a collector
+-- (confirms a waiting handover and sweeps anything newer into a confirmed one). Applied live.

@@ -750,12 +750,13 @@ function roleLabel(r) {
    Tasks: repeating tasks roll forward when ticked
    --------------------------------------------------------------------------- */
 var REPEATS = {
-  none: ['Once', 'مرة واحدة'], weekly: ['Every week', 'كل أسبوع'], monthly: ['Every month', 'كل شهر'],
+  none: ['Once', 'مرة واحدة'], daily: ['Every day', 'كل يوم'], weekly: ['Every week', 'كل أسبوع'], monthly: ['Every month', 'كل شهر'],
   quarterly: ['Every 3 months', 'كل 3 أشهر'], halfyear: ['Every 6 months', 'كل 6 أشهر'], yearly: ['Every year', 'كل سنة']
 };
 function rollDate(iso, rep) {
   var d = new Date((iso || todayIso()) + 'T12:00:00');
-  if (rep === 'weekly') d.setDate(d.getDate() + 7);
+  if (rep === 'daily') { var td = new Date(todayIso() + 'T12:00:00'); if (d < td) d = td; d.setDate(d.getDate() + 1); }
+  else if (rep === 'weekly') d.setDate(d.getDate() + 7);
   else if (rep === 'monthly') d.setMonth(d.getMonth() + 1);
   else if (rep === 'quarterly') d.setMonth(d.getMonth() + 3);
   else if (rep === 'halfyear') d.setMonth(d.getMonth() + 6);
@@ -825,7 +826,9 @@ var CHARGE_PRESETS = {
     { g: ['Upkeep', 'الصيانة والتشغيل'], en: 'Elevator maintenance contract', ar: 'عقد صيانة المصعد', amt: 60, cur: 'USD', split: 'total' },
     { g: ['Upkeep', 'الصيانة والتشغيل'], en: 'Water pump maintenance', ar: 'صيانة مضخة المياه', amt: 20, cur: 'USD', split: 'total' },
     { g: ['Upkeep', 'الصيانة والتشغيل'], en: 'Garden care', ar: 'العناية بالحديقة', amt: 40, cur: 'USD', split: 'total' },
-    { g: ['Upkeep', 'الصيانة والتشغيل'], en: 'Garbage collection', ar: 'جمع النفايات', amt: 3, cur: 'USD', split: 'each' },
+    { g: ['Trash', 'النفايات'], en: 'Trash collection (door to door)', ar: 'جمع النفايات من الأبواب', amt: 5, cur: 'USD', split: 'each' },
+    { g: ['Trash', 'النفايات'], en: 'Trash collection company', ar: 'شركة جمع النفايات', amt: 60, cur: 'USD', split: 'total' },
+    { g: ['Trash', 'النفايات'], en: 'Trash bags & bin cleaning', ar: 'أكياس النفايات وتنظيف المستوعبات', amt: 2, cur: 'USD', split: 'each' },
     { g: ['Staff', 'الموظفون'], en: 'Natour (concierge) salary', ar: 'راتب الناطور', amt: 300, cur: 'USD', split: 'total' },
     { g: ['Staff', 'الموظفون'], en: 'Security guard', ar: 'أجر الحارس', amt: 400, cur: 'USD', split: 'total' },
     { g: ['Staff', 'الموظفون'], en: 'Cleaner', ar: 'أجر عامل التنظيف', amt: 100, cur: 'USD', split: 'total' },
@@ -857,6 +860,9 @@ var CHARGE_PRESETS = {
     { g: ['Safety & admin', 'السلامة والإدارة'], en: 'Building insurance', ar: 'تأمين البناية', amt: 300, cur: 'USD', split: 'total' },
     { g: ['Safety & admin', 'السلامة والإدارة'], en: 'Municipality fees (common parts)', ar: 'رسوم البلدية (الأقسام المشتركة)', amt: 5000000, cur: 'LBP', split: 'total' },
     { g: ['Safety & admin', 'السلامة والإدارة'], en: 'Lawyer or syndicate fees', ar: 'أتعاب المحامي أو النقابة', amt: 100, cur: 'USD', split: 'total' },
+    { g: ['Trash', 'النفايات'], en: 'New trash bins', ar: 'مستوعبات نفايات جديدة', amt: 80, cur: 'USD', split: 'total' },
+    { g: ['Trash', 'النفايات'], en: 'Bulky waste removal (renovation debris)', ar: 'رفع ردميات وأغراض كبيرة', amt: 50, cur: 'USD', split: 'total' },
+    { g: ['Trash', 'النفايات'], en: 'Municipality trash fee', ar: 'رسم النفايات للبلدية', amt: 2000000, cur: 'LBP', split: 'total' },
     { g: ['Other', 'أخرى'], en: 'Common light bulbs', ar: 'لمبات الأقسام المشتركة', amt: 20, cur: 'USD', split: 'total' },
     { g: ['Other', 'أخرى'], en: 'Holiday decoration', ar: 'زينة الأعياد', amt: 50, cur: 'USD', split: 'total' }
   ],
@@ -868,6 +874,7 @@ var CHARGE_PRESETS = {
     { g: ['Collected for a supplier', 'تُجمع لمورّد'], en: 'Drinking water delivery', ar: 'توصيل مياه الشرب', cur: 'USD' },
     { g: ['Collected for a supplier', 'تُجمع لمورّد'], en: 'Cooking gas', ar: 'غاز الطبخ', cur: 'USD' },
     { g: ['Collected for a supplier', 'تُجمع لمورّد'], en: 'Solar power share', ar: 'حصة الطاقة الشمسية', cur: 'USD' },
+    { g: ['Collected for a supplier', 'تُجمع لمورّد'], en: 'Private trash pickup', ar: 'جمع النفايات الخاص', cur: 'USD' },
     { g: ['Collected for a supplier', 'تُجمع لمورّد'], en: 'Parking space rent', ar: 'إيجار موقف السيارة', cur: 'USD' }
   ]
 };
@@ -883,7 +890,10 @@ var EXPENSE_PRESETS = [
   { cat: 'water', en: 'Water tank cleaning', ar: 'تنظيف خزانات المياه' },
   { cat: 'water', en: 'Water pump repair', ar: 'تصليح مضخة المياه' },
   { cat: 'clean', en: 'Cleaning supplies', ar: 'مواد تنظيف' },
-  { cat: 'clean', en: 'Garbage bags', ar: 'أكياس نفايات' },
+  { cat: 'clean', en: 'Trash bags', ar: 'أكياس نفايات' },
+  { cat: 'clean', en: 'Trash collection fee', ar: 'رسم جمع النفايات' },
+  { cat: 'clean', en: 'Trash bins', ar: 'مستوعبات نفايات' },
+  { cat: 'clean', en: 'Bulky waste removal', ar: 'رفع ردميات وأغراض كبيرة' },
   { cat: 'clean', en: 'Pest control', ar: 'رش مبيدات' },
   { cat: 'light', en: 'Light bulbs', ar: 'لمبات إنارة' },
   { cat: 'light', en: 'EDL bill (common meter)', ar: 'فاتورة كهرباء الدولة (العداد المشترك)' },
@@ -911,8 +921,12 @@ var TASK_PRESETS = [
   { g: ['Power', 'الكهرباء'], en: 'Top up generator diesel', ar: 'تعبئة مازوت المولّد', rep: 'weekly', who: 'collector' },
   { g: ['Power', 'الكهرباء'], en: 'Dust the solar panels', ar: 'تنظيف ألواح الطاقة الشمسية', rep: 'monthly', who: 'collector' },
   { g: ['Power', 'الكهرباء'], en: 'Replace burnt common lights', ar: 'تبديل اللمبات المحروقة', rep: 'monthly', who: 'collector' },
+  { g: ['Trash', 'النفايات'], en: 'Collect trash from the floors', ar: 'جمع النفايات من الطوابق', rep: 'daily', who: 'collector' },
+  { g: ['Trash', 'النفايات'], en: 'Put the bins out for pickup', ar: 'إخراج المستوعبات للجمع', rep: 'daily', who: 'collector' },
+  { g: ['Trash', 'النفايات'], en: 'Sort recycling (plastic, cardboard)', ar: 'فرز إعادة التدوير (بلاستيك، كرتون)', rep: 'weekly', who: 'collector' },
+  { g: ['Trash', 'النفايات'], en: 'Pay the trash collection company', ar: 'الدفع لشركة جمع النفايات', rep: 'monthly', who: 'manager' },
+  { g: ['Trash', 'النفايات'], en: 'Wash the trash bins', ar: 'غسل مستوعبات النفايات', rep: 'weekly', who: 'collector' },
   { g: ['Cleaning', 'التنظيف'], en: 'Clean the staircase', ar: 'تنظيف الدرج', rep: 'weekly', who: 'collector' },
-  { g: ['Cleaning', 'التنظيف'], en: 'Wash the trash bins', ar: 'غسل مستوعبات النفايات', rep: 'weekly', who: 'collector' },
   { g: ['Cleaning', 'التنظيف'], en: 'Clean the entrance glass', ar: 'تنظيف زجاج المدخل', rep: 'weekly', who: 'collector' },
   { g: ['Cleaning', 'التنظيف'], en: 'Clear roof drains before winter', ar: 'تنظيف مجاري السطح قبل الشتاء', rep: 'yearly', who: 'collector' },
   { g: ['Cleaning', 'التنظيف'], en: 'Clean basement drains & light wells', ar: 'تنظيف مجاري الطابق السفلي والمناور', rep: 'quarterly', who: 'collector' },

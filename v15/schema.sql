@@ -138,7 +138,7 @@ create table if not exists public.tasks (
   title       text not null,
   title_ar    text,
   due_on      date,
-  repeat      text not null default 'none' check (repeat in ('none','weekly','monthly','quarterly','halfyear','yearly')),
+  repeat      text not null default 'none' check (repeat in ('none','daily','weekly','monthly','quarterly','halfyear','yearly')),
   assignee    text not null default 'manager' check (assignee in ('manager','collector')),
   done_at     timestamptz,
   done_by     uuid,
@@ -311,10 +311,11 @@ begin
   if new.done_at is not null and old.done_at is null and new.repeat <> 'none' then
     insert into public.tasks(building_id, title, title_ar, due_on, repeat, assignee)
     values (new.building_id, new.title, new.title_ar,
-            (coalesce(new.due_on, current_date) + case new.repeat
+            case when new.repeat = 'daily' then greatest(coalesce(new.due_on, current_date), current_date) + 1
+            else (coalesce(new.due_on, current_date) + case new.repeat
                when 'weekly' then interval '7 days' when 'monthly' then interval '1 month'
                when 'quarterly' then interval '3 months' when 'halfyear' then interval '6 months'
-               else interval '1 year' end)::date,
+               else interval '1 year' end)::date end,
             new.repeat, new.assignee);
     new.repeat := 'none';
   end if;

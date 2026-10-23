@@ -410,6 +410,13 @@ a.btn { text-decoration: none; }
 .bh:not(.bh-bare) .bh-neigh, .bh:not(.bh-bare) .bh-nline, .bh:not(.bh-bare) .bh-nw { opacity:.6 }
 .bh.day .bh-neigh{fill:#DCE1E8} .bh.day .bh-nline{fill:#CBD2DC} .bh.day .bh-nw{fill:#A9B7C8}
 
+/* Elevator */
+.bh-shaft{fill:#BFD6E6;opacity:.55;stroke:var(--rail);stroke-width:.5}
+.bh.night .bh-shaft,.bh.eve .bh-shaft{fill:#2B3A6E;opacity:.7}
+.bh-cable{stroke:var(--rail);stroke-width:.3;opacity:.5}
+.bh-cab rect{fill:#5A6070} .bh-cab .bh-cabLit{fill:#FFE7AE}
+@media (prefers-reduced-motion: reduce){ .bh-cab animateTransform{display:none} }
+
 </style>
 </head>
 <body>
@@ -1418,6 +1425,35 @@ function buildBuildingScene(o) {
  }
 
  // Railings drawn over the windows
+ // Elevator: glass shaft on the side wall, cabin wanders between floors and rests
+ if (o.elevator && fh >= 14) {
+   var shX = bx2 + 2, shTop = top + 8, shBot = basements ? 231 + basements * fh - 3 : 225;
+   s += '<rect class="bh-shaft" x="' + heroR(shX) + '" y="' + heroR(shTop) + '" width="6.5" height="' + heroR(shBot - shTop) + '" rx=".8"/>';
+   s += '<path class="bh-cable" d="M' + heroR(shX + 3.25) + ' ' + heroR(shTop) + 'V' + heroR(shBot) + '"/>';
+   var cabH = Math.min(9, fh * 0.55);
+   function stopY(lv) { // lv: 0 lobby, 1..floors up, -1..-basements down
+     if (lv > 0) return lobbyTop - lv * fh + fh * 0.84 - cabH;
+     if (lv < 0) return 231 + (-lv) * fh - 2.6 - cabH;
+     return 225 - cabH;
+   }
+   var vals = [], times = [], tt = 0, cur = 0, k = 0;
+   function push(lv, wait) {
+     var y = heroR(stopY(lv)), travel = Math.abs(lv - cur) * 0.9;
+     if (vals.length) { tt += travel; vals.push(y); times.push(tt); }
+     else { vals.push(y); times.push(0); }
+     tt += wait; vals.push(y); times.push(tt); cur = lv;
+   }
+   push(0, 4);
+   for (k = 0; k < 7; k++) {
+     var lv = Math.floor(rnd(500 + k) * (floors + basements + 1)) - basements;
+     if (lv === cur) lv = cur === 0 ? floors : 0;
+     push(lv, 2 + rnd(600 + k) * 3);
+   }
+   push(0, 3 + rnd(700) * 5);
+   var y0 = vals[0];
+   s += '<g class="bh-cab"><rect x="' + heroR(shX + 0.8) + '" y="0" width="4.9" height="' + heroR(cabH) + '" rx=".6"/><rect class="bh-cabLit" x="' + heroR(shX + 1.6) + '" y="1.2" width="3.3" height="' + heroR(cabH - 2.4) + '" rx=".4"/>';
+   s += '<animateTransform attributeName="transform" type="translate" dur="' + heroR(tt) + 's" repeatCount="indefinite" calcMode="spline" keyTimes="' + times.map(function(x) { return (x / tt).toFixed(4); }).join(';') + '" keySplines="' + times.slice(1).map(function() { return '.45 0 .55 1'; }).join(';') + '" values="' + vals.map(function(v) { return '0 ' + v; }).join(';') + '"/></g>';
+ }
  if (rails) s += '<path class="bh-rail" d="' + rails + '" style="stroke-width:.6"/>';
  s += plants;
  // Ground-floor plinth: a wide light slab with a soft lip, like a podium
@@ -2019,7 +2055,7 @@ function heroHtml(cyc, opts) {
   var safe = cash ? { split: true, usdH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.USD) / 40)), lbpH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.LBP) / 4e6)) } : null;
   var html = buildBuildingScene({
     phase: ph, wins: wins, levels: levels, interactive: !opts.noTap, idp: opts.idp || 'hm', signText: blk ? (S.building.name + ' ' + blk).slice(0, 12) : S.building.name, chip: ph.chip,
-    safe: safe, coreGlow: openTasks().some(function(x) { return x.due_on && x.due_on <= todayIso(); }),
+    safe: safe, elevator: !!setting('elevator'), coreGlow: openTasks().some(function(x) { return x.due_on && x.due_on <= todayIso(); }),
     extraCls: reveal ? 'reveal' : ''
   });
   var paid = wins.filter(function(w) { return w.state === 'paid'; }).length;
@@ -3142,6 +3178,9 @@ function renderSettingsSec() {
   h += '<div class="two"><label class="field"><span>' + esc(t('Safe at the start ($)', 'الصندوق عند البدء ($)')) + '</span><input class="input" id="s-ou" inputmode="decimal" value="' + esc(st.opening_usd || 0) + '"></label>';
   h += '<label class="field"><span>' + esc(t('Safe at the start (LBP)', 'الصندوق عند البدء (ل.ل)')) + '</span><input class="input" id="s-ol" inputmode="numeric" value="' + esc(st.opening_lbp || 0) + '"></label></div>';
   h += '<button class="btn pri block" style="margin-top:14px" onclick="saveSettings()">' + esc(t('Save', 'حفظ')) + '</button></div></div>';
+  h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('The building', 'البناية')) + '</h2></div><div class="card pad">';
+  h += switchRow('elevator', !!st.elevator, t('Has an elevator', 'فيها مصعد'), t('Shown on the building picture, going up and down', 'يظهر في صورة البناية صاعداً ونازلاً'));
+  h += '</div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('What residents see', 'ما يراه السكان')) + '</h2></div><div class="card pad">';
   h += switchRow('books_public', st.books_public !== false, t('The building\'s books', 'حسابات البناية'), t('Money in, money out and the safe, on every resident\'s page', 'المقبوض والمصروف والصندوق في صفحة كل ساكن'));
   h += switchRow('show_who_paid', !!st.show_who_paid, t('Who has paid', 'من سدّد'), t('Light up neighbours\' windows on their page. Off keeps it private.', 'إظهار شبابيك الجيران المضاءة. الإيقاف يبقيها خاصة.'));
@@ -3863,7 +3902,7 @@ function heroThumb(cyc) {
   var wins = units.map(function(u) { var st = unitCycle(u, cyc).state; return { state: st === 'paid' ? 'paid' : st === 'none' ? 'closed' : 'owes' }; });
   if (!wins.length) wins = [{ state: 'closed' }];
   var levels = levelsFor(units.map(function(u, i) { return { code: u.code, win: wins[i] }; }));
-  return buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, wins: wins, levels: levels, signText: S.building.name, idp: 'ov' + Math.random().toString(36).slice(2, 6), extraCls: 'studio bh-bare nopop' });
+  return buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, wins: wins, levels: levels, signText: S.building.name, elevator: !!setting('elevator'), idp: 'ov' + Math.random().toString(36).slice(2, 6), extraCls: 'studio bh-bare nopop' });
 }
 function renderOverview() {
   var h = '<div class="shell"><header class="topbar"><div class="grow"><b style="font-size:20px;font-weight:800">' + esc(t('Your buildings', 'بناياتك')) + '</b></div><button class="iconbtn" onclick="setLang()">' + (LANG === 'ar' ? 'EN' : 'ع') + '</button></header>';

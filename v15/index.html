@@ -444,6 +444,9 @@ a.btn { text-decoration: none; }
 /* Tower */
 .bh-blink{animation:bhBlink 2.4s steps(1) infinite} @keyframes bhBlink{0%{opacity:1}50%{opacity:.15}}
 
+.bh-liftLight{fill:#FFE3A0;filter:drop-shadow(0 0 1.5px #FFD27A)}
+.bh-safeAmt{font:700 5px Inter,system-ui,sans-serif;text-anchor:middle;fill:#F2D68E}
+
 </style>
 </head>
 <body>
@@ -1337,8 +1340,8 @@ function buildBuildingScene(o) {
  for (var f = 0; f < floors; f++) {
  var ft = lobbyTop - (f + 1) * fh;
  var coreRects = coreRects || '';
- if (!single && !even) { coreRects += '<rect x="178" y="' + heroR(ft + fh * 0.18) + '" width="10" height="' + heroR(fh * 0.6) + '" rx="0.6"/>'; }
- if (!single && !even) s += '<rect class="bh-core" x="178" y="' + heroR(ft + fh * 0.18) + '" width="10" height="' + heroR(fh * 0.6) + '" rx="0.6"/>';
+ if (!single && !even) { coreRects += '<rect class="bh-liftLight" x="176" y="' + heroR(ft + fh * 0.18) + '" width="14" height="' + heroR(fh * 0.6) + '" rx="0.6"/>'; }
+ if (!single && !even) s += '<rect class="bh-core" x="176" y="' + heroR(ft + fh * 0.18) + '" width="14" height="' + heroR(fh * 0.6) + '" rx="0.6"/>';
  s += '<rect class="bh-slab" x="' + (bx - 4) + '" y="' + heroR(ft + fh * 0.89) + '" width="' + (bw + 8) + '" height="' + heroR(Math.max(2, fh * 0.1)) + '"/>';
  s += '<rect class="bh-slabEdge" x="' + (bx - 4) + '" y="' + heroR(ft + fh * 0.89 + Math.max(2, fh * 0.1)) + '" width="' + (bw + 8) + '" height="0.8"/>';
  if (f % 2 === 1) s += '<rect class="bh-ac" x="' + (bx2 - 9) + '" y="' + heroR(ft + fh * 0.5) + '" width="8" height="5" rx="0.6"/>';
@@ -1361,8 +1364,8 @@ function buildBuildingScene(o) {
      sc.push(bx + 2, bx2 - 5);
      if (!single && !even) {
        var cy0 = bt + fh * 0.16, ch0 = fh * 0.56;
-       s += '<rect class="bh-core" x="178" y="' + heroR(cy0) + '" width="10" height="' + heroR(ch0) + '" rx="0.6"/>';
-       coreRects += '<rect x="178" y="' + heroR(cy0) + '" width="10" height="' + heroR(ch0) + '" rx="0.6"/>';
+       s += '<rect class="bh-core" x="176" y="' + heroR(cy0) + '" width="14" height="' + heroR(ch0) + '" rx="0.6"/>';
+       coreRects += '<rect class="bh-liftLight" x="176" y="' + heroR(cy0) + '" width="14" height="' + heroR(ch0) + '" rx="0.6"/>';
      }
      sc.forEach(function(scx) {
        s += '<circle class="bh-sconceGlow" cx="' + heroR(scx + 1.5) + '" cy="' + heroR(bt + fh * 0.36) + '" r="3.2" filter="url(#' + P + 'Glow)"/>';
@@ -1459,9 +1462,11 @@ function buildBuildingScene(o) {
    if (!mid) {
      s += '<rect class="bh-shaft" x="' + heroR(shX) + '" y="' + heroR(shTop) + '" width="6.5" height="' + heroR(shBot - shTop) + '" rx=".8"/>';
      s += '<path class="bh-cable" d="M' + heroR(shX + 3.25) + ' ' + heroR(shTop) + 'V' + heroR(shBot) + '"/>';
-   } else s += '<clipPath id="' + P + 'Lift">' + coreRects + '</clipPath>';
-   var cabH = Math.min(9, fh * 0.55);
+   }
+   var cabH = mid ? fh * 0.6 : Math.min(9, fh * 0.55);
    function stopY(lv) { // lv: 0 lobby, 1..floors up, -1..-basements down
+     if (mid && lv > 0) return lobbyTop - lv * fh + fh * 0.18;
+     if (mid && lv < 0) return 231 + (-lv - 1) * fh + fh * 0.16;
      if (lv > 0) return lobbyTop - lv * fh + fh * 0.84 - cabH;
      if (lv < 0) return 231 + (-lv) * fh - 2.6 - cabH;
      return 225 - cabH;
@@ -1471,10 +1476,10 @@ function buildBuildingScene(o) {
    for (var lvv = -basements; lvv <= floors; lvv++) stops.push(lvv + ':' + heroR(stopY(lvv)));
    var lkey = P + seed0;
    var cabOpen = '<g class="bh-cabMove" data-key="' + esc(lkey) + '" data-stops="' + stops.join(',') + '" transform="translate(0 ' + heroR(LIFT[lkey] ? LIFT[lkey].y : stopY(0)) + ')">';
-   if (mid) s += '<g clip-path="url(#' + P + 'Lift)">' + cabOpen + '<rect class="bh-cabGlow" x="176" y="-4" width="14" height="' + heroR(cabH + 8) + '"/><rect class="bh-cabLit" x="178" y="0" width="10" height="' + heroR(cabH) + '"/><rect x="178" y="' + heroR(cabH - 1) + '" width="10" height="1" fill="#5A6070"/></g></g>';
+   if (mid) s += coreRects.replace(/<rect class="bh-liftLight" x="176" y="([\d.]+)" width="14" height="([\d.]+)"/g, function(m, y, h) { return '<rect class="bh-liftLight" x="176" y="' + y + '" width="14" height="0" data-y0="' + y + '" data-y1="' + heroR(+y + +h) + '"'; }) + cabOpen.replace('>', ' data-cabh="' + heroR(cabH) + '" data-mid="1">') + '</g>';
    else s += cabOpen + '<g class="bh-cab"><rect x="' + heroR(shX + 0.8) + '" y="0" width="4.9" height="' + heroR(cabH) + '" rx=".6"/><rect class="bh-cabLit" x="' + heroR(shX + 1.6) + '" y="1.2" width="3.3" height="' + heroR(cabH - 2.4) + '" rx=".4"/></g></g>';
    // tap area over the shaft: tap a floor and the elevator goes there
-   s += '<rect class="bh-liftTap" x="' + heroR(mid ? 174 : shX - 2) + '" y="' + heroR(shTop - 4) + '" width="' + (mid ? 18 : 10.5) + '" height="' + heroR(shBot - shTop + 8) + '" fill="transparent" onclick="liftTap(event,this,' + jsq(lkey) + ')"/>';
+   s += '<rect class="bh-liftTap" x="' + heroR(mid ? 173 : shX - 2) + '" y="' + heroR(shTop - 4) + '" width="' + (mid ? 20 : 10.5) + '" height="' + heroR(shBot - shTop + 8) + '" fill="transparent" onclick="liftTap(event,this,' + jsq(lkey) + ')"/>';
  }
  s += '<rect class="bh-lobby" x="' + bx + '" y="' + lobbyTop + '" width="' + bw + '" height="29"/>';
  s += '<rect class="bh-parapet" x="156" y="199" width="54" height="3" rx="0.6"/>';
@@ -1552,7 +1557,6 @@ function buildBuildingScene(o) {
      var u = Math.min(1, (o.safe.usdH - 2) / 20), l = Math.min(1, (o.safe.lbpH - 2) / 20);
      var tapS = o.safe.tap ? ' role="button" tabindex="0" onclick="safeTap(this,event)" data-go="' + o.safe.tap + '"' : '';
      s += '<g class="bh-safe bh-safeTap' + (SAFE_OPEN ? ' open' : '') + '"' + tapS + '>';
-     s += '<rect x="' + (nx + 3) + '" y="' + (ny + shh - 0.5) + '" width="5" height="2.4" rx=".6" class="bh-safeFoot"/><rect x="' + (nx + sw - 8) + '" y="' + (ny + shh - 0.5) + '" width="5" height="2.4" rx=".6" class="bh-safeFoot"/>';
      s += '<rect x="' + nx + '" y="' + ny + '" width="' + sw + '" height="' + shh + '" rx="3.4" class="bh-safeBody"/>';
      // inside (seen when open)
      s += '<g class="bh-safeOpenG" style="display:' + (SAFE_OPEN ? 'inline' : 'none') + '"><rect x="' + (nx + 2.5) + '" y="' + (ny + 2.5) + '" width="' + (sw - 5) + '" height="' + (shh - 5) + '" rx="1.4" class="bh-safeIn"/>';
@@ -1564,15 +1568,13 @@ function buildBuildingScene(o) {
      }
      var nU = Math.max(1, Math.round(u * 6)), nL = Math.max(1, Math.round(l * 6));
      // dollars only: up to 4 stacks per shelf, filling the bottom shelf first
-     var piles = Math.max(1, Math.round(u * 8));
-     for (var pi = 0; pi < piles; pi++) {
-       var top2 = pi >= 4, col = pi % 4;
-       s += stacks(nx + 3.6 + col * 5.6, (top2 ? ny + shh / 2 - 0.2 : ny + shh - 2.8), 3 + (pi * 7 % 3), '#2BC48C', '#1E9E70').replace(/width="9"/g, 'width="4.8"');
-     }
+     var piles = Math.max(1, Math.round(u * 4));
+     for (var pi = 0; pi < piles; pi++) s += stacks(nx + 3.6 + pi * 5.6, ny + shh - 2.8, 2 + Math.round(u * 3) + (pi * 7 % 2), '#2BC48C', '#1E9E70').replace(/width="9"/g, 'width="4.8"');
+     s += '<text x="' + (nx + sw / 2) + '" y="' + heroR(ny + shh / 2 - 2.6) + '" class="bh-safeAmt">' + esc(safeLabel()) + '</text>';
      // door swung open to the right
      s += '<path d="M' + (nx + sw) + ' ' + (ny + 1) + ' L' + (nx + sw + 7) + ' ' + (ny - 1) + ' L' + (nx + sw + 7) + ' ' + (ny + shh + 1) + ' L' + (nx + sw) + ' ' + (ny + shh - 1) + ' Z" class="bh-safeDoor"/>';
      [0.3, 0.5, 0.7].forEach(function(f) { s += '<circle cx="' + (nx + sw + 3.6) + '" cy="' + heroR(ny + shh * f) + '" r=".8" class="bh-safeBolt"/>'; });
-     s += '<rect x="' + (nx + 1) + '" y="' + (ny - 7) + '" width="' + (sw - 2) + '" height="5" rx="1" class="bh-brass"/><text x="' + (nx + sw / 2) + '" y="' + (ny - 3.3) + '" class="bh-brassTx" style="font-size:4px">' + esc(safeLabel()) + '</text></g>';
+     s += '</g>';
      // closed door
      var cx = nx + sw * 0.6, cy = ny + shh / 2;
      s += '<g class="bh-safeClosedG" style="display:' + (SAFE_OPEN ? 'none' : 'inline') + '"><rect x="' + (nx + 2.5) + '" y="' + (ny + 2.5) + '" width="' + (sw - 5) + '" height="' + (shh - 5) + '" rx="1.6" class="bh-safeFace"/>';
@@ -1708,6 +1710,13 @@ function liftTick(now) {
       liftGo(key, nx.y, 0);
     }
     cab.setAttribute('transform', 'translate(0 ' + st.y.toFixed(2) + ')');
+    if (cab.getAttribute('data-mid')) {
+      var ch = +cab.getAttribute('data-cabh'), c0 = st.y, c1 = st.y + ch;
+      cab.parentNode.querySelectorAll('.bh-liftLight').forEach(function(r) {
+        var y0 = +r.getAttribute('data-y0'), y1 = +r.getAttribute('data-y1'), a = Math.max(y0, c0), b = Math.min(y1, c1);
+        if (b > a) { r.setAttribute('y', a.toFixed(2)); r.setAttribute('height', (b - a).toFixed(2)); } else r.setAttribute('height', '0');
+      });
+    }
   });
   requestAnimationFrame(liftTick);
 }

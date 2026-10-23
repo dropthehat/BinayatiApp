@@ -4809,7 +4809,7 @@ SHEETS.remind = function(d) {
   }
   h += scanStatus(d);
   h += '<label class="field"><span>' + esc(t('Message (you can edit it)', 'الرسالة (يمكنك تعديلها)')) + '</span><textarea class="input" id="rm-text" dir="auto" style="min-height:' + (d.len === 'long' ? 220 : 140) + 'px;font-size:15px">' + esc(d.text) + '</textarea></label>';
-  h += '<div id="sheet-err" class="err"></div><div class="foot"><button class="btn sec" onclick="UI.sheet.data.text=null;UI.sheet.data.ai=false;UI.sheet.data.scan=null;render()">' + esc(t('Standard text', 'النص العادي')) + '</button>';
+  h += '<div id="sheet-err" class="err"></div><div class="foot"><button class="btn sec" onclick="UI.sheet.data.text=null;UI.sheet.data.ai=false;UI.sheet.data.scan=null;render()">' + '↺ ' + esc(t('Reset message', 'إعادة الرسالة')) + '</button>';
   h += u.phone ? '<button class="btn wa" onclick="sendReminder()">' + esc(t('Send on WhatsApp', 'أرسل على واتساب')) + '</button>' : '<button class="btn sec" onclick="copyText(val(\'rm-text\'))">' + esc(t('Copy (no phone saved)', 'نسخ (لا رقم محفوظ)')) + '</button>';
   return h + '</div>';
 };

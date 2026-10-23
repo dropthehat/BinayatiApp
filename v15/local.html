@@ -204,7 +204,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* Sheets */
 .scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 90; display: flex; align-items: flex-end; justify-content: center; animation: fadeIn .18s ease; }
 .sheet { width: 100%; max-width: 520px; max-height: 92vh; max-height: 92dvh; overflow-y: auto; background: var(--sheet); border-radius: 24px 24px 0 0; padding: 10px 18px calc(18px + env(safe-area-inset-bottom)); animation: up .24s cubic-bezier(.2,.8,.2,1); }
-.sheet .grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 10px; }
+.sheet .grab { width: 40px; height: 5px; touch-action: none; cursor: grab; border-radius: 3px; background: var(--line); margin: 0 auto 10px; }
 .sheet h3 { margin: 4px 0 4px; font-size: 19px; font-weight: 800; }
 .sheet .lead { margin: 0 0 14px; color: var(--mut); font-size: 13.5px; }
 .sheet .foot { display: flex; gap: 10px; margin-top: 18px; }
@@ -530,7 +530,8 @@ function num(v) { var n = Number(v); return isFinite(n) ? n : 0; }
 function round(v, cur) { return cur === 'LBP' ? Math.round(v) : Math.round(v * 100) / 100; }
 function tiny(v, cur) { return Math.abs(v) < (cur === 'LBP' ? 1 : 0.005); }
 
-function fmt(amt, cur) {
+function fmt(amt, cur) { return '\u2066' + fmtRaw(amt, cur) + '\u2069'; }
+function fmtRaw(amt, cur) {
   var n = num(amt), sign = n < 0 ? '-' : '';
   n = Math.abs(n);
   if (cur === 'LBP') {
@@ -577,7 +578,7 @@ function fmtPair(p, zeroCur) {
   var parts = [];
   if (!tiny(p.USD || 0, 'USD')) parts.push(fmt(p.USD, 'USD'));
   if (!tiny(p.LBP || 0, 'LBP')) parts.push(fmt(p.LBP, 'LBP'));
-  return parts.length ? parts.join(' + ') : fmt(0, zeroCur || 'USD');
+  return parts.length ? '\u2066' + parts.join(' + ') + '\u2069' : fmt(0, zeroCur || 'USD');
 }
 function pair() { return { USD: 0, LBP: 0 }; }
 function addTo(p, cur, v) { p[cur] = (p[cur] || 0) + v; return p; }
@@ -2437,7 +2438,7 @@ function fmtPairBig(p) {
   if (baseUsd()) return esc(fmt(u + l / rate(), 'USD'));
   if (tiny(l, 'LBP')) return esc(fmt(u, 'USD'));
   if (tiny(u, 'USD')) return esc(fmt(l, 'LBP'));
-  return esc(fmt(u, 'USD')) + '<small>+ ' + esc(fmt(l, 'LBP')) + '</small>';
+  return esc(fmt(u, 'USD')) + '<small><bdi dir="ltr">+ ' + esc(fmtRaw(l, 'LBP')) + '</bdi></small>';
 }
 function tile(lbl, valHtml, sub, onclick, dot, cls) {
   return '<button class="card tile ' + (cls || '') + '" onclick="' + onclick + '"><div class="lbl"><span class="dot" style="background:' + dot + '"></span>' + esc(lbl) + '</div><div class="val">' + valHtml + '</div><div class="sub">' + esc(sub) + '</div></button>';
@@ -2733,6 +2734,36 @@ function waLink(u, cyc) {
   if (digits.length === 7) digits = '961' + digits;
   return 'https://wa.me/' + digits + '?text=' + encodeURIComponent(waText(u, cyc));
 }
+
+/* Pull a sheet down to close it (from the grab bar, or anywhere once it's scrolled to the top). */
+(function() {
+  var drag = null;
+  document.addEventListener('touchstart', function(e) {
+    var sh = e.target.closest && e.target.closest('.sheet');
+    if (!sh || e.touches.length !== 1) return;
+    if (e.target.closest('input,textarea,select')) return;
+    var onGrab = !!e.target.closest('.grab') || (e.touches[0].clientY - sh.getBoundingClientRect().top) < 44;
+    if (!onGrab && sh.scrollTop > 0) return;
+    drag = { sh: sh, y0: e.touches[0].clientY, dy: 0, grab: onGrab };
+  }, { passive: true });
+  document.addEventListener('touchmove', function(e) {
+    if (!drag) return;
+    var dy = e.touches[0].clientY - drag.y0;
+    if (!drag.grab && drag.sh.scrollTop > 0) { drag = null; return; }
+    if (dy <= 0) { drag.sh.style.transform = ''; drag.dy = 0; return; }
+    drag.dy = dy;
+    drag.sh.style.transition = 'none';
+    drag.sh.style.transform = 'translateY(' + dy + 'px)';
+    if (e.cancelable) e.preventDefault();
+  }, { passive: false });
+  document.addEventListener('touchend', function() {
+    if (!drag) return;
+    var d = drag; drag = null;
+    d.sh.style.transition = 'transform .2s ease';
+    if (d.dy > 90) { d.sh.style.transform = 'translateY(100%)'; setTimeout(closeSheet, 180); }
+    else d.sh.style.transform = '';
+  });
+})();
 
 /* ============================================================================
    Books: where the money is, every movement, and who did what
@@ -3177,7 +3208,7 @@ function renderUnitsSec() {
     if (bl.length > 1) h += '<div class="daylbl">' + esc(g.b ? blockLabel(g.b) : t('No block', 'بلا بلوك')) + '</div>';
     h += '<div class="card list">';
     g.us.slice().sort(function(a, b) { return (a.sort || 0) - (b.sort || 0) || String(a.code).localeCompare(String(b.code), 'en', { numeric: true }); }).forEach(function(u) {
-      h += '<button class="li" onclick="openSheet(\'unitEdit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(u.code) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc([u.phone || t('no phone', 'بلا هاتف'), num(u.weight) !== 1 ? t('share ×', 'حصة ×') + num(u.weight) : '', u.active === false ? t('inactive', 'غير فعّالة') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
+      h += '<button class="li" onclick="openSheet(\'unitEdit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(u.code) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc([u.phone ? '\u2066' + u.phone + '\u2069' : t('no phone', 'بلا هاتف'), num(u.weight) !== 1 ? t('share ×', 'حصة ×') + num(u.weight) : '', u.active === false ? t('inactive', 'غير فعّالة') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
     });
     h += '</div>';
   });
@@ -3224,7 +3255,7 @@ SHEETS.unit = function(d) {
   var u = byId(S.units, d.id);
   if (!u) return '';
   var cyc = currentCycle(), r = unitCycle(u, cyc), b = unitBalance(u, cyc);
-  var h = '<div class="row"><div class="ucode">' + esc(u.code) + '</div><div class="grow"><h3 style="margin:0">' + esc(unitName(u) || t('Apartment ', 'شقة ') + u.code) + '</h3><div class="muted" style="font-size:13px">' + esc(u.phone || '') + '</div></div></div>';
+  var h = '<div class="row"><div class="ucode">' + esc(u.code) + '</div><div class="grow"><h3 style="margin:0">' + esc(unitName(u) || t('Apartment ', 'شقة ') + u.code) + '</h3><div class="muted" style="font-size:13px"><bdi dir="ltr">' + esc(u.phone || '') + '</bdi></div></div></div>';
   h += '<div class="card pad" style="margin-top:12px"><div style="font-size:12.5px;font-weight:800;color:var(--mut)">' + esc(cycleTitle(cyc)) + '</div>';
   r.cells.forEach(function(x) { h += '<div class="kv"><span>' + esc(L(x.ch)) + '</span><b>' + (x.c.state === 'paid' ? '<span style="color:var(--ok)">✓ </span>' : '') + esc(fmt(x.c.due, x.ch.cur)) + '</b></div>'; });
   if (!r.cells.length) h += '<div class="muted">' + esc(t('Nothing due this month', 'لا مستحقات هذا الشهر')) + '</div>';

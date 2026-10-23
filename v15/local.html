@@ -306,6 +306,12 @@ a.btn { text-decoration: none; }
 .unit-actions .btn { min-height: 40px; }
 .hero-cap { right: auto; left: 12px; }
 [dir="rtl"] .hero-cap { left: auto; right: 12px; }
+.tr-box:empty { display: none; }
+.tr-box { margin-top: 6px; }
+.tr-chip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-height: 34px; padding: 4px 12px; border-radius: 999px; background: var(--soft); color: var(--acc-ink); font-size: 13px; font-weight: 600; text-align: start; }
+.tr-chip span { opacity: .75; }
+.tr-chip b { font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tr-wait { font-size: 12.5px; color: var(--mut); font-weight: 600; }
 
 /* ---- living building scene ---- */
 .bh { position: relative; margin: 0 16px 12px; border-radius: 26px; overflow: hidden; aspect-ratio: 366 / 256; box-shadow: var(--shadow-lg); background: var(--sky2); }
@@ -968,6 +974,128 @@ function presetSelect(id, list, onchange, label) {
   if (group !== null) h += '</optgroup>';
   return h + '</select>';
 }
+
+/* ============================================================================
+   Suggested translations: type English, get the Arabic proposed (and back).
+   1) Ready-made lists and a dictionary of Lebanese names: instant, offline.
+   2) Otherwise the "translate" function on the server (AI, key kept there).
+   A suggestion only fills the field when tapped.
+   ============================================================================ */
+var NAME_DICT = {
+  // first names
+  ahmad: 'أحمد', ahmed: 'أحمد', mohammad: 'محمد', mohamad: 'محمد', mohamed: 'محمد', muhammad: 'محمد', ali: 'علي', hassan: 'حسن', hussein: 'حسين',
+  hussain: 'حسين', omar: 'عمر', khaled: 'خالد', khalil: 'خليل', karim: 'كريم', kareem: 'كريم', rami: 'رامي', ramy: 'رامي', samir: 'سمير', sami: 'سامي',
+  ziad: 'زياد', ziyad: 'زياد', hadi: 'هادي', fadi: 'فادي', rabih: 'ربيع', walid: 'وليد', nabil: 'نبيل', jamil: 'جميل', georges: 'جورج', george: 'جورج',
+  elie: 'إيلي', eli: 'إيلي', joseph: 'جوزيف', youssef: 'يوسف', yousef: 'يوسف', joe: 'جو', tony: 'طوني', antoine: 'أنطوان', charbel: 'شربل',
+  michel: 'ميشال', pierre: 'بيار', paul: 'بول', marc: 'مارك', jad: 'جاد', ralph: 'رالف', carl: 'كارل', charles: 'شارل', nicolas: 'نيكولا',
+  maroun: 'مارون', fouad: 'فؤاد', fuad: 'فؤاد', nader: 'نادر', bilal: 'بلال', anas: 'أنس', tarek: 'طارق', tarik: 'طارق', wassim: 'وسيم', wael: 'وائل',
+  issam: 'عصام', imad: 'عماد', emad: 'عماد', bassam: 'بسام', hisham: 'هشام', majed: 'ماجد', maher: 'ماهر', mazen: 'مازن', nizar: 'نزار',
+  raed: 'رائد', ghassan: 'غسان', salim: 'سليم', selim: 'سليم', toufic: 'توفيق', tawfik: 'توفيق', abbas: 'عباس', mahmoud: 'محمود', mustafa: 'مصطفى',
+  moustafa: 'مصطفى', ibrahim: 'إبراهيم', ismail: 'إسماعيل', jihad: 'جهاد', kamal: 'كمال', abu: 'أبو', abou: 'أبو', um: 'أم', oum: 'أم',
+  nadia: 'ناديا', nada: 'ندى', rania: 'رانيا', lina: 'لينا', rima: 'ريما', reem: 'ريم', maya: 'مايا', mira: 'ميرا', layla: 'ليلى', leila: 'ليلى',
+  zeina: 'زينة', zaina: 'زينة', hiba: 'هبة', fatima: 'فاطمة', fatmeh: 'فاطمة', zahra: 'زهراء', mariam: 'مريم', maryam: 'مريم', sara: 'سارة',
+  sarah: 'سارة', nour: 'نور', noor: 'نور', joelle: 'جويل', rita: 'ريتا', carla: 'كارلا', christine: 'كريستين', nancy: 'نانسي', hala: 'هالة',
+  dana: 'دانا', tanya: 'تانيا', tania: 'تانيا', samar: 'سمر', amal: 'أمل', hanan: 'حنان', souad: 'سعاد', ghada: 'غادة', mona: 'منى', muna: 'منى',
+  yasmine: 'ياسمين', yasmin: 'ياسمين', lara: 'لارا', nathalie: 'ناتالي', josephine: 'جوزفين', georgette: 'جورجيت', therese: 'تريز',
+  // family names
+  khoury: 'خوري', khouri: 'خوري', haddad: 'حداد', hallal: 'حلال', halal: 'حلال', khatib: 'الخطيب', 'el-khatib': 'الخطيب', mansour: 'منصور',
+  salameh: 'سلامة', salame: 'سلامة', nasser: 'ناصر', saab: 'صعب', farah: 'فرح', haidar: 'حيدر', haydar: 'حيدر', hamdan: 'حمدان', hammoud: 'حمود',
+  khalife: 'خليفة', khalifeh: 'خليفة', karam: 'كرم', aoun: 'عون', gemayel: 'الجميل', frangieh: 'فرنجية', geagea: 'جعجع', sfeir: 'صفير',
+  chamoun: 'شمعون', chehab: 'شهاب', shehab: 'شهاب', harb: 'حرب', abboud: 'عبود', azar: 'عازار', bou: 'بو', 'abi': 'أبي', daou: 'ضو', diab: 'دياب',
+  fakhoury: 'فاخوري', ghanem: 'غانم', habib: 'حبيب', hajj: 'الحاج', 'el-hajj': 'الحاج', hachem: 'هاشم', hashem: 'هاشم', issa: 'عيسى', jaber: 'جابر',
+  kassem: 'قاسم', qassem: 'قاسم', makdessi: 'المقدسي', moussa: 'موسى', nassar: 'نصار', rizk: 'رزق', saade: 'سعادة', saadeh: 'سعادة', sleiman: 'سليمان',
+  suleiman: 'سليمان', tannous: 'طنوس', younes: 'يونس', yammine: 'يمين', zein: 'الزين', 'el-zein': 'الزين', chahine: 'شاهين', shahine: 'شاهين',
+  daher: 'ضاهر', hayek: 'الحايك', 'el-hayek': 'الحايك', ayoub: 'أيوب', baz: 'الباز', kanaan: 'كنعان', maalouf: 'معلوف', matar: 'مطر', nakhle: 'نخلة',
+  nehme: 'نعمة', obeid: 'عبيد', rahme: 'رحمة', sabbagh: 'الصباغ', salem: 'سالم', srour: 'سرور', tabbara: 'طبارة', wehbe: 'وهبة', zoghbi: 'الزغبي',
+  'el-hassan': 'الحسن', husseini: 'الحسيني', berri: 'بري', hariri: 'الحريري', mikati: 'ميقاتي', karami: 'كرامي', jumblatt: 'جنبلاط', arslan: 'أرسلان',
+  osman: 'عثمان', othman: 'عثمان', itani: 'عيتاني', beydoun: 'بيضون', fawaz: 'فواز', merhi: 'مرعي', mrad: 'مراد', murad: 'مراد', hamieh: 'حمية',
+  dagher: 'داغر', nassif: 'ناصيف', tabet: 'ثابت', ziadeh: 'زيادة', abdallah: 'عبدالله', abdullah: 'عبدالله'
+};
+
+/* Instant answer from the lists, or null. */
+function localTranslate(text, kind, to) {
+  var s = String(text || '').trim();
+  if (!s) return null;
+  if (to === 'ar') {
+    var low = s.toLowerCase().replace(/\s+/g, ' ');
+    var lists = [].concat(CHARGE_PRESETS.fixed, CHARGE_PRESETS.due, CHARGE_PRESETS.service, TASK_PRESETS, EXPENSE_PRESETS);
+    for (var i = 0; i < lists.length; i++) if (lists[i].en.toLowerCase() === low) return lists[i].ar;
+    if (kind === 'name') {
+      var parts = low.split(/\s+/), out = [];
+      for (var j = 0; j < parts.length; j++) {
+        var w = parts[j], hit = NAME_DICT[w];
+        if (!hit && /^(el|al)-/.test(w) && NAME_DICT[w.slice(3)]) hit = 'ال' + NAME_DICT[w.slice(3)].replace(/^ال/, '');
+        if (!hit) return null;
+        out.push(hit);
+      }
+      return out.join(' ');
+    }
+  } else {
+    var lists2 = [].concat(CHARGE_PRESETS.fixed, CHARGE_PRESETS.due, CHARGE_PRESETS.service, TASK_PRESETS, EXPENSE_PRESETS);
+    for (var k = 0; k < lists2.length; k++) if (lists2[k].ar === s) return lists2[k].en;
+  }
+  return null;
+}
+
+var TR_CACHE = {};
+function serverTranslate(text, kind, to) {
+  var key = kind + '|' + to + '|' + text;
+  if (TR_CACHE[key] !== undefined) return Promise.resolve(TR_CACHE[key]);
+  if (!isCloud()) return Promise.resolve(null);
+  return SB.functions.invoke('translate', { body: { text: text, kind: kind, to: to } }).then(function(r) {
+    var out = r && !r.error && r.data && r.data.text ? r.data.text : null;
+    if (out && out.trim().toLowerCase() === text.trim().toLowerCase()) out = null;
+    TR_CACHE[key] = out;
+    return out;
+  }, function() { return null; });
+}
+
+/* Wiring: an input with data-tr="otherId" data-tr-kind="name|phrase" proposes text for #otherId.
+   The suggestion appears under #otherId, in a div with id "trs-otherId". */
+var _trT = {};
+function trInput(el) {
+  var dst = el.getAttribute('data-tr'), kind = el.getAttribute('data-tr-kind') || 'phrase';
+  var target = document.getElementById(dst), box = document.getElementById('trs-' + dst);
+  if (!target || !box) return;
+  var src = el.value.trim();
+  var arabicSrc = /[؀-ۿ]/.test(src);
+  // The pair can go either way: English field → Arabic field, or the reverse.
+  var to = target.getAttribute('dir') === 'rtl' ? 'ar' : 'en';
+  if (!src || (to === 'ar' && arabicSrc) || (to === 'en' && !arabicSrc)) { box.innerHTML = ''; return; }
+  if (target.value.trim() && target.getAttribute('data-tr-auto') !== String(target.value)) { box.innerHTML = ''; return; }
+  var quick = localTranslate(src, kind, to);
+  if (quick) { showTr(box, dst, quick); return; }
+  clearTimeout(_trT[dst]);
+  if (!isCloud()) { box.innerHTML = ''; return; }
+  box.innerHTML = '<span class="tr-wait">' + esc(t('Suggesting…', 'جارٍ الاقتراح…')) + '</span>';
+  _trT[dst] = setTimeout(function() {
+    serverTranslate(src, kind, to).then(function(out) {
+      if (el.value.trim() !== src) return;
+      if (out) showTr(box, dst, out); else box.innerHTML = '';
+    });
+  }, 650);
+}
+function showTr(box, dst, text) {
+  box.innerHTML = '<button type="button" class="tr-chip" onclick="useTr(' + jsArg(dst) + ',' + jsArg(text) + ')"><span>' + esc(t('Use', 'استعمل')) + '</span> <b dir="auto">' + esc(text) + '</b></button>';
+}
+function useTr(dst, text) {
+  var el = document.getElementById(dst);
+  if (!el) return;
+  el.value = text;
+  el.setAttribute('data-tr-auto', text);
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  var box = document.getElementById('trs-' + dst); if (box) box.innerHTML = '';
+}
+document.addEventListener('input', function(e) {
+  if (e.target && e.target.getAttribute && e.target.getAttribute('data-tr')) trInput(e.target);
+});
+/* After a re-render, show a suggestion again for fields that already have text. */
+function trRefresh() {
+  Array.prototype.forEach.call(document.querySelectorAll('[data-tr]'), function(el) { if (el.value.trim()) trInput(el); });
+}
+
+/* Mark a pair of fields: English input id a, Arabic input id b. */
+function trPairHtml() {}
 
 /* Living building scene — carried over from V13 (windows = who paid, sky = real time of day). */
 function sunTimesLocal(d) {
@@ -1732,6 +1860,7 @@ function afterRender() {
   var f = document.querySelector('[data-autofocus]');
   if (f && !f._focused) { f._focused = true; try { f.focus({ preventScroll: true }); } catch (e) {} }
   setSync(SYNC);
+  trRefresh();
 }
 
 function toast(msg) {
@@ -2599,8 +2728,8 @@ SHEETS.unitEdit = function(d) {
   h += '<label class="field"><span>' + esc(t('Share', 'الحصة')) + '</span><input class="input" id="u-w" inputmode="decimal" value="' + esc(v.weight == null ? 1 : v.weight) + '"></label></div>';
   var blist = blocks();
   h += '<label class="field"><span>' + esc(t('Block (only for compounds with several blocks)', 'البلوك (للمجمّعات فقط)')) + '</span><input class="input" id="u-block" list="u-blocks" value="' + esc(v.block || (d.block || '')) + '" placeholder="' + esc(t('e.g. A', 'مثلاً A')) + '"><datalist id="u-blocks">' + blist.map(function(b) { return '<option value="' + esc(b) + '">'; }).join('') + '</datalist></label>';
-  h += '<label class="field"><span>' + esc(t('Resident name', 'اسم الساكن')) + '</span><input class="input" id="u-name" value="' + esc(v.name) + '"></label>';
-  h += '<label class="field"><span>' + esc(t('Name in Arabic (optional)', 'الاسم بالعربية (اختياري)')) + '</span><input class="input" id="u-name-ar" dir="rtl" value="' + esc(v.name_ar || '') + '"></label>';
+  h += '<label class="field"><span>' + esc(t('Resident name', 'اسم الساكن')) + '</span><input class="input" id="u-name" data-tr="u-name-ar" data-tr-kind="name" value="' + esc(v.name) + '"><div class="tr-box" id="trs-u-name"></div></label>';
+  h += '<label class="field"><span>' + esc(t('Name in Arabic (optional)', 'الاسم بالعربية (اختياري)')) + '</span><input class="input" id="u-name-ar" data-tr="u-name" data-tr-kind="name" dir="rtl" value="' + esc(v.name_ar || '') + '"><div class="tr-box" id="trs-u-name-ar"></div></label>';
   h += '<label class="field"><span>' + esc(t('WhatsApp number', 'رقم واتساب')) + '</span><input class="input" id="u-ph" inputmode="tel" value="' + esc(v.phone || '') + '" placeholder="03 123 456"></label>';
   h += '<label class="field"><span>' + esc(t('Messages in', 'الرسائل بـ')) + '</span><select class="input" id="u-lang"><option value="both"' + (v.lang === 'both' ? ' selected' : '') + '>' + esc(t('Arabic + English', 'عربي + إنكليزي')) + '</option><option value="ar"' + (v.lang === 'ar' ? ' selected' : '') + '>العربية</option><option value="en"' + (v.lang === 'en' ? ' selected' : '') + '>English</option></select></label>';
   h += '<div class="switch-row"><div><b>' + esc(t('Active', 'فعّالة')) + '</b><small>' + esc(t('Inactive apartments are not charged', 'الشقق غير الفعّالة لا تُحتسب')) + '</small></div><button class="sw' + (v.active !== false ? ' on' : '') + '" id="u-act" onclick="this.classList.toggle(\'on\')" aria-label="active"></button></div>';
@@ -2702,8 +2831,8 @@ SHEETS.charge = function(d) {
   ['fixed', 'due', 'service'].forEach(function(k) { h += '<button class="' + (kind === k ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.kind=\'' + k + '\';UI.sheet.data.split=null;render()">' + esc(LANG === 'ar' ? KIND_INFO[k][1] : KIND_INFO[k][0]) + '</button>'; });
   h += '</div><p class="hint">' + esc(LANG === 'ar' ? KIND_INFO[kind][3] : KIND_INFO[kind][2]) + '</p>';
   h += '<label class="field"><span>' + esc(t('Common ones', 'الشائعة')) + '</span>' + presetSelect('c-pre', CHARGE_PRESETS[kind], 'chargePreset(this.value)') + '</label>';
-  h += '<label class="field"><span>' + esc(t('Name', 'الاسم')) + '</span><input class="input" id="c-title" value="' + esc(st.title != null ? st.title : v.title) + '" placeholder="' + esc(kind === 'service' ? 'Moteur' : kind === 'due' ? t('Water bill', 'فاتورة المياه') : t('Maintenance', 'الصيانة')) + '"></label>';
-  h += '<label class="field"><span>' + esc(t('Name in Arabic (optional)', 'الاسم بالعربية (اختياري)')) + '</span><input class="input" id="c-title-ar" dir="rtl" value="' + esc(st.title_ar != null ? st.title_ar : (v.title_ar || '')) + '"></label>';
+  h += '<label class="field"><span>' + esc(t('Name', 'الاسم')) + '</span><input class="input" id="c-title" data-tr="c-title-ar" data-tr-kind="phrase" value="' + esc(st.title != null ? st.title : v.title) + '" placeholder="' + esc(kind === 'service' ? 'Moteur' : kind === 'due' ? t('Water bill', 'فاتورة المياه') : t('Maintenance', 'الصيانة')) + '"><div class="tr-box" id="trs-c-title"></div></label>';
+  h += '<label class="field"><span>' + esc(t('Name in Arabic (optional)', 'الاسم بالعربية (اختياري)')) + '</span><input class="input" id="c-title-ar" data-tr="c-title" data-tr-kind="phrase" dir="rtl" value="' + esc(st.title_ar != null ? st.title_ar : (v.title_ar || '')) + '"><div class="tr-box" id="trs-c-title-ar"></div></label>';
   if (blocks().length > 1) {
     var cb = st.block != null ? st.block : (v.block || '');
     h += '<label class="field"><span>' + esc(t('Applies to', 'ينطبق على')) + '</span><select class="input" id="c-block" onchange="keepCharge();chargePreview()"><option value="">' + esc(t('Whole building (all blocks)', 'كل البناية (كل البلوكات)')) + '</option>' + blocks().map(function(b) { return '<option value="' + esc(b) + '"' + (cb === b ? ' selected' : '') + '>' + esc(blockLabel(b)) + '</option>'; }).join('') + '</select></label>';
@@ -2911,7 +3040,8 @@ SHEETS.task = function(d) {
   if (!x) {
     h += '<label class="field"><span>' + esc(t('Common tasks', 'مهام شائعة')) + '</span>' + presetSelect('t-pre', TASK_PRESETS, 'taskPreset(this.value)') + '</label>';
   }
-  h += '<label class="field"><span>' + esc(t('What', 'ماذا')) + '</span><input class="input" id="t-title" value="' + esc(L(v) || '') + '"></label>';
+  h += '<label class="field"><span>' + esc(t('What (English)', 'ماذا (بالإنكليزية)')) + '</span><input class="input" id="t-title" dir="ltr" data-tr="t-title-ar" data-tr-kind="phrase" value="' + esc(v.title || '') + '"><div class="tr-box" id="trs-t-title"></div></label>';
+  h += '<label class="field"><span>' + esc(t('In Arabic', 'بالعربية')) + '</span><input class="input" id="t-title-ar" dir="rtl" data-tr="t-title" data-tr-kind="phrase" value="' + esc(v.title_ar || '') + '"><div class="tr-box" id="trs-t-title-ar"></div></label>';
   h += '<div class="two"><label class="field"><span>' + esc(t('When', 'متى')) + '</span><input class="input" type="date" id="t-date" value="' + esc(v.due_on || '') + '"></label>';
   h += '<label class="field"><span>' + esc(t('Repeats', 'يتكرر')) + '</span><select class="input" id="t-rep">' + Object.keys(REPEATS).map(function(k) { return '<option value="' + k + '"' + (v.repeat === k ? ' selected' : '') + '>' + esc(LANG === 'ar' ? REPEATS[k][1] : REPEATS[k][0]) + '</option>'; }).join('') + '</select></label></div>';
   h += '<label class="field"><span>' + esc(t('Who does it', 'من ينفذها')) + '</span><select class="input" id="t-who"><option value="manager"' + (v.assignee === 'manager' ? ' selected' : '') + '>' + esc(t('Managers', 'الإدارة')) + '</option><option value="collector"' + (v.assignee === 'collector' ? ' selected' : '') + '>' + esc(collectorLabel()) + '</option></select></label>';
@@ -2923,18 +3053,16 @@ SHEETS.task = function(d) {
 function taskPreset(i) {
   if (i === '') return;
   var p = TASK_PRESETS[i];
-  document.getElementById('t-title').value = LANG === 'ar' ? p.ar : p.en;
+  document.getElementById('t-title').value = p.en;
+  document.getElementById('t-title-ar').value = p.ar;
   document.getElementById('t-rep').value = p.rep;
   if (p.who === 'manager' || collectors().length) document.getElementById('t-who').value = p.who;
   UI.sheet.data.preset = Number(i);
 }
 function saveTask(id) {
-  var title = val('t-title').trim();
-  if (!title) return sheetErr(t('What needs doing?', 'ما المطلوب؟'));
-  var p = UI.sheet.data.preset != null ? TASK_PRESETS[UI.sheet.data.preset] : null;
-  var same = p && (title === p.en || title === p.ar);
-  var row = { title: same ? p.en : title, title_ar: same ? p.ar : (LANG === 'ar' ? title : null),
-              due_on: val('t-date') || null, repeat: val('t-rep'), assignee: val('t-who') };
+  var en = val('t-title').trim(), ar = val('t-title-ar').trim();
+  if (!en && !ar) return sheetErr(t('What needs doing?', 'ما المطلوب؟'));
+  var row = { title: en || ar, title_ar: ar || null, due_on: val('t-date') || null, repeat: val('t-rep'), assignee: val('t-who') };
   (id ? dbUpdate('tasks', id, row) : dbInsert('tasks', row)).then(function() { closeSheet(); }, function(e) { sheetErr(e.message); });
 }
 
@@ -2942,8 +3070,8 @@ function saveTask(id) {
 function renderSettingsSec() {
   var st = S.building.settings || {};
   var h = '<div class="sec"><div class="card pad">';
-  h += '<label class="field" style="margin-top:0"><span>' + esc(t('Building name', 'اسم البناية')) + '</span><input class="input" id="s-name" value="' + esc(S.building.name) + '"></label>';
-  h += '<label class="field"><span>' + esc(t('Name in Arabic', 'الاسم بالعربية')) + '</span><input class="input" id="s-name-ar" dir="rtl" value="' + esc(S.building.name_ar || '') + '"></label>';
+  h += '<label class="field" style="margin-top:0"><span>' + esc(t('Building name', 'اسم البناية')) + '</span><input class="input" id="s-name" data-tr="s-name-ar" data-tr-kind="phrase" value="' + esc(S.building.name) + '"><div class="tr-box" id="trs-s-name"></div></label>';
+  h += '<label class="field"><span>' + esc(t('Name in Arabic', 'الاسم بالعربية')) + '</span><input class="input" id="s-name-ar" data-tr="s-name" data-tr-kind="phrase" dir="rtl" value="' + esc(S.building.name_ar || '') + '"><div class="tr-box" id="trs-s-name-ar"></div></label>';
   h += '<label class="field"><span>' + esc(t('Dollar rate (LBP per $1)', 'سعر الدولار (ليرة لكل دولار)')) + '</span><input class="input" id="s-rate" inputmode="numeric" value="' + esc(st.rate || 89500) + '"></label>';
   h += '<div class="two"><label class="field"><span>' + esc(t('Safe at the start ($)', 'الصندوق عند البدء ($)')) + '</span><input class="input" id="s-ou" inputmode="decimal" value="' + esc(st.opening_usd || 0) + '"></label>';
   h += '<label class="field"><span>' + esc(t('Safe at the start (LBP)', 'الصندوق عند البدء (ل.ل)')) + '</span><input class="input" id="s-ol" inputmode="numeric" value="' + esc(st.opening_lbp || 0) + '"></label></div>';
@@ -3238,8 +3366,8 @@ function renderOnboarding() {
   h += '<div class="ob-body">';
   if (step === 1) {
     h += '<h1>' + esc(t('What\'s the building called?', 'ما اسم البناية؟')) + '</h1><p class="sub">' + esc(t('It goes on the sign and on every receipt.', 'يظهر على اللافتة وعلى كل إيصال.')) + '</p>';
-    h += '<label class="field"><input class="input" id="ob-name" value="' + esc(OB.name) + '" placeholder="' + esc(t('e.g. Block C, Bayt Haddad', 'مثلاً البلوك C، بيت حداد')) + '" oninput="OB.name=this.value;obSign()" data-autofocus></label>';
-    h += '<label class="field"><input class="input" id="ob-name-ar" dir="rtl" value="' + esc(OB.nameAr) + '" placeholder="' + esc(t('Arabic name (optional)', 'الاسم بالعربية (اختياري)')) + '" oninput="OB.nameAr=this.value"></label>';
+    h += '<label class="field"><input class="input" id="ob-name" data-tr="ob-name-ar" data-tr-kind="phrase" value="' + esc(OB.name) + '" placeholder="' + esc(t('e.g. Block C, Bayt Haddad', 'مثلاً البلوك C، بيت حداد')) + '" oninput="OB.name=this.value;obSign()" data-autofocus><div class="tr-box" id="trs-ob-name"></div></label>';
+    h += '<label class="field"><input class="input" id="ob-name-ar" data-tr="ob-name" data-tr-kind="phrase" dir="rtl" value="' + esc(OB.nameAr) + '" placeholder="' + esc(t('Arabic name (optional)', 'الاسم بالعربية (اختياري)')) + '" oninput="OB.nameAr=this.value"><div class="tr-box" id="trs-ob-name-ar"></div></label>';
   } else if (step === 2) {
     h += '<h1>' + esc(t(n + ' apartments', n + ' شقق')) + '</h1><p class="sub">' + esc(t('Roughly is fine. You can rename, add shops or remove any later.', 'تقريباً يكفي. يمكنك التعديل وإضافة محلات لاحقاً.')) + '</p>';
     h += '<div class="ob-step"><div><b>' + esc(t('Floors', 'الطوابق')) + '</b></div><div class="stepper"><button onclick="obBump(\'floors\',-1)">−</button><span>' + OB.floors + '</span><button onclick="obBump(\'floors\',1)">+</button></div></div>';
@@ -3790,8 +3918,8 @@ SHEETS.shared = function(d) {
   var cur = d.cur || 'USD', how = d.how || 'units';
   var h = '<h3>' + esc(t('Split a shared bill', 'قسّم فاتورة مشتركة')) + '</h3><p class="lead">' + esc(t('Each building gets its share as a bill in its current month, split among its apartments.', 'تحصل كل بناية على حصتها كفاتورة في شهرها الحالي، مقسّمة على شققها.')) + '</p>';
   h += '<label class="field"><span>' + esc(t('Common ones', 'الشائعة')) + '</span>' + presetSelect('sh-pre', CHARGE_PRESETS.due.concat(CHARGE_PRESETS.fixed.filter(function(p) { return p.split === 'total'; })), 'sharedPreset(this.value)') + '</label>';
-  h += '<label class="field"><span>' + esc(t('Name', 'الاسم')) + '</span><input class="input" id="sh-title" value="' + esc(d.title || '') + '"></label>';
-  h += '<label class="field"><span>' + esc(t('Name in Arabic', 'الاسم بالعربية')) + '</span><input class="input" id="sh-title-ar" dir="rtl" value="' + esc(d.title_ar || '') + '"></label>';
+  h += '<label class="field"><span>' + esc(t('Name', 'الاسم')) + '</span><input class="input" id="sh-title" data-tr="sh-title-ar" data-tr-kind="phrase" value="' + esc(d.title || '') + '"><div class="tr-box" id="trs-sh-title"></div></label>';
+  h += '<label class="field"><span>' + esc(t('Name in Arabic', 'الاسم بالعربية')) + '</span><input class="input" id="sh-title-ar" data-tr="sh-title" data-tr-kind="phrase" dir="rtl" value="' + esc(d.title_ar || '') + '"><div class="tr-box" id="trs-sh-title-ar"></div></label>';
   h += '<label class="field"><span>' + esc(t('Total for the compound', 'المجموع للمجمّع')) + '</span><div class="money-in"><input class="input" id="sh-amt" inputmode="decimal" value="' + esc(d.amount || '') + '" oninput="sharedPreview()"><div class="seg"><button class="' + (cur === 'USD' ? 'on' : '') + '" onclick="keepShared();UI.sheet.data.cur=\'USD\';render()">USD</button><button class="' + (cur === 'LBP' ? 'on' : '') + '" onclick="keepShared();UI.sheet.data.cur=\'LBP\';render()">LBP</button></div></div></label>';
   h += '<label class="field"><span>' + esc(t('Split between buildings', 'التقسيم بين البنايات')) + '</span><div class="seg"><button class="' + (how === 'units' ? 'on' : '') + '" onclick="keepShared();UI.sheet.data.how=\'units\';render()">' + esc(t('By apartments', 'حسب عدد الشقق')) + '</button><button class="' + (how === 'equal' ? 'on' : '') + '" onclick="keepShared();UI.sheet.data.how=\'equal\';render()">' + esc(t('Equally', 'بالتساوي')) + '</button></div></label>';
   h += '<div class="card pad" id="sh-prev" style="margin-top:12px"></div><div id="sheet-err" class="err"></div>';

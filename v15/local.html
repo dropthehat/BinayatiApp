@@ -2451,25 +2451,43 @@ function renderHomeCollector() {
   var cash = cashState();
   var mine = cash.pockets[S.me.id] || { USD: 0, LBP: 0, pending: pair(), pendingId: null };
   var pend = S.handovers.filter(function(x) { return x.collector_id === S.me.id && x.status === 'pending'; })[0];
+  var bl = blocks(), blk = bl.length > 1 ? (bl.indexOf(UI.block) >= 0 ? UI.block : bl[0]) : null;
+  var units = activeUnits().filter(function(u) { return !blk || blockOf(u) === blk; });
+  // what's left this month, and who owes (oldest debts first)
+  var left = pair(), owing = [], paidN = 0;
+  units.forEach(function(u) {
+    var l = pair();
+    if (cyc) chargesOf(cyc.id).forEach(function(ch) { var x = cell(ch, u); if (x.left > 0) addTo(l, ch.cur, x.left); });
+    var arr = unitBalance(u, cyc).arrears;
+    addTo(left, 'USD', l.USD); addTo(left, 'LBP', l.LBP);
+    if (pairUsd(l) > 0.005 || pairUsd(arr) > 0.005) owing.push({ u: u, now: l, arr: arr, tot: pairUsd(l) + pairUsd(arr) });
+    else paidN++;
+  });
+  owing.sort(function(a, b) { return (pairUsd(b.arr) > 0.005) - (pairUsd(a.arr) > 0.005) || b.tot - a.tot; });
   var h = renderTopbar();
-  h += blockChips() + heroHtml(cyc, { idp: 'hc' });
-  h += '<div class="sec"><div class="card pad">';
-  h += '<div class="lbl muted" style="font-size:12.5px;font-weight:700">' + esc(t('In your pocket', 'معك الآن')) + '</div>';
-  h += '<div class="tile" style="padding:0"><div class="val" style="font-size:30px;margin:2px 0 10px">' + fmtPairBig({ USD: mine.USD, LBP: mine.LBP }) + '</div></div>';
-  if (pend) {
-    h += '<div class="banner info"><div class="grow"><b>' + esc(t('Handed over ' + fmtPair({ USD: num(pend.usd), LBP: num(pend.lbp) }), 'سلّمت ' + fmtPair({ USD: num(pend.usd), LBP: num(pend.lbp) }))) + '</b>' + esc(t('Waiting for the manager to confirm.', 'بانتظار تأكيد المدير.')) + '</div></div>';
-  } else if (pairUsd(mine) > 0.005) {
-    h += '<button class="btn pri block" onclick="openSheet(\'handreq\')">' + esc(t('Hand over to the manager', 'سلّم المبلغ للمدير')) + '</button>';
-  } else {
-    h += '<p class="muted" style="margin:0">' + esc(t('Tick apartments as you collect. The cash shows here until you hand it over.', 'علّم الشقق عند التحصيل. يبقى المبلغ هنا حتى تسلّمه.')) + '</p>';
-  }
-  h += '<div class="row" style="margin-top:10px"><button class="btn sec sm grow" onclick="openSheet(\'expense\',{})">' + esc(t('I spent building cash', 'صرفت من مال البناية')) + '</button><button class="btn sec sm grow" onclick="go(\'collect\')">' + esc(t('Collect', 'التحصيل')) + '</button></div>';
-  h += '</div></div>';
-  if (cyc) h += '<div class="sec">' + monthCard(cyc, true) + '</div>';
-  var tasks = openTasks('collector');
-  h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Your tasks', 'مهامك')) + '</h2></div>';
-  h += tasks.length ? '<div class="card">' + tasks.slice(0, 5).map(taskRow).join('') + '</div>' : '<div class="card empty">' + esc(t('No tasks right now', 'لا مهام الآن')) + '</div>';
+  h += blockChips();
+  h += '<div class="sec"><div class="tiles">';
+  h += tile(t('In your pocket', 'معك الآن'), fmtPairBig({ USD: mine.USD, LBP: mine.LBP }), pend ? t('Handover waiting for the manager', 'تسليم بانتظار المدير') : t('Cash you collected, not handed over yet', 'نقد جمعته ولم تسلّمه بعد'), pairUsd(mine) > 0.005 && !pend ? 'openSheet(\'handreq\')' : '', 'var(--warn)');
+  h += tile(t('Still to collect', 'باقي للتحصيل'), fmtPairBig(left), (cyc ? cycleTitle(cyc) + ' · ' : '') + t(paidN + ' of ' + units.length + ' paid', paidN + ' من ' + units.length + ' سدّدوا'), 'go(\'collect\')', 'var(--acc)');
   h += '</div>';
+  if (pend) h += '<div class="banner info" style="margin-top:10px"><div class="grow"><b>' + esc(t('Handed over ' + fmtPair({ USD: num(pend.usd), LBP: num(pend.lbp) }), 'سلّمت ' + fmtPair({ USD: num(pend.usd), LBP: num(pend.lbp) }))) + '</b>' + esc(t('Waiting for the manager to confirm.', 'بانتظار تأكيد المدير.')) + '</div></div>';
+  else if (pairUsd(mine) > 0.005) h += '<button class="btn pri block" style="margin-top:10px" onclick="openSheet(\'handreq\')">' + esc(t('Hand over to the manager', 'سلّم المبلغ للمدير')) + '</button>';
+  h += '<div class="row" style="margin-top:10px"><button class="btn sec sm grow" onclick="go(\'collect\')">' + esc(t('Collect', 'التحصيل')) + '</button><button class="btn sec sm grow" onclick="openSheet(\'expense\',{})">' + esc(t('I spent building cash', 'صرفت من مال البناية')) + '</button></div>';
+  h += '</div>';
+  // Important now: late tasks, then the doors to knock on
+  var tasks = openTasks('collector'), today = todayIso();
+  var urgent = tasks.filter(function(x) { return x.due_on && x.due_on <= today; });
+  if (urgent.length) h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Do today', 'اليوم')) + '</h2></div><div class="card">' + urgent.map(taskRow).join('') + '</div></div>';
+  if (owing.length) {
+    h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Doors to knock on', 'أبواب لطرقها')) + '</h2><button onclick="go(\'collect\')">' + esc(t('All', 'الكل')) + '</button></div><div class="card list">';
+    owing.slice(0, 5).forEach(function(o) {
+      var late = pairUsd(o.arr) > 0.005;
+      h += '<button class="li" onclick="openSheet(\'unit\',{id:' + jsArg(o.u.id) + '})"><div class="ic' + (late ? ' out' : '') + '">' + esc(o.u.code) + '</div><div class="grow"><b>' + esc(unitName(o.u) || o.u.code) + '</b><small' + (late ? ' style="color:var(--bad)"' : '') + '>' + esc(late ? t('Also owes earlier months', 'عليه أشهر سابقة') : t('This month', 'هذا الشهر')) + '</small></div><span class="amt">' + esc(fmtPair({ USD: o.now.USD + o.arr.USD, LBP: o.now.LBP + o.arr.LBP })) + '</span></button>';
+    });
+    h += '</div></div>';
+  } else if (units.length) h += '<div class="sec"><div class="card empty">' + esc(t('Everyone has paid ✓', 'الجميع سدّد ✓')) + '</div></div>';
+  var rest = tasks.filter(function(x) { return urgent.indexOf(x) < 0; });
+  if (rest.length) h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Coming up', 'قادماً')) + '</h2></div><div class="card">' + rest.slice(0, 4).map(taskRow).join('') + '</div></div>';
   return h;
 }
 

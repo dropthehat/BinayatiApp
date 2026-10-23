@@ -419,6 +419,17 @@ a.btn { text-decoration: none; }
 
 .bh-cabMid .bh-cabLit{fill:#FFE3A0} .bh-cabGlow{fill:#FFD27A;opacity:.45}
 
+/* Safe */
+.bh-safeBody{fill:#4A5262} .bh-safeIn{fill:#2A2F3A} .bh-safeDoor{fill:#69728A;stroke:#3A4050;stroke-width:.5}
+.bh-safeDial{fill:#C9CED8;stroke:#3A4050;stroke-width:.5} .bh-safeFoot{fill:#2A2F3A}
+.bh-tag{fill:#fff;stroke:#2E2B5F;stroke-width:.6} .bh-tagTx,.bh-plaqueTx,.bh-brassTx{font:700 5.2px Inter,system-ui,sans-serif;text-anchor:middle;fill:#2E2B5F}
+.bh-niche{fill:#2A2F3A} .bh-nicheGlass{fill:#FFE7AE;opacity:.18;stroke:var(--doorFrame);stroke-width:.8}
+.bh-plaque{fill:#FFF6E3;stroke:var(--doorFrame);stroke-width:.4} .bh-plaqueTx{font-size:4.2px}
+.bh-brass{fill:#E8C77A;stroke:#9A7A34;stroke-width:.6} .bh-brassTx{fill:#4A3510;font-size:5px}
+.bh-safeTap{cursor:pointer}
+
+.bh-safeFrame{fill:#7A8296;stroke:#3A4050;stroke-width:.5} .bh-safeShelf{fill:#5A6274}
+
 </style>
 </head>
 <body>
@@ -1498,16 +1509,65 @@ function buildBuildingScene(o) {
  }
 
  // Right side: the building safe, or the street lamp
+ function safeLabel() {
+   var u = Math.max(0, Math.round(o.safe.usd || 0)), l = Math.max(0, o.safe.lbp || 0);
+   return '$' + u + (l >= 1e5 ? ' · ' + (l >= 1e6 ? Math.round(l / 1e6) + 'M' : Math.round(l / 1e3) + 'K') : '');
+ }
+ // A little steel safe with its door ajar: green notes = dollars, blue = lira.
+ function safeBox(w, h, scale) {
+   var u = Math.min(1, (o.safe.usdH - 2) / 20), l = Math.min(1, (o.safe.lbpH - 2) / 20);
+   var g = '<rect x="0" y="0" width="' + w + '" height="' + h + '" rx="2.2" class="bh-safeBody"/>';
+   g += '<rect x="2" y="2" width="' + (w - 4) + '" height="' + (h - 4) + '" rx="1.2" class="bh-safeIn"/>';
+   var sh = h - 6, nU = Math.max(1, Math.round(u * 5)), nL = Math.max(1, Math.round(l * 5));
+   for (var i = 0; i < nU; i++) g += '<rect x="4" y="' + heroR(h - 3.5 - (i + 1) * sh / 6) + '" width="' + heroR(w * 0.3) + '" height="' + heroR(sh / 6 - 0.6) + '" rx=".5" fill="#22B07D"/>';
+   for (var j = 0; j < nL; j++) g += '<rect x="' + heroR(5 + w * 0.3) + '" y="' + heroR(h - 3.5 - (j + 1) * sh / 6) + '" width="' + heroR(w * 0.22) + '" height="' + heroR(sh / 6 - 0.6) + '" rx=".5" fill="#3B9EFF"/>';
+   // door swung open to the right
+   g += '<path d="M' + w + ' 1 L' + heroR(w + w * 0.28) + ' 4 L' + heroR(w + w * 0.28) + ' ' + (h - 4) + ' L' + w + ' ' + (h - 1) + ' Z" class="bh-safeDoor"/>';
+   g += '<circle cx="' + heroR(w + w * 0.14) + '" cy="' + heroR(h / 2) + '" r="' + heroR(Math.min(3, w * 0.08)) + '" class="bh-safeDial"/>';
+   return g;
+ }
  if (o.safe) {
- var sx = bx2 + 16;
- if (o.fixedStream) s += '<path class="bh-stream" d="M' + bx2 + ' 214 C ' + (bx2 + 8) + ' 214, ' + (bx2 + 10) + ' 208, ' + sx + ' 208" style="stroke:#A99DFF"/>';
- s += '<g transform="translate(' + sx + ' 192)"><g class="bh-pop">';
- s += '<rect width="42" height="34" rx="5" fill="#EEEAF8" style="stroke:#2E2B5F;stroke-width:1.6"/>';
- s += '<rect x="' + 6 + '" y="' + heroR(28 - o.safe.usdH) + '" width="9" height="' + heroR(o.safe.usdH) + '" rx="1.5" fill="#10B981"/>';
- if (o.safe.split) s += '<rect x="18" y="' + heroR(28 - o.safe.lbpH) + '" width="9" height="' + heroR(o.safe.lbpH) + '" rx="1.5" fill="#3B9EFF"/>';
- s += '<circle cx="34" cy="14" r="4" style="fill:none;stroke:#2E2B5F;stroke-width:1.4"/>';
- s += '</g></g>';
- } else if (!o.bare) {
+   var tapA = o.safe.tap ? ' class="bh-safeTap" role="button" tabindex="0" onclick="' + o.safe.tap + '"' : '';
+   var st = o.safe.style;
+   if (st === 'lobby') {
+     // The lobby wall IS the safe: a steel door set flush in the wall, swung open on its hinge
+     var sw = 34, shh = 21, nx = Math.min(bx2 - sw - 14, 212), ny = 203;
+     var u = Math.min(1, (o.safe.usdH - 2) / 20), l = Math.min(1, (o.safe.lbpH - 2) / 20);
+     s += '<g' + tapA + '>';
+     s += '<rect x="' + (nx - 1.5) + '" y="' + (ny - 1.5) + '" width="' + (sw + 3) + '" height="' + (shh + 3) + '" rx="1.6" class="bh-safeFrame"/>';
+     s += '<rect x="' + nx + '" y="' + ny + '" width="' + sw + '" height="' + shh + '" rx="1" class="bh-safeIn"/>';
+     s += '<rect x="' + nx + '" y="' + heroR(ny + shh / 2 - 0.4) + '" width="' + (sw * 0.62) + '" height=".8" class="bh-safeShelf"/>';
+     var nU = Math.max(1, Math.round(u * 6)), nL = Math.max(1, Math.round(l * 6)), bh = 1.5;
+     for (var i = 0; i < nU; i++) s += '<rect x="' + (nx + 2) + '" y="' + heroR(ny + shh - 1.6 - (i + 1) * (bh + .4)) + '" width="9" height="' + bh + '" rx=".3" fill="' + (i % 2 ? '#2BC48C' : '#1E9E70') + '"/>';
+     for (var j = 0; j < nL; j++) s += '<rect x="' + (nx + 12) + '" y="' + heroR(ny + shh - 1.6 - (j + 1) * (bh + .4)) + '" width="8" height="' + bh + '" rx=".3" fill="' + (j % 2 ? '#5DB2FF' : '#2F86E8') + '"/>';
+     s += '<rect x="' + (nx + 3) + '" y="' + (ny + 2) + '" width="5" height="3" rx=".4" fill="#E8C77A"/>';
+     // open door, seen at an angle on the right
+     var dx = nx + sw * 0.62;
+     s += '<path d="M' + dx + ' ' + (ny - 1) + ' L' + (nx + sw + 1.5) + ' ' + (ny + 1.5) + ' L' + (nx + sw + 1.5) + ' ' + (ny + shh - 1.5) + ' L' + dx + ' ' + (ny + shh + 1) + ' Z" class="bh-safeDoor"/>';
+     var dcx = dx + (nx + sw + 1.5 - dx) / 2;
+     s += '<circle cx="' + heroR(dcx) + '" cy="' + heroR(ny + shh / 2) + '" r="3.4" class="bh-safeDial"/><circle cx="' + heroR(dcx) + '" cy="' + heroR(ny + shh / 2) + '" r="1.1" fill="#3A4050"/>';
+     s += '<rect x="' + heroR(dcx - 0.5) + '" y="' + heroR(ny + shh / 2 - 6.4) + '" width="1" height="2.2" fill="#C9CED8"/>';
+     s += '<rect x="' + heroR(dx + 1) + '" y="' + heroR(ny + 3) + '" width="1.4" height="3" rx=".4" class="bh-safeDial"/><rect x="' + heroR(dx + 1) + '" y="' + heroR(ny + shh - 6) + '" width="1.4" height="3" rx=".4" class="bh-safeDial"/>';
+     // brass plate with the amount, above
+     s += '<rect x="' + (nx + 2) + '" y="' + (ny - 7.5) + '" width="' + (sw - 4) + '" height="5" rx="1" class="bh-brass"/><text x="' + (nx + sw / 2) + '" y="' + (ny - 3.8) + '" class="bh-brassTx" style="font-size:4.2px">' + esc(safeLabel()) + '</text></g>';
+   } else if (st === 'plaque') {
+     // A brass plaque by the door, like the building number, with two coin stacks
+     var px = Math.min(bx2 - 40, 212);
+     s += '<g' + tapA + '><rect x="' + px + '" y="203" width="36" height="14" rx="2" class="bh-brass"/>';
+     s += '<circle cx="' + (px + 6) + '" cy="210" r="3.4" fill="#22B07D"/><circle cx="' + (px + 13) + '" cy="210" r="3.4" fill="#3B9EFF"/>';
+     s += '<text x="' + (px + 27) + '" y="211.6" class="bh-brassTx">' + esc(safeLabel()) + '</text></g>';
+   } else {
+     // Free-standing safe on the pavement, with a tag showing the amount
+     var sx = bx2 + 18;
+     if (o.fixedStream) s += '<path class="bh-stream" d="M' + bx2 + ' 214 C ' + (bx2 + 8) + ' 214, ' + (bx2 + 10) + ' 212, ' + sx + ' 212" style="stroke:#A99DFF"/>';
+     s += '<g' + tapA + '><g transform="translate(' + sx + ' 196)"><g class="bh-pop">';
+     s += '<rect x="3" y="27" width="4" height="3" rx=".6" class="bh-safeFoot"/><rect x="21" y="27" width="4" height="3" rx=".6" class="bh-safeFoot"/>';
+     s += safeBox(28, 27);
+     s += '<rect x="-2" y="-11" width="38" height="8" rx="4" class="bh-tag"/><text x="17" y="-5.3" class="bh-tagTx">' + esc(safeLabel()) + '</text>';
+     s += '</g></g></g>';
+   }
+  }
+ if ((!o.safe || o.safe.style === 'lobby' || o.safe.style === 'plaque') && !o.bare) {
  s += '<g class="bh-bg">';
  var lpx = Math.min(346, bx2 + 44);
  s += '<path class="bh-lampglow" d="M' + (lpx - 13) + ' 166 L ' + (lpx - 32) + ' 226 L ' + (lpx + 14) + ' 226 L ' + (lpx - 7) + ' 166 Z" fill="url(#' + P + 'Cone)"/>';
@@ -2066,7 +2126,7 @@ function heroHtml(cyc, opts) {
   var levels = units.length ? levelsFor(units.map(function(u, i) { return { code: u.code, win: wins[i] }; })) : null;
   var cash = opts.noSafe ? null : cashState();
   var reveal = HERO_REVEAL; HERO_REVEAL = false;
-  var safe = cash ? { split: true, usdH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.USD) / 40)), lbpH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.LBP) / 4e6)) } : null;
+  var safe = cash ? { split: true, usdH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.USD) / 40)), lbpH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.LBP) / 4e6)), usd: cash.safe.USD, lbp: cash.safe.LBP, style: setting('safe_style') || 'lobby', tap: opts.noTap ? null : 'go(\'books\')' } : null;
   var html = buildBuildingScene({
     phase: ph, wins: wins, levels: levels, interactive: !opts.noTap, idp: opts.idp || 'hm', signText: blk ? (S.building.name + ' ' + blk).slice(0, 12) : S.building.name, chip: ph.chip,
     safe: safe, elevator: !!setting('elevator'), coreGlow: openTasks().some(function(x) { return x.due_on && x.due_on <= todayIso(); }),

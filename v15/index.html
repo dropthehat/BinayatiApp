@@ -2069,7 +2069,7 @@ function cloudBuildingState(bid, light) {
       ns.building = res[0].data;
       TABLES.forEach(function(k, i) { ns[k] = res[i + 1].data || []; });
       ns.events.reverse();
-      ns.me = { id: sess.user.id };
+      ns.me = { id: sess.user.id, email: sess.user.email };
       var m = null; ns.members.forEach(function(x) { if (x.user_id === sess.user.id) m = x; });
       ns.role = m ? m.role : null;
       ns._rev = Math.random();
@@ -3495,6 +3495,11 @@ SHEETS.menu = function() {
     var u0 = activeUnits()[0];
     if (u0 && isManager()) h += '<button class="li" onclick="location.href=' + jsArg('?r=' + u0.resident_token) + '"><div class="ic">👁</div><div class="grow"><b>' + esc(t('See a resident\'s page', 'شاهد صفحة ساكن')) + '</b><small>' + esc(u0.code) + '</small></div></button>';
   }
+  if (isCloud() && typeof isDemo === 'function' && isDemo()) {
+    var asMgr = S.role === 'manager';
+    h += '<button class="li" onclick="demoSignIn(' + (asMgr ? '\'collector\'' : '\'manager\'') + ')"><div class="ic">⇄</div><div class="grow"><b>' + esc(asMgr ? t('Switch to the collector (Anas)', 'بدّل إلى الجابي (أنس)') : t('Switch to the manager (Rima)', 'بدّل إلى المدير (ريما)')) + '</b><small>' + esc(t('Demo: see the same building from the other side', 'تجربة: نفس البناية من الجهة الأخرى')) + '</small></div></button>';
+    h += '<button class="li" onclick="demoReset()"><div class="ic">↺</div><div class="grow"><b>' + esc(t('Reset the demo data', 'أعد بيانات التجربة')) + '</b><small>' + esc(t('Back to the original sample', 'العودة للنموذج الأصلي')) + '</small></div></button>';
+  }
   h += '<button class="li" onclick="closeSheet();setLang()"><div class="ic">ع</div><div class="grow"><b>' + esc(LANG === 'ar' ? 'English' : 'العربية') + '</b></div></button>';
   if (isManager()) h += '<button class="li" onclick="closeSheet();go(\'building\');UI.bsec=\'settings\';render()"><div class="ic">⚙️</div><div class="grow"><b>' + esc(t('Settings', 'الإعدادات')) + '</b></div></button>';
   if (isCloud()) h += '<button class="li" onclick="signOut()"><div class="ic">⎋</div><div class="grow"><b>' + esc(t('Sign out', 'تسجيل الخروج')) + '</b></div></button>';
@@ -3684,7 +3689,10 @@ function renderWelcome() {
   h += '<div class="feat"><i>🧾</i><span>' + esc(t('Residents get receipts and see the books.', 'السكان يستلمون إيصالات ويرون الحسابات.')) + '<small>' + esc(t('A private link on WhatsApp. No app to install.', 'رابط خاص على واتساب. بلا تطبيق.')) + '</small></span></div>';
   h += '</div></div>';
   h += '<div class="ob-foot"><button class="btn pri block" onclick="startSetup()">' + esc(t('Set up my building', 'أعدّ بنايتي')) + '</button>';
-  if (isCloud()) h += '<button class="btn ghost block" onclick="UI.screen=\'auth\';UI.auth={mode:\'in\'};render()">' + esc(t('I already have an account', 'لدي حساب')) + '</button>';
+  if (isCloud()) {
+    h += '<button class="btn ghost block" onclick="UI.screen=\'auth\';UI.auth={mode:\'in\'};render()">' + esc(t('I already have an account', 'لدي حساب')) + '</button>';
+    h += '<button class="btn ghost block" onclick="demoSignIn(\'manager\')">' + esc(t('Try the demo building', 'جرّب البناية التجريبية')) + '</button>';
+  }
   else h += '<button class="btn ghost block" onclick="loadSample()">' + esc(t('Look around with a sample building', 'جرّب ببناية نموذجية')) + '</button>';
   h += '</div></div></div>';
   return h;
@@ -3906,6 +3914,19 @@ function authGo() {
     if (e.confirm) { a.mode = 'in'; render(); var el = document.getElementById('ob-err'); if (el) { el.style.color = 'var(--ok)'; el.textContent = e.message; } var u = document.getElementById('au-user'); if (u) u.value = user; return; }
     err.textContent = e.message;
   });
+}
+/* Shared demo accounts: a manager (Rima) and a collector (Anas) on one sample building. */
+var DEMO_PASS = 'binayati-demo';
+function isDemo() { return !!(S.me && S.me.email && /^demo-(manager|collector)@binayati\.local$/.test(S.me.email)); }
+function demoSignIn(who) {
+  toast(t('Opening the demo…', 'جارٍ فتح التجربة…'));
+  SB.auth.signOut().catch(function() {}).then(function() { return cloudSignIn('demo-' + who, DEMO_PASS); }).then(function() {
+    try { localStorage.removeItem('bny15_last'); } catch (e) {}
+    location.href = location.pathname;
+  }, function(e) { toast(e.message); });
+}
+function demoReset() {
+  rpc('demo_reset', {}).then(function() { try { localStorage.removeItem('bny15_last'); } catch (e) {} location.href = location.pathname; }, function(e) { toast(e.message); });
 }
 function signOut() {
   SB.auth.signOut().then(function() { try { localStorage.removeItem('bny15_last'); } catch (e) {} location.href = location.pathname; });

@@ -580,3 +580,7 @@ alter table public.members add column if not exists display_name_ar text;
 alter table public.invites add column if not exists display_name_ar text;
 -- set_my_name(p_building, p_name, p_name_ar), invite_name_ar trigger, peek_invite and resident_view
 -- return display_name_ar (applied live as migrations v15_10_arabic_member_names / v15_11).
+
+-- v15_12–14: shared demo accounts demo-manager / demo-collector (password binayati-demo)
+-- and public.demo_reset(), which builds a fresh "Demo Arz" building (12 apartments, Sep+Oct,
+-- handovers, expenses, tasks) and moves the two demo members onto it. Applied live as migrations.

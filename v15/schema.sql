@@ -574,3 +574,9 @@ create policy bny_receipts_add on storage.objects for insert to authenticated
   with check (bucket_id = 'receipts' and private.is_member(((storage.foldername(name))[1])::uuid));
 create policy bny_receipts_del on storage.objects for delete to authenticated
   using (bucket_id = 'receipts' and private.is_manager(((storage.foldername(name))[1])::uuid));
+
+-- v15_10: Arabic names for people
+alter table public.members add column if not exists display_name_ar text;
+alter table public.invites add column if not exists display_name_ar text;
+-- set_my_name(p_building, p_name, p_name_ar), invite_name_ar trigger, peek_invite and resident_view
+-- return display_name_ar (applied live as migrations v15_10_arabic_member_names / v15_11).

@@ -753,17 +753,22 @@ function spentIn(cyc) {
    People
    --------------------------------------------------------------------------- */
 function member(uid) { for (var i = 0; i < S.members.length; i++) if (S.members[i].user_id === uid) return S.members[i]; return null; }
-function memberName(uid) {
+function mName(m, lang) {
+  if (!m) return '';
+  return ((lang || LANG) === 'ar' ? (m.display_name_ar || m.display_name) : (m.display_name || m.display_name_ar)) || '';
+}
+function memberName(uid, lang) {
   var m = member(uid);
-  if (m && m.display_name) return m.display_name;
+  if (m && mName(m, lang)) return mName(m, lang);
   return t('Someone', 'أحدهم');
 }
 function collectors() { return S.members.filter(function(m) { return m.role === 'collector'; }); }
 function isManager() { return S.role === 'manager' || S.role === 'comanager'; }
-function collectorLabel() {
+function collectorLabel(lang) {
   var c = collectors()[0];
-  if (c && c.display_name) return c.display_name;
-  return setting('collector_name') || t('the collector', 'الجابي');
+  if (c && mName(c, lang)) return mName(c, lang);
+  if ((lang || LANG) === 'ar' && setting('collector_name_ar')) return setting('collector_name_ar');
+  return setting('collector_name') || ((lang || LANG) === 'ar' ? 'الجابي' : 'the collector');
 }
 function roleLabel(r) {
   return { manager: t('Manager', 'المدير'), comanager: t('Co-manager', 'مدير مساعد'), collector: t('Collector', 'الجابي') }[r] || r;
@@ -2293,7 +2298,7 @@ function waText(u, cyc, lang) {
       s += T('Hello ', 'مرحباً ') + (name ? '*' + name + '* ' : '') + '(' + u.code + ') 👋\n' + lines.join('\n') + '\n\n';
       s += '*' + T('Left to pay: ', 'المتبقي: ') + fmtPair(r.allLeft) + '*';
       if (pairUsd(b.arrears) > 0.005) s += '\n' + T('Plus earlier months: ', 'إضافة لأشهر سابقة: ') + fmtPair(b.arrears);
-      s += '\n' + T('You can hand it to ', 'يمكنك تسليمه إلى ') + (collectors().length ? collectorLabel() : T('the building manager', 'مدير البناية')) + '.';
+      s += '\n' + T('You can hand it to ', 'يمكنك تسليمه إلى ') + (collectors().length ? collectorLabel(lg) : T('the building manager', 'مدير البناية')) + '.';
     } else {
       s += '🧾 *' + T('Receipt', 'إيصال') + '*\n' + T('Thank you ', 'شكراً ') + (name ? '*' + name + '* ' : '') + '(' + u.code + ') 🌸\n' + lines.join('\n') + '\n\n';
       s += '✅ *' + T('Fully paid for ', 'مسدد بالكامل عن ') + cycleTitle(cyc, lg) + '*';
@@ -2985,7 +2990,8 @@ function saveProject() {
 function renderTeamSec() {
   var h = '<div class="sec"><div class="card list">';
   S.members.forEach(function(m) {
-    h += '<div class="li"><div class="ic">' + esc((m.display_name || '?').charAt(0).toUpperCase()) + '</div><div class="grow"><b>' + esc(m.display_name || '—') + (S.me && m.user_id === S.me.id ? ' · ' + esc(t('you', 'أنت')) : '') + '</b><small>' + esc(roleLabel(m.role)) + '</small></div>';
+    h += '<div class="li"><div class="ic">' + esc((m.display_name || '?').charAt(0).toUpperCase()) + '</div><div class="grow"><b>' + esc(m.display_name || '—') + (m.display_name_ar ? ' · ' + esc(m.display_name_ar) : '') + (S.me && m.user_id === S.me.id ? ' · ' + esc(t('you', 'أنت')) : '') + '</b><small>' + esc(roleLabel(m.role)) + '</small></div>';
+    if (S.me && (m.user_id === S.me.id || isManager())) h += '<button class="btn sm sec" onclick="openSheet(\'memberName\',{uid:' + jsArg(m.user_id) + '})">' + esc(t('Name', 'الاسم')) + '</button>';
     if (S.role === 'manager' && m.role !== 'manager') h += '<button class="btn sm danger" onclick="removeMember(' + jsArg(m.user_id) + ')">' + esc(t('Remove', 'إزالة')) + '</button>';
     h += '</div>';
   });
@@ -3007,7 +3013,7 @@ SHEETS.invite = function(d) {
     h += '<div class="foot"><button class="btn sec" onclick="copyText(' + jsArg(link) + ')">' + esc(t('Copy', 'نسخ')) + '</button><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=' + esc(encodeURIComponent(msg)) + '">WhatsApp</a></div>';
     return h;
   }
-  h += '<label class="field"><span>' + esc(t('Their name', 'اسمه')) + '</span><input class="input" id="inv-name" placeholder="' + esc(role === 'collector' ? t('e.g. Anas', 'مثلاً أنس') : '') + '" data-autofocus></label><div id="sheet-err" class="err"></div>';
+  h += '<label class="field"><span>' + esc(t('Their name', 'اسمه')) + '</span><input class="input" id="inv-name" data-tr="inv-name-ar" data-tr-kind="name" placeholder="' + esc(role === 'collector' ? t('e.g. Anas', 'مثلاً أنس') : '') + '" data-autofocus><div class="tr-box" id="trs-inv-name"></div></label><label class="field"><span>' + esc(t('Name in Arabic', 'الاسم بالعربية')) + '</span><input class="input" id="inv-name-ar" dir="rtl" data-tr="inv-name" data-tr-kind="name" placeholder="أنس"><div class="tr-box" id="trs-inv-name-ar"></div></label><div id="sheet-err" class="err"></div>';
   if (!isCloud()) {
     h += '<p class="hint">' + esc(t('The server isn\'t connected, so this adds them on this phone only, to preview their view.', 'الخادم غير متصل، فسيُضاف على هذا الهاتف فقط للمعاينة.')) + '</p>';
     h += '<div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Cancel', 'إلغاء')) + '</button><button class="btn pri" onclick="localAddMember(' + jsArg(role) + ')">' + esc(t('Add', 'إضافة')) + '</button></div>';
@@ -3017,16 +3023,17 @@ SHEETS.invite = function(d) {
   return h;
 };
 function makeInvite(role) {
-  var name = val('inv-name').trim();
+  var name = val('inv-name').trim(), nameAr = val('inv-name-ar').trim();
   rpc('create_invite', { p_building: S.building.id, p_role: role, p_display_name: name }).then(function(code) {
+    if (nameAr) cloudCall(SB.from('invites').update({ display_name_ar: nameAr }).eq('code', code)).catch(function() {});
     UI.sheet.data.code = code; UI.sheet.data.name = name; render();
   }, function(e) { sheetErr(e.message); });
 }
 function localAddMember(role) {
-  var name = val('inv-name').trim() || roleLabel(role);
+  var name = val('inv-name').trim() || roleLabel(role), nameAr = val('inv-name-ar').trim() || null;
   var uid = role === 'collector' ? 'u-collector' : 'u-comanager';
   if (S.members.some(function(m) { return m.user_id === uid; })) uid = uid + '-' + token().slice(0, 4);
-  dbInsert('members', { user_id: uid, role: role, display_name: name }).then(function() { closeSheet(); toast(t(name + ' added', 'أُضيف ' + name)); }, fail);
+  dbInsert('members', { user_id: uid, role: role, display_name: name, display_name_ar: nameAr }).then(function() { closeSheet(); toast(t(name + ' added', 'أُضيف ' + name)); }, fail);
 }
 function removeMember(uid) {
   var m = member(uid);
@@ -3314,6 +3321,26 @@ function addBlock() {
   }, fail);
 }
 
+/* Edit a person's name in both languages (yourself, or anyone if you manage). */
+SHEETS.memberName = function(d) {
+  var m = member(d.uid);
+  if (!m) return '';
+  var h = '<h3>' + esc(t('Name', 'الاسم')) + '</h3><p class="lead">' + esc(t('Used in messages and receipts, in each resident\'s language.', 'يُستعمل في الرسائل والإيصالات بلغة كل ساكن.')) + '</p>';
+  h += '<label class="field"><span>' + esc(t('In English', 'بالإنكليزية')) + '</span><input class="input" id="mn-en" dir="ltr" data-tr="mn-ar" data-tr-kind="name" value="' + esc(m.display_name || '') + '"><div class="tr-box" id="trs-mn-en"></div></label>';
+  h += '<label class="field"><span>' + esc(t('In Arabic', 'بالعربية')) + '</span><input class="input" id="mn-ar" dir="rtl" data-tr="mn-en" data-tr-kind="name" value="' + esc(m.display_name_ar || '') + '"><div class="tr-box" id="trs-mn-ar"></div></label>';
+  h += '<div id="sheet-err" class="err"></div><div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Cancel', 'إلغاء')) + '</button><button class="btn pri" onclick="saveMemberName(' + jsArg(d.uid) + ')">' + esc(t('Save', 'حفظ')) + '</button></div>';
+  return h;
+};
+function saveMemberName(uid) {
+  var en = val('mn-en').trim(), ar = val('mn-ar').trim();
+  var m = member(uid);
+  var p;
+  if (!isCloud()) { p = dbUpdate('members', m.id, { display_name: en || m.display_name, display_name_ar: ar || null }); }
+  else if (uid === S.me.id) p = rpc('set_my_name', { p_building: S.building.id, p_name: en, p_name_ar: ar });
+  else p = cloudCall(SB.from('members').update({ display_name: en || m.display_name, display_name_ar: ar || null }).eq('building_id', S.building.id).eq('user_id', uid).select());
+  p.then(function() { m.display_name = en || m.display_name; m.display_name_ar = ar || null; closeSheet(); toast(t('Saved', 'تم الحفظ')); if (isCloud()) reloadBuilding(); }, function(e) { sheetErr(e.message); });
+}
+
 /* ============================================================================
    First run: show the building first, ask for an account last.
    Full screen, one idea per step, never scrolls.
@@ -3399,7 +3426,10 @@ function renderOnboarding() {
   } else if (step === 4) {
     h += '<h1>' + esc(t('Who collects the money?', 'من يجمع المال؟')) + '</h1><p class="sub">' + esc(t('Cash they collect stays "with them" until they hand it over.', 'النقد الذي يجمعه يبقى "معه" حتى يسلّمه.')) + '</p>';
     h += '<div style="margin-top:10px"><button class="choice' + (OB.who === 'other' ? ' on' : '') + '" onclick="OB.who=\'other\';render()"><span class="ic">💵</span><span class="grow"><b>' + esc(t('Someone goes door to door', 'شخص يمرّ على الشقق')) + '</b><small>' + esc(t('Natour, concierge or a neighbour', 'ناطور أو حارس أو جار')) + '</small></span></button>';
-    if (OB.who === 'other') h += '<input class="input" style="margin-top:8px" id="ob-col" value="' + esc(OB.colName) + '" placeholder="' + esc(t('Their name, e.g. Anas', 'اسمه، مثلاً أنس')) + '" oninput="OB.colName=this.value">';
+    if (OB.who === 'other') {
+      h += '<div class="two" style="margin-top:8px"><div><input class="input" id="ob-col" dir="ltr" data-tr="ob-col-ar" data-tr-kind="name" value="' + esc(OB.colName) + '" placeholder="' + esc(t('Name, e.g. Anas', 'الاسم، مثلاً Anas')) + '" oninput="OB.colName=this.value"><div class="tr-box" id="trs-ob-col"></div></div>';
+      h += '<div><input class="input" id="ob-col-ar" dir="rtl" data-tr="ob-col" data-tr-kind="name" value="' + esc(OB.colNameAr || '') + '" placeholder="أنس" oninput="OB.colNameAr=this.value"><div class="tr-box" id="trs-ob-col-ar"></div></div></div>';
+    }
     h += '<button class="choice' + (OB.who === 'me' ? ' on' : '') + '" onclick="OB.who=\'me\';render()"><span class="ic">🙋</span><span class="grow"><b>' + esc(t('I collect it myself', 'أنا أجمعه بنفسي')) + '</b><small>' + esc(t('Or residents transfer to me', 'أو يحوّل لي السكان')) + '</small></span></button></div>';
   } else if (step === 5) {
     h += '<h1>' + esc(t('Anything in the safe already?', 'هل يوجد مال في الصندوق؟')) + '</h1><p class="sub">' + esc(t('Leave it at zero if you\'re starting fresh.', 'اتركه صفراً إذا كنت تبدأ من جديد.')) + '</p>';
@@ -3440,7 +3470,7 @@ function obNext() {
 /* Create the building from the answers, in whichever backend is active. */
 function finishSetup(displayName) {
   var settings = { rate: 89500, opening_usd: num(OB.openUsd), opening_lbp: num(OB.openLbp), books_public: true, show_who_paid: false,
-                   collector_name: OB.who === 'other' ? (OB.colName || '') : '' };
+                   collector_name: OB.who === 'other' ? (OB.colName || '') : '', collector_name_ar: OB.who === 'other' ? (OB.colNameAr || '') : '' };
   var bid;
   return rpc('create_building', { p_name: OB.name.trim(), p_name_ar: OB.nameAr.trim() || null, p_settings: settings, p_display_name: displayName || t('Manager', 'المدير') })
     .then(function(id) { bid = id; return openBuilding(bid); })
@@ -3460,7 +3490,7 @@ function finishSetup(displayName) {
       }).then(function() { UI.cycleId = cyc.id; });
     })
     .then(function() {
-      if (OB.who === 'other' && !isCloud()) return dbInsert('members', { user_id: 'u-collector', role: 'collector', display_name: OB.colName || t('Collector', 'الجابي') });
+      if (OB.who === 'other' && !isCloud()) return dbInsert('members', { user_id: 'u-collector', role: 'collector', display_name: OB.colName || t('Collector', 'الجابي'), display_name_ar: OB.colNameAr || null });
     })
     .then(function() {
       return dbInsertMany('tasks', [
@@ -3470,18 +3500,18 @@ function finishSetup(displayName) {
     })
     .then(function() {
       var askInvite = OB.who === 'other' && isCloud();
-      var name = OB.colName;
+      var name = OB.colName, nameAr = OB.colNameAr;
       OB = null;
       UI.screen = 'app'; UI.tab = 'home'; HERO_REVEAL = true;
       render(); window.scrollTo(0, 0); launchConfetti();
-      if (askInvite) setTimeout(function() { openSheet('invite', { role: 'collector' }); setTimeout(function() { var el = document.getElementById('inv-name'); if (el) el.value = name || ''; }, 50); }, 1600);
+      if (askInvite) setTimeout(function() { openSheet('invite', { role: 'collector' }); setTimeout(function() { var el = document.getElementById('inv-name'); if (el) el.value = name || ''; var ea = document.getElementById('inv-name-ar'); if (ea) ea.value = nameAr || ''; }, 50); }, 1600);
     })
     .catch(function(e) { fail(e); });
 }
 
 /* A filled-in example so people can poke around before committing. */
 function loadSample() {
-  OB = { step: 6, name: 'Block C', nameAr: 'البلوك C', floors: 4, per: 2, under: 0, fee: 20, cur: 'USD', split: 'each', who: 'other', colName: 'Anas', openUsd: 450, openLbp: 18000000 };
+  OB = { step: 6, name: 'Block C', nameAr: 'البلوك C', floors: 4, per: 2, under: 0, fee: 20, cur: 'USD', split: 'each', who: 'other', colName: 'Anas', colNameAr: 'أنس', openUsd: 450, openLbp: 18000000 };
   finishSetup('Carl').then(function() {
     var cyc = currentCycle(); if (!cyc) return;
     var us = activeUnits();
@@ -3513,7 +3543,8 @@ function renderAuth() {
   h += '<div class="ob-body">';
   if (a.invite) h += '<h1>' + esc(t('Join ' + a.invite.building, 'انضم إلى ' + (a.invite.building_ar || a.invite.building))) + '</h1><p class="sub">' + esc(t('You were invited as ' + roleLabel(a.invite.role).toLowerCase() + '.', 'دُعيت ك' + roleLabel(a.invite.role) + '.')) + '</p>';
   else h += '<h1>' + esc(up ? t('Create your account', 'أنشئ حسابك') : t('Welcome back', 'أهلاً بعودتك')) + '</h1>';
-  if (up) h += '<label class="field"><span>' + esc(t('Your name', 'اسمك')) + '</span><input class="input" id="au-name" value="' + esc(a.name || (a.invite && a.invite.display_name) || '') + '" autocomplete="name"></label>';
+  if (up) h += '<label class="field"><span>' + esc(t('Your name', 'اسمك')) + '</span><input class="input" id="au-name" dir="ltr" data-tr="au-name-ar" data-tr-kind="name" value="' + esc(a.name || (a.invite && a.invite.display_name) || '') + '" autocomplete="name"><div class="tr-box" id="trs-au-name"></div></label>';
+  if (up && a.invite) h += '<label class="field"><span>' + esc(t('Your name in Arabic', 'اسمك بالعربية')) + '</span><input class="input" id="au-name-ar" dir="rtl" data-tr="au-name" data-tr-kind="name" value="' + esc(a.nameAr || a.invite.display_name_ar || '') + '"><div class="tr-box" id="trs-au-name-ar"></div></label>';
   h += '<label class="field"><span>' + esc(t('Username or email', 'اسم المستخدم أو البريد')) + '</span><input class="input" id="au-user" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" dir="ltr" placeholder="' + esc(t('e.g. anas', 'مثلاً anas')) + '"' + (up ? '' : ' data-autofocus') + '></label>';
   if (up) h += '<div class="hint">' + esc(t('No email needed: pick any username, like anas or abuali.', 'لا حاجة لبريد: اختر أي اسم مستخدم مثل anas أو abuali.')) + '</div>';
   h += '<label class="field"><span>' + esc(t('Password', 'كلمة المرور')) + '</span><input class="input" id="au-pass" type="password" autocomplete="' + (up ? 'new-password' : 'current-password') + '" onkeydown="if(event.key===\'Enter\')authGo()"></label>';
@@ -3535,7 +3566,11 @@ function authGo() {
   var btn = document.getElementById('au-go'); btn.disabled = true;
   if (up) a.name = name;
   Promise.resolve().then(function() { return up ? cloudSignUp(user, pass, name) : cloudSignIn(user, pass); }).then(function() {
+    var nameAr = up && document.getElementById('au-name-ar') ? val('au-name-ar').trim() : '';
     if (a.invite) return rpc('join_building', { p_code: a.invite.code, p_display_name: name || a.invite.display_name }).then(function(bid) {
+      if (nameAr) return rpc('set_my_name', { p_building: bid, p_name: name || a.invite.display_name, p_name_ar: nameAr }).then(function() { return bid; }, function() { return bid; });
+      return bid;
+    }).then(function(bid) {
       history.replaceState(null, '', location.pathname);
       return openBuilding(bid).then(function() { UI.screen = 'app'; UI.tab = 'home'; HERO_REVEAL = true; render(); launchConfetti(); });
     });
@@ -3688,7 +3723,7 @@ function renderResident() {
   if (pairUsd(b.arrears) > 0.005) h += '<div class="hint" style="color:var(--bad)">' + esc(t('Includes earlier months: ', 'يشمل أشهراً سابقة: ') + fmtPair(b.arrears)) + '</div>';
   if (pairUsd(owed) > 0.005) {
     var col = S.members.filter(function(m) { return m.role === 'collector'; })[0];
-    h += '<p class="hint">' + esc(col ? t('You can hand it to ' + col.display_name + ', or pay the manager directly.', 'يمكنك تسليمه إلى ' + col.display_name + ' أو للمدير مباشرة.') : t('Pay the building manager.', 'ادفع لمدير البناية.')) + '</p>';
+    h += '<p class="hint">' + esc(col ? t('You can hand it to ' + mName(col, 'en') + ', or pay the manager directly.', 'يمكنك تسليمه إلى ' + mName(col, 'ar') + ' أو للمدير مباشرة.') : t('Pay the building manager.', 'ادفع لمدير البناية.')) + '</p>';
   }
   h += '</div></div>';
 
@@ -4193,7 +4228,7 @@ function waTextShort(u, cyc, lang) {
     var name = (lg === 'ar' ? (u.name_ar || u.name) : u.name || '').split(/\s+/)[0];
     var hi = T('Hi', 'مرحباً') + (name ? ' ' + name : '') + ' (' + u.code + ')';
     var s = owes
-      ? hi + ' 👋 ' + cycleTitle(cyc, lg) + ': *' + fmtPair(r.allLeft) + '* ' + T('still open', 'متبقي') + (pairUsd(b.arrears) > 0.005 ? T(' (+ ' + fmtPair(b.arrears) + ' earlier)', ' (+ ' + fmtPair(b.arrears) + ' سابقاً)') : '') + '.' + (collectors().length ? T(' You can hand it to ' + collectorLabel() + '.', ' يمكنك تسليمه إلى ' + collectorLabel() + '.') : '')
+      ? hi + ' 👋 ' + cycleTitle(cyc, lg) + ': *' + fmtPair(r.allLeft) + '* ' + T('still open', 'متبقي') + (pairUsd(b.arrears) > 0.005 ? T(' (+ ' + fmtPair(b.arrears) + ' earlier)', ' (+ ' + fmtPair(b.arrears) + ' سابقاً)') : '') + '.' + (collectors().length ? T(' You can hand it to ' + collectorLabel('en') + '.', ' يمكنك تسليمه إلى ' + collectorLabel('ar') + '.') : '')
       : hi + ' ✅ ' + T('Received in full for ', 'تم استلام كامل ') + cycleTitle(cyc, lg) + T('. Thank you!', '. شكراً!');
     return s;
   }
@@ -4235,7 +4270,7 @@ function aiReminder() {
   var body = { tone: d.tone, lang: lang, length: d.len === 'long' ? 'long' : 'short', building: lang === 'ar' ? (S.building.name_ar || S.building.name) : S.building.name, unit: u.code,
                name: lang === 'ar' ? (u.name_ar || u.name) : u.name, month: cycleTitle(cyc, lang === 'ar' ? 'ar' : 'en'), items: lines,
                left: d.tone === 'thanks' ? '' : left, arrears: pairUsd(b.arrears) > 0.005 ? fmtPair(b.arrears) : '', monthsBehind: hist.behind,
-               payTo: collectors().length ? collectorLabel() : '', manager: memberName(S.me.id) };
+               payTo: collectors().length ? (lang === 'ar' ? collectorLabel('ar') : lang === 'en' ? collectorLabel('en') : collectorLabel('ar') + ' / ' + collectorLabel('en')) : '', manager: memberName(S.me.id, lang === 'ar' ? 'ar' : 'en') };
   d.text = val('rm-text'); d.scan = 'reading'; render();
   SB.functions.invoke('write-reminder', { body: body }).then(function(res) {
     if (!UI.sheet || UI.sheet.data !== d) return;

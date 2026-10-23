@@ -4788,17 +4788,17 @@ SHEETS.remind = function(d) {
   var u = byId(S.units, d.u), cyc = byId(S.cycles, d.cyc) || currentCycle();
   if (!u || !cyc) return '';
   if (!d.tone) d.tone = suggestTone(u, cyc);
-  if (!d.len) d.len = 'short';
+  if (!d.len) d.len = 'long';
   if (d.text == null) d.text = d.len === 'long' ? waText(u, cyc) : waTextShort(u, cyc);
   var h = '<h3>' + esc(t('Message to ', 'رسالة إلى ') + u.code + (unitName(u) ? ' · ' + unitName(u) : '')) + '</h3>';
   var hist = unitHistory(u, cyc);
-  h += '<p class="lead">' + esc(hist.checked ? t('Last ' + hist.checked + ' months: paid ' + hist.paid + ', still open ' + hist.behind + '.', 'آخر ' + hist.checked + ' أشهر: سدد ' + hist.paid + '، متأخر ' + hist.behind + '.') : t('No earlier months yet.', 'لا أشهر سابقة بعد.')) + '</p>';
+  h += '<p class="lead">' + esc(hist.checked ? t((hist.checked === 1 ? 'Last month' : 'Last ' + hist.checked + ' months') + ': paid ' + hist.paid + ', still open ' + hist.behind + '.', (hist.checked === 1 ? 'الشهر الماضي' : 'آخر ' + hist.checked + ' أشهر') + ': سدد ' + hist.paid + '، متأخر ' + hist.behind + '.') : t('No earlier months yet.', 'لا أشهر سابقة بعد.')) + '</p>';
   h += '<div class="chips" style="padding:0 0 8px;flex-wrap:wrap">';
   Object.keys(TONE_INFO).forEach(function(k) {
     h += '<button class="chip' + (d.tone === k ? ' on' : '') + '" onclick="UI.sheet.data.text=val(\'rm-text\');UI.sheet.data.tone=\'' + k + '\';render()">' + esc(LANG === 'ar' ? TONE_INFO[k][1] : TONE_INFO[k][0]) + (k === suggestTone(u, cyc) ? ' ★' : '') + '</button>';
   });
   h += '</div>';
-  h += '<div class="seg" style="margin-bottom:8px"><button class="' + (d.len === 'short' ? 'on' : '') + '" onclick="UI.sheet.data.len=\'short\';UI.sheet.data.text=null;UI.sheet.data.ai=false;UI.sheet.data.scan=null;render()">' + esc(t('Short', 'قصيرة')) + '</button><button class="' + (d.len === 'long' ? 'on' : '') + '" onclick="UI.sheet.data.len=\'long\';UI.sheet.data.text=null;UI.sheet.data.ai=false;UI.sheet.data.scan=null;render()">' + esc(t('Detailed', 'مفصّلة')) + '</button></div>';
+  h += '<div class="seg" style="margin-bottom:8px"><button class="' + (d.len === 'long' ? 'on' : '') + '" onclick="UI.sheet.data.len=\'long\';UI.sheet.data.text=null;UI.sheet.data.ai=false;UI.sheet.data.scan=null;render()">' + esc(t('Detailed', 'مفصّلة')) + '</button><button class="' + (d.len === 'short' ? 'on' : '') + '" onclick="UI.sheet.data.len=\'short\';UI.sheet.data.text=null;UI.sheet.data.ai=false;UI.sheet.data.scan=null;render()">' + esc(t('Short', 'قصيرة')) + '</button></div>';
   if (aiReady()) h += '<button class="btn sec block" onclick="aiReminder()">✨ ' + esc(d.ai ? t('Write it again', 'أعد الكتابة') : t('Write it in this tone', 'اكتبها بهذه النبرة')) + '</button>';
   h += scanStatus(d);
   h += '<label class="field"><span>' + esc(t('Message (you can edit it)', 'الرسالة (يمكنك تعديلها)')) + '</span><textarea class="input" id="rm-text" dir="auto" style="min-height:' + (d.len === 'long' ? 220 : 140) + 'px;font-size:15px">' + esc(d.text) + '</textarea></label>';

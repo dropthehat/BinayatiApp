@@ -526,8 +526,17 @@ function unitInCycle(u, cyc) {
 }
 /* A shared bill is split among the apartments that existed when it was added. */
 function inSplit(u, ch) { return !ch || !ch.created_at || !u.created_at || u.created_at <= ch.created_at; }
+/* Blocks: a compound run as one building can have blocks A, B, C… A charge can target one block. */
+function blockOf(u) { return (u && u.block) || ''; }
+function blocks() {
+  var seen = {}, out = [];
+  activeUnits().forEach(function(u) { var b = blockOf(u); if (b && !seen[b]) { seen[b] = 1; out.push(b); } });
+  return out.sort(function(a, b) { return a.localeCompare(b, 'en', { numeric: true }); });
+}
+function inBlock(u, ch) { return !ch || !ch.block || blockOf(u) === ch.block; }
+function blockLabel(b) { return b ? t('Block ', 'بلوك ') + b : t('Whole building', 'كل البناية'); }
 function weightSum(cyc, ch) {
-  return activeUnits().filter(function(u) { return unitInCycle(u, cyc) && inSplit(u, ch); })
+  return activeUnits().filter(function(u) { return unitInCycle(u, cyc) && inSplit(u, ch) && inBlock(u, ch); })
     .reduce(function(s, u) { return s + num(u.weight == null ? 1 : u.weight); }, 0) || 1;
 }
 
@@ -537,7 +546,7 @@ function dueFor(ch, u) {
   var ov = ch.overrides || {};
   if (ov[u.id] != null && ov[u.id] !== '') return num(ov[u.id]);
   var cyc = byId(S.cycles, ch.cycle_id);
-  if (!unitInCycle(u, cyc)) return 0;
+  if (!unitInCycle(u, cyc) || !inBlock(u, ch)) return 0;
   if (ch.pass_through || ch.split === 'custom') return 0;
   var w = num(u.weight == null ? 1 : u.weight);
   if (ch.split === 'weight') return round(num(ch.amount) * w, ch.cur);
@@ -1371,18 +1380,20 @@ function localEvent(tbl, action, row) {
   LDB.events.push(ev);
   S.events.push(ev);
 }
-function localLoadBuilding(bid) {
+function localBuildingState(bid) {
   var db = localLoad();
   var b = byId(db.buildings, bid);
-  S = emptyState();
-  if (!b) return;
-  S.building = b;
-  TABLES.forEach(function(k) { S[k] = db[k].filter(function(r) { return r.building_id === bid; }); });
-  S.me = localUser();
-  var m = member(S.me.id);
-  S.role = m ? m.role : 'manager';
-  S._rev = (S._rev || 0) + 1;
+  var ns = emptyState();
+  if (!b) return ns;
+  ns.building = b;
+  TABLES.forEach(function(k) { ns[k] = db[k].filter(function(r) { return r.building_id === bid; }); });
+  ns.me = localUser();
+  var m = null; ns.members.forEach(function(x) { if (x.user_id === ns.me.id) m = x; });
+  ns.role = m ? m.role : 'manager';
+  ns._rev = Math.random();
+  return ns;
 }
+function localLoadBuilding(bid) { S = localBuildingState(bid); }
 
 /* ---------------------------------------------------------------------------
    Generic writes (same calls in both modes)
@@ -1614,14 +1625,13 @@ function cloudMyBuildings() {
       .then(function(rows) { return (rows || []).map(function(r) { return { id: r.building_id, role: r.role, name: r.buildings && r.buildings.name, name_ar: r.buildings && r.buildings.name_ar }; }); });
   });
 }
-function cloudLoadBuilding(bid) {
-  setSync('busy');
+function cloudBuildingState(bid, light) {
   return cloudSession().then(function(sess) {
     if (!sess) throw new Error('signed out');
     var qs = [SB.from('buildings').select('*').eq('id', bid).single()];
     TABLES.forEach(function(k) {
       var q = SB.from(k).select('*').eq('building_id', bid);
-      if (k === 'events') q = q.order('at', { ascending: false }).limit(300);
+      if (k === 'events') q = q.order('at', { ascending: false }).limit(light ? 1 : 300);
       if (k === 'payments') q = q.order('received_at', { ascending: true });
       qs.push(q);
     });
@@ -1636,13 +1646,24 @@ function cloudLoadBuilding(bid) {
       ns.me = { id: sess.user.id };
       var m = null; ns.members.forEach(function(x) { if (x.user_id === sess.user.id) m = x; });
       ns.role = m ? m.role : null;
-      ns._rev = (S._rev || 0) + 1;
-      S = ns;
-      setSync('live');
-      subscribe(bid);
+      ns._rev = Math.random();
+      return ns;
     });
   });
 }
+function cloudLoadBuilding(bid) {
+  setSync('busy');
+  return cloudBuildingState(bid).then(function(ns) {
+    S = ns;
+    setSync('live');
+    subscribe(bid);
+  });
+}
+/* Load any building without switching to it (for the all-buildings overview). */
+function buildingState(bid) { return isCloud() ? cloudBuildingState(bid, true) : Promise.resolve(localBuildingState(bid)); }
+/* Run money calculations against another building's data. */
+function withState(ns, fn) { var old = S; S = ns; try { return fn(); } finally { S = old; } }
+
 var _reloadT = null;
 function reloadBuilding() {
   if (!isCloud() || !S.building) return;
@@ -1699,6 +1720,7 @@ function render() {
     case 'auth': h = renderAuth(); break;
     case 'join': h = renderJoin(); break;
     case 'pick': h = renderPick(); break;
+    case 'overview': h = renderOverview(); break;
     case 'resident': h = renderResident(); break;
     case 'error': h = renderFatal(); break;
     default: h = renderApp();
@@ -1753,6 +1775,7 @@ function currentCycle() {
 }
 function renderTopbar(sub) {
   var h = '<header class="topbar">';
+  if (UI.multi) h += '<button class="iconbtn" onclick="showOverview()" aria-label="' + esc(t('All my buildings', 'كل بناياتي')) + '">' + (LANG === 'ar' ? '›' : '‹') + ' 🏢</button>';
   h += '<button class="bpill" onclick="openSheet(\'menu\')" aria-label="' + esc(t('Building menu', 'قائمة البناية')) + '"><span class="logo">' + esc((bName() || 'B').trim().charAt(0).toUpperCase()) + '</span><span class="grow"><b>' + esc(bName()) + '</b>';
   h += '<small><span id="sync-dot" class="sync"></span>' + esc(sub || (roleLabel(S.role) + (isCloud() ? '' : ' · ' + t('on this phone', 'على هذا الهاتف')))) + '</small></span></button>';
   h += '<button class="iconbtn" onclick="setLang()" aria-label="Language">' + (LANG === 'ar' ? 'EN' : 'ع') + '</button>';
@@ -1792,7 +1815,9 @@ function heroHtml(cyc, opts) {
   opts = opts || {};
   var ph = heroPhase(new Date());
   HERO_KEY = ph.key + '|' + ph.label;
-  var units = activeUnits();
+  var bl = blocks();
+  var blk = opts.block !== undefined ? opts.block : (bl.length > 1 ? (bl.indexOf(UI.block) >= 0 ? UI.block : bl[0]) : null);
+  var units = activeUnits().filter(function(u) { return !blk || blockOf(u) === blk; });
   var wins = units.map(function(u) {
     var st = opts.only ? (u.id === opts.only ? unitCycle(u, cyc).state : 'closed') : (opts.hideWho ? 'closed' : unitCycle(u, cyc).state);
     var state = st === 'paid' ? 'paid' : (st === 'closed' || st === 'none' ? 'closed' : 'owes');
@@ -1805,7 +1830,7 @@ function heroHtml(cyc, opts) {
   var reveal = HERO_REVEAL; HERO_REVEAL = false;
   var safe = cash ? { split: true, usdH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.USD) / 40)), lbpH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.LBP) / 4e6)) } : null;
   var html = buildBuildingScene({
-    phase: ph, wins: wins, levels: levels, interactive: !opts.noTap, idp: opts.idp || 'hm', signText: S.building.name, chip: ph.chip,
+    phase: ph, wins: wins, levels: levels, interactive: !opts.noTap, idp: opts.idp || 'hm', signText: blk ? (S.building.name + ' ' + blk).slice(0, 12) : S.building.name, chip: ph.chip,
     safe: safe, coreGlow: openTasks().some(function(x) { return x.due_on && x.due_on <= todayIso(); }),
     extraCls: reveal ? 'reveal' : ''
   });
@@ -1847,7 +1872,7 @@ function renderHomeManager() {
   var cyc = homeCycle();
   var cash = cashState();
   var h = renderTopbar();
-  h += heroHtml(cyc);
+  h += blockChips() + heroHtml(cyc);
 
   cash.pending.forEach(function(ho) {
     h += '<div class="sec"><div class="banner warn"><div class="grow"><b>' + esc(t(memberName(ho.collector_id) + ' handed over ' + fmtPair({ USD: num(ho.usd), LBP: num(ho.lbp) }), memberName(ho.collector_id) + ' سلّم ' + fmtPair({ USD: num(ho.usd), LBP: num(ho.lbp) }))) + '</b>' + esc(t('Confirm once the cash is in your hands.', 'أكّد عند استلام المبلغ.')) + '</div><button class="btn sm ok" onclick="openSheet(\'handover\',{id:' + jsArg(ho.id) + '})">' + esc(t('Review', 'مراجعة')) + '</button></div></div>';
@@ -1900,7 +1925,7 @@ function renderHomeCollector() {
   var mine = cash.pockets[S.me.id] || { USD: 0, LBP: 0, pending: pair(), pendingId: null };
   var pend = S.handovers.filter(function(x) { return x.collector_id === S.me.id && x.status === 'pending'; })[0];
   var h = renderTopbar();
-  h += heroHtml(cyc, { idp: 'hc' });
+  h += blockChips() + heroHtml(cyc, { idp: 'hc' });
   h += '<div class="sec"><div class="card pad">';
   h += '<div class="lbl muted" style="font-size:12.5px;font-weight:700">' + esc(t('In your pocket', 'معك الآن')) + '</div>';
   h += '<div class="tile" style="padding:0"><div class="val" style="font-size:30px;margin:2px 0 10px">' + fmtPairBig({ USD: mine.USD, LBP: mine.LBP }) + '</div></div>';
@@ -1937,6 +1962,16 @@ function cycleChips(cur, onPick) {
   if (isManager()) h += '<button class="chip" onclick="openSheet(\'add\')">＋ ' + esc(t('Month or project', 'شهر أو مشروع')) + '</button>';
   return h + '</div>';
 }
+/* Block switcher, shown only when the building has blocks. withAll adds an "All" chip. */
+function blockChips(withAll) {
+  var bl = blocks();
+  if (bl.length < 2) return '';
+  var cur = withAll ? (UI.block || '') : (bl.indexOf(UI.block) >= 0 ? UI.block : bl[0]);
+  var h = '<div class="chips" style="margin-bottom:10px">';
+  if (withAll) h += '<button class="chip' + (!cur ? ' on' : '') + '" onclick="UI.block=null;render()">' + esc(t('All blocks', 'كل البلوكات')) + '</button>';
+  bl.forEach(function(b) { h += '<button class="chip' + (cur === b ? ' on' : '') + '" onclick="UI.block=' + jsArg(b) + ';render()">' + esc(blockLabel(b)) + '</button>'; });
+  return h + '</div>';
+}
 function pickCycle(id) { UI.cycleId = id; render(); }
 
 function renderCollect() {
@@ -1959,7 +1994,7 @@ function renderCollect() {
     h += '<button class="' + (ch === 'transfer' ? 'on' : '') + '" onclick="UI.channel=\'transfer\';render()">' + esc(t('Transfer', 'تحويل')) + '</button>';
     h += '</div></div>';
   }
-  var units = activeUnits();
+  var units = activeUnits().filter(function(u) { return !UI.block || blocks().length < 2 || blockOf(u) === UI.block; });
   var rows = units.map(function(u) { return { u: u, r: unitCycle(u, cyc), b: unitBalance(u, cyc) }; });
   var cnt = { all: rows.length, owing: 0, paid: 0, arrears: 0 };
   rows.forEach(function(x) {
@@ -1967,7 +2002,8 @@ function renderCollect() {
     if (pairUsd(x.b.arrears) > 0.005) cnt.arrears++;
   });
   var f = UI.filter || 'all';
-  h += '<div class="chips" style="margin-top:12px">';
+  if (blocks().length > 1) h += '<div style="margin-top:12px">' + blockChips(true) + '</div>';
+  h += '<div class="chips" style="margin-top:' + (blocks().length > 1 ? 0 : 12) + 'px">';
   [['all', t('All', 'الكل')], ['owing', t('Still owe', 'لم يسددوا')], ['paid', t('Paid', 'سددوا')], ['arrears', t('Earlier months', 'متأخرات')]].forEach(function(x) {
     if (x[0] === 'arrears' && !cnt.arrears) return;
     h += '<button class="chip' + (f === x[0] ? ' on' : '') + '" onclick="UI.filter=\'' + x[0] + '\';render()">' + esc(x[1]) + ' <span class="cnt">' + cnt[x[0]] + '</span></button>';
@@ -1989,6 +2025,7 @@ function unitCard(u, cyc, r, b) {
   var stTxt = st === 'paid' ? t('Paid', 'مسدد') : st === 'none' ? t('Nothing due', 'لا مستحقات') : t('Owes', 'عليه') + ' ' + fmtPair(r.allLeft);
   var h = '<div class="card unit' + (st === 'paid' ? ' settled' : '') + '">';
   h += '<div class="unit-h" role="button" tabindex="0" onclick="openSheet(\'unit\',{id:' + jsArg(u.id) + '})"><div class="ucode">' + esc(u.code) + '</div><div class="grow"><div class="uname">' + esc(unitName(u) || t('Apartment ', 'شقة ') + u.code) + '</div>';
+  if (blockOf(u) && blocks().length > 1 && !UI.block) h += '<div class="umeta">' + esc(blockLabel(blockOf(u))) + '</div>';
   if (num(u.weight) !== 1) h += '<div class="umeta">' + esc(t('Share ×' + num(u.weight), 'حصة ×' + num(u.weight))) + '</div>';
   h += '</div><span class="status ' + st + '">' + esc(stTxt) + '</span></div>';
   if (pairUsd(b.arrears) > 0.005) h += '<div class="arrears"><span>' + esc(t('From earlier months', 'من أشهر سابقة')) + '</span><b>' + esc(fmtPair(b.arrears)) + '</b></div>';
@@ -2517,12 +2554,14 @@ function renderBuilding() {
   if (sec === 'team') return h + renderTeamSec();
   if (sec === 'tasks') return h + renderTasksSec();
   if (sec === 'settings') return h + renderSettingsSec();
+  if (sec === 'compound') return h + renderCompoundSec();
   var cyc = currentCycle();
   var items = [
     ['units', '🏠', t('Apartments', 'الشقق'), t(activeUnits().length + ' apartments · names, phones, shares', activeUnits().length + ' شقق · أسماء، هواتف، حصص')],
     ['charges', '🧾', t('What each apartment pays', 'ما تدفعه كل شقة'), cyc ? cycleTitle(cyc) + ' · ' + chargesOf(cyc.id).length + t(' charges', ' رسوم') : t('No month open', 'لا شهر مفتوح')],
     ['cycles', '📅', t('Months & projects', 'الأشهر والمشاريع'), S.cycles.length + t(' in total', ' بالمجموع')],
     ['team', '👥', t('Team', 'الفريق'), S.members.map(function(m) { return m.display_name || roleLabel(m.role); }).join(', ')],
+    ['compound', '🏘', t('Compound', 'المجمّع'), S.building.compound_id ? t('Shared with other buildings · split shared bills', 'مشترك مع بنايات أخرى · قسّم الفواتير المشتركة') : t('Group with neighbouring buildings', 'اجمعها مع بنايات مجاورة')],
     ['tasks', '✅', t('Tasks & reminders', 'المهام والتذكيرات'), openTasks().length + t(' open', ' مفتوحة')],
     ['settings', '⚙️', t('Settings', 'الإعدادات'), t('Rate, opening balance, what residents see', 'سعر الصرف، الرصيد الافتتاحي، ما يراه السكان')]
   ];
@@ -2534,11 +2573,21 @@ function renderBuilding() {
 
 /* ---------------- Apartments ---------------- */
 function renderUnitsSec() {
-  var h = '<div class="sec"><button class="card li" style="border-radius:18px" onclick="openSheet(\'layout\',{})"><div class="ic">🏢</div><div class="grow"><b>' + esc(t('Floors & apartments per floor', 'الطوابق والشقق في كل طابق')) + '</b><small>' + esc(layoutSummary(currentLayout())) + '</small></div><span class="chev">›</span></button></div>';
-  h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Apartments', 'الشقق')) + '</h2><button onclick="openSheet(\'unitEdit\',{})">＋ ' + esc(t('Add', 'إضافة')) + '</button></div><div class="card list">';
-  S.units.slice().sort(function(a, b) { return (a.sort || 0) - (b.sort || 0) || String(a.code).localeCompare(String(b.code), 'en', { numeric: true }); }).forEach(function(u) {
-    h += '<button class="li" onclick="openSheet(\'unitEdit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(u.code) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc([u.phone || t('no phone', 'بلا هاتف'), num(u.weight) !== 1 ? t('share ×', 'حصة ×') + num(u.weight) : '', u.active === false ? t('inactive', 'غير فعّالة') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
+  var h = '<div class="sec"><button class="card li" style="border-radius:18px" onclick="openSheet(\'layout\',{})"><div class="ic">🏢</div><div class="grow"><b>' + esc(t('Floors, apartments & blocks', 'الطوابق والشقق والبلوكات')) + '</b><small>' + esc(blocks().length > 1 ? blocks().map(function(b) { return b + ': ' + layoutSummary(currentLayout(b)); }).join(' · ') : layoutSummary(currentLayout())) + '</small></div><span class="chev">›</span></button></div>';
+  var bl = blocks();
+  var groups = bl.length > 1 ? bl.map(function(b) { return { b: b, us: S.units.filter(function(u) { return blockOf(u) === b; }) }; }).concat([{ b: '', us: S.units.filter(function(u) { return !blockOf(u) || bl.indexOf(blockOf(u)) < 0; }) }])
+                             : [{ b: '', us: S.units }];
+  h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Apartments', 'الشقق')) + '</h2><button onclick="openSheet(\'unitEdit\',{})">＋ ' + esc(t('Add', 'إضافة')) + '</button></div>';
+  groups.forEach(function(g, gi) {
+    if (!g.us.length) return;
+    if (bl.length > 1) h += '<div class="daylbl">' + esc(g.b ? blockLabel(g.b) : t('No block', 'بلا بلوك')) + '</div>';
+    h += '<div class="card list">';
+    g.us.slice().sort(function(a, b) { return (a.sort || 0) - (b.sort || 0) || String(a.code).localeCompare(String(b.code), 'en', { numeric: true }); }).forEach(function(u) {
+      h += '<button class="li" onclick="openSheet(\'unitEdit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(u.code) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc([u.phone || t('no phone', 'بلا هاتف'), num(u.weight) !== 1 ? t('share ×', 'حصة ×') + num(u.weight) : '', u.active === false ? t('inactive', 'غير فعّالة') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
+    });
+    h += '</div>';
   });
+  h += '<div>';
   h += '</div><p class="hint">' + esc(t('Share is how much of a split bill an apartment carries: 1 is a normal apartment, 1.5 a bigger one, 0.5 a small shop.', 'الحصة هي نسبة الشقة من الفاتورة المقسّمة: 1 شقة عادية، 1.5 أكبر، 0.5 محل صغير.')) + '</p></div>';
   return h;
 }
@@ -2548,6 +2597,8 @@ SHEETS.unitEdit = function(d) {
   var h = '<h3>' + esc(u ? t('Apartment ', 'الشقة ') + u.code : t('New apartment', 'شقة جديدة')) + '</h3>';
   h += '<div class="two"><label class="field"><span>' + esc(t('Code', 'الرمز')) + '</span><input class="input" id="u-code" value="' + esc(v.code) + '" placeholder="2B"' + (u ? '' : ' data-autofocus') + '></label>';
   h += '<label class="field"><span>' + esc(t('Share', 'الحصة')) + '</span><input class="input" id="u-w" inputmode="decimal" value="' + esc(v.weight == null ? 1 : v.weight) + '"></label></div>';
+  var blist = blocks();
+  h += '<label class="field"><span>' + esc(t('Block (only for compounds with several blocks)', 'البلوك (للمجمّعات فقط)')) + '</span><input class="input" id="u-block" list="u-blocks" value="' + esc(v.block || (d.block || '')) + '" placeholder="' + esc(t('e.g. A', 'مثلاً A')) + '"><datalist id="u-blocks">' + blist.map(function(b) { return '<option value="' + esc(b) + '">'; }).join('') + '</datalist></label>';
   h += '<label class="field"><span>' + esc(t('Resident name', 'اسم الساكن')) + '</span><input class="input" id="u-name" value="' + esc(v.name) + '"></label>';
   h += '<label class="field"><span>' + esc(t('Name in Arabic (optional)', 'الاسم بالعربية (اختياري)')) + '</span><input class="input" id="u-name-ar" dir="rtl" value="' + esc(v.name_ar || '') + '"></label>';
   h += '<label class="field"><span>' + esc(t('WhatsApp number', 'رقم واتساب')) + '</span><input class="input" id="u-ph" inputmode="tel" value="' + esc(v.phone || '') + '" placeholder="03 123 456"></label>';
@@ -2560,9 +2611,10 @@ SHEETS.unitEdit = function(d) {
 };
 function saveUnit(id) {
   var row = { code: val('u-code').trim().toUpperCase(), name: val('u-name').trim(), name_ar: val('u-name-ar').trim() || null, phone: val('u-ph').trim() || null,
-              lang: val('u-lang'), weight: num(val('u-w') || 1), active: document.getElementById('u-act').classList.contains('on') };
+              lang: val('u-lang'), weight: num(val('u-w') || 1), active: document.getElementById('u-act').classList.contains('on'),
+              block: val('u-block').trim().toUpperCase() || null };
   if (!row.code) return sheetErr(t('Give it a code like 2B', 'أعطها رمزاً مثل 2B'));
-  if (S.units.some(function(x) { return x.code === row.code && x.id !== id; })) return sheetErr(t('That code is already used', 'هذا الرمز مستعمل'));
+  if (S.units.some(function(x) { return x.code === row.code && blockOf(x) === (row.block || '') && x.id !== id; })) return sheetErr(t('That code is already used', 'هذا الرمز مستعمل'));
   if (!id) { row.resident_token = token(); row.sort = S.units.length; }
   (id ? dbUpdate('units', id, row) : dbInsert('units', row)).then(function() { closeSheet(); toast(t('Saved', 'تم الحفظ')); }, function(e) { sheetErr(e.message); });
 }
@@ -2628,7 +2680,7 @@ function renderChargesSec() {
     h += '<div class="card list">';
     chs.forEach(function(ch) {
       var how = ch.pass_through ? t('per subscriber', 'لكل مشترك') : ch.split === 'total' ? t('total split by share', 'المجموع مقسّم بالحصص') : ch.split === 'weight' ? t('each × share', 'لكل شقة × الحصة') : t('each apartment', 'لكل شقة');
-      h += '<button class="li" onclick="openSheet(\'charge\',{id:' + jsArg(ch.id) + '})"><div class="ic">' + (ch.kind === 'service' ? '↗' : ch.kind === 'due' ? '÷' : '↻') + '</div><div class="grow"><b>' + esc(L(ch)) + '</b><small>' + esc((LANG === 'ar' ? KIND_INFO[ch.kind][1] : KIND_INFO[ch.kind][0]) + ' · ' + how) + '</small></div><span class="amt">' + esc(ch.pass_through ? fmt(chargeTotal(ch), ch.cur) : ch.split === 'total' ? fmt(ch.amount, ch.cur) : fmt(ch.amount, ch.cur)) + '</span></button>';
+      h += '<button class="li" onclick="openSheet(\'charge\',{id:' + jsArg(ch.id) + '})"><div class="ic">' + (ch.kind === 'service' ? '↗' : ch.kind === 'due' ? '÷' : '↻') + '</div><div class="grow"><b>' + esc(L(ch)) + '</b><small>' + esc((LANG === 'ar' ? KIND_INFO[ch.kind][1] : KIND_INFO[ch.kind][0]) + ' · ' + how + (ch.block ? ' · ' + blockLabel(ch.block) : '')) + '</small></div><span class="amt">' + esc(ch.pass_through ? fmt(chargeTotal(ch), ch.cur) : ch.split === 'total' ? fmt(ch.amount, ch.cur) : fmt(ch.amount, ch.cur)) + '</span></button>';
     });
     h += '</div>';
     var s = cycleSummary(cyc);
@@ -2652,6 +2704,10 @@ SHEETS.charge = function(d) {
   h += '<label class="field"><span>' + esc(t('Common ones', 'الشائعة')) + '</span>' + presetSelect('c-pre', CHARGE_PRESETS[kind], 'chargePreset(this.value)') + '</label>';
   h += '<label class="field"><span>' + esc(t('Name', 'الاسم')) + '</span><input class="input" id="c-title" value="' + esc(st.title != null ? st.title : v.title) + '" placeholder="' + esc(kind === 'service' ? 'Moteur' : kind === 'due' ? t('Water bill', 'فاتورة المياه') : t('Maintenance', 'الصيانة')) + '"></label>';
   h += '<label class="field"><span>' + esc(t('Name in Arabic (optional)', 'الاسم بالعربية (اختياري)')) + '</span><input class="input" id="c-title-ar" dir="rtl" value="' + esc(st.title_ar != null ? st.title_ar : (v.title_ar || '')) + '"></label>';
+  if (blocks().length > 1) {
+    var cb = st.block != null ? st.block : (v.block || '');
+    h += '<label class="field"><span>' + esc(t('Applies to', 'ينطبق على')) + '</span><select class="input" id="c-block" onchange="keepCharge();chargePreview()"><option value="">' + esc(t('Whole building (all blocks)', 'كل البناية (كل البلوكات)')) + '</option>' + blocks().map(function(b) { return '<option value="' + esc(b) + '"' + (cb === b ? ' selected' : '') + '>' + esc(blockLabel(b)) + '</option>'; }).join('') + '</select></label>';
+  }
   if (kind !== 'service') {
     h += '<label class="field"><span>' + esc(t('How to split it', 'طريقة التقسيم')) + '</span><div class="seg">';
     [['each', t('Same for each', 'نفس المبلغ لكل شقة')], ['total', t('Split a total', 'تقسيم مبلغ كلي')], ['weight', t('Each × share', 'لكل شقة × الحصة')]].forEach(function(x) {
@@ -2686,14 +2742,15 @@ function keepCharge() {
   if (document.getElementById('c-title-ar')) d.title_ar = val('c-title-ar');
   if (document.getElementById('c-amt')) d.amount = val('c-amt');
   var r = document.getElementById('c-rec'); if (r) d.recurring = r.classList.contains('on');
+  var cbk = document.getElementById('c-block'); if (cbk) d.block = cbk.value;
 }
 function chargePreview() {
   var el = document.getElementById('c-prev');
   if (!el || !UI.sheet) return;
   var d = UI.sheet.data;
-  var tmp = { amount: num(d.amount), cur: d.cur, split: d.split, overrides: {}, pass_through: d.kind === 'service', cycle_id: d.cycle || (byId(S.charges, d.id) || {}).cycle_id };
+  var tmp = { amount: num(d.amount), cur: d.cur, split: d.split, overrides: {}, pass_through: d.kind === 'service', cycle_id: d.cycle || (byId(S.charges, d.id) || {}).cycle_id, block: d.block != null ? d.block : (byId(S.charges, d.id) || {}).block };
   var h = '';
-  activeUnits().forEach(function(u) {
+  activeUnits().filter(function(u) { return inBlock(u, tmp); }).forEach(function(u) {
     var calc = dueFor(tmp, u), o = d.ov[u.id];
     h += '<div class="kv" style="align-items:center"><span>' + esc(u.code + (unitName(u) ? ' · ' + unitName(u) : '')) + '</span><input class="input" style="max-width:130px;min-height:38px;padding:6px 10px;font-size:15px;text-align:end" inputmode="decimal" placeholder="' + esc(d.kind === 'service' ? '—' : String(calc)) + '" value="' + esc(o != null ? o : '') + '" oninput="ovSet(' + jsArg(u.id) + ',this.value)"></div>';
   });
@@ -2704,7 +2761,7 @@ function saveCharge() {
   keepCharge();
   var d = UI.sheet.data, ch = d.id ? byId(S.charges, d.id) : null;
   var row = { title: (d.title || '').trim(), title_ar: (d.title_ar || '').trim() || null, kind: d.kind, cur: d.cur, amount: d.kind === 'service' ? 0 : num(d.amount),
-              split: d.split, overrides: d.ov || {}, pass_through: d.kind === 'service', recurring: d.kind === 'due' ? false : (d.recurring != null ? d.recurring : true) };
+              split: d.split, overrides: d.ov || {}, pass_through: d.kind === 'service', block: (d.block != null ? d.block : (ch && ch.block)) || null, recurring: d.kind === 'due' ? false : (d.recurring != null ? d.recurring : true) };
   if (!row.title) return sheetErr(t('Give it a name', 'أعطه اسماً'));
   if (d.kind !== 'service' && !(row.amount > 0) && !Object.keys(row.overrides).length) return sheetErr(t('Enter an amount', 'أدخل المبلغ'));
   if (d.kind === 'service' && !Object.keys(row.overrides).length) return sheetErr(t('Enter at least one subscriber', 'أدخل مشتركاً واحداً على الأقل'));
@@ -2742,7 +2799,7 @@ function newMonth() {
   var cyc = { kind: 'month', period: period, title: periodLabel(period, 'en'), title_ar: periodLabel(period, 'ar'), published: true };
   dbInsert('cycles', cyc).then(function(c) {
     var rows = last ? chargesOf(last.id).filter(function(ch) { return ch.recurring; }).map(function(ch, i) {
-      return { cycle_id: cyc.id, kind: ch.kind, title: ch.title, title_ar: ch.title_ar, cur: ch.cur, amount: ch.amount, split: ch.split, overrides: ch.overrides || {}, pass_through: ch.pass_through, recurring: true, sort: i };
+      return { cycle_id: cyc.id, kind: ch.kind, title: ch.title, title_ar: ch.title_ar, cur: ch.cur, amount: ch.amount, split: ch.split, overrides: ch.overrides || {}, pass_through: ch.pass_through, recurring: true, sort: i, block: ch.block || null };
     }) : [];
     return dbInsertMany('charges', rows).then(function() {
       UI.cycleId = cyc.id; closeSheet();
@@ -2953,7 +3010,8 @@ function saveServer(off) {
 /* ---------------- Menu and "+" ---------------- */
 SHEETS.menu = function() {
   var h = '<h3>' + esc(bName()) + '</h3><p class="lead">' + esc(roleLabel(S.role) + (isCloud() ? ' · ' + t('synced', 'متزامن') : ' · ' + t('this phone only', 'هذا الهاتف فقط'))) + '</p><div class="card list menu">';
-  if (isCloud()) h += '<button class="li" onclick="closeSheet();showPicker()"><div class="ic">🏢</div><div class="grow"><b>' + esc(t('Switch or add a building', 'بدّل أو أضف بناية')) + '</b></div></button>';
+  h += '<button class="li" onclick="showOverview()"><div class="ic">🏢</div><div class="grow"><b>' + esc(t('All my buildings', 'كل بناياتي')) + '</b><small>' + esc(t('Summary of each, switch or add one', 'ملخص كل منها، بدّل أو أضف')) + '</small></div></button>';
+  if (isCloud()) {}
   else {
     h += '<button class="li" onclick="closeSheet();startSetup()"><div class="ic">＋</div><div class="grow"><b>' + esc(t('Set up another building', 'أعدّ بناية أخرى')) + '</b></div></button>';
     var others = localLoad().buildings.filter(function(b) { return b.id !== S.building.id; });
@@ -2974,7 +3032,10 @@ SHEETS.menu = function() {
 function viewAs(uid) {
   var db = localLoad(); db.persona = uid; localSave();
   UI.sheet = null; UI.tab = 'home';
-  localLoadBuilding(S.building.id); render();
+  localLoadBuilding(S.building.id);
+  if (!S.role) { showOverview(); return; }
+  render();
+  myBuildingList().then(function(l) { UI.multi = l.length > 1; render(); });
 }
 SHEETS.add = function() {
   var items = [];
@@ -3003,9 +3064,9 @@ function addPick(k) {
 
 /* ---------------- Building layout: fix floors after setup ---------------- */
 var LAYOUT_CODE = /^(SS\d+|\d+)[A-H]?$/;
-function currentLayout() {
+function currentLayout(block) {
   var floors = 0, under = 0, per = 1, by = {};
-  activeUnits().forEach(function(u) {
+  activeUnits().filter(function(u) { return block == null || blockOf(u) === block; }).forEach(function(u) {
     var lv = unitLevel(u.code);
     if (lv == null || lv === 0) return;
     if (lv > 0) floors = Math.max(floors, lv); else under = Math.max(under, -lv);
@@ -3017,21 +3078,28 @@ function currentLayout() {
 function layoutSummary(l) {
   return t(l.floors + ' floors × ' + l.per + (l.under ? ' · ' + l.under + ' underground' : ''), l.floors + ' طوابق × ' + l.per + (l.under ? ' · ' + l.under + ' سفلية' : ''));
 }
-function layoutPlan(l) {
+function layoutPlan(l, block) {
+  block = block || '';
   var target = layoutCodes(l.floors, l.per, l.under), want = {};
   target.forEach(function(c) { want[c] = 1; });
   var byCode = {};
-  S.units.forEach(function(u) { byCode[String(u.code).toUpperCase()] = u; });
+  S.units.forEach(function(u) { if (blockOf(u) === block) byCode[String(u.code).toUpperCase()] = u; });
   var add = [], revive = [], drop = [];
   target.forEach(function(c) { var u = byCode[c]; if (!u) add.push(c); else if (u.active === false) revive.push(u); });
-  activeUnits().forEach(function(u) { var c = String(u.code).toUpperCase(); if (LAYOUT_CODE.test(c) && !want[c]) drop.push(u); });
+  activeUnits().forEach(function(u) { var c = String(u.code).toUpperCase(); if (blockOf(u) === block && LAYOUT_CODE.test(c) && !want[c]) drop.push(u); });
   return { target: target, add: add, revive: revive, drop: drop };
 }
 SHEETS.layout = function(d) {
-  if (!d.l) d.l = currentLayout();
-  var l = d.l, plan = layoutPlan(l);
-  var h = '<h3>' + esc(t('Floors & apartments', 'الطوابق والشقق')) + '</h3><p class="lead">' + esc(t('Fix the building if setup got it wrong. Apartments you renamed yourself are left alone.', 'صحّح البناية إذا أخطأ الإعداد. الشقق التي سمّيتها بنفسك لا تتغير.')) + '</p>';
-  h += '<div class="ob-stage" style="height:190px;padding:0">' + obScene(plan.target.length, plan.target, S.building.name, false) + '</div>';
+  var bl = blocks();
+  if (bl.length > 1 && d.block == null) d.block = bl[0];
+  if (!d.l) d.l = currentLayout(bl.length > 1 ? d.block : null);
+  var l = d.l, plan = layoutPlan(l, bl.length > 1 ? d.block : '');
+  var h = '<h3>' + esc(t('Floors & apartments', 'الطوابق والشقق')) + '</h3>';
+  h += '<div class="chips" style="padding:4px 0 8px;flex-wrap:wrap">';
+  bl.forEach(function(b) { h += '<button class="chip' + (d.block === b ? ' on' : '') + '" onclick="UI.sheet.data={block:' + jsArg(b) + '};render()">' + esc(blockLabel(b)) + '</button>'; });
+  h += '<button class="chip" onclick="addBlock()">＋ ' + esc(bl.length > 1 ? t('Another block', 'بلوك آخر') : t('This is a compound with blocks', 'هذا مجمّع ببلوكات')) + '</button></div>';
+  h += '<p class="lead">' + esc(t('Fix the building if setup got it wrong. Apartments you renamed yourself are left alone.', 'صحّح البناية إذا أخطأ الإعداد. الشقق التي سمّيتها بنفسك لا تتغير.')) + '</p>';
+  h += '<div class="ob-stage" style="height:190px;padding:0">' + obScene(plan.target.length, plan.target, d.block ? (S.building.name + ' ' + d.block).slice(0, 12) : S.building.name, false) + '</div>';
   [['floors', t('Floors', 'الطوابق'), 1, 12], ['per', t('Apartments per floor', 'شقق في الطابق'), 1, 6], ['under', t('Underground floors', 'طوابق سفلية'), 0, 3]].forEach(function(x) {
     h += '<div class="ob-step"><div><b>' + esc(x[1]) + '</b></div><div class="stepper"><button onclick="layoutBump(\'' + x[0] + '\',-1,' + x[2] + ',' + x[3] + ')">−</button><span>' + l[x[0]] + '</span><button onclick="layoutBump(\'' + x[0] + '\',1,' + x[2] + ',' + x[3] + ')">+</button></div></div>';
   });
@@ -3053,9 +3121,10 @@ function layoutBump(k, dlt, min, max) {
   render();
 }
 function applyLayout() {
-  var plan = layoutPlan(UI.sheet.data.l), ops = Promise.resolve();
+  var blk = blocks().length > 1 ? UI.sheet.data.block : '';
+  var plan = layoutPlan(UI.sheet.data.l, blk), ops = Promise.resolve();
   var base = S.units.length;
-  var rows = plan.add.map(function(c, i) { return { code: c, name: '', sort: base + i, weight: 1, lang: 'both', active: true, resident_token: token() }; });
+  var rows = plan.add.map(function(c, i) { return { code: c, name: '', sort: base + i, weight: 1, lang: 'both', active: true, resident_token: token(), block: blk || null }; });
   if (rows.length) ops = ops.then(function() { return dbInsertMany('units', rows); });
   plan.revive.forEach(function(u) { ops = ops.then(function() { return dbUpdate('units', u.id, { active: true }); }); });
   plan.drop.forEach(function(u) {
@@ -3065,6 +3134,7 @@ function applyLayout() {
   // keep the list in building order: underground first, then floor by floor
   ops.then(function() {
     var all = S.units.slice().sort(function(a, b) {
+      if (blockOf(a) !== blockOf(b)) return blockOf(a).localeCompare(blockOf(b));
       var la = unitLevel(a.code), lb = unitLevel(b.code);
       if (la == null) la = 99; if (lb == null) lb = 99;
       return la - lb || String(a.code).localeCompare(String(b.code), 'en', { numeric: true });
@@ -3073,6 +3143,29 @@ function applyLayout() {
     all.forEach(function(u, i) { if (u.sort !== i) p2 = p2.then(function() { return dbUpdate('units', u.id, { sort: i }); }); });
     return p2;
   }).then(function() { closeSheet(); toast(t('Building updated', 'تم تحديث البناية')); }, function(e) { sheetErr(e.message); });
+}
+
+/* Turn the building into a compound with blocks, or add one more block. */
+function addBlock() {
+  var bl = blocks(), letters = 'ABCDEFGHIJ';
+  var ops = Promise.resolve();
+  if (bl.length < 2) {
+    var first = bl[0] || 'A';
+    activeUnits().forEach(function(u) { if (!blockOf(u)) ops = ops.then(function() { return dbUpdate('units', u.id, { block: first }); }); });
+    bl = [first];
+  }
+  var next = '';
+  for (var i = 0; i < letters.length; i++) if (bl.indexOf(letters.charAt(i)) < 0) { next = letters.charAt(i); break; }
+  var name = prompt(t('Name of the new block', 'اسم البلوك الجديد'), next);
+  if (!name) return;
+  name = name.trim().toUpperCase().slice(0, 12);
+  if (bl.indexOf(name) >= 0) { toast(t('That block exists already', 'هذا البلوك موجود')); return; }
+  var l = currentLayout(bl[0]), base = S.units.length;
+  var rows = layoutCodes(l.floors, l.per, l.under).map(function(c, i) { return { code: c, name: '', sort: base + i, weight: 1, lang: 'both', active: true, resident_token: token(), block: name }; });
+  ops.then(function() { return dbInsertMany('units', rows); }).then(function() {
+    UI.sheet = { name: 'layout', data: { block: name } }; render();
+    toast(t('Block ' + name + ' added with ' + rows.length + ' apartments. Adjust its floors here.', 'أُضيف البلوك ' + name + ' مع ' + rows.length + ' شقق. عدّل طوابقه هنا.'));
+  }, fail);
 }
 
 /* ============================================================================
@@ -3121,7 +3214,7 @@ function tickWelcome() {
 }
 
 function startSetup() {
-  OB = { step: 1, name: '', nameAr: '', floors: 4, per: 2, under: 0, fee: '', cur: 'USD', split: 'each', who: 'other', colName: '', openUsd: '', openLbp: '' };
+  OB = { step: 1, name: '', nameAr: '', floors: 4, per: 2, under: 0, blocks: 1, fee: '', cur: 'USD', split: 'each', who: 'other', colName: '', openUsd: '', openLbp: '' };
   UI.screen = 'ob';
   render();
 }
@@ -3134,7 +3227,7 @@ function layoutCodes(floors, per, under) {
 }
 function obUnits() { return layoutCodes(OB.floors, OB.per, OB.under || 0); }
 function renderOnboarding() {
-  var n = (OB.floors + (OB.under || 0)) * OB.per, step = OB.step;
+  var n = (OB.floors + (OB.under || 0)) * OB.per * (OB.blocks || 1), step = OB.step;
   var lit = { 1: 0, 2: 0, 3: Math.round(n * 0.3), 4: Math.round(n * 0.6), 5: n, 6: n }[step] || 0;
   var safe = step >= 5 ? { split: true, usdH: Math.min(22, 4 + num(OB.openUsd) / 40), lbpH: Math.min(22, 4 + num(OB.openLbp) / 4e6) } : null;
   var h = '<div class="ob"><div class="ob-in">';
@@ -3152,6 +3245,7 @@ function renderOnboarding() {
     h += '<div class="ob-step"><div><b>' + esc(t('Floors', 'الطوابق')) + '</b></div><div class="stepper"><button onclick="obBump(\'floors\',-1)">−</button><span>' + OB.floors + '</span><button onclick="obBump(\'floors\',1)">+</button></div></div>';
     h += '<div class="ob-step"><div><b>' + esc(t('Apartments per floor', 'شقق في الطابق')) + '</b><small>' + esc(obUnits().filter(function(c) { return c.indexOf('SS') !== 0; }).slice(0, 4).join(', ') + '…') + '</small></div><div class="stepper"><button onclick="obBump(\'per\',-1)">−</button><span>' + OB.per + '</span><button onclick="obBump(\'per\',1)">+</button></div></div>';
     h += '<div class="ob-step"><div><b>' + esc(t('Underground floors', 'طوابق سفلية')) + '</b><small>' + esc(OB.under ? obUnits().filter(function(c) { return c.indexOf('SS') === 0; }).slice(0, 3).join(', ') + (OB.under * OB.per > 3 ? '…' : '') : t('SS1, SS2… if any', 'SS1، SS2… إن وُجدت')) + '</small></div><div class="stepper"><button onclick="obBump(\'under\',-1)">−</button><span>' + (OB.under || 0) + '</span><button onclick="obBump(\'under\',1)">+</button></div></div>';
+    h += '<div class="ob-step"><div><b>' + esc(t('Blocks', 'البلوكات')) + '</b><small>' + esc((OB.blocks || 1) > 1 ? t('One compound, one safe: blocks A–' + 'ABCDEF'.charAt(OB.blocks - 1), 'مجمّع واحد وصندوق واحد: بلوكات A–' + 'ABCDEF'.charAt(OB.blocks - 1)) : t('Just one building', 'بناية واحدة')) + '</small></div><div class="stepper"><button onclick="obBump(\'blocks\',-1)">−</button><span>' + (OB.blocks || 1) + '</span><button onclick="obBump(\'blocks\',1)">+</button></div></div>';
   } else if (step === 3) {
     h += '<h1>' + esc(t('The monthly fee', 'الرسم الشهري')) + '</h1><p class="sub">' + esc(t('What each apartment pays for upkeep. Bills, moteur and projects come later.', 'ما تدفعه كل شقة للصيانة. الفواتير والموتور والمشاريع لاحقاً.')) + '</p>';
     h += '<label class="field"><div class="money-in"><input class="input" id="ob-fee" inputmode="decimal" value="' + esc(OB.fee) + '" placeholder="20" oninput="OB.fee=this.value" data-autofocus><div class="seg"><button class="' + (OB.cur === 'USD' ? 'on' : '') + '" onclick="OB.cur=\'USD\';render()">USD</button><button class="' + (OB.cur === 'LBP' ? 'on' : '') + '" onclick="OB.cur=\'LBP\';render()">LBP</button></div></div></label>';
@@ -3182,9 +3276,9 @@ function obSign() {
 }
 function obBump(k, d) {
   var min = k === 'under' ? 0 : 1, max = k === 'floors' ? 12 : k === 'under' ? 3 : 6;
-  var was = OB[k] || 0;
+  var was = OB[k] || (k === 'blocks' ? 1 : 0);
   OB[k] = Math.max(min, Math.min(max, was + d));
-  if ((OB.floors + (OB.under || 0)) * OB.per > 48) OB[k] = was;
+  if ((OB.floors + (OB.under || 0)) * OB.per > 48 || (OB.floors + (OB.under || 0)) * OB.per * (OB.blocks || 1) > 150) OB[k] = was;
   render();
 }
 function obBack() { if (OB.step <= 1) { UI.screen = 'welcome'; render(); tickWelcome(); return; } OB.step--; render(); }
@@ -3205,7 +3299,10 @@ function finishSetup(displayName) {
   return rpc('create_building', { p_name: OB.name.trim(), p_name_ar: OB.nameAr.trim() || null, p_settings: settings, p_display_name: displayName || t('Manager', 'المدير') })
     .then(function(id) { bid = id; return openBuilding(bid); })
     .then(function() {
-      var units = obUnits().map(function(code, i) { return { code: code, name: '', sort: i, weight: 1, lang: 'both', active: true, resident_token: token() }; });
+      var units = [], nb = OB.blocks || 1;
+      for (var bi = 0; bi < nb; bi++) obUnits().forEach(function(code) {
+        units.push({ code: code, name: '', sort: units.length, weight: 1, lang: 'both', active: true, resident_token: token(), block: nb > 1 ? 'ABCDEF'.charAt(bi) : null });
+      });
       return dbInsertMany('units', units);
     })
     .then(function() {
@@ -3340,6 +3437,7 @@ function showPicker() { cloudMyBuildings().then(function(bs) { UI.buildings = bs
    --------------------------------------------------------------------------- */
 function openBuilding(bid) {
   try { localStorage.setItem('bny15_last', bid); } catch (e) {}
+  setTimeout(function() { myBuildingList().then(function(l) { var m = l.length > 1; if (m !== !!UI.multi) { UI.multi = m; if (UI.screen === 'app') render(); } }, function() {}); }, 0);
   UI.cycleId = null;
   if (isCloud()) return cloudLoadBuilding(bid);
   var db = localLoad(); db.current = bid; localSave();
@@ -3350,6 +3448,8 @@ function openLocalBuilding(bid) { var db = localLoad(); db.persona = 'u-manager'
 function afterSignIn() {
   return cloudMyBuildings().then(function(bs) {
     if (!bs.length) { UI.screen = 'welcome'; render(); tickWelcome(); return; }
+    UI.multi = bs.length > 1;
+    if (bs.length > 1) { showOverview(); return; }
     var last = null; try { last = localStorage.getItem('bny15_last'); } catch (e) {}
     var pick = bs.filter(function(b) { return b.id === last; })[0] || (bs.length === 1 ? bs[0] : null);
     if (!pick) { UI.buildings = bs; UI.screen = 'pick'; render(); return; }
@@ -3379,6 +3479,8 @@ function boot() {
       }
       var db = localLoad();
       if (!db.buildings.length) { UI.screen = 'welcome'; render(); tickWelcome(); return; }
+      var mine = db.buildings.filter(function(b) { return db.members.some(function(m) { return m.building_id === b.id && m.user_id === (db.persona || 'u-manager'); }); });
+      UI.multi = mine.length > 1;
       openBuilding(byId(db.buildings, db.current) ? db.current : db.buildings[0].id);
       UI.screen = 'app'; render();
     })
@@ -3426,7 +3528,7 @@ function renderResident() {
   var r = unitCycle(u, cyc), b = unitBalance(u, cyc);
   var h = '<div class="shell" style="padding-bottom:24px">';
   h += '<div class="res-head row between"><div><small>' + esc(bName()) + '</small><h1>' + esc(t('Apartment ', 'الشقة ') + u.code) + '</h1>' + (unitName(u) ? '<div class="muted" style="font-weight:600">' + esc(unitName(u)) + '</div>' : '') + '</div><button class="iconbtn" onclick="setLang()">' + (LANG === 'ar' ? 'EN' : 'ع') + '</button></div>';
-  h += heroHtml(cyc, { idp: 'rs', noTap: true, noSafe: !S.resident.booksPublic, only: S.resident.who ? null : u.id });
+  h += heroHtml(cyc, { block: blockOf(u) || null, idp: 'rs', noTap: true, noSafe: !S.resident.booksPublic, only: S.resident.who ? null : u.id });
 
   // The bill
   h += '<div class="sec"><div class="card pad"><div class="row between"><b style="font-size:16px">' + esc(cycleTitle(cyc)) + '</b>' + (r.state === 'paid' ? '<span class="receipt-stamp">✓ ' + esc(t('Paid', 'مسدد')) + '</span>' : '') + '</div>';
@@ -3484,6 +3586,263 @@ function renderResident() {
   }
   h += '<div class="foot-note">' + esc(t('This page is private to your apartment. Binayati · بنايتي', 'هذه الصفحة خاصة بشقتك. بنايتي · Binayati')) + '</div></div>';
   return h;
+}
+
+/* ============================================================================
+   Several buildings: an overview for people who work in more than one
+   (a Natour covering three buildings, a manager running a compound), and
+   compounds that group separate buildings while each keeps its own safe.
+   ============================================================================ */
+
+/* ---------------- Which buildings do I belong to? ---------------- */
+function myBuildingList() {
+  if (isCloud()) return cloudMyBuildings();
+  var db = localLoad(), me = localUser().id;
+  return Promise.resolve(db.buildings.map(function(b) {
+    var m = null; db.members.forEach(function(x) { if (x.building_id === b.id && x.user_id === me) m = x; });
+    return m ? { id: b.id, role: m.role, name: b.name, name_ar: b.name_ar } : null;
+  }).filter(Boolean));
+}
+function compoundsList() {
+  if (isCloud()) return cloudCall(SB.from('compounds').select('*')).then(function(r) { return r || []; }, function() { return []; });
+  return Promise.resolve(localLoad().compounds || []);
+}
+
+/* ---------------- Overview ---------------- */
+function showOverview() {
+  UI.screen = 'overview'; UI.ov = null; UI.sheet = null; render();
+  Promise.all([myBuildingList(), compoundsList()]).then(function(r) {
+    var list = r[0], comps = r[1];
+    UI.myBuildings = list;
+    return Promise.all(list.map(function(b) {
+      return buildingState(b.id).then(function(ns) { return { b: b, ns: ns }; }, function(e) { return { b: b, err: e.message }; });
+    })).then(function(rows) { UI.ov = { rows: rows, comps: comps }; render(); });
+  }).catch(function(e) { UI.ov = { error: e.message, rows: [] }; render(); });
+}
+function overviewStats(ns) {
+  return withState(ns, function() {
+    var cyc = latestMonth(), s = cycleSummary(cyc), cash = cashState();
+    var mine = cash.pockets[S.me.id] || pair();
+    var mgr = S.role === 'manager' || S.role === 'comanager';
+    var tasks = openTasks(mgr ? null : 'collector');
+    var late = tasks.filter(function(x) { return x.due_on && x.due_on <= todayIso(); }).length;
+    return { cyc: cyc, s: s, cash: cash, mine: { USD: mine.USD || 0, LBP: mine.LBP || 0 }, mgr: mgr,
+             pending: mgr ? cash.pending.length : cash.pending.filter(function(h) { return h.collector_id === S.me.id; }).length,
+             tasks: tasks.length, late: late, owing: s.owing.length, compound: S.building.compound_id || null, hero: heroThumb(cyc) };
+  });
+}
+function heroThumb(cyc) {
+  var units = activeUnits().slice(0, 30);
+  var wins = units.map(function(u) { var st = unitCycle(u, cyc).state; return { state: st === 'paid' ? 'paid' : st === 'none' ? 'closed' : 'owes' }; });
+  if (!wins.length) wins = [{ state: 'closed' }];
+  var levels = levelsFor(units.map(function(u, i) { return { code: u.code, win: wins[i] }; }));
+  return buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, wins: wins, levels: levels, signText: S.building.name, idp: 'ov' + Math.random().toString(36).slice(2, 6), extraCls: 'studio bh-bare nopop' });
+}
+function renderOverview() {
+  var h = '<div class="shell"><header class="topbar"><div class="grow"><b style="font-size:20px;font-weight:800">' + esc(t('Your buildings', 'بناياتك')) + '</b></div><button class="iconbtn" onclick="setLang()">' + (LANG === 'ar' ? 'EN' : 'ع') + '</button></header>';
+  var ov = UI.ov;
+  if (!ov) return h + '<div class="sec"><div class="card empty">' + esc(t('Loading your buildings…', 'جارٍ تحميل بناياتك…')) + '</div></div></div>';
+  if (ov.error) h += '<div class="sec"><div class="banner warn">' + esc(ov.error) + '</div></div>';
+  var rows = ov.rows.map(function(r) { if (r.ns) r.st = overviewStats(r.ns); return r; });
+  // Totals across everything
+  var pocket = pair(), safe = pair(), pend = 0, late = 0, anyCol = false, anyMgr = false;
+  rows.forEach(function(r) {
+    if (!r.st) return;
+    addTo(pocket, 'USD', r.st.mine.USD); addTo(pocket, 'LBP', r.st.mine.LBP);
+    if (r.st.mgr) { anyMgr = true; addTo(safe, 'USD', r.st.cash.safe.USD); addTo(safe, 'LBP', r.st.cash.safe.LBP); }
+    else anyCol = true;
+    pend += r.st.pending; late += r.st.late;
+  });
+  h += '<div class="sec" style="margin-top:4px"><div class="tiles">';
+  if (anyCol || pairUsd(pocket) > 0.005) h += tile(t('In your pocket, all buildings', 'معك من كل البنايات'), fmtPairBig(pocket), t('Hand over each building separately', 'سلّم كل بناية على حدة'), '', 'var(--warn)', pairUsd(pocket) > 0.005 ? 'alert' : '');
+  if (anyMgr) h += tile(t('In the safes', 'في الصناديق'), fmtPairBig(safe), t('Each building keeps its own', 'لكل بناية صندوقها'), '', 'var(--ok)');
+  h += tile(t('Needs you', 'بانتظارك'), '<span>' + (pend + late) + '</span>', t(pend + ' handovers · ' + late + ' tasks due', pend + ' تسليم · ' + late + ' مهام مستحقة'), '', 'var(--acc)');
+  h += '</div></div>';
+
+  // Group by compound
+  var groups = {}, order = [];
+  rows.forEach(function(r) {
+    var c = (r.st && r.st.compound) || '';
+    if (!groups[c]) { groups[c] = []; order.push(c); }
+    groups[c].push(r);
+  });
+  order.sort(function(a, b) { return (a ? 0 : 1) - (b ? 0 : 1); });
+  order.forEach(function(c) {
+    var comp = c ? (ov.comps || []).filter(function(x) { return x.id === c; })[0] : null;
+    h += '<div class="sec"><div class="sec-h"><h2>' + esc(c ? (comp ? comp.name : t('Compound', 'مجمّع')) : (order.length > 1 ? t('Other buildings', 'بنايات أخرى') : t('Buildings', 'البنايات'))) + '</h2></div><div class="stack">';
+    groups[c].forEach(function(r) { h += overviewCard(r); });
+    h += '</div></div>';
+  });
+  h += '<div class="sec"><button class="btn sec block" onclick="startSetup()">＋ ' + esc(t('Set up a new building', 'أعدّ بناية جديدة')) + '</button>';
+  if (isCloud()) h += '<button class="btn ghost block" style="margin-top:6px" onclick="signOut()">' + esc(t('Sign out', 'خروج')) + '</button>';
+  h += '</div></div>';
+  return h;
+}
+function overviewCard(r) {
+  var b = r.b;
+  if (!r.st) return '<div class="card pad"><b>' + esc(b.name) + '</b><div class="err">' + esc(r.err || '') + '</div></div>';
+  var st = r.st, s = st.s;
+  var h = '<button class="card pad" style="width:100%;text-align:start;display:block" onclick="openFromOverview(' + jsArg(b.id) + ')">';
+  h += '<div class="row" style="align-items:flex-start"><div style="width:84px;height:84px;flex:none;display:flex;align-items:flex-end;justify-content:center;overflow:hidden">' + st.hero + '</div><div class="grow">';
+  h += '<div class="row between"><b style="font-size:16px">' + esc(LANG === 'ar' ? (b.name_ar || b.name) : b.name) + '</b><span class="status none">' + esc(roleLabel(b.role)) + '</span></div>';
+  if (st.cyc) {
+    h += '<div class="muted" style="font-size:12.5px;font-weight:600;margin-top:2px">' + esc(cycleTitle(st.cyc) + ' · ' + t(s.settled + ' of ' + s.units + ' paid', s.settled + ' من ' + s.units + ' سددوا')) + '</div>';
+    h += '<div class="bar" style="margin:8px 0 6px"><i class="paid" style="width:' + s.pct + '%"></i></div>';
+  }
+  var chips = [];
+  if (pairUsd(st.mine) > 0.005) chips.push(['owes', t('In your pocket ', 'معك ') + fmtPair(st.mine)]);
+  if (st.pending) chips.push(['part', st.mgr ? t(st.pending + ' handover to confirm', st.pending + ' تسليم للتأكيد') : t('Handover waiting', 'تسليم بالانتظار')]);
+  if (st.late) chips.push(['owes', t(st.late + ' tasks due', st.late + ' مهام مستحقة')]);
+  else if (st.tasks) chips.push(['none', t(st.tasks + ' tasks', st.tasks + ' مهام')]);
+  if (st.owing) chips.push(['none', t(st.owing + ' still owe', st.owing + ' لم يسددوا')]);
+  h += '<div class="row" style="flex-wrap:wrap;gap:6px">' + chips.map(function(c) { return '<span class="status ' + c[0] + '">' + esc(c[1]) + '</span>'; }).join('') + '</div>';
+  h += '</div></div></button>';
+  return h;
+}
+function openFromOverview(bid) {
+  openBuilding(bid).then(function() { UI.screen = 'app'; UI.tab = 'home'; UI.block = null; render(); window.scrollTo(0, 0); }, fail);
+}
+
+/* ---------------- Compounds: separate buildings, separate safes, shared bills ---------------- */
+function renderCompoundSec() {
+  var h = '<div class="sec">';
+  var cid = S.building.compound_id;
+  if (!cid) {
+    h += '<div class="card pad"><b>' + esc(t('Part of a bigger compound?', 'جزء من مجمّع أكبر؟')) + '</b><p class="muted" style="margin:6px 0 12px">' + esc(t('Group this building with others that share costs (a guard, the garden, a generator). Each keeps its own safe and books; shared bills are split between them.', 'اجمع هذه البناية مع بنايات تتشارك التكاليف (حارس، حديقة، مولّد). لكل بناية صندوقها وحساباتها؛ والفواتير المشتركة تُقسّم بينها.')) + '</p>';
+    h += '<p class="hint" style="margin-top:0">' + esc(t('One management and one safe for several blocks? Use blocks instead: Building → Apartments → Floors, apartments & blocks.', 'إدارة واحدة وصندوق واحد لعدة بلوكات؟ استعمل البلوكات: البناية ← الشقق ← الطوابق والشقق والبلوكات.')) + '</p>';
+    h += '<button class="btn pri" onclick="openSheet(\'compound\',{})">' + esc(t('Create or join a compound', 'أنشئ مجمّعاً أو انضم إليه')) + '</button></div>';
+    return h + '</div>';
+  }
+  h += '<div class="card pad" id="comp-box"><div class="muted">' + esc(t('Loading…', 'جارٍ التحميل…')) + '</div></div>';
+  setTimeout(loadCompoundBox, 0);
+  return h + '</div>';
+}
+function compoundMembers(cid) {
+  if (isCloud()) return cloudCall(SB.rpc('compound_buildings', { p_compound: cid }));
+  var db = localLoad(), me = localUser().id;
+  return Promise.resolve(db.buildings.filter(function(b) { return b.compound_id === cid; }).map(function(b) {
+    var m = db.members.filter(function(x) { return x.building_id === b.id && x.user_id === me; })[0];
+    return { id: b.id, name: b.name, name_ar: b.name_ar, units: db.units.filter(function(u) { return u.building_id === b.id && u.active !== false; }).length, my_role: m ? m.role : null };
+  }));
+}
+function loadCompoundBox() {
+  var el = document.getElementById('comp-box');
+  if (!el) return;
+  var cid = S.building.compound_id;
+  Promise.all([compoundMembers(cid), compoundsList()]).then(function(r) {
+    var list = r[0] || [], comp = (r[1] || []).filter(function(c) { return c.id === cid; })[0];
+    UI.compound = { id: cid, name: comp ? comp.name : t('Compound', 'مجمّع'), list: list };
+    var h = '<b style="font-size:16px">' + esc(UI.compound.name) + '</b><div class="muted" style="font-size:13px;margin-top:2px">' + esc(t(list.length + ' buildings, each with its own safe', list.length + ' بنايات، لكل منها صندوق')) + '</div>';
+    h += '<div class="list" style="margin:8px -14px">' + list.map(function(b) {
+      return '<div class="li"><div class="ic">🏢</div><div class="grow"><b>' + esc(b.name) + (b.id === S.building.id ? ' · ' + esc(t('this one', 'هذه')) : '') + '</b><small>' + esc(t(b.units + ' apartments', b.units + ' شقق') + ' · ' + (b.my_role ? roleLabel(b.my_role) : t('not yours', 'ليست لك'))) + '</small></div></div>';
+    }).join('') + '</div>';
+    h += '<div class="row" style="flex-wrap:wrap"><button class="btn pri sm grow" onclick="openSheet(\'shared\',{})">' + esc(t('Split a shared bill', 'قسّم فاتورة مشتركة')) + '</button><button class="btn sec sm grow" onclick="openSheet(\'compound\',{})">' + esc(t('Add buildings', 'أضف بنايات')) + '</button></div>';
+    h += '<button class="btn ghost sm" style="margin-top:8px" onclick="leaveCompound()">' + esc(t('Take this building out of the compound', 'أخرج هذه البناية من المجمّع')) + '</button>';
+    el.innerHTML = h;
+  }, function(e) { el.innerHTML = '<div class="err">' + esc(e.message) + '</div>'; });
+}
+SHEETS.compound = function(d) {
+  var cid = S.building.compound_id;
+  var h = '<h3>' + esc(cid ? t('Add buildings to the compound', 'أضف بنايات إلى المجمّع') : t('Create a compound', 'أنشئ مجمّعاً')) + '</h3>';
+  if (!cid) h += '<label class="field"><span>' + esc(t('Compound name', 'اسم المجمّع')) + '</span><input class="input" id="cp-name" placeholder="' + esc(t('e.g. Sahel Alma Residences', 'مثلاً مجمّع ساحل علما')) + '" data-autofocus></label>';
+  if (!UI.myBuildings) { myBuildingList().then(function(l) { UI.myBuildings = l; if (UI.sheet && UI.sheet.name === 'compound') render(); }); }
+  var others = (UI.myBuildings || []).filter(function(b) { return b.id !== S.building.id && (b.role === 'manager' || b.role === 'comanager'); });
+  h += '<div class="field"><span>' + esc(t('Your other buildings to include', 'بناياتك الأخرى لضمّها')) + '</span>';
+  if (!others.length) h += '<div class="hint">' + esc(t('You don\'t manage other buildings yet. Their managers can join from their own app: open Building → Compound there.', 'لا تدير بنايات أخرى بعد. يمكن لمديريها الانضمام من تطبيقهم.')) + '</div>';
+  others.forEach(function(b) { h += '<label class="switch-row" style="cursor:pointer"><div><b>' + esc(b.name) + '</b><small>' + esc(roleLabel(b.role)) + '</small></div><input type="checkbox" class="cp-b" value="' + esc(b.id) + '" style="width:22px;height:22px"></label>'; });
+  h += '</div><div id="sheet-err" class="err"></div><div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Cancel', 'إلغاء')) + '</button><button class="btn pri" onclick="saveCompound()">' + esc(t('Save', 'حفظ')) + '</button></div>';
+  return h;
+};
+function saveCompound() {
+  var cid = S.building.compound_id;
+  var picks = Array.prototype.slice.call(document.querySelectorAll('.cp-b:checked')).map(function(x) { return x.value; });
+  var p;
+  if (!cid) {
+    var name = val('cp-name').trim();
+    if (!name) return sheetErr(t('Give the compound a name', 'أعطِ المجمّع اسماً'));
+    var row = { id: uuid(), name: name, created_at: nowIso() };
+    if (isCloud()) p = cloudCall(SB.from('compounds').insert(row).select().single()).then(function() { return row.id; });
+    else { var db = localLoad(); db.compounds = db.compounds || []; row.created_by = localUser().id; db.compounds.push(row); localSave(); p = Promise.resolve(row.id); }
+    picks.push(S.building.id);
+  } else p = Promise.resolve(cid);
+  p.then(function(id) {
+    var chain = Promise.resolve();
+    picks.forEach(function(bid) { chain = chain.then(function() { return setBuildingCompound(bid, id); }); });
+    return chain;
+  }).then(function() { closeSheet(); toast(t('Compound saved', 'تم حفظ المجمّع')); render(); }, function(e) { sheetErr(e.message); });
+}
+function setBuildingCompound(bid, cid) {
+  if (bid === S.building.id) { S.building.compound_id = cid; }
+  if (isCloud()) return cloudCall(SB.from('buildings').update({ compound_id: cid }).eq('id', bid).select()).then(function(r) { if (!r || !r.length) throw new Error(t('Only that building\'s manager can do this', 'فقط مدير تلك البناية يمكنه ذلك')); });
+  var db = localLoad(), b = byId(db.buildings, bid); if (b) b.compound_id = cid; localSave();
+  return Promise.resolve();
+}
+function leaveCompound() {
+  if (!confirm(t('Take this building out of the compound? Its own books stay as they are.', 'إخراج هذه البناية من المجمّع؟ تبقى حساباتها كما هي.'))) return;
+  setBuildingCompound(S.building.id, null).then(render, fail);
+}
+
+/* A bill for the whole compound (guard, garden, shared generator…), split into
+   one charge per building. Each building collects its share into its own safe. */
+SHEETS.shared = function(d) {
+  var c = UI.compound || { list: [] };
+  var list = c.list || [];
+  var cur = d.cur || 'USD', how = d.how || 'units';
+  var h = '<h3>' + esc(t('Split a shared bill', 'قسّم فاتورة مشتركة')) + '</h3><p class="lead">' + esc(t('Each building gets its share as a bill in its current month, split among its apartments.', 'تحصل كل بناية على حصتها كفاتورة في شهرها الحالي، مقسّمة على شققها.')) + '</p>';
+  h += '<label class="field"><span>' + esc(t('Common ones', 'الشائعة')) + '</span>' + presetSelect('sh-pre', CHARGE_PRESETS.due.concat(CHARGE_PRESETS.fixed.filter(function(p) { return p.split === 'total'; })), 'sharedPreset(this.value)') + '</label>';
+  h += '<label class="field"><span>' + esc(t('Name', 'الاسم')) + '</span><input class="input" id="sh-title" value="' + esc(d.title || '') + '"></label>';
+  h += '<label class="field"><span>' + esc(t('Name in Arabic', 'الاسم بالعربية')) + '</span><input class="input" id="sh-title-ar" dir="rtl" value="' + esc(d.title_ar || '') + '"></label>';
+  h += '<label class="field"><span>' + esc(t('Total for the compound', 'المجموع للمجمّع')) + '</span><div class="money-in"><input class="input" id="sh-amt" inputmode="decimal" value="' + esc(d.amount || '') + '" oninput="sharedPreview()"><div class="seg"><button class="' + (cur === 'USD' ? 'on' : '') + '" onclick="keepShared();UI.sheet.data.cur=\'USD\';render()">USD</button><button class="' + (cur === 'LBP' ? 'on' : '') + '" onclick="keepShared();UI.sheet.data.cur=\'LBP\';render()">LBP</button></div></div></label>';
+  h += '<label class="field"><span>' + esc(t('Split between buildings', 'التقسيم بين البنايات')) + '</span><div class="seg"><button class="' + (how === 'units' ? 'on' : '') + '" onclick="keepShared();UI.sheet.data.how=\'units\';render()">' + esc(t('By apartments', 'حسب عدد الشقق')) + '</button><button class="' + (how === 'equal' ? 'on' : '') + '" onclick="keepShared();UI.sheet.data.how=\'equal\';render()">' + esc(t('Equally', 'بالتساوي')) + '</button></div></label>';
+  h += '<div class="card pad" id="sh-prev" style="margin-top:12px"></div><div id="sheet-err" class="err"></div>';
+  h += '<div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Cancel', 'إلغاء')) + '</button><button class="btn pri" onclick="saveShared()">' + esc(t('Create the bills', 'أنشئ الفواتير')) + '</button></div>';
+  setTimeout(sharedPreview, 0);
+  return h;
+};
+function keepShared() { var d = UI.sheet.data; d.title = val('sh-title'); d.title_ar = val('sh-title-ar'); d.amount = val('sh-amt'); }
+function sharedPreset(i) {
+  if (i === '') return;
+  keepShared();
+  var all = CHARGE_PRESETS.due.concat(CHARGE_PRESETS.fixed.filter(function(p) { return p.split === 'total'; })), p = all[i], d = UI.sheet.data;
+  d.title = p.en; d.title_ar = p.ar; d.cur = p.cur; if (p.amt) d.amount = p.amt;
+  render();
+}
+function sharedShares() {
+  var d = UI.sheet.data, list = (UI.compound && UI.compound.list) || [], tot = num(val('sh-amt') || d.amount), cur = d.cur || 'USD';
+  var units = list.reduce(function(s, b) { return s + (b.units || 0); }, 0) || 1;
+  return list.map(function(b) { return { b: b, amt: round(d.how === 'equal' ? tot / (list.length || 1) : tot * (b.units || 0) / units, cur) }; });
+}
+function sharedPreview() {
+  var el = document.getElementById('sh-prev');
+  if (!el || !UI.sheet) return;
+  var cur = UI.sheet.data.cur || 'USD';
+  el.innerHTML = sharedShares().map(function(x) {
+    return '<div class="kv"><span>' + esc(x.b.name) + (x.b.my_role ? '' : ' <small style="color:var(--warn)">· ' + esc(t('their manager adds it', 'يضيفها مديرها')) + '</small>') + '</span><b>' + esc(fmt(x.amt, cur)) + '</b></div>';
+  }).join('') || '<div class="muted">' + esc(t('No buildings in the compound', 'لا بنايات في المجمّع')) + '</div>';
+}
+function saveShared() {
+  keepShared();
+  var d = UI.sheet.data, cur = d.cur || 'USD';
+  if (!(d.title || '').trim()) return sheetErr(t('Give it a name', 'أعطه اسماً'));
+  if (!(num(d.amount) > 0)) return sheetErr(t('Enter the total', 'أدخل المجموع'));
+  var shares = sharedShares(), done = [], skipped = [];
+  var chain = Promise.resolve();
+  shares.forEach(function(x) {
+    if (!(x.b.my_role === 'manager' || x.b.my_role === 'comanager') || !(x.amt > 0)) { skipped.push(x.b.name); return; }
+    chain = chain.then(function() { return buildingState(x.b.id); }).then(function(ns) {
+      var cyc = withState(ns, function() { return latestMonth(); });
+      if (!cyc) { skipped.push(x.b.name); return; }
+      var row = { id: uuid(), building_id: x.b.id, cycle_id: cyc.id, kind: 'due', title: d.title.trim(), title_ar: (d.title_ar || '').trim() || null, cur: cur, amount: x.amt,
+                  split: 'total', overrides: {}, pass_through: false, recurring: false, sort: 50, created_at: nowIso() };
+      if (x.b.id === S.building.id) return dbInsert('charges', row).then(function() { done.push(x.b.name); });
+      if (isCloud()) return cloudCall(SB.from('charges').insert(row)).then(function() { done.push(x.b.name); });
+      var db = localLoad(); db.charges.push(row); localSave(); done.push(x.b.name);
+    });
+  });
+  chain.then(function() {
+    closeSheet();
+    toast(t('Added to ' + done.join(', ') + (skipped.length ? '. Ask the managers of ' + skipped.join(', ') + ' to add their share.' : ''), 'أُضيفت إلى ' + done.join('، ') + (skipped.length ? '. اطلب من مديري ' + skipped.join('، ') + ' إضافة حصتهم.' : '')));
+  }, function(e) { sheetErr(e.message); });
 }
 
 boot();

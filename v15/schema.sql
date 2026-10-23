@@ -453,7 +453,7 @@ begin
   res := jsonb_build_object(
     'building', jsonb_build_object('id', b.id, 'name', b.name, 'name_ar', b.name_ar, 'settings', b.settings - 'notes'),
     'unit', to_jsonb(u) - 'resident_token' - 'phone',
-    'units', (select coalesce(jsonb_agg(jsonb_build_object('id', x.id, 'code', x.code, 'weight', x.weight, 'active', x.active, 'sort', x.sort, 'created_at', x.created_at)), '[]')
+    'units', (select coalesce(jsonb_agg(jsonb_build_object('id', x.id, 'code', x.code, 'block', x.block, 'weight', x.weight, 'active', x.active, 'sort', x.sort, 'created_at', x.created_at)), '[]')
                 from public.units x where x.building_id = b.id),
     'cycles', (select coalesce(jsonb_agg(to_jsonb(c)), '[]') from public.cycles c where c.building_id = b.id and c.published),
     'charges', (select coalesce(jsonb_agg(to_jsonb(ch)), '[]') from public.charges ch
@@ -509,3 +509,50 @@ begin
     end;
   end loop;
 end $$;
+
+-- ---------------------------------------------------------------------------
+-- 7. Blocks and compounds
+--    Blocks: one building record, one safe, units and charges tagged A, B, C…
+--    Compounds: separate buildings (own safe, own team) grouped to split shared bills.
+-- ---------------------------------------------------------------------------
+alter table public.units add column if not exists block text;
+alter table public.charges add column if not exists block text;
+create table if not exists public.compounds (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  created_by uuid default auth.uid(),
+  created_at timestamptz not null default now()
+);
+alter table public.buildings add column if not exists compound_id uuid references public.compounds(id) on delete set null;
+create index if not exists buildings_compound on public.buildings(compound_id);
+alter table public.compounds enable row level security;
+grant select, insert, update, delete on public.compounds to authenticated;
+revoke all on public.compounds from anon;
+create or replace function private.in_compound(c uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists(select 1 from public.buildings b join public.members m on m.building_id = b.id
+                where b.compound_id = c and m.user_id = auth.uid())
+$$;
+revoke all on function private.in_compound(uuid) from public;
+grant execute on function private.in_compound(uuid) to authenticated;
+drop policy if exists bny_compounds_read on public.compounds;
+drop policy if exists bny_compounds_insert on public.compounds;
+drop policy if exists bny_compounds_edit on public.compounds;
+drop policy if exists bny_compounds_del on public.compounds;
+create policy bny_compounds_read on public.compounds for select to authenticated using (created_by = auth.uid() or private.in_compound(id));
+create policy bny_compounds_insert on public.compounds for insert to authenticated with check (created_by = auth.uid());
+create policy bny_compounds_edit on public.compounds for update to authenticated using (created_by = auth.uid()) with check (created_by = auth.uid());
+create policy bny_compounds_del on public.compounds for delete to authenticated using (created_by = auth.uid());
+create or replace function public.compound_buildings(p_compound uuid)
+returns table(id uuid, name text, name_ar text, units int, my_role text)
+language sql stable security definer set search_path = public as $$
+  select b.id, b.name, b.name_ar,
+         (select count(*)::int from public.units u where u.building_id = b.id and u.active),
+         (select m.role from public.members m where m.building_id = b.id and m.user_id = auth.uid())
+  from public.buildings b
+  where b.compound_id = p_compound and private.in_compound(p_compound)
+  order by b.name
+$$;
+revoke all on function public.compound_buildings(uuid) from public, anon;
+grant execute on function public.compound_buildings(uuid) to authenticated;
+-- resident_view in section 5 also returns each unit's block (applied as migration v15_08).

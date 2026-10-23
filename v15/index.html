@@ -321,6 +321,8 @@ a.btn { text-decoration: none; }
 .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin .8s linear infinite; flex: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+.card.later .task{opacity:.62}
+
 /* ---- living building scene ---- */
 .bh { position: relative; margin: 0 16px 12px; border-radius: 26px; overflow: hidden; aspect-ratio: 366 / 256; box-shadow: var(--shadow-lg); background: var(--sky2); }
 .bh svg.bh-art { display: block; width: 100%; height: 100%; }
@@ -2611,8 +2613,22 @@ SHEETS.cell = function(d) {
    --------------------------------------------------------------------------- */
 function taskRow(x) {
   var late = x.due_on && x.due_on < todayIso() && !x.done_at;
+  if (x.done_at) {
+    var dsub = t('Done ', 'أُنجزت ') + dateLabel(x.done_at) + (x.done_by ? ' · ' + memberName(x.done_by) : '');
+    return '<div class="task done"><button class="check on" onclick="tickTask(' + jsArg(x.id) + ')" aria-label="' + esc(t('Undo', 'تراجع')) + '">✓</button><div class="grow"><b>' + esc(L(x)) + '</b><small>' + esc(dsub) + '</small></div></div>';
+  }
   var sub = (x.due_on ? dateLabel(x.due_on) : t('No date', 'بلا تاريخ')) + (x.repeat !== 'none' ? ' · ' + (LANG === 'ar' ? REPEATS[x.repeat][1] : REPEATS[x.repeat][0]) : '') + (x.assignee === 'collector' ? ' · ' + collectorLabel() : '');
   return '<div class="task' + (x.done_at ? ' done' : '') + '"><button class="check' + (x.done_at ? ' on' : '') + '" onclick="tickTask(' + jsArg(x.id) + ')" aria-label="' + esc(t('Done', 'تم')) + '">✓</button><div class="grow" role="button" tabindex="0" onclick="' + (isManager() ? 'openSheet(\'task\',{id:' + jsArg(x.id) + '})' : '') + '"><b>' + esc(L(x)) + '</b><small class="' + (late ? 'late' : '') + '">' + esc(sub) + '</small></div></div>';
+}
+/* Open tasks: what's due in the next 2 weeks, then a quieter "later" list (e.g. the next tank cleaning in 6 months). */
+function taskLists(open) {
+  var lim = new Date(); lim.setDate(lim.getDate() + 14);
+  var limIso = lim.toISOString().slice(0, 10);
+  var soon = open.filter(function(x) { return !x.due_on || x.due_on <= limIso; });
+  var later = open.filter(function(x) { return x.due_on && x.due_on > limIso; });
+  var h = soon.length ? '<div class="card">' + soon.map(taskRow).join('') + '</div>' : '<div class="card empty">' + esc(t('Nothing due in the next 2 weeks', 'لا شيء مستحق خلال أسبوعين')) + '</div>';
+  if (later.length) h += '<div class="daylbl">' + esc(t('Later', 'لاحقاً')) + '</div><div class="card later">' + later.map(taskRow).join('') + '</div>';
+  return h;
 }
 function tickTask(id) {
   var x = byId(S.tasks, id);
@@ -2635,7 +2651,7 @@ function renderTasksScreen() {
   var mine = S.tasks.filter(function(x) { return x.assignee === 'collector' || isManager(); });
   var open = mine.filter(function(x) { return !x.done_at; }).sort(function(a, b) { return String(a.due_on || '9').localeCompare(String(b.due_on || '9')); });
   var done = mine.filter(function(x) { return x.done_at; }).sort(function(a, b) { return String(b.done_at).localeCompare(String(a.done_at)); }).slice(0, 10);
-  h += '<div class="sec">' + (open.length ? '<div class="card">' + open.map(taskRow).join('') + '</div>' : '<div class="card empty">' + esc(t('All done', 'أُنجز كل شيء')) + '</div>') + '</div>';
+  h += '<div class="sec">' + (open.length ? taskLists(open) : '<div class="card empty">' + esc(t('All done', 'أُنجز كل شيء')) + '</div>') + '</div>';
   if (done.length) h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Done recently', 'أُنجزت مؤخراً')) + '</h2></div><div class="card">' + done.map(taskRow).join('') + '</div></div>';
   return h;
 }
@@ -3477,7 +3493,7 @@ function removeMember(uid) {
 function renderTasksSec() {
   var h = '<div class="sec"><div class="sec-h"><h2>' + esc(t('Tasks & reminders', 'المهام والتذكيرات')) + '</h2><button onclick="openSheet(\'task\',{})">＋ ' + esc(t('Add', 'إضافة')) + '</button></div>';
   var open = openTasks();
-  h += open.length ? '<div class="card">' + open.map(taskRow).join('') + '</div>' : '<div class="card empty">' + esc(t('No tasks', 'لا مهام')) + '</div>';
+  h += open.length ? taskLists(open) : '<div class="card empty">' + esc(t('No tasks', 'لا مهام')) + '</div>';
   var done = S.tasks.filter(function(x) { return x.done_at; }).sort(function(a, b) { return String(b.done_at).localeCompare(String(a.done_at)); }).slice(0, 8);
   if (done.length) h += '<div class="daylbl">' + esc(t('Done', 'منجزة')) + '</div><div class="card">' + done.map(taskRow).join('') + '</div>';
   return h + '</div>';

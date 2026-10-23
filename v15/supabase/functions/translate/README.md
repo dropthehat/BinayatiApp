@@ -1,3 +1,3 @@
-Deployed to the BINAYATI project as `translate` (verify_jwt = true, signed-in users only).
-Needs one Supabase secret: ANTHROPIC_API_KEY. Optional: TRANSLATE_MODEL (default claude-haiku-5-5).
-The source is the version deployed via the Supabase connector; see the dashboard → Edge Functions → translate.
+`translate` Edge Function (deployed to BINAYATI, verify_jwt = false; it checks the caller's session itself).
+Secrets: GEMINI_API_KEY (used first) or ANTHROPIC_API_KEY. Optional TRANSLATE_MODEL to pin a model.
+Default model: gemini-3.5-flash-lite. A GET request returns {provider, model} so you can see what's in use.

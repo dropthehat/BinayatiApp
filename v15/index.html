@@ -448,8 +448,8 @@ a.btn { text-decoration: none; }
 .bh-safeAmt{font:700 5px Inter,system-ui,sans-serif;text-anchor:middle;fill:#F2D68E}
 
 .bh-bubble{fill:#fff;filter:drop-shadow(0 1px 1.5px rgba(30,30,60,.25))}
-.bh-bubbleAmt{font:800 10px Inter,system-ui,sans-serif;text-anchor:middle;fill:#14805A}
-.bh-bubbleSub{font:600 4.6px Inter,system-ui,sans-serif;text-anchor:middle;fill:#6B7079}
+.bh-bubbleAmt{font:800 14px Inter,system-ui,sans-serif;text-anchor:middle;fill:#14805A}
+.bh-bubbleSub{font:600 6px Inter,system-ui,sans-serif;text-anchor:middle;fill:#6B7079}
 
 .bh-chip{border:0;font-family:inherit;cursor:pointer;transition:opacity .2s,transform .2s;max-width:62%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bh-chip span{overflow:hidden;text-overflow:ellipsis}
@@ -1364,15 +1364,14 @@ function buildBuildingScene(o) {
    s += '<rect class="bh-earth" x="' + ex0 + '" y="229" width="' + (ex1 - ex0) + '" height="' + eH + '"' + (o.bare ? ' rx="8"' : '') + '/>';
    s += '<rect x="' + ex0 + '" y="229" width="' + (ex1 - ex0) + '" height="' + eH + '" fill="url(#' + P + 'Soil)"' + (o.bare ? ' rx="8"' : '') + '/>';
    // concrete cut-away: thin grey shell, lighter back wall, slab per level
-   s += '<rect class="bh-conc" x="' + (bx - 6) + '" y="229" width="' + (bw + 12) + '" height="' + (bH + 4) + '"/>';
-   s += '<rect class="bh-base" x="' + (bx - 2.5) + '" y="231" width="' + (bw + 5) + '" height="' + (bH - 0.5) + '"/>';
-   s += '<rect class="bh-concDk" x="' + (bx - 6) + '" y="229" width="1" height="' + (bH + 4) + '"/><rect class="bh-concDk" x="' + (bx2 + 5) + '" y="229" width="1" height="' + (bH + 4) + '"/>';
+   s += '<rect class="bh-conc" x="' + (bx + 5) + '" y="229" width="' + (bw - 10) + '" height="' + (bH + 4) + '"/>';
+   s += '<rect class="bh-base" x="' + (bx + 6.5) + '" y="231" width="' + (bw - 13) + '" height="' + (bH - 0.5) + '"/>';
+   s += '<rect class="bh-concDk" x="' + (bx + 5) + '" y="229" width="1" height="' + (bH + 4) + '"/><rect class="bh-concDk" x="' + (bx2 - 6) + '" y="229" width="1" height="' + (bH + 4) + '"/>';
    for (var bi = 0; bi < basements; bi++) {
      var bt = 231 + bi * fh;
-     if (bi > 0) s += '<rect class="bh-conc" x="' + (bx - 2.5) + '" y="' + heroR(bt - 1) + '" width="' + (bw + 5) + '" height="2.4"/>';
-     s += '<rect class="bh-floorLine" x="' + (bx - 2.5) + '" y="' + heroR(bt + fh - 2.6) + '" width="' + (bw + 5) + '" height="1.4"/>';
+     if (bi > 0) s += '<rect class="bh-conc" x="' + (bx + 6.5) + '" y="' + heroR(bt - 1) + '" width="' + (bw - 13) + '" height="2.4"/>';
+     s += '<rect class="bh-floorLine" x="' + (bx + 6.5) + '" y="' + heroR(bt + fh - 2.6) + '" width="' + (bw - 13) + '" height="1.4"/>';
      var sc = [];
-     sc.push(bx + 2, bx2 - 5);
      if (!single && !even) {
        var cy0 = bt + fh * 0.16, ch0 = fh * 0.56;
        s += '<rect class="bh-core" x="176" y="' + heroR(cy0) + '" width="14" height="' + heroR(ch0) + '" rx="0.6"/>';
@@ -1584,12 +1583,14 @@ function buildBuildingScene(o) {
      // door swung open to the right
      s += '<path d="M' + (nx + sw) + ' ' + (ny + 1) + ' L' + (nx + sw + 7) + ' ' + (ny - 1) + ' L' + (nx + sw + 7) + ' ' + (ny + shh + 1) + ' L' + (nx + sw) + ' ' + (ny + shh - 1) + ' Z" class="bh-safeDoor"/>';
      [0.3, 0.5, 0.7].forEach(function(f) { s += '<circle cx="' + (nx + sw + 3.6) + '" cy="' + heroR(ny + shh * f) + '" r=".8" class="bh-safeBolt"/>'; });
-     // the amount, in a speech bubble beside the safe
-     var bx0 = nx + sw + 11, by0 = ny - 6;
-     s += '<path d="M' + (bx0 + 3) + ' ' + (by0 + 15) + ' L' + (nx + sw + 7.5) + ' ' + (by0 + 19) + ' L' + (bx0 + 3) + ' ' + (by0 + 19) + ' Z" class="bh-bubble"/>';
-     s += '<rect x="' + bx0 + '" y="' + by0 + '" width="50" height="23" rx="5" class="bh-bubble"/>';
-     s += '<text x="' + (bx0 + 25) + '" y="' + (by0 + 11.5) + '" class="bh-bubbleAmt">' + esc(safeLabel()) + '</text>';
-     s += '<text x="' + (bx0 + 25) + '" y="' + (by0 + 18.5) + '" class="bh-bubbleSub">' + esc(o.safe.sub || 'in the safe') + '</text>';
+     // the amount, in a big speech bubble above the safe
+     var bwB = 64, bhB = 30, bx0 = Math.min(bx2 + 4 - bwB, nx + sw / 2 - bwB / 2), by0 = ny - bhB - 8;
+     var bub = '<g class="bh-safeBubble" style="display:' + (SAFE_OPEN ? 'inline' : 'none') + '" onclick="safeTap(document.querySelector(\'.bh-safe\'),event)">';
+     bub += '<path d="M' + heroR(nx + sw / 2 - 4) + ' ' + (by0 + bhB - 1) + ' L' + heroR(nx + sw / 2) + ' ' + (ny - 2) + ' L' + heroR(nx + sw / 2 + 4) + ' ' + (by0 + bhB - 1) + ' Z" class="bh-bubble"/>';
+     bub += '<rect x="' + heroR(bx0) + '" y="' + by0 + '" width="' + bwB + '" height="' + bhB + '" rx="7" class="bh-bubble"/>';
+     bub += '<text x="' + heroR(bx0 + bwB / 2) + '" y="' + (by0 + 17) + '" class="bh-bubbleAmt">' + esc(safeLabel()) + '</text>';
+     bub += '<text x="' + heroR(bx0 + bwB / 2) + '" y="' + (by0 + 25.5) + '" class="bh-bubbleSub">' + esc(o.safe.sub || 'in the safe') + '</text>';
+     bub += '</g>'; SAFE_BUB = bub;
      s += '</g>';
      // closed door
      var cx = nx + sw * 0.6, cy = ny + shh / 2;
@@ -1642,6 +1643,7 @@ function buildBuildingScene(o) {
  s += '</g>';
  }
 
+ if (o.safe && SAFE_BUB) { s += SAFE_BUB; SAFE_BUB = ''; }
  s += '</svg>';
 
  var cls = 'bh ' + ph.key + (o.elevator ? ' lift' : o.coreGlow ? ' elev' : '') + (o.dropsOn ? ' drops' : '') + (o.extraCls ? ' ' + o.extraCls : '');
@@ -1663,7 +1665,7 @@ function launchConfetti() {
 }
 
 /* Scene taps: one tap plays (light, safe door, elevator), two quick taps navigate. */
-var SAFE_OPEN = false, WIN_FLIP = {}, LIFT = {}, LAST_TAP = { el: null, t: 0 };
+var SAFE_BUB = '', SAFE_OPEN = false, WIN_FLIP = {}, LIFT = {}, LAST_TAP = { el: null, t: 0 };
 function isDoubleTap(el) {
   var now = Date.now(), d = LAST_TAP.el === el && now - LAST_TAP.t < 350;
   LAST_TAP = d ? { el: null, t: 0 } : { el: el, t: now };
@@ -1675,6 +1677,8 @@ function safeShow(el, open) {
   var o = el.querySelector('.bh-safeOpenG'), c = el.querySelector('.bh-safeClosedG');
   if (o) o.style.display = open ? 'inline' : 'none';
   if (c) c.style.display = open ? 'none' : 'inline';
+  var b = el.ownerSVGElement && el.ownerSVGElement.querySelector('.bh-safeBubble');
+  if (b) b.style.display = open ? 'inline' : 'none';
 }
 function safeTap(el, ev) {
   if (ev) { ev.stopPropagation(); ev.preventDefault(); }

@@ -230,6 +230,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .dock button.tab svg { width: 22px; height: 22px; }
 .dock button.tab.on { color: var(--acc-ink); background: var(--soft); }
 .dock .fab { flex: none; width: 52px; height: 52px; border-radius: 16px; background: var(--acc); color: var(--on-acc); font-size: 26px; font-weight: 600; display: grid; place-items: center; box-shadow: 0 8px 18px rgba(91,76,245,.35); }
+/* Plus Jakarta Sans (English) draws "+" about 4px below the middle of this square.
+   IBM Plex Sans Arabic already sits in the middle, so only English is nudged. */
+[dir="ltr"] .dock .fab { padding-bottom: 6.5px; }
 
 /* Sheets */
 .scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 90; display: flex; align-items: flex-end; justify-content: center; animation: fadeIn .18s ease; }

@@ -1,0 +1,135 @@
+.bh { position: relative; margin: 0 16px 12px; border-radius: 26px; overflow: hidden; aspect-ratio: 366 / 256; box-shadow: var(--shadow-lg); background: var(--sky2); }
+.bh svg.bh-art { display: block; width: 100%; height: 100%; }
+.bh-chip { position: absolute; left: 12px; top: 12px; display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.bh-chip i { width: 7px; height: 7px; border-radius: 50%; display: block; }
+.bh.day .bh-chip { background: rgba(255,255,255,.82); color: #14172C; }
+.bh.dusk .bh-chip, .bh.night .bh-chip { background: rgba(10,12,40,.5); color: #F3EEDC; }
+.bh.day .bh-chip i { background: #F5A524; } .bh.dusk .bh-chip i { background: #FF9A6C; } .bh.night .bh-chip i { background: #F3EEDC; }
+.bh.day { --sky1:#3FA9F5; --sky2:#8FD3FF; --sky3:#FFF1DC; --sun:#FFF4CF; --cloud:rgba(255,255,255,.88); --mount:#B4C6DA; --far:#C3D0E0; --neigh:#DDD1C1; --nline:#CABEAC; --nw:#8FA5BD; --nwlit:#8FA5BD; --facade:#ECE2CF; --shade:#CDBDA2; --parapet:#F6EFE2; --slab:#F8F2E7; --slabEdge:#B9A688; --lobby:#D6C7AE; --doorFrame:#5A4A38; --doorGlass:#A9C3DE; --side:#D2CBBD; --street:#8F8B98; --lane:#EDEAE2; --pole:#56515E; --wire:#3B3A44; --rail:#4E4234; --trunk:#6A5442; --leaf:#4E8B5F; --leaf2:#76AD7F; --tankBase:#8D8577; --ac:#F4F6FA; --core:#BFC9D3; --sh:#7E9E86; --sl:#5F7F68; --w1:#FCE7B8; --w2:#F2C077; --w3:#EDB566; --glassOff:#4A5A75; --bulb:#E5E2D8; }
+.bh.dusk { --sky1:#3B6FD8; --sky2:#F59FB5; --sky3:#FFD49A; --sun:#FFB36B; --cloud:rgba(255,228,218,.8); --mount:#9AA6DD; --far:#AEB3E2; --neigh:#C4BCDF; --nline:#B0A8D0; --nw:#8A90C2; --nwlit:#FFC56E; --facade:#F3DFCB; --shade:#CCB2A8; --parapet:#FCEDE0; --slab:#FFF4EA; --slabEdge:#BC9E93; --lobby:#DCC3B2; --doorFrame:#5A4440; --doorGlass:#FFC35E; --side:#CDBDCB; --street:#76729A; --lane:#EAE4F3; --pole:#4A4266; --wire:#3A3256; --rail:#4A3A3E; --trunk:#5E4A40; --leaf:#4C7A62; --leaf2:#6E9E7E; --tankBase:#8A7E8E; --ac:#F4F2F8; --core:#BCB8DA; --sh:#7E9E86; --sl:#5F7F68; --w1:#FFE6A6; --w2:#FFC35E; --w3:#F0A040; --glassOff:#5B6386; --bulb:#FFF4D6; }
+.bh.night { --sky1:#0E1A4A; --sky2:#22357F; --sky3:#4262B4; --sun:#F7F1DE; --cloud:transparent; --mount:#2F428C; --far:#2C3A7C; --neigh:#36438A; --nline:#2B3775; --nw:#45529A; --nwlit:#FFC56E; --facade:#5E6DB0; --shade:#404D8C; --parapet:#7886C6; --slab:#8A99D8; --slabEdge:#B3BEEE; --lobby:#4A5796; --doorFrame:#1C2350; --doorGlass:#FFC35E; --side:#3D4A88; --street:#1C275C; --lane:#6572AE; --pole:#18204A; --wire:#121A40; --rail:#1A2150; --trunk:#2E2630; --leaf:#2D5260; --leaf2:#427080; --tankBase:#404D8C; --ac:#DCE2F4; --core:#5463A8; --sh:#7080B8; --sl:#5A6AA2; --w1:#FFE6A6; --w2:#FFC35E; --w3:#F0A040; --glassOff:#2C3774; --bulb:#FFF8E2; }
+.bh.eve { --sky1:#1E2160; --sky2:#5B4E8E; --sky3:#C97E8A; --sun:#FF9A7A; --cloud:rgba(255,190,190,.35); --mount:#4A4688; --far:#4F4888; --neigh:#4A4277; --nline:#3F386A; --nw:#3A3566; --nwlit:#F0B05A; --facade:#8E7E9E; --shade:#5E5276; --parapet:#A595B2; --slab:#B3A3BE; --slabEdge:#6E6290; --lobby:#6E5F86; --doorFrame:#2E2448; --doorGlass:#FFC35E; --side:#5E5486; --street:#34305A; --lane:#8C84B0; --pole:#241F3E; --wire:#1A1530; --rail:#22193A; --trunk:#3A2E30; --leaf:#2A4448; --leaf2:#3B5C5E; --tankBase:#4A4266; --ac:#D4D2E2; --core:#62598E; --sh:#556A62; --sl:#43554D; --w1:#FFE6A6; --w2:#FFC35E; --w3:#E38A36; --glassOff:#2C2E58; --bulb:#FFF4D6; }
+.bh.eve .bh-chip { background: rgba(10,12,40,.5); color: #F3EEDC; }
+.bh.eve .bh-moon { display: none; }
+.bh.eve .bh-star { opacity: .6; }
+.bh.eve .bh-lampglow { opacity: .9; }
+.bh.bh-ob { margin: 0 0 14px; border-radius: 22px; box-shadow: 0 10px 28px rgba(20,23,44,.18); }
+.bh-stream { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 3 6; animation: bhDash 1s linear infinite; }
+.bh-drop { fill: #3B9EFF; opacity: 0; }
+.bh.drops .bh-drop { animation: bhDrop 1.8s ease-in infinite; }
+.bh-burst { transform-box: fill-box; transform-origin: center; animation: bhBurst 3.6s ease-out infinite both; }
+.bh-pop { animation: bhPop .5s cubic-bezier(.2,.8,.2,1.3) both; transform-box: fill-box; transform-origin: center bottom; }
+@keyframes bhDash { to { stroke-dashoffset: -18; } }
+@keyframes bhDrop { 0% { transform: translateY(-14px); opacity: 0; } 25% { opacity: 1; } 75% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(2px); opacity: 0; } }
+@keyframes bhBurst { 0% { transform: scale(.15); opacity: 0; } 8% { opacity: 1; } 55% { transform: scale(1); opacity: .9; } 80%, 100% { transform: scale(1.12); opacity: 0; } }
+@keyframes bhPop { from { transform: scale(.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.bh-mount{fill:var(--mount)} .bh-far{fill:var(--far)} .bh-neigh{fill:var(--neigh)} .bh-nline{fill:var(--nline)} .bh-nw{fill:var(--nw)} .bh-nw.lit{fill:var(--nwlit)}
+.bh-facade{fill:var(--facade)} .bh-shade{fill:var(--shade)} .bh-parapet{fill:var(--parapet)} .bh-slab{fill:var(--slab)} .bh-slabEdge{fill:var(--slabEdge)}
+.bh-lobby{fill:var(--lobby)} .bh-doorFrame{fill:var(--doorFrame)} .bh-doorGlass{fill:var(--doorGlass)} .bh-side{fill:var(--side)} .bh-street{fill:var(--street)} .bh-lane{fill:var(--lane)}
+.bh-pole{fill:var(--pole)} .bh-wire{fill:none;stroke:var(--wire);stroke-width:.6;stroke-linecap:round} .bh-rail{fill:none;stroke:var(--rail)}
+.bh-trunk{fill:none;stroke:var(--trunk);stroke-width:2.2;stroke-linecap:round} .bh-leaf{fill:var(--leaf)} .bh-leaf2{fill:var(--leaf2)}
+.bh-tankBase{fill:var(--tankBase)} .bh-ac{fill:var(--ac)} .bh-bulb{fill:var(--bulb)} .bh-cloud{fill:var(--cloud)}
+.bh-core{fill:var(--core)} .bh.elev .bh-core{fill:#7FE3C2;animation:bhCore 2.2s ease-in-out infinite}
+.bh-glassOff{fill:var(--glassOff)} .bh-mull{fill:rgba(0,0,0,.32)}
+.bh-win{cursor:pointer;outline:none}
+.bh-win:focus-visible .bh-frame{stroke:#FFFFFF;stroke-width:1.4}
+.bh-dot{fill:#F59E0B;stroke:#FFFFFF;stroke-width:1;transform-box:fill-box;transform-origin:center;animation:bhPulse 1.8s ease-in-out infinite}
+.bh.day .bh-halo{display:none}
+.bh.day .bh-lampglow{opacity:0} .bh.dusk .bh-lampglow{opacity:.7}
+.bh.day .bh-moon, .bh.dusk .bh-moon, .bh.day .bh-star{display:none}
+.bh.dusk .bh-star{opacity:.35}
+.bh.night .bh-sun, .bh.night .bh-cloud{display:none}
+.bh-star{fill:#FFF6DA;animation:bhTw 3s ease-in-out infinite}
+.bh-cloud{animation:bhDrift 16s ease-in-out infinite alternate}
+.bh-bob{animation:bhBob 2.4s ease-in-out infinite}
+@keyframes bhCore{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes bhPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
+@keyframes bhTw{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes bhDrift{from{transform:translateX(0)}to{transform:translateX(16px)}}
+@keyframes bhBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+@media (prefers-reduced-motion: reduce){.bh *{animation:none!important}}
+/* Onboarding studio (building only), reveal + confetti */
+.bh.studio { --w1:#FFE6A6; --w2:#FFC35E; --w3:#F0A040; --glassOff:#5D6B85; }
+.bh.studio .bh-halo { display: inline; }
+.bh.bh-bare { aspect-ratio: auto; width: 100%; height: 100%; margin: 0; border-radius: 0; box-shadow: none; background: transparent; overflow: visible; }
+.bh.nopop .bh-pop { animation: none; }
+.bh.reveal { background: transparent; }
+.bh.reveal .bh-bg { animation: bhReveal 1.8s ease .35s both; }
+.bh.reveal .bh-chip { animation: bhReveal .8s ease 1.6s both; }
+@keyframes bhReveal { from { opacity: 0; } to { opacity: 1; } }
+.cf-layer { position: fixed; inset: 0; pointer-events: none; z-index: 400; overflow: hidden; }
+.cf-layer i { position: absolute; top: -24px; width: 8px; height: 13px; border-radius: 2px; animation-name: cfFall; animation-timing-function: cubic-bezier(.25,.6,.4,1); animation-fill-mode: forwards; }
+@keyframes cfFall { to { transform: translateY(112vh) rotate(560deg); } }
+/* Underground floors */
+.bh.day { --earth:#C9AE8A; --base:#DCCDB3; --strata:#A88B66; }
+.bh.dusk { --earth:#B9958A; --base:#D9C2B2; --strata:#9A7A70; }
+.bh.eve { --earth:#5C4A68; --base:#7A6B8E; --strata:#47395A; }
+.bh.night { --earth:#2E2A58; --base:#4A5796; --strata:#24204A; }
+.bh-earth{fill:var(--earth)} .bh-base{fill:var(--base)} .bh-strata{fill:none;stroke:var(--strata);stroke-width:.6;opacity:.6}
+.bh.day { --earth:#4A3A2E; --grain:#6B5646; --conc:#E4E1DA; --base:#EFE6D6; }
+.bh.dusk { --earth:#3E302C; --grain:#5E4A42; --conc:#E2D8D2; --base:#EBDCCF; }
+.bh.eve { --earth:#271E28; --grain:#3E3140; --conc:#A79BB4; --base:#8E7E9E; }
+.bh.night { --earth:#16131E; --grain:#2A2434; --conc:#8C96C8; --base:#5E6DB0; }
+.bh-grain{fill:var(--grain)} .bh-conc{fill:var(--conc)} .bh-pot{fill:#8A5A3C}
+.bh-sconce{fill:#3A3540} .bh-sconceGlow{fill:#FFD98A;opacity:.55}
+.bh.day .bh-sconceGlow{opacity:.25}
+
+/* Concrete underground + podium (v15.2) */
+.bh.day   { --conc:#C9C6C0; --base:#E2DFD9; --concDk:#A9A59E; --floorLine:#D2CEC7; --plinth:#E9E7E2; --plinthLip:#FFF3D0; }
+.bh.dusk  { --conc:#C4BCBA; --base:#DDD5D2; --concDk:#A39A98; --floorLine:#CEC5C2; --plinth:#E6DEDB; --plinthLip:#FFD9A0; }
+.bh.eve   { --conc:#8E8698; --base:#A59DAF; --concDk:#6E6678; --floorLine:#958D9F; --plinth:#B1A9BB; --plinthLip:#FFC979; }
+.bh.night { --conc:#5D6488; --base:#717A9E; --concDk:#454C70; --floorLine:#646C90; --plinth:#7D86AC; --plinthLip:#FFD27A; }
+.bh-concDk{fill:var(--concDk)} .bh-floorLine{fill:var(--floorLine)} .bh-plinth{fill:var(--plinth)} .bh-plinthHi{fill:#fff;opacity:.5}
+.bh-plinthLip{fill:var(--plinthLip);opacity:.55}
+.bh.day .bh-plinthLip{opacity:.35}
+/* Neighbours step back so our building leads */
+.bh:not(.bh-bare) .bh-neigh, .bh:not(.bh-bare) .bh-nline, .bh:not(.bh-bare) .bh-nw { opacity:.6 }
+.bh.day .bh-neigh{fill:#DCE1E8} .bh.day .bh-nline{fill:#CBD2DC} .bh.day .bh-nw{fill:#A9B7C8}
+
+/* Elevator */
+.bh-shaft{fill:#BFD6E6;opacity:.55;stroke:var(--rail);stroke-width:.5}
+.bh.night .bh-shaft,.bh.eve .bh-shaft{fill:#2B3A6E;opacity:.7}
+.bh-cable{stroke:var(--rail);stroke-width:.3;opacity:.5}
+.bh-cab rect{fill:#5A6070} .bh-cab .bh-cabLit{fill:#FFE7AE}
+@media (prefers-reduced-motion: reduce){ .bh-cab animateTransform{display:none} }
+
+.bh-cabMid .bh-cabLit{fill:#FFE3A0} .bh-cabGlow{fill:#FFD27A;opacity:.45}
+
+/* Safe */
+.bh-safeBody{fill:#4A5262} .bh-safeIn{fill:#2A2F3A} .bh-safeDoor{fill:#69728A;stroke:#3A4050;stroke-width:.5}
+.bh-safeDial{fill:#C9CED8;stroke:#3A4050;stroke-width:.5} .bh-safeFoot{fill:#2A2F3A}
+.bh-tag{fill:#fff;stroke:#2E2B5F;stroke-width:.6} .bh-tagTx,.bh-plaqueTx,.bh-brassTx{font:700 5.2px Inter,system-ui,sans-serif;text-anchor:middle;fill:#2E2B5F}
+.bh-niche{fill:#2A2F3A} .bh-nicheGlass{fill:#FFE7AE;opacity:.18;stroke:var(--doorFrame);stroke-width:.8}
+.bh-plaque{fill:#FFF6E3;stroke:var(--doorFrame);stroke-width:.4} .bh-plaqueTx{font-size:4.2px}
+.bh-brass{fill:#E8C77A;stroke:#9A7A34;stroke-width:.6} .bh-brassTx{fill:#4A3510;font-size:5px}
+.bh-safeTap{cursor:pointer}
+
+.bh-safeFrame{fill:#7A8296;stroke:#3A4050;stroke-width:.5} .bh-safeShelf{fill:#5A6274}
+
+.bh-safe .bh-safeBody{fill:#8E939C;stroke:#6B7079;stroke-width:.6} .bh-safeFace{fill:#9EA3AC;stroke:#7A7F88;stroke-width:.5}
+.bh-safeDialRing{fill:#7A7F88} .bh-safe .bh-safeDial{fill:#C4C8CF;stroke:none} .bh-safeKnob{fill:#4A4F58} .bh-safeTick{stroke:#E6E8EC;stroke-width:.35}
+.bh-safeBolt{fill:#6B7079} .bh-safe .bh-safeIn{fill:#2E3138} .bh-safe .bh-safeShelf{fill:#4A4F58}
+.bh-safe .bh-safeDoor{fill:#A2A7B0;stroke:#6B7079;stroke-width:.5}
+
+.bh-safeTap:focus{outline:none} .bh-safeTap:focus-visible .bh-safeBody{stroke:#5B4CF5;stroke-width:1}
+
+.bh-flip{opacity:0;transition:opacity .25s;pointer-events:none} .bh-win.flip .bh-flip{opacity:1}
+.bh-liftTap{cursor:pointer}
+.bh{touch-action:manipulation}
+
+/* Tower */
+.bh-blink{animation:bhBlink 2.4s steps(1) infinite} @keyframes bhBlink{0%{opacity:1}50%{opacity:.15}}
+
+.bh-liftLight{fill:#FFE3A0;filter:drop-shadow(0 0 1.5px #FFD27A)}
+.bh-safeAmt{font:700 5px Inter,system-ui,sans-serif;text-anchor:middle;fill:#F2D68E}
+
+.bh-bubble{fill:#fff;filter:drop-shadow(0 1px 1.5px rgba(30,30,60,.25))}
+.bh-bubbleAmt{font:800 14px Inter,system-ui,sans-serif;text-anchor:middle;fill:#14805A}
+.bh-bubbleSub{font:600 6px Inter,system-ui,sans-serif;text-anchor:middle;fill:#6B7079}
+
+.bh-chip{border:0;font-family:inherit;cursor:pointer;transition:opacity .2s,transform .2s;max-width:62%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bh-chip span{overflow:hidden;text-overflow:ellipsis}
+.bh-chip.swap{opacity:0;transform:translateY(-3px)}
+/* With an elevator, the middle windows are dark glass so the cabin light shows */
+.bh.lift .bh-core{fill:#263049;animation:none;stroke:rgba(0,0,0,.25);stroke-width:.4}
+.bh.night.lift .bh-core,.bh.eve.lift .bh-core{fill:#141A33}

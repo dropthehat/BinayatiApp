@@ -353,6 +353,22 @@ a.btn { text-decoration: none; }
 
 .card.later .task{opacity:.62}
 
+
+/* amount + its equivalent underneath (month review) */
+.chg-figs .v .main, b.dual .main { display: block; white-space: nowrap; }
+.chg-figs .v .eq, b.dual .eq { display: block; font-size: 11.5px; font-weight: 600; color: var(--mut); white-space: nowrap; }
+b.dual { text-align: end; }
+/* the dock: equal tabs so the + sits in the middle */
+.dock button.tab { flex: 1 1 0; min-width: 0; }
+/* apartment rows in the month review: name, then each figure on its own line */
+.apt-bill .rowbtn .grow { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: start; min-width: 0; }
+.apt-bill .rowbtn .grow b, .apt-bill .rowbtn .grow small { display: block; }
+.apt-bill .rowbtn .grow small { font-size: 12.5px; line-height: 1.35; }
+/* iOS draws date inputs with their own size: make them match the other fields */
+input.input[type="date"], input.input[type="time"] { -webkit-appearance: none; appearance: none; display: block; width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box; text-align: start; line-height: normal; }
+input.input[type="date"]::-webkit-date-and-time-value { text-align: start; margin: 0; }
+.two > * { min-width: 0; }
+
 /* ---- living building scene ---- */
 .bh { position: relative; margin: 0 16px 12px; border-radius: 26px; overflow: hidden; aspect-ratio: 366 / 256; box-shadow: var(--shadow-lg); background: var(--sky2); }
 .bh svg.bh-art { display: block; width: 100%; height: 100%; }
@@ -969,6 +985,7 @@ function levelsFor(items) {
     return out;
   }, []);
 }
+
 
 /* ============================================================================
    Ready-made lists, in English and Arabic, so filling things in is a pick
@@ -2803,6 +2820,7 @@ function waLink(u, cyc) {
   });
 })();
 
+
 /* ============================================================================
    Books: where the money is, every movement, and who did what
    ============================================================================ */
@@ -3347,14 +3365,14 @@ function lbpOfUsd(usd, ch) { var r = chargeRateInfo(ch).rate; return r > 0 ? Mat
 function rateDiffers(info) { return !!(info && info.rate && (!info.building || Math.round(info.rate) !== Math.round(info.building))); }
 function fmtDual(amt, ch) {
   if (!ch) return fmt(amt, 'USD');
-  if (ch.cur === 'LBP') { var usd = usdOfLbp(amt, ch); return usd == null ? fmt(amt, 'LBP') : fmt(amt, 'LBP') + ' · ' + fmt(usd, 'USD'); }
-  if (ch.orig_cur === 'LBP') { var lbp = lbpOfUsd(amt, ch); return lbp == null ? fmt(amt, 'USD') : fmt(amt, 'USD') + ' · ' + fmt(lbp, 'LBP'); }
+  if (ch.cur === 'LBP') { var usd = usdOfLbp(amt, ch); return usd == null ? fmt(amt, 'LBP') : fmt(amt, 'LBP') + ' ≈ ' + fmt(usd, 'USD'); }
+  if (ch.orig_cur === 'LBP') { var lbp = lbpOfUsd(amt, ch); return lbp == null ? fmt(amt, 'USD') : fmt(amt, 'USD') + ' ≈ ' + fmt(lbp, 'LBP'); }
   return fmt(amt, ch.cur || 'USD');
 }
 function fmtDualRange(min, max, ch) {
   var cur = ch.cur || 'USD', native = fmt(min, cur) + '–' + fmt(max, cur);
-  if (cur === 'LBP') { var a = usdOfLbp(min, ch), b = usdOfLbp(max, ch); return a == null ? native : native + ' · ' + fmt(a, 'USD') + '–' + fmt(b, 'USD'); }
-  if (ch.orig_cur === 'LBP') { var c = lbpOfUsd(min, ch), d = lbpOfUsd(max, ch); return c == null ? native : native + ' · ' + fmt(c, 'LBP') + '–' + fmt(d, 'LBP'); }
+  if (cur === 'LBP') { var a = usdOfLbp(min, ch), b = usdOfLbp(max, ch); return a == null ? native : native + ' ≈ ' + fmt(a, 'USD') + '–' + fmt(b, 'USD'); }
+  if (ch.orig_cur === 'LBP') { var c = lbpOfUsd(min, ch), d = lbpOfUsd(max, ch); return c == null ? native : native + ' ≈ ' + fmt(c, 'LBP') + '–' + fmt(d, 'LBP'); }
   return native;
 }
 function explicitOverride(ch, u) { var ov = (ch && ch.overrides) || {}; return ov[u.id] != null && ov[u.id] !== ''; }
@@ -3398,6 +3416,8 @@ function rateCaption(ch) {
   if (!rateDiffers(info)) return '';
   return t('This charge\'s rate: ', 'سعر هذا الرسم: ') + Math.round(info.rate).toLocaleString('en-US') + t(' LBP per $1', ' ل.ل لكل دولار');
 }
+/* "1.5M LBP ≈ $16.76": the amount on one line, its equivalent small underneath */
+function dualHtml(txt) { var i = txt.indexOf(' ≈ '); return i < 0 ? '<span class="main">' + esc(txt) + '</span>' : '<span class="main">' + esc(txt.slice(0, i)) + '</span><small class="eq">≈ ' + esc(txt.slice(i + 3)) + '</small>'; }
 function emptyBag() { return { usd: 0, lbp: 0, derivedLbp: 0, dollars: 0, missing: false }; }
 function addLine(bag, ch, amt) {
   amt = num(amt);
@@ -3422,8 +3442,8 @@ function bagText(bag) {
   if (hasUsd) bits.push(fmt(round(bag.usd, 'USD'), 'USD'));
   if (hasLbp) bits.push(fmt(round(bag.lbp, 'LBP'), 'LBP'));
   var native = bits.join(' + ') || fmt(0, 'USD');
-  if (hasLbp && !bag.missing) native += ' · ' + t('in dollars ', 'بالدولار ') + fmt(round(bag.dollars, 'USD'), 'USD');
-  if (hasDer && !bag.missing) native += ' · ' + fmt(round(bag.derivedLbp, 'LBP'), 'LBP') + ' ' + t('entered in lira', 'أُدخلت بالليرة');
+  if (hasLbp && !bag.missing) native += ' ≈ ' + fmt(round(bag.dollars, 'USD'), 'USD');
+  if (hasDer && !bag.missing) native += ' ≈ ' + fmt(round(bag.derivedLbp, 'LBP'), 'LBP');
   return native;
 }
 function earlierOpen(u, cyc) {
@@ -3459,8 +3479,8 @@ function renderChargeBlocks(chs) {
     h += '<div class="chg-block"><div class="li chg"><button class="rowbtn" onclick="toggleChg(' + jsArg(ch.id) + ')"><div class="ic">' + (ch.kind === 'service' ? '↗' : ch.kind === 'due' ? '÷' : '↻') + '</div><div class="grow">';
     h += '<b class="chg-name">' + esc(L(ch)) + (ch.recurring ? '' : ' · ' + esc(t('one-off', 'لمرة واحدة'))) + '</b>';
     h += '<small>' + esc((LANG === 'ar' ? KIND_INFO[ch.kind][1] : KIND_INFO[ch.kind][0]) + ' · ' + chargeHow(ch) + (ch.block ? ' · ' + blockLabel(ch.block) : '')) + '</small>';
-    h += '<div class="chg-figs"><div class="line"><span class="k">' + esc(t('Each apartment', 'لكل شقة')) + '</span><span class="v">' + esc(eachApartmentText(ch, spread)) + '</span></div>';
-    h += '<div class="line"><span class="k">' + esc(t('Building total', 'مجموع البناية')) + '</span><span class="v">' + esc(fmtDual(spread.total, ch)) + '</span></div></div>';
+    h += '<div class="chg-figs"><div class="line"><span class="k">' + esc(t('Each apartment', 'لكل شقة')) + '</span><span class="v">' + dualHtml(eachApartmentText(ch, spread)) + '</span></div>';
+    h += '<div class="line"><span class="k">' + esc(t('Building total', 'مجموع البناية')) + '</span><span class="v">' + dualHtml(fmtDual(spread.total, ch)) + '</span></div></div>';
     if (cap) h += '<small class="chg-rate">' + esc(cap) + '</small>';
     h += '</div><span class="chev">' + (open ? '▾' : closed) + '</span></button>';
     if (isManager()) h += '<button class="btn sm danger" onclick="deleteCharge(' + jsArg(ch.id) + ')">' + esc(t('Remove', 'حذف')) + '</button>';
@@ -3496,7 +3516,7 @@ function renderReviewTotals(cyc, chs) {
     });
   });
   var h = '<div class="card pad tot-card" style="margin-top:12px">';
-  h += '<div class="kv"><span>' + esc(t('Building total', 'مجموع البناية')) + '</span><b>' + esc(bagText(bld)) + '</b></div>';
+  h += '<div class="kv"><span>' + esc(t('Building total', 'مجموع البناية')) + '</span><b class="dual">' + dualHtml(bagText(bld)) + '</b></div>';
   var supAny = !tiny(sup.usd, 'USD') || !tiny(sup.lbp, 'LBP');
   if (supAny) {
     var all = { usd: bld.usd + sup.usd, lbp: bld.lbp + sup.lbp, derivedLbp: (bld.derivedLbp || 0) + (sup.derivedLbp || 0), dollars: bld.dollars + sup.dollars, missing: bld.missing || sup.missing };
@@ -4427,6 +4447,7 @@ function saveMemberName(uid) {
   else p = cloudCall(SB.from('members').update({ display_name: en || m.display_name, display_name_ar: ar || null }).eq('building_id', S.building.id).eq('user_id', uid).select());
   p.then(function() { m.display_name = en || m.display_name; m.display_name_ar = ar || null; closeSheet(); toast(t('Saved', 'تم الحفظ')); if (isCloud()) reloadBuilding(); }, function(e) { sheetErr(e.message); });
 }
+
 
 /* ============================================================================
    First run: show the building first, ask for an account last.

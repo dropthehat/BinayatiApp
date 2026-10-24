@@ -181,6 +181,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .li .amt.in { color: var(--ok); }
 .li .amt.out { color: var(--bad); }
 .li .chev { color: var(--faint); font-weight: 800; }
+.li .rowbtn { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; text-align: start; background: none; padding: 0; }
 .daylbl { font-size: 12px; font-weight: 800; color: var(--mut); margin: 14px 4px 6px; text-transform: uppercase; letter-spacing: .04em; }
 .empty { text-align: center; padding: 28px 16px; color: var(--mut); font-weight: 600; font-size: 14px; }
 
@@ -713,7 +714,8 @@ function handoverConfirmed(hid) {
    Cycles
    --------------------------------------------------------------------------- */
 function visibleCycles() {
-  return S.cycles.slice().sort(function(a, b) {
+  // Draft months stay on the manager's phone until they are shown to residents.
+  return S.cycles.filter(function(c) { return c.published !== false || isManager(); }).sort(function(a, b) {
     var ka = a.kind === 'month' ? (a.period || '') : String(a.created_at || '').slice(0, 7);
     var kb = b.kind === 'month' ? (b.period || '') : String(b.created_at || '').slice(0, 7);
     if (ka !== kb) return ka < kb ? 1 : -1;
@@ -2260,6 +2262,7 @@ function sheetErr(msg) { var el = document.getElementById('sheet-err'); if (el) 
    --------------------------------------------------------------------------- */
 function currentCycle() {
   var c = UI.cycleId && byId(S.cycles, UI.cycleId);
+  if (c && c.published === false && !isManager()) c = null;
   if (!c) { c = latestMonth() || visibleCycles()[0] || null; UI.cycleId = c ? c.id : null; }
   return c;
 }
@@ -2381,7 +2384,7 @@ function monthCard(cyc, clickable) {
   var inHand = s.paidEq - s.pocketEq;
   var wPaid = s.dueEq > 0 ? Math.max(0, inHand / s.dueEq * 100) : 0, wPocket = s.dueEq > 0 ? s.pocketEq / s.dueEq * 100 : 0;
   var h = '<div class="card month"' + (clickable ? ' role="button" tabindex="0" onclick="go(\'collect\')"' : '') + '>';
-  h += '<div class="month-top"><b>' + esc(cycleTitle(cyc)) + '</b><span>' + esc(t(s.settled + ' of ' + s.units + ' paid', s.settled + ' من ' + s.units + ' سددوا')) + ' · ' + s.pct + '%</span></div>';
+  h += '<div class="month-top"><b>' + esc(cycleTitle(cyc) + (cyc.published === false ? ' · ' + t('draft', 'مسودة') : '')) + '</b><span>' + esc(t(s.settled + ' of ' + s.units + ' paid', s.settled + ' من ' + s.units + ' سددوا')) + ' · ' + s.pct + '%</span></div>';
   h += '<div class="bar"><i class="paid" style="width:' + wPaid.toFixed(1) + '%"></i><i class="pocket" style="width:' + wPocket.toFixed(1) + '%"></i></div>';
   h += '<div class="legend"><span><i style="background:var(--ok)"></i>' + esc(t('Collected', 'محصّل')) + ' ' + esc(fmtPair(s.paid)) + '</span>';
   var left = { USD: s.due.USD - s.paid.USD, LBP: s.due.LBP - s.paid.LBP };
@@ -2404,12 +2407,17 @@ function renderHomeManager() {
   cash.pending.forEach(function(ho) {
     h += '<div class="sec"><div class="banner warn"><div class="grow"><b>' + esc(t(memberName(ho.collector_id) + ' handed over ' + fmtPair({ USD: num(ho.usd), LBP: num(ho.lbp) }), memberName(ho.collector_id) + ' سلّم ' + fmtPair({ USD: num(ho.usd), LBP: num(ho.lbp) }))) + '</b>' + esc(t('Confirm once the cash is in your hands.', 'أكّد عند استلام المبلغ.')) + '</div><button class="btn sm ok" onclick="openSheet(\'handover\',{id:' + jsArg(ho.id) + '})">' + esc(t('Review', 'مراجعة')) + '</button></div></div>';
   });
+  visibleCycles().filter(function(c) { return c.published === false && (!cyc || c.id !== cyc.id); }).slice(0, 1).forEach(function(d0) {
+    h += '<div class="sec"><div class="banner info"><div class="grow"><b>' + esc(cycleTitle(d0) + t(' is a draft', ' مسودة')) + '</b>' + esc(t('Residents can\'t see it until you show it.', 'السكان لا يرونها حتى تُظهرها.')) + '</div><button class="btn sm pri" onclick="openCycleAdjust(' + jsArg(d0.id) + ')">' + esc(t('Review', 'مراجعة')) + '</button></div></div>';
+  });
 
   if (!cyc) {
     h += '<div class="sec"><div class="card pad"><b>' + esc(t('No month open yet', 'لا يوجد شهر مفتوح')) + '</b><p class="muted">' + esc(t('Open a month to start collecting.', 'افتح شهراً لبدء التحصيل.')) + '</p><button class="btn pri" onclick="newMonth()">' + esc(t('Open this month', 'افتح هذا الشهر')) + '</button></div></div>';
     return h;
   }
-  h += '<div class="sec">' + monthCard(cyc, true) + '</div>';
+  h += '<div class="sec">' + monthCard(cyc, true);
+  if (isManager()) h += '<div class="row" style="margin-top:8px"><button class="btn sec sm grow" onclick="openCycleAdjust(' + jsArg(cyc.id) + ')">' + esc(t('Adjust charges', 'تعديل الرسوم')) + '</button></div>';
+  h += '</div>';
 
   h += '<div class="sec"><div class="tiles">';
   h += tile(t('In the safe', 'في الصندوق'), fmtPairBig(cash.safe), t('Cash the building holds', 'نقد البناية'), 'go(\'books\')', 'var(--ok)');
@@ -2525,6 +2533,7 @@ function renderCollect() {
   var h = renderTopbar(t('Collect', 'التحصيل'));
   h += cycleChips(cyc, 'pickCycle');
   if (!cyc) return h + '<div class="sec"><div class="card empty">' + esc(t('Open a month first.', 'افتح شهراً أولاً.')) + '</div></div>';
+  h += cycleAdjustBar(cyc);
   var chs = chargesOf(cyc.id);
   if (!chs.length) {
     return h + '<div class="sec"><div class="card pad"><b>' + esc(t('No charges in ' + cycleTitle(cyc), 'لا رسوم في ' + cycleTitle(cyc))) + '</b><p class="muted">' + esc(t('Add the monthly fee, a bill to split, or a supplier service.', 'أضف الرسم الشهري أو فاتورة للتقسيم أو خدمة مورّد.')) + '</p>' + (isManager() ? '<button class="btn pri" onclick="openSheet(\'charge\',{cycle:' + jsArg(cyc.id) + '})">' + esc(t('Add a charge', 'أضف رسماً')) + '</button>' : '') + '</div></div>';
@@ -3298,18 +3307,34 @@ function renderChargesSec() {
   var cyc = currentCycle();
   var h = cycleChips(cyc, 'pickCycle');
   if (!cyc) return h;
-  h += '<div class="sec"><div class="sec-h"><h2>' + esc(cycleTitle(cyc)) + '</h2><button onclick="openSheet(\'charge\',{cycle:' + jsArg(cyc.id) + '})">＋ ' + esc(t('Add', 'إضافة')) + '</button></div>';
+  h += '<div class="sec">';
+  if (isManager() && cyc.published === false) {
+    h += '<div class="banner info"><div class="grow"><b>' + esc(t('Draft — residents can\'t see it yet', 'مسودة — السكان لا يرونها بعد')) + '</b>' + esc(t('Change a unit\'s amount, add a one-off, or remove a charge that does not apply. Then show it.', 'غيّر مبلغ شقة، أو أضف رسماً لمرة واحدة، أو احذف رسماً لا ينطبق. ثم أظهرها.')) + '</div></div>';
+    h += '<div class="row" style="margin-top:10px"><button class="btn pri sm grow" onclick="setCyclePublished(' + jsArg(cyc.id) + ',true)">' + esc(t('Show to residents', 'أظهرها للسكان')) + '</button><button class="btn danger sm" onclick="discardCycle(' + jsArg(cyc.id) + ')">' + esc(t('Discard', 'تجاهل')) + '</button></div>';
+  }
+  h += '<div class="sec-h" style="margin-top:12px"><h2>' + esc(cycleTitle(cyc)) + '</h2><span style="display:flex;gap:10px">';
+  if (isManager()) {
+    h += '<button onclick="openSheet(\'extra\',{cycle:' + jsArg(cyc.id) + '})">＋ ' + esc(t('One-off', 'لمرة واحدة')) + '</button>';
+    h += '<button onclick="openSheet(\'charge\',{cycle:' + jsArg(cyc.id) + '})">＋ ' + esc(t('Add', 'إضافة')) + '</button>';
+  }
+  h += '</span></div>';
   var chs = chargesOf(cyc.id);
-  if (!chs.length) h += '<div class="card empty">' + esc(t('No charges yet', 'لا رسوم بعد')) + '</div>';
+  if (!chs.length) h += '<div class="card empty">' + esc(t('No charges yet. Add the monthly fee, or a one-off for this month only.', 'لا رسوم بعد. أضف الرسم الشهري، أو رسماً لهذا الشهر فقط.')) + '</div>';
   else {
     h += '<div class="card list">';
     chs.forEach(function(ch) {
       var how = ch.meter ? fmt(ch.meter.rate, ch.cur) + ' / kWh' + (Object.keys(ch.meter.kwh || {}).length ? '' : ' · ' + t('readings missing', 'القراءات ناقصة')) : ch.pass_through ? t('per subscriber', 'لكل مشترك') : ch.split === 'total' ? t('total split by share', 'المجموع مقسّم بالحصص') : ch.split === 'weight' ? t('each × share', 'لكل شقة × الحصة') : t('each apartment', 'لكل شقة');
-      h += '<button class="li" onclick="openSheet(\'charge\',{id:' + jsArg(ch.id) + '})"><div class="ic">' + (ch.kind === 'service' ? '↗' : ch.kind === 'due' ? '÷' : '↻') + '</div><div class="grow"><b>' + esc(L(ch)) + '</b><small>' + esc((LANG === 'ar' ? KIND_INFO[ch.kind][1] : KIND_INFO[ch.kind][0]) + ' · ' + how + (ch.block ? ' · ' + blockLabel(ch.block) : '') + origNote(ch)) + '</small></div><span class="amt">' + esc(ch.pass_through || ch.meter ? fmt(chargeTotal(ch), ch.cur) : ch.split === 'total' ? fmt(ch.amount, ch.cur) : fmt(ch.amount, ch.cur)) + '</span></button>';
+      if (!ch.meter && Object.keys(ch.overrides || {}).length) how += ' · ' + t('some amounts changed', 'بعض المبالغ معدّلة');
+      var np = livePayments().filter(function(p) { return p.charge_id === ch.id; }).length;
+      if (np) how += ' · ' + (np === 1 ? t('1 payment', 'دفعة واحدة') : t(np + ' payments', np + ' دفعات'));
+      h += '<div class="li"><button class="rowbtn" onclick="openSheet(\'charge\',{id:' + jsArg(ch.id) + '})"><div class="ic">' + (ch.kind === 'service' ? '↗' : ch.kind === 'due' ? '÷' : '↻') + '</div><div class="grow"><b>' + esc(L(ch)) + (ch.recurring ? '' : ' · ' + esc(t('one-off', 'لمرة واحدة'))) + '</b><small>' + esc((LANG === 'ar' ? KIND_INFO[ch.kind][1] : KIND_INFO[ch.kind][0]) + ' · ' + how + (ch.block ? ' · ' + blockLabel(ch.block) : '') + origNote(ch)) + '</small></div><span class="amt">' + esc(fmt(chargeTotal(ch), ch.cur)) + '</span></button>';
+      if (isManager()) h += '<button class="btn sm danger" onclick="deleteCharge(' + jsArg(ch.id) + ')">' + esc(t('Remove', 'حذف')) + '</button>';
+      h += '</div>';
     });
     h += '</div>';
     var s = cycleSummary(cyc);
     h += '<p class="hint">' + esc(t('Building money due this month: ', 'مستحقات البناية هذا الشهر: ') + fmtPair(s.due) + (pairUsd(s.supDue) > 0 ? t(' · for suppliers: ', ' · للموردين: ') + fmtPair(s.supDue) : '')) + '</p>';
+    if (isManager()) h += '<p class="hint">' + esc(t('Tap a charge to change what an apartment pays. Payments already recorded are kept.', 'اضغط رسماً لتغيير ما تدفعه شقة. الدفعات المسجّلة تبقى.')) + '</p>';
   }
   h += '</div>';
   return h;
@@ -3352,7 +3377,7 @@ SHEETS.charge = function(d) {
   }
   h += fxField('c-fx', cur, st.fx || v.fx, mt ? 'm-rate' : 'c-amt');
   if (mt) h += '<div class="field"><span>' + esc(t('kWh used this month (leave empty if not subscribed)', 'الاستهلاك هذا الشهر بالكيلوواط (فارغ لغير المشترك)')) + '</span><div class="card" id="c-prev" style="padding:4px 12px"></div></div>';
-  else h += '<div class="field"><span>' + esc(kind === 'service' ? t('What each subscriber pays (leave empty if not subscribed)', 'ما يدفعه كل مشترك (اتركه فارغاً لغير المشترك)') : t('Per apartment (type to change one)', 'لكل شقة (اكتب لتغيير واحدة)')) + '</span><div class="card" id="c-prev" style="padding:4px 12px"></div></div>';
+  else h += '<div class="field"><span>' + esc(kind === 'service' ? t('What each subscriber pays (leave empty if not subscribed)', 'ما يدفعه كل مشترك (اتركه فارغاً لغير المشترك)') : t('Per apartment — type to change one. A payment already recorded is not deleted.', 'لكل شقة — اكتب لتغيير واحدة. الدفعة المسجّلة لا تُحذف.')) + '</span><div class="card" id="c-prev" style="padding:4px 12px"></div></div>';
   if (kind !== 'due') h += '<div class="switch-row"><div><b>' + esc(t('Repeat next month', 'كرّر الشهر القادم')) + '</b><small>' + esc(t('Copied when you open the next month', 'يُنسخ عند فتح الشهر التالي')) + '</small></div><button class="sw' + ((st.recurring != null ? st.recurring : v.recurring) ? ' on' : '') + '" id="c-rec" onclick="this.classList.toggle(\'on\');keepCharge()"></button></div>';
   h += '<div id="sheet-err" class="err"></div><div class="foot">';
   if (ch) h += '<button class="btn danger" onclick="deleteCharge(' + jsArg(ch.id) + ')">' + esc(t('Remove', 'حذف')) + '</button>';
@@ -3395,28 +3420,59 @@ function kwhSet(uid, v) {
   var a = meterAmount(m, m.kwh[uid], UI.sheet.data.cur), el = document.getElementById('kw-' + uid);
   if (el) el.textContent = a == null ? '—' : fmt(a, UI.sheet.data.cur);
 }
+function paidMark(ch, u) {
+  if (!ch || !u) return '';
+  var paid = paidFor(ch, u);
+  if (!(paid > 0)) return '';
+  return '<small class="muted" style="display:block;font-weight:600">' + esc(t('paid ', 'مدفوع ') + fmt(paid, ch.cur)) + '</small>';
+}
 function chargePreview() {
   var el = document.getElementById('c-prev');
   if (!el || !UI.sheet) return;
   var d = UI.sheet.data;
-  var tmp = { amount: num(d.amount), cur: d.cur, split: d.split, overrides: {}, pass_through: d.kind === 'service', cycle_id: d.cycle || (byId(S.charges, d.id) || {}).cycle_id, block: d.block != null ? d.block : (byId(S.charges, d.id) || {}).block };
+  var ch0 = d.id ? byId(S.charges, d.id) : null;
+  var tmp = { amount: num(d.amount), cur: d.cur, split: d.split, overrides: {}, pass_through: d.kind === 'service', cycle_id: d.cycle || (ch0 || {}).cycle_id, block: d.block != null ? d.block : (ch0 || {}).block };
   var h = '';
   if (d.meter) {
     activeUnits().filter(function(u) { return inBlock(u, tmp); }).forEach(function(u) {
       var k = d.meter.kwh[u.id], a = meterAmount(d.meter, k, d.cur);
-      h += '<div class="kv" style="align-items:center;gap:8px"><span class="grow">' + esc(u.code + (unitName(u) ? ' · ' + unitName(u) : '')) + '</span><input class="input" style="max-width:86px;min-height:38px;padding:6px 10px;font-size:15px;text-align:end" inputmode="decimal" placeholder="kWh" value="' + esc(k != null ? k : '') + '" oninput="kwhSet(' + jsArg(u.id) + ',this.value)"><b id="kw-' + esc(u.id) + '" style="min-width:74px;text-align:end">' + esc(a == null ? '—' : fmt(a, d.cur)) + '</b></div>';
+      h += '<div class="kv" style="align-items:center;gap:8px"><span class="grow">' + esc(u.code + (unitName(u) ? ' · ' + unitName(u) : '')) + paidMark(ch0, u) + '</span><input class="input" style="max-width:86px;min-height:38px;padding:6px 10px;font-size:15px;text-align:end" inputmode="decimal" placeholder="kWh" value="' + esc(k != null ? k : '') + '" oninput="kwhSet(' + jsArg(u.id) + ',this.value)"><b id="kw-' + esc(u.id) + '" style="min-width:74px;text-align:end">' + esc(a == null ? '—' : fmt(a, d.cur)) + '</b></div>';
     });
     el.innerHTML = h || '<div class="muted">' + esc(t('Add apartments first', 'أضف الشقق أولاً')) + '</div>';
     return;
   }
   activeUnits().filter(function(u) { return inBlock(u, tmp); }).forEach(function(u) {
     var calc = dueFor(tmp, u), o = d.ov[u.id];
-    h += '<div class="kv" style="align-items:center"><span>' + esc(u.code + (unitName(u) ? ' · ' + unitName(u) : '')) + '</span><input class="input" style="max-width:130px;min-height:38px;padding:6px 10px;font-size:15px;text-align:end" inputmode="decimal" placeholder="' + esc(d.kind === 'service' ? '—' : String(calc)) + '" value="' + esc(o != null ? o : '') + '" oninput="ovSet(' + jsArg(u.id) + ',this.value)"></div>';
+    h += '<div class="kv" style="align-items:center"><span>' + esc(u.code + (unitName(u) ? ' · ' + unitName(u) : '')) + paidMark(ch0, u) + '</span><input class="input" style="max-width:130px;min-height:38px;padding:6px 10px;font-size:15px;text-align:end" inputmode="decimal" placeholder="' + esc(d.kind === 'service' ? '—' : String(calc)) + '" value="' + esc(o != null ? o : '') + '" oninput="ovSet(' + jsArg(u.id) + ',this.value)"></div>';
   });
   el.innerHTML = h || '<div class="muted">' + esc(t('Add apartments first', 'أضف الشقق أولاً')) + '</div>';
 }
 function ovSet(uid, v) { if (v === '') delete UI.sheet.data.ov[uid]; else UI.sheet.data.ov[uid] = num(v); }
+/* True when the edit is safe to save. Payments are never rewritten here. */
+function confirmChargeEdit(ch, row) {
+  var preview = JSON.parse(JSON.stringify(row));
+  toBase('charges', preview);
+  var pays = livePayments().filter(function(p) { return p.charge_id === ch.id; });
+  if (!pays.length) return true;
+  if (pays.some(function(p) { return p.cur !== preview.cur; })) {
+    var cn = pays[0].cur === 'LBP' ? t('lira', 'الليرة') : t('dollars', 'الدولار');
+    sheetErr(t('Payments on this charge are in ' + cn + '. Undo them before changing the currency.', 'دفعات هذا الرسم ب' + cn + '. ألغها قبل تغيير العملة.'));
+    return false;
+  }
+  var tmp = Object.assign({}, ch, preview, { id: ch.id, cycle_id: ch.cycle_id });
+  var under = [];
+  activeUnits().forEach(function(u) {
+    var due = dueFor(tmp, u), paid = paidFor(ch, u);
+    if (paid - due > (preview.cur === 'LBP' ? 1 : 0.009)) under.push(u.code + ': ' + fmt(paid, preview.cur) + ' → ' + fmt(due, preview.cur));
+  });
+  if (!under.length) return true;
+  return confirm(t(
+    'Some apartments already paid more than the new amount. The extra stays in the books and is not deleted:\n' + under.slice(0, 8).join('\n'),
+    'بعض الشقق دفعت أكثر من المبلغ الجديد. الزيادة تبقى في الحسابات ولا تُحذف:\n' + under.slice(0, 8).join('\n')
+  ));
+}
 function saveCharge() {
+  if (!isManager()) return sheetErr(t('Only a manager can change charges', 'فقط المدير يعدّل الرسوم'));
   keepCharge();
   var d = UI.sheet.data, ch = d.id ? byId(S.charges, d.id) : null;
   var row = { title: (d.title || '').trim(), title_ar: (d.title_ar || '').trim() || null, kind: d.kind, cur: d.cur, amount: d.kind === 'service' ? 0 : num(d.amount),
@@ -3424,53 +3480,320 @@ function saveCharge() {
   if (d.meter) {
     if (!(num(d.meter.rate) > 0)) return sheetErr(t('Enter the price per kWh', 'أدخل سعر الكيلوواط'));
     row.meter = { rate: num(d.meter.rate), fixed: num(d.meter.fixed), kwh: d.meter.kwh || {} };
-    row.split = 'custom'; row.amount = 0; row.overrides = meterOverrides(row.meter, row.cur);
+    row.split = 'custom'; row.amount = 0;
+    var computed = meterOverrides(row.meter, row.cur);
+    // Keep an exact amount for a unit that has no kWh reading and never had one
+    // (a waived remainder). Clearing a reading that was there still drops the charge.
+    if (ch && ch.overrides) {
+      var oldK = (ch.meter && ch.meter.kwh) || {}, newK = row.meter.kwh || {};
+      Object.keys(ch.overrides).forEach(function(uid) {
+        if (newK[uid] == null && oldK[uid] == null && num(ch.overrides[uid]) > 0) computed[uid] = num(ch.overrides[uid]);
+      });
+    }
+    row.overrides = computed;
   } else row.meter = null;
   if (row.cur === 'LBP') row.fx = num(d.fx) || rate();
   if (!row.title) return sheetErr(t('Give it a name', 'أعطه اسماً'));
   if (!d.meter && d.kind !== 'service' && !(row.amount > 0) && !Object.keys(row.overrides).length) return sheetErr(t('Enter an amount', 'أدخل المبلغ'));
   if (!d.meter && d.kind === 'service' && !Object.keys(row.overrides).length) return sheetErr(t('Enter at least one subscriber', 'أدخل مشتركاً واحداً على الأقل'));
   if (!ch) { row.cycle_id = d.cycle || UI.cycleId; row.sort = chargesOf(row.cycle_id).length; }
+  else if (!confirmChargeEdit(ch, row)) return;
   (ch ? dbUpdate('charges', ch.id, row) : dbInsert('charges', row)).then(function() { closeSheet(); toast(t('Saved', 'تم الحفظ')); }, function(e) { sheetErr(e.message); });
 }
-function deleteCharge(id) {
-  var n = livePayments().filter(function(p) { return p.charge_id === id; }).length;
-  if (!confirm(n ? t('This charge has ' + n + ' payments. Removing it deletes them too. Continue?', 'لهذا الرسم ' + n + ' دفعات وستُحذف أيضاً. متابعة؟') : t('Remove this charge?', 'حذف هذا الرسم؟'))) return;
-  dbDelete('charges', id).then(function() {
+function chargePayRows(id) {
+  return livePayments().filter(function(p) { return p.charge_id === id; });
+}
+function chargeExpRows(id) {
+  return liveExpenses().filter(function(e) { return e.charge_id === id; });
+}
+function chargeHasUnpaid(ch) {
+  return activeUnits().some(function(u) { return cell(ch, u).left > 0; });
+}
+function reallyDeleteCharge(id) {
+  return dbDelete('charges', id).then(function() {
     S.payments = S.payments.filter(function(p) { return p.charge_id !== id; });
-    if (!isCloud()) { var db = localLoad(); db.payments = db.payments.filter(function(p) { return p.charge_id !== id; }); localSave(); }
+    S.expenses.forEach(function(e) { if (e.charge_id === id) e.charge_id = null; });
+    if (!isCloud()) {
+      var db = localLoad();
+      db.payments = (db.payments || []).filter(function(p) { return p.charge_id !== id; });
+      (db.expenses || []).forEach(function(e) { if (e.charge_id === id) e.charge_id = null; });
+      localSave();
+    }
+    S._rev = (S._rev || 0) + 1;
+  });
+}
+function deleteCharge(id) {
+  if (!isManager()) return;
+  var ch = byId(S.charges, id);
+  if (!ch) return;
+  var n = chargePayRows(id).length;
+  if (!n) {
+    if (!confirm(t('Remove this charge?', 'حذف هذا الرسم؟'))) return;
+    reallyDeleteCharge(id).then(function() { closeSheet(); toast(t('Removed', 'تم الحذف')); }, fail);
+    return;
+  }
+  openSheet('chargeRemove', { id: id });
+}
+/* Payments stay. Apartments that have not paid the full amount stop owing the rest. */
+function waiveUnpaid(id) {
+  if (!isManager()) return;
+  var ch = byId(S.charges, id);
+  if (!ch) return;
+  var gap = ch.cur === 'LBP' ? 1 : 0.009;
+  var ov = JSON.parse(JSON.stringify(ch.overrides || {}));
+  var meter = ch.meter ? JSON.parse(JSON.stringify(ch.meter)) : null;
+  if (meter && !meter.kwh) meter.kwh = {};
+  activeUnits().forEach(function(u) {
+    if (!inBlock(u, ch)) return;
+    var paid = paidFor(ch, u), due = dueFor(ch, u);
+    if (!(due > 0)) return;
+    if (paid <= 0) {
+      ov[u.id] = 0;
+      if (meter) delete meter.kwh[u.id];
+    } else if (due - paid > gap) {
+      ov[u.id] = round(paid, ch.cur);
+      if (meter) delete meter.kwh[u.id];
+    }
+  });
+  var patch = { overrides: ov };
+  if (meter) patch.meter = meter;
+  dbUpdate('charges', id, patch).then(function() {
     closeSheet();
+    toast(t('Unpaid amounts were dropped. Payments stay. Review the copy when you open next month.', 'أُسقط ما لم يُدفع. الدفعات تبقى. راجع النسخة عند فتح الشهر القادم.'));
   }, fail);
+}
+function undoAndRemoveCharge(id) {
+  if (!isManager()) return;
+  var ch = byId(S.charges, id);
+  if (!ch) return;
+  if (chargeExpRows(id).length) return sheetErr(t('Cancel the supplier payout first.', 'ألغِ دفع المورد أولاً.'));
+  var pays = chargePayRows(id);
+  var tot = pair();
+  pays.forEach(function(p) { addTo(tot, p.cur, num(p.amount)); });
+  if (!confirm(t(
+    'Undo these payments (' + fmtPair(tot) + ') and remove the charge. The money leaves the safe or the collector\'s pocket.',
+    'إلغاء هذه الدفعات (' + fmtPair(tot) + ') وحذف الرسم. المبلغ يخرج من الصندوق أو من جيب الجابي.'
+  ))) return;
+  var p = Promise.resolve();
+  pays.forEach(function(pay) { p = p.then(function() { return rpc('void_payment', { p_payment: pay.id }); }); });
+  p.then(function() { return reallyDeleteCharge(id); }).then(function() {
+    closeSheet();
+    toast(t('Charge removed and its payments undone', 'حُذف الرسم وأُلغيت دفعاته'));
+    if (isCloud()) reloadBuilding();
+  }, function(e) { sheetErr((e && e.message) || String(e)); if (isCloud()) reloadBuilding(); });
+}
+SHEETS.chargeRemove = function(d) {
+  var ch = byId(S.charges, d.id);
+  if (!ch) return '';
+  var pays = chargePayRows(ch.id), exps = chargeExpRows(ch.id), tot = pair();
+  pays.forEach(function(p) { addTo(tot, p.cur, num(p.amount)); });
+  var h = '<h3>' + esc(t('Remove ', 'حذف ') + L(ch)) + '</h3>';
+  h += '<p class="lead">' + esc(t('Payments totalling ' + fmtPair(tot) + ' are already recorded. Deleting the charge must not erase that money by itself.', 'دفعات مجموعها ' + fmtPair(tot) + ' مسجّلة. حذف الرسم وحده لا يمحو هذا المبلغ.')) + '</p>';
+  h += '<div class="card list">';
+  var seen = {};
+  pays.forEach(function(p) {
+    var u = byId(S.units, p.unit_id), k = p.unit_id + '|' + p.cur;
+    if (!seen[k]) seen[k] = { code: u ? u.code : '?', cur: p.cur, amt: 0 };
+    seen[k].amt += num(p.amount);
+  });
+  Object.keys(seen).forEach(function(k) {
+    var x = seen[k];
+    h += '<div class="li"><div class="ic in">✓</div><div class="grow"><b>' + esc(x.code) + '</b><small>' + esc(t('Stays in the books unless you undo it', 'يبقى في الحسابات إلا إذا ألغيتها')) + '</small></div><span class="amt">' + esc(fmt(x.amt, x.cur)) + '</span></div>';
+  });
+  h += '</div>';
+  if (exps.length) h += '<p class="hint">' + esc(t('A supplier payout is recorded on this charge. Cancel that expense before undoing the payments.', 'سُجّل دفع للمورد على هذا الرسم. ألغِ ذلك المصروف قبل إلغاء الدفعات.')) + '</p>';
+  if (pays.some(function(p) { return p.handover_id && handoverConfirmed(p.handover_id); })) h += '<p class="hint">' + esc(t('Some of this cash was already handed over. Undoing it lowers the safe. The handover note is not rewritten.', 'بعض هذا النقد سُلّم مسبقاً. إلغاؤه ينقص الصندوق. ملاحظة التسليم لا تتغير.')) + '</p>';
+  h += '<div id="sheet-err" class="err"></div><div class="foot" style="flex-wrap:wrap">';
+  if (chargeHasUnpaid(ch)) h += '<button class="btn sec" style="flex:1" onclick="waiveUnpaid(' + jsArg(ch.id) + ')">' + esc(t('Drop what is still unpaid', 'أسقط ما لم يُدفع')) + '</button>';
+  if (!exps.length) h += '<button class="btn danger" style="flex:1" onclick="undoAndRemoveCharge(' + jsArg(ch.id) + ')">' + esc(t('Undo payments and remove', 'ألغِ الدفعات واحذف')) + '</button>';
+  h += '<button class="btn sec" onclick="openSheet(\'charge\',{id:' + jsArg(ch.id) + '})">' + esc(t('Back', 'رجوع')) + '</button></div>';
+  return h;
+};
+
+/* A one-off line: one apartment, or a total split by each apartment's share. Not copied next month. */
+function keepExtra() {
+  var d = UI.sheet && UI.sheet.data;
+  if (!d) return;
+  if (document.getElementById('x-title')) d.title = val('x-title');
+  if (document.getElementById('x-title-ar')) d.title_ar = val('x-title-ar');
+  if (document.getElementById('x-amt')) d.amount = val('x-amt');
+  if (document.getElementById('x-unit')) d.unit = val('x-unit');
+  if (document.getElementById('x-block')) d.block = val('x-block');
+  if (document.getElementById('x-fx')) d.fx = val('x-fx');
+}
+function extraHint(d) {
+  var amt = num(d.amount), cur = d.cur || 'USD', who = d.who || 'shares';
+  if (!(amt > 0)) return t('Enter an amount to see who pays.', 'أدخل المبلغ لترى من يدفع.');
+  if (who === 'one') {
+    var one = byId(S.units, d.unit);
+    return one ? t(one.code + ' owes ' + fmt(amt, cur) + '. Other apartments are not charged.', one.code + ' تدفع ' + fmt(amt, cur) + '. الشقق الأخرى لا تُحاسب.') : t('Pick an apartment', 'اختر شقة');
+  }
+  var tmp = { amount: amt, cur: cur, split: who === 'shares' ? 'total' : 'each', overrides: {}, pass_through: false, cycle_id: d.cycle || UI.cycleId, block: d.block || null };
+  var n = 0, sample = '';
+  activeUnits().forEach(function(u) {
+    var due = dueFor(tmp, u);
+    if (due > 0) { n++; if (!sample) sample = u.code + ' ' + fmt(due, cur); }
+  });
+  if (!n) return t('No apartment is charged. Check the block.', 'لا شقة تُحاسب. تحقق من البلوك.');
+  if (who === 'shares') return t('Split ' + fmt(amt, cur) + ' by share across ' + n + ' apartments. Example: ' + sample, 'يُقسّم ' + fmt(amt, cur) + ' بالحصص على ' + n + ' شقق. مثال: ' + sample);
+  return t(fmt(amt, cur) + ' each for ' + n + ' apartments.', fmt(amt, cur) + ' لكل شقة من ' + n + '.');
+}
+function extraPreview() {
+  keepExtra();
+  var el = document.getElementById('x-hint');
+  if (el && UI.sheet) el.textContent = extraHint(UI.sheet.data);
+}
+SHEETS.extra = function(d) {
+  if (!isManager()) return '';
+  var who = d.who || 'shares', cur = d.cur || 'USD', units = activeUnits();
+  if (who === 'one' && !d.unit && units[0]) d.unit = units[0].id;
+  var cyc = byId(S.cycles, d.cycle || UI.cycleId);
+  var h = '<h3>' + esc(t('One-off charge', 'رسم لمرة واحدة')) + '</h3>';
+  h += '<p class="lead">' + esc(t('Added only to ' + (cyc ? cycleTitle(cyc) : t('this month', 'هذا الشهر')) + '. It is not copied next month.', 'يُضاف إلى ' + (cyc ? cycleTitle(cyc) : 'هذا الشهر') + ' فقط، ولا يُنسخ للشهر القادم.')) + '</p>';
+  h += '<label class="field"><span>' + esc(t('Name', 'الاسم')) + '</span><input class="input" id="x-title" data-tr="x-title-ar" data-tr-kind="phrase" value="' + esc(d.title || '') + '" placeholder="' + esc(t('e.g. Tanker', 'مثلاً صهريج')) + '" data-autofocus><div class="tr-box" id="trs-x-title"></div></label>';
+  h += '<label class="field"><span>' + esc(t('Name in Arabic (optional)', 'الاسم بالعربية (اختياري)')) + '</span><input class="input" id="x-title-ar" dir="rtl" data-tr="x-title" data-tr-kind="phrase" value="' + esc(d.title_ar || '') + '"><div class="tr-box" id="trs-x-title-ar"></div></label>';
+  h += '<div class="chips" style="padding:2px 0 8px;flex-wrap:wrap">';
+  [['one', t('One apartment', 'شقة واحدة')], ['shares', t('Split by shares', 'تقسيم بالحصص')], ['each', t('Same for each', 'نفس المبلغ لكل شقة')]].forEach(function(x) {
+    h += '<button type="button" class="chip' + (who === x[0] ? ' on' : '') + '" onclick="keepExtra();UI.sheet.data.who=\'' + x[0] + '\';render()">' + esc(x[1]) + '</button>';
+  });
+  h += '</div>';
+  if (who === 'one') {
+    h += '<label class="field"><span>' + esc(t('Apartment', 'الشقة')) + '</span><select class="input" id="x-unit" onchange="extraPreview()">';
+    units.forEach(function(u) { h += '<option value="' + esc(u.id) + '"' + (u.id === d.unit ? ' selected' : '') + '>' + esc(u.code + (unitName(u) ? ' · ' + unitName(u) : '') + (blockOf(u) && blocks().length > 1 ? ' · ' + blockOf(u) : '')) + '</option>'; });
+    h += '</select></label>';
+  } else if (blocks().length > 1) {
+    h += '<label class="field"><span>' + esc(t('Applies to', 'ينطبق على')) + '</span><select class="input" id="x-block" onchange="keepExtra();extraPreview()"><option value="">' + esc(t('Whole building', 'كل البناية')) + '</option>';
+    blocks().forEach(function(b) { h += '<option value="' + esc(b) + '"' + ((d.block || '') === b ? ' selected' : '') + '>' + esc(blockLabel(b)) + '</option>'; });
+    h += '</select></label>';
+  }
+  var amtLabel = who === 'shares' ? t('Total to split', 'المبلغ الكلي') : who === 'one' ? t('Amount for that apartment', 'مبلغ هذه الشقة') : t('Amount per apartment', 'المبلغ لكل شقة');
+  h += '<label class="field"><span>' + esc(amtLabel) + '</span><div class="money-in"><input class="input" id="x-amt" inputmode="decimal" value="' + esc(d.amount || '') + '" oninput="extraPreview()"><div class="seg"><button type="button" class="' + (cur === 'USD' ? 'on' : '') + '" onclick="keepExtra();UI.sheet.data.cur=\'USD\';render()">USD</button><button type="button" class="' + (cur === 'LBP' ? 'on' : '') + '" onclick="keepExtra();UI.sheet.data.cur=\'LBP\';render()">LBP</button></div></div></label>';
+  h += fxField('x-fx', cur, d.fx, 'x-amt');
+  h += '<p class="hint" id="x-hint">' + esc(extraHint(d)) + '</p>';
+  h += '<div id="sheet-err" class="err"></div><div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Cancel', 'إلغاء')) + '</button><button class="btn pri" onclick="saveExtra()">' + esc(t('Add', 'إضافة')) + '</button></div>';
+  return h;
+};
+function saveExtra() {
+  if (!isManager()) return sheetErr(t('Only a manager can change charges', 'فقط المدير يعدّل الرسوم'));
+  keepExtra();
+  var d = UI.sheet.data, title = (d.title || '').trim(), amt = num(d.amount), who = d.who || 'shares';
+  var cycleId = d.cycle || UI.cycleId;
+  if (!title) return sheetErr(t('Give it a name', 'أعطه اسماً'));
+  if (!(amt > 0)) return sheetErr(t('Enter an amount', 'أدخل المبلغ'));
+  var row = { cycle_id: cycleId, title: title, title_ar: (d.title_ar || '').trim() || null, kind: 'due', cur: d.cur || 'USD', pass_through: false, recurring: false, sort: chargesOf(cycleId).length, block: null, overrides: {}, amount: amt, split: 'each' };
+  if (who === 'one') {
+    if (!d.unit) return sheetErr(t('Pick an apartment', 'اختر شقة'));
+    row.split = 'custom'; row.amount = 0; row.overrides[d.unit] = amt;
+  } else if (who === 'shares') {
+    row.split = 'total'; row.amount = amt; if (d.block) row.block = d.block;
+  } else if (d.block) row.block = d.block;
+  if (row.cur === 'LBP') row.fx = num(d.fx) || rate();
+  var btn = document.querySelector('.sheet .foot .btn.pri'); if (btn) btn.disabled = true;
+  dbInsert('charges', row).then(function() { closeSheet(); toast(t('Added to this month only', 'أُضيف لهذا الشهر فقط')); }, function(e) { if (btn) btn.disabled = false; sheetErr(e.message); });
 }
 
 /* ---------------- Months & projects ---------------- */
+function cycleAdjustBar(cyc) {
+  if (!isManager() || !cyc) return '';
+  if (cyc.published === false) {
+    return '<div class="sec"><div class="banner info"><div class="grow"><b>' + esc(t('Draft', 'مسودة')) + '</b>' + esc(t('Residents can\'t see ' + cycleTitle(cyc) + ' yet.', 'السكان لا يرون ' + cycleTitle(cyc) + ' بعد.')) + '</div></div><div class="row" style="margin-top:8px"><button class="btn pri sm grow" onclick="openCycleAdjust(' + jsArg(cyc.id) + ')">' + esc(t('Adjust charges', 'تعديل الرسوم')) + '</button><button class="btn sec sm" onclick="setCyclePublished(' + jsArg(cyc.id) + ',true)">' + esc(t('Show', 'إظهار')) + '</button></div></div>';
+  }
+  return '<div class="sec" style="margin-top:8px"><button class="btn sec sm" onclick="openCycleAdjust(' + jsArg(cyc.id) + ')">' + esc(t('Adjust charges', 'تعديل الرسوم')) + '</button></div>';
+}
+function openCycleAdjust(id) {
+  if (!isManager()) return;
+  UI.cycleId = id;
+  UI.tab = 'building';
+  UI.bsec = 'charges';
+  UI.sheet = null;
+  render();
+  window.scrollTo(0, 0);
+}
+function setCyclePublished(id, on) {
+  if (!isManager()) return;
+  var cyc = byId(S.cycles, id);
+  if (!cyc) return;
+  if (on && chargesOf(id).some(function(ch) { return ch.meter && !Object.keys(ch.meter.kwh || {}).length; })) {
+    if (!confirm(t('A generator charge has no kWh readings yet, so it bills nothing. Show this month to residents anyway?', 'رسم مولّد بلا قراءات كيلوواط، فلن يُحاسب أحداً. إظهار هذا الشهر للسكان على أي حال؟'))) return;
+  }
+  dbUpdate('cycles', id, { published: !!on }).then(function() {
+    toast(on ? t('Residents can see ' + cycleTitle(cyc), 'السكان يرون ' + cycleTitle(cyc)) : t(cycleTitle(cyc) + ' is hidden from residents', 'أُخفي ' + cycleTitle(cyc) + ' عن السكان'));
+    render();
+  }, fail);
+}
+function cycleMoneyBlock(id) {
+  var ids = {};
+  chargesOf(id).forEach(function(c) { ids[c.id] = 1; });
+  if (livePayments().some(function(p) { return ids[p.charge_id]; })) return 'pay';
+  if (liveExpenses().some(function(e) { return e.cycle_id === id || (e.charge_id && ids[e.charge_id]); })) return 'exp';
+  return '';
+}
+function discardCycle(id) {
+  if (!isManager()) return;
+  var cyc = byId(S.cycles, id);
+  if (!cyc) return;
+  var why = cycleMoneyBlock(id);
+  if (why === 'pay') { toast(t('This month has payments, so it can\'t be discarded. Adjust the charges instead.', 'هذا الشهر فيه دفعات، لا يمكن تجاهله. عدّل الرسوم.')); return; }
+  if (why === 'exp') { toast(t('This month has expenses. Cancel those before discarding it.', 'هذا الشهر عليه مصاريف. ألغها قبل التجاهل.')); return; }
+  if (!confirm(t('Discard ' + cycleTitle(cyc) + '? Its charges are removed. Nothing has been paid.', 'تجاهل ' + cycleTitle(cyc) + '؟ تُحذف رسومه. لم يُدفع شيء.'))) return;
+  var chs = chargesOf(id).slice(), p = Promise.resolve();
+  chs.forEach(function(ch) { p = p.then(function() { return dbDelete('charges', ch.id); }); });
+  p.then(function() { return dbDelete('cycles', id); }).then(function() {
+    if (UI.cycleId === id) UI.cycleId = null;
+    UI.tab = 'home'; UI.bsec = null;
+    toast(t('Discarded', 'تم التجاهل'));
+    render();
+  }, fail);
+}
+function copiedCharge(ch, cycleId, sort) {
+  var row = {
+    cycle_id: cycleId, kind: ch.kind, title: ch.title, title_ar: ch.title_ar, cur: ch.cur, amount: ch.amount, split: ch.split,
+    overrides: ch.meter ? {} : JSON.parse(JSON.stringify(ch.overrides || {})),
+    pass_through: !!ch.pass_through, recurring: true, sort: sort, block: ch.block || null,
+    meter: ch.meter ? { rate: ch.meter.rate, fixed: ch.meter.fixed || 0, kwh: {} } : null
+  };
+  if (ch.fx) row.fx = ch.fx;
+  if (ch.orig_amount) { row.orig_amount = ch.orig_amount; row.orig_cur = ch.orig_cur || 'LBP'; }
+  return row;
+}
 function renderCyclesSec() {
   var h = '<div class="sec"><div class="row" style="gap:8px"><button class="btn pri sm grow" onclick="newMonth()">＋ ' + esc(t('Next month', 'الشهر التالي')) + '</button><button class="btn sec sm grow" onclick="openSheet(\'project\',{})">＋ ' + esc(t('Project', 'مشروع')) + '</button></div></div>';
   h += '<div class="sec"><div class="card list">';
   visibleCycles().forEach(function(c) {
     var s = cycleSummary(c);
-    h += '<div class="li"><div class="ic">' + (c.kind === 'project' ? '◆' : '📅') + '</div><div class="grow" role="button" tabindex="0" onclick="UI.cycleId=' + jsArg(c.id) + ';go(\'collect\')"><b>' + esc(cycleTitle(c)) + '</b><small>' + esc(s.pct + '% · ' + fmtPair(s.paid) + t(' of ', ' من ') + fmtPair(s.due) + (c.kind === 'project' && c.budget ? ' · ' + t('budget ', 'الميزانية ') + fmt(c.budget, 'USD') : '')) + '</small></div>';
-    h += '<button class="sw' + (c.published !== false ? ' on' : '') + '" title="' + esc(t('Visible to residents', 'ظاهر للسكان')) + '" onclick="dbUpdate(\'cycles\',' + jsArg(c.id) + ',{published:' + (c.published === false) + '}).then(render,fail);render()"></button></div>';
+    h += '<div class="li"><div class="ic">' + (c.kind === 'project' ? '◆' : '📅') + '</div><div class="grow" role="button" tabindex="0" onclick="UI.cycleId=' + jsArg(c.id) + ';go(\'collect\')"><b>' + esc(cycleTitle(c) + (c.published === false ? ' · ' + t('draft', 'مسودة') : '')) + '</b><small>' + esc(s.pct + '% · ' + fmtPair(s.paid) + t(' of ', ' من ') + fmtPair(s.due) + (c.kind === 'project' && c.budget ? ' · ' + t('budget ', 'الميزانية ') + fmt(c.budget, 'USD') : '')) + '</small></div>';
+    h += '<button class="btn sm sec" onclick="openCycleAdjust(' + jsArg(c.id) + ')">' + esc(t('Adjust', 'تعديل')) + '</button>';
+    h += '<button class="sw' + (c.published !== false ? ' on' : '') + '" title="' + esc(t('Visible to residents', 'ظاهر للسكان')) + '" onclick="setCyclePublished(' + jsArg(c.id) + ',' + (c.published === false) + ')"></button></div>';
   });
   if (!S.cycles.length) h += '<div class="empty">' + esc(t('Nothing yet', 'لا شيء بعد')) + '</div>';
-  h += '</div><p class="hint">' + esc(t('The switch decides whether residents see that month on their page.', 'المفتاح يحدد إذا كان السكان يرون الشهر في صفحتهم.')) + '</p></div>';
+  h += '</div><p class="hint">' + esc(t('Adjust changes the charges. The switch decides whether residents see that month.', 'تعديل يغيّر الرسوم. المفتاح يحدد إذا كان السكان يرون الشهر.')) + '</p></div>';
   return h;
 }
 function newMonth() {
-  var ms = monthCycles();
+  if (!isManager()) return;
+  var ms = monthCycles(), draft = null;
+  for (var i = 0; i < ms.length; i++) if (ms[i].published === false) { draft = ms[i]; break; }
+  if (draft) {
+    toast(t(cycleTitle(draft) + ' is still a draft', cycleTitle(draft) + ' ما زال مسودة'));
+    openCycleAdjust(draft.id);
+    return;
+  }
   var last = ms[0];
   var period = last ? nextPeriod(last.period) : currentPeriod();
-  if (S.cycles.some(function(c) { return c.period === period; })) { toast(t('That month is already open', 'هذا الشهر مفتوح')); return; }
-  var cyc = { kind: 'month', period: period, title: periodLabel(period, 'en'), title_ar: periodLabel(period, 'ar'), published: true };
-  dbInsert('cycles', cyc).then(function(c) {
-    var rows = last ? chargesOf(last.id).filter(function(ch) { return ch.recurring; }).map(function(ch, i) {
-      return { cycle_id: cyc.id, kind: ch.kind, title: ch.title, title_ar: ch.title_ar, cur: ch.cur, amount: ch.amount, split: ch.split, overrides: ch.meter ? {} : (ch.overrides || {}), pass_through: ch.pass_through, recurring: true, sort: i, block: ch.block || null,
-               meter: ch.meter ? { rate: ch.meter.rate, fixed: ch.meter.fixed, kwh: {} } : null };
-    }) : [];
+  var existing = null;
+  S.cycles.forEach(function(c) { if (c.period === period) existing = c; });
+  if (existing) {
+    toast(t('That month is already open — you can still adjust it', 'هذا الشهر مفتوح — يمكنك تعديله'));
+    openCycleAdjust(existing.id);
+    return;
+  }
+  var cyc = { kind: 'month', period: period, title: periodLabel(period, 'en'), title_ar: periodLabel(period, 'ar'), published: false };
+  dbInsert('cycles', cyc).then(function() {
+    var rows = last ? chargesOf(last.id).filter(function(ch) { return ch.recurring; }).map(function(ch, i) { return copiedCharge(ch, cyc.id, i); }) : [];
     return dbInsertMany('charges', rows).then(function() {
-      UI.cycleId = cyc.id; closeSheet();
-      toast(t(periodLabel(period) + ' is open' + (rows.length ? ' with ' + rows.length + ' charge' + (rows.length > 1 ? 's' : '') : ''), 'فُتح ' + periodLabel(period) + ' مع ' + rows.length + ' رسوم'));
-      go('collect');
+      UI.cycleId = cyc.id;
+      toast(t(periodLabel(period) + ' is a draft. Adjust the charges, then show it to residents.', periodLabel(period) + ' مسودة. عدّل الرسوم ثم أظهرها للسكان.'));
+      openCycleAdjust(cyc.id);
     });
   }).catch(fail);
 }
@@ -3502,7 +3825,7 @@ function saveProject() {
                   cur: 'USD', amount: split === 'equal' ? round(part / (activeUnits().length || 1), 'USD') : part, split: split === 'equal' ? 'each' : 'total', overrides: {}, pass_through: false, recurring: false, sort: i });
     }
     return dbInsertMany('charges', rows);
-  }).then(function() { UI.cycleId = cyc.id; closeSheet(); go('collect'); }).catch(function(e) { sheetErr(e.message); });
+  }).then(function() { UI.cycleId = cyc.id; openCycleAdjust(cyc.id); }).catch(function(e) { sheetErr(e.message); });
 }
 
 /* ---------------- Team ---------------- */
@@ -3721,7 +4044,7 @@ SHEETS.add = function() {
     if (aiReady()) items.splice(1, 0, ['scanpay', '📷', t('Read a transfer screenshot', 'اقرأ لقطة تحويل'), t('Whish, OMT, bank: fills the payment for you', 'Whish، OMT، بنك: تملأ الدفعة عنك')]);
     if (aiReady()) items.push(['scanexp', '🧾', t('Scan a receipt', 'امسح إيصالاً'), t('Photo of an invoice becomes an expense', 'صورة الفاتورة تصبح مصروفاً')]);
     items.push(['charge', '🧾', t('Add a charge', 'أضف رسماً'), t('A bill to split, a fee, a supplier service', 'فاتورة، رسم، خدمة مورّد')]);
-    items.push(['month', '📅', t('Open the next month', 'افتح الشهر التالي'), t('Copies the repeating charges', 'ينسخ الرسوم المتكررة')]);
+    items.push(['month', '📅', t('Open the next month', 'افتح الشهر التالي'), t('Copies repeating charges for you to review', 'ينسخ الرسوم المتكررة لتراجعها')]);
     if (collectorsHolding().length) items.push(['handrecv', '⇄', t('Cash received from a collector', 'استلمت نقداً من الجابي'), t('Even if they didn\'t send a handover', 'حتى لو لم يرسل تسليماً')]);
     items.push(['project', '◆', t('New project', 'مشروع جديد'), t('Solar, elevator, painting…', 'طاقة شمسية، مصعد، دهان…')]);
     items.push(['task', '✅', t('Add a task', 'أضف مهمة'), t('Reminders that repeat', 'تذكيرات متكررة')]);

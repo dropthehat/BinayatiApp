@@ -54,6 +54,6 @@ boot();
 </html>
 `;
 }
-fs.writeFileSync(path.join(D, 'dist', 'index.html'), page({ url: 'https://ehatjqqmdmgptqbkgrzb.supabase.co', key: 'sb_publishable_rnuIP7E5qOBxf1JG5a0Jzw_iyDJ74Zi', publicUrl: 'https://dropthehat.github.io/BinayatiApp/v15/' }));
-fs.writeFileSync(path.join(D, 'dist', 'local.html'), page({ url: '', key: '', publicUrl: '' }));
-console.log('built', fs.statSync(path.join(D, 'dist', 'index.html')).size);
+fs.writeFileSync(path.join(D, 'index.html'), page({ url: 'https://ehatjqqmdmgptqbkgrzb.supabase.co', key: 'sb_publishable_rnuIP7E5qOBxf1JG5a0Jzw_iyDJ74Zi', publicUrl: 'https://dropthehat.github.io/BinayatiApp/v15/' }));
+fs.writeFileSync(path.join(D, 'local.html'), page({ url: '', key: '', publicUrl: '' }));
+console.log('built', fs.statSync(path.join(D, 'index.html')).size);

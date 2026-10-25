@@ -1,6 +1,6 @@
 const fs = require('fs'), path = require('path');
 const D = __dirname, src = f => fs.readFileSync(path.join(D, 'src', f), 'utf8');
-const vendor = fs.readFileSync('/home/claude/sbjs/node_modules/@supabase/supabase-js/dist/umd/supabase.js', 'utf8');
+const vendor = fs.readFileSync(path.join(D, 'vendor', 'supabase.js'), 'utf8'); // supabase-js 2.117.3 UMD
 function page(config) {
   return `<!doctype html>
 <html lang="en" dir="ltr">

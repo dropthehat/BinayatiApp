@@ -224,6 +224,7 @@ function renderHomeManager() {
   var h = renderTopbar();
   h += blocks().length > 1 ? blockChips(true) + (UI.block && blocks().indexOf(UI.block) >= 0 ? heroHtml(cyc) : heroCompound(cyc)) : heroHtml(cyc);
   h += renderSetupCard();
+  h += renderContactsCard();
 
   cash.pending.forEach(function(ho) {
     h += '<div class="sec"><div class="banner warn"><div class="grow"><b>' + esc(t(memberName(ho.collector_id) + ' handed over ' + fmtPair({ USD: num(ho.usd), LBP: num(ho.lbp) }), memberName(ho.collector_id) + ' سلّم ' + fmtPair({ USD: num(ho.usd), LBP: num(ho.lbp) }))) + '</b>' + esc(t('Confirm once the cash is in your hands.', 'أكّد عند استلام المبلغ.')) + '</div><button class="btn sm ok" onclick="openSheet(\'handover\',{id:' + jsArg(ho.id) + '})">' + esc(t('Review', 'مراجعة')) + '</button></div></div>';
@@ -296,6 +297,7 @@ function renderHomeCollector() {
   owing.sort(function(a, b) { return (pairUsd(b.arr) > 0.005) - (pairUsd(a.arr) > 0.005) || b.tot - a.tot; });
   var h = renderTopbar();
   h += blockChips();
+  h += renderContactsCard();
   h += '<div class="sec"><div class="tiles">';
   h += tile(t('In your pocket', 'معك الآن'), fmtPairBig({ USD: mine.USD, LBP: mine.LBP }), pend ? t('Handover waiting for the manager', 'تسليم بانتظار المدير') : t('Cash you collected, not handed over yet', 'نقد جمعته ولم تسلّمه بعد'), pairUsd(mine) > 0.005 && !pend ? 'openSheet(\'handreq\')' : '', 'var(--warn)');
   h += tile(t('Still to collect', 'باقي للتحصيل'), fmtPairBig(left), (cyc ? cycleTitle(cyc) + ' · ' : '') + t(paidN + ' of ' + units.length + ' paid', paidN + ' من ' + units.length + ' سدّدوا'), 'go(\'collect\')', 'var(--acc)');
@@ -628,6 +630,8 @@ function setupSteps() {
       done: livePayments().length > 0, go: "go('collect')" },
     { k: 'expense', ic: '📷', en: 'Log money spent', ar: 'سجّل مصروفاً', sen: 'Snap a receipt: diesel, a repair, cleaning', sar: 'صوّر الإيصال: مازوت، تصليح، تنظيف',
       done: liveExpenses().length > 0, go: "openSheet('expense',{})" },
+    { k: 'contacts', ic: '📇', en: 'Add the building\'s contacts', ar: 'أضف جهات اتصال البناية', sen: 'Elevator company, plumber, emergency numbers', sar: 'شركة المصعد، السنكري، أرقام الطوارئ',
+      done: (S.contacts || []).length > 0, go: "UI.tab='building';UI.bsec='contacts';render();window.scrollTo(0,0)" },
     { k: 'task', ic: '🔔', en: 'See tasks and reminders', ar: 'شاهد المهام والتذكيرات', sen: 'Tank cleaning, bins, anything that repeats', sar: 'تنظيف الخزانات، المستوعبات، أي شيء يتكرر',
       done: !!mark.task, go: "UI.tab='building';UI.bsec='tasks';render();window.scrollTo(0,0)" }
   ];

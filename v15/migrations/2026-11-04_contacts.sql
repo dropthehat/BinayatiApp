@@ -1,0 +1,5 @@
+-- Binayati V15 · 2026-11-04 · Building contacts (applied live as building_contacts_2026_11_04)
+-- contacts table (cat, name/name_ar, phone, phone2, note, emergency, show_residents, block, sort),
+-- RLS: members read, managers write within their blocks, support read/full-write policies,
+-- resident_contacts(token) for the resident page, app_lists kind 'contact_cat' (seeded),
+-- app_features row 'contacts' (switchable).

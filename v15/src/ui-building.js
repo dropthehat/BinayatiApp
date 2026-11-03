@@ -10,6 +10,7 @@ function renderBuilding() {
   if (sec === 'cycles') return h + renderCyclesSec();
   if (sec === 'team') return h + renderTeamSec();
   if (sec === 'tasks') return h + renderTasksSec();
+  if (sec === 'contacts') return h + renderContactsSec();
   if (sec === 'settings') return h + renderSettingsSec();
   if (sec === 'compound') return h + renderCompoundSec();
   var cyc = currentCycle();
@@ -20,9 +21,11 @@ function renderBuilding() {
     ['team', '👥', t('Team', 'الفريق'), S.members.map(function(m) { return m.display_name || roleLabel(m.role); }).join(', ')],
     ['compound', '🏘', t('Compound', 'المجمّع'), S.building.compound_id ? t('Shared with other buildings · split shared bills', 'مشترك مع بنايات أخرى · قسّم الفواتير المشتركة') : t('Group with neighbouring buildings', 'اجمعها مع بنايات مجاورة')],
     ['tasks', '✅', t('Tasks & reminders', 'المهام والتذكيرات'), openTasks().length + t(' open', ' مفتوحة')],
+    ['contacts', '📇', t('Contacts', 'جهات الاتصال'), (S.contacts || []).length ? t((S.contacts || []).length + ' numbers', (S.contacts || []).length + ' أرقام') : t('Elevator company, plumber, emergencies', 'شركة المصعد، السنكري، الطوارئ')],
     ['settings', '⚙️', t('Settings', 'الإعدادات'), t('Rate, opening balance, what residents see', 'سعر الصرف، الرصيد الافتتاحي، ما يراه السكان')]
   ];
   h += '<div class="sec"><div class="card list">';
+  items = items.filter(function(x) { return x[0] !== 'contacts' || feature('contacts'); });
   items.forEach(function(x) { h += '<button class="li" onclick="UI.bsec=\'' + x[0] + '\';render();window.scrollTo(0,0)"><div class="ic">' + x[1] + '</div><div class="grow"><b>' + esc(x[2]) + '</b><small>' + esc(x[3]) + '</small></div><span class="chev">›</span></button>'; });
   h += '</div></div>';
   return h;

@@ -400,3 +400,8 @@ input.input[type="date"]::-webkit-date-and-time-value { text-align: start; margi
 .support-bar span { flex: 1; opacity: .9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .support-bar button { background: rgba(255,255,255,.22); color: #fff; border: 0; border-radius: 999px; padding: 6px 14px; font-weight: 700; }
 .support-bar.full { background: var(--bad); }
+
+/* Contacts */
+.li.contact .cbtn { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--bg2); text-decoration: none; font-size: 18px; margin-inline-start: 6px; }
+.li.contact .cbtn.wa { background: var(--okbg); }
+.li .ic.sos { background: var(--badbg); }

@@ -4,7 +4,7 @@
    - Cloud: Supabase. Accounts, roles, sync between phones, resident links.
    Writes are applied to S straight away so taps feel instant, then sent.
    ============================================================================ */
-var TABLES = ['members', 'units', 'cycles', 'charges', 'payments', 'handovers', 'expenses', 'tasks', 'events', 'invites'];
+var TABLES = ['members', 'units', 'cycles', 'charges', 'payments', 'handovers', 'expenses', 'tasks', 'events', 'invites', 'contacts'];
 var SB = null;          // supabase client when in cloud mode
 var SYNC = 'local';     // local | live | busy | off
 var RT_CHANNEL = null;
@@ -256,6 +256,11 @@ var LOCAL_RPC = {
     Object.assign(p, patch); var x = byId(localLoad().payments, p.id); if (x) Object.assign(x, patch);
     localEvent('payments', 'update', p); S._rev++; localSave();
   },
+  resident_contacts: function(a) {
+    var db = localLoad(), u = null; db.units.forEach(function(x) { if (x.resident_token === a.p_token) u = x; });
+    if (!u) return [];
+    return (db.contacts || []).filter(function(c) { return c.building_id === u.building_id && c.show_residents !== false && (!c.block || c.block === u.block); });
+  },
   resident_view: function(a) {
     var db = localLoad();
     var u = null; db.units.forEach(function(x) { if (x.resident_token === a.p_token) u = x; });
@@ -343,7 +348,7 @@ function cloudBuildingState(bid, light) {
       qs.push(q);
     });
     return Promise.all(qs).then(function(res) {
-      var bad = res.filter(function(r) { return r.error && !(r.error.message || '').match(/invites/); })[0];
+      var bad = res.filter(function(r) { return r.error && !(r.error.message || '').match(/invites|contacts/); })[0];
       if (res[0].error) throw new Error(niceError(res[0].error));
       if (bad) throw new Error(niceError(bad.error));
       var ns = emptyState();
@@ -385,7 +390,7 @@ function subscribe(bid) {
   if (RT_CHANNEL && RT_CHANNEL._bid === bid) return;
   if (RT_CHANNEL) { SB.removeChannel(RT_CHANNEL); RT_CHANNEL = null; }
   var ch = SB.channel('b-' + bid);
-  ['units', 'cycles', 'charges', 'payments', 'handovers', 'expenses', 'tasks', 'members'].forEach(function(tbl) {
+  ['units', 'cycles', 'charges', 'payments', 'handovers', 'expenses', 'tasks', 'members', 'contacts'].forEach(function(tbl) {
     ch = ch.on('postgres_changes', { event: '*', schema: 'public', table: tbl, filter: 'building_id=eq.' + bid }, function() { reloadBuilding(); });
   });
   ch = ch.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'buildings', filter: 'id=eq.' + bid }, function() { reloadBuilding(); });
@@ -415,5 +420,6 @@ function scopeToMyBlocks(ns) {
   var shared = !(ns.building && ns.building.settings && ns.building.settings.safe_mode === 'block');
   ns.expenses = (ns.expenses || []).filter(function(e) { return e.block ? mine.indexOf(e.block) >= 0 : (shared || e.paid_by === ns.me.id); });
   ns.charges = (ns.charges || []).filter(function(c) { return !c.block || mine.indexOf(c.block) >= 0; });
+  ns.contacts = (ns.contacts || []).filter(function(c) { return !c.block || mine.indexOf(c.block) >= 0; });
   return ns;
 }

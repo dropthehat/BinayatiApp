@@ -12,7 +12,7 @@ var MONTHS_AR = ['كانون الثاني','شباط','آذار','نيسان','�
 var S = emptyState();
 function emptyState() {
   return { building: null, members: [], units: [], cycles: [], charges: [], payments: [], handovers: [],
-           expenses: [], tasks: [], events: [], invites: [], me: null, role: null, resident: null };
+           expenses: [], tasks: [], events: [], invites: [], contacts: [], me: null, role: null, resident: null };
 }
 
 function t(en, ar) { return LANG === 'ar' ? ar : en; }

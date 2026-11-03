@@ -25,6 +25,7 @@ function loadResident(tok) {
     S = ns;
     UI.resident = { ok: true };
     render();
+    loadResidentContacts(tok);
   }, function(e) { UI.resident = { error: niceError(e) }; render(); });
 }
 
@@ -95,6 +96,7 @@ function renderResident() {
     }
     h += '</div>';
   }
+  if (feature('contacts')) h += renderResidentContacts();
   h += '<div class="foot-note">' + esc(t('This page is private to your apartment. Binayati · بنايتي', 'هذه الصفحة خاصة بشقتك. بنايتي · Binayati')) + '</div></div>';
   return h;
 }

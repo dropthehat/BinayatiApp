@@ -70,7 +70,8 @@ function scanBlockExpense(d, e) {
   if (d.photo) h += '<img class="doc-thumb" src="' + esc(d.photo) + '" alt="" onclick="viewPhoto(this.src)">';
   else if (e && e.photo_path) h += photoImg(e.photo_path);
   if (!e) {
-    h += aiReady()
+    if (aiReady() && !feature('expense_scan')) h += '';
+    else h += aiReady()
       ? '<button class="btn sec sm grow scan-btn" onclick="scanReceipt()">📷 ' + esc(d.photo ? t('Scan another photo', 'صورة أخرى') : t('Scan the receipt', 'امسح الإيصال')) + '</button>'
       : '<div class="hint grow" style="margin:0">' + esc(t('Receipt scanning works once the app is connected to the server.', 'مسح الإيصالات يعمل عند ربط التطبيق بالخادم.')) + '</div>';
   }
@@ -153,7 +154,7 @@ function scanBlockPay(d) {
   if (isManager()) {
     h += '<div class="scan-row">';
     if (d.photo) h += '<img class="doc-thumb" src="' + esc(d.photo) + '" alt="" onclick="viewPhoto(this.src)">';
-    h += aiReady() ? '<button class="btn sec sm grow scan-btn" onclick="scanTransfer()">📷 ' + esc(d.photo ? t('Another screenshot', 'لقطة أخرى') : t('Read a transfer screenshot', 'اقرأ لقطة تحويل')) + '</button>' : '';
+    h += aiReady() && feature('transfer_scan') ? '<button class="btn sec sm grow scan-btn" onclick="scanTransfer()">📷 ' + esc(d.photo ? t('Another screenshot', 'لقطة أخرى') : t('Read a transfer screenshot', 'اقرأ لقطة تحويل')) + '</button>' : '';
     h += '</div>';
   }
   if (d.sender || d.ref) h += '<div class="hint">' + esc([d.sender ? t('From ', 'من ') + d.sender : '', d.ref ? t('Ref ', 'مرجع ') + d.ref : ''].filter(Boolean).join(' · ')) + '</div>';

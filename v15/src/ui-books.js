@@ -142,6 +142,11 @@ function eventText(e) {
   var u = d.unit_id && byId(S.units, d.unit_id), ch = d.charge_id && byId(S.charges, d.charge_id);
   var code = u ? unitTag(u) : '';
   switch (e.tbl) {
+    case 'support':
+      if (e.action === 'view') return t('Binayati support looked at the building (read-only)', 'اطّلع دعم بنايتي على البناية (قراءة فقط)');
+      if (e.action === 'grant') return t(who + ' let Binayati support look until ' + dateLabel(d.until, true), who + ' سمح لدعم بنايتي بالاطّلاع حتى ' + dateLabel(d.until, true));
+      if (e.action === 'revoke') return t(who + ' turned off support access', who + ' أوقف وصول الدعم');
+      return null;
     case 'payments':
       if (e.action === 'insert') return t(who + ' recorded ' + fmt(d.amount, d.cur) + ' from ' + code + (ch ? ' · ' + ch.title : ''), who + ' سجّل ' + fmt(d.amount, d.cur) + ' من ' + code + (ch ? ' · ' + (ch.title_ar || ch.title) : ''));
       if (d.voided_at && !old.voided_at) return t(who + ' undid ' + fmt(d.amount, d.cur) + ' from ' + code, who + ' ألغى ' + fmt(d.amount, d.cur) + ' من ' + code);
@@ -286,7 +291,7 @@ SHEETS.pay = function(d) {
     h += '<label class="field"><span>' + esc(t('Who received it', 'من استلمه')) + '</span><select class="input" id="pay-ch" onchange="UI.sheet.data.channel=this.value">';
     h += '<option value="manager"' + (ch === 'manager' ? ' selected' : '') + '>' + esc(t('Me, in cash', 'أنا، نقداً')) + '</option>';
     collectors().forEach(function(m) { var k = 'collector:' + m.user_id; h += '<option value="' + esc(k) + '"' + (ch === k ? ' selected' : '') + '>' + esc(m.display_name) + '</option>'; });
-    ['Whish', 'OMT', 'Bank'].forEach(function(m) { h += '<option value="transfer:' + m + '"' + (ch === 'transfer:' + m || (ch === 'transfer' && m === 'Whish') ? ' selected' : '') + '>' + esc(t('Transfer · ', 'تحويل · ') + m) + '</option>'; });
+    PAY_METHODS.forEach(function(pm, pi) { var m = pm.key; h += '<option value="transfer:' + esc(m) + '"' + (ch === 'transfer:' + m || (ch === 'transfer' && pi === 0) ? ' selected' : '') + '>' + esc(t('Transfer · ', 'تحويل · ') + (LANG === 'ar' ? pm.ar : pm.en)) + '</option>'; });
     h += '</select></label>';
   }
   h += '<div id="pay-prev" class="card pad" style="margin-top:12px"></div><div id="sheet-err" class="err"></div>';

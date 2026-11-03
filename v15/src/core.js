@@ -220,8 +220,8 @@ function meterUnit(m) { return m && m.unit === 'm3' ? 'm³' : 'kWh'; }
 /* Which meter a charge name suggests: 'kwh' for a generator, 'm3' for water, '' for anything else. */
 function meterKindFor(title) {
   var s = String(title || '').toLowerCase();
-  if (/water|m3|m³|مياه|ماء/.test(s)) return 'm3';
-  if (/generat|moteur|motor|kwh|مولد|مولّد|موتور/.test(s)) return 'kwh';
+  if (/water|m3|m³|مياه|ماء/.test(s)) return typeof feature === 'function' && !feature('meter_m3') ? '' : 'm3';
+  if (/generat|moteur|motor|kwh|مولد|مولّد|موتور/.test(s)) return typeof feature === 'function' && !feature('meter_kwh') ? '' : 'kwh';
   return '';
 }
 /* " (120 kWh)" or " (14 m³)" after a metered charge for one apartment */
@@ -494,8 +494,8 @@ var CATS = {
   clean: ['🧹', 'Cleaning', 'التنظيف'], light: ['💡', 'Lighting', 'الإنارة'], repair: ['🔧', 'Repairs', 'تصليحات'],
   staff: ['🧑‍🔧', 'Staff pay', 'أجور'], supplier: ['↗', 'Supplier', 'مورّد'], other: ['🧾', 'Other', 'أخرى']
 };
-function catIcon(k) { return (CATS[k] || CATS.other)[0]; }
-function catName(k) { var c = CATS[k] || CATS.other; return LANG === 'ar' ? c[2] : c[1]; }
+function catIcon(k) { var A = (typeof CATS_ALL !== 'undefined' && CATS_ALL) || CATS; return (A[k] || CATS.other)[0]; }
+function catName(k) { var A = (typeof CATS_ALL !== 'undefined' && CATS_ALL) || CATS; var c = A[k] || CATS.other; return LANG === 'ar' ? c[2] : c[1]; }
 
 /* ---------------------------------------------------------------------------
    Which floor an apartment is on, read from its code:

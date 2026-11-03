@@ -75,7 +75,7 @@ function localBuildingState(bid) {
   ns._rev = Math.random();
   return ns;
 }
-function localLoadBuilding(bid) { S = localBuildingState(bid); }
+function localLoadBuilding(bid) { S = localBuildingState(bid); loadConfig(bid); }
 
 /* ---------------------------------------------------------------------------
    Generic writes (same calls in both modes)
@@ -364,6 +364,7 @@ function cloudLoadBuilding(bid) {
     S = scopeToMyBlocks(ns);
     setSync('live');
     subscribe(bid);
+    return loadConfig(bid);
   });
 }
 /* Load any building without switching to it (for the all-buildings overview). */

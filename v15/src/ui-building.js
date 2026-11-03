@@ -930,7 +930,7 @@ SHEETS.invite = function(d) {
     h += '<p class="lead">' + esc(t('Send this link. It works once and expires in 14 days.', 'أرسل هذا الرابط. يعمل مرة واحدة وينتهي بعد 14 يوماً.')) + '</p><div class="linkbox"><span class="grow">' + esc(link) + '</span></div>';
     var msg = t('Hi ' + (d.name || '') + ', join ' + bName() + ' on Binayati: ', 'مرحباً ' + (d.name || '') + '، انضم إلى ' + bName() + ' على بنايتي: ') + link;
     var qr = qrImage(link, (role === 'collector' ? t('Collector invite', 'دعوة جابي') : t('Co-manager invite', 'دعوة مدير مساعد')) + (d.name ? ' · ' + d.name : ''), bName());
-    if (qr) h += '<div class="qr-box"><img src="' + qr + '" alt="QR" onclick="viewPhoto(this.src)"><button class="btn sec sm" onclick="saveQr(' + jsArg(qr) + ',' + jsArg('binayati-invite-' + d.code + '.png') + ')">' + esc(t('Save QR image', 'احفظ صورة الرمز')) + '</button><small class="muted">' + esc(t('They scan it with the phone camera. Same one-time link.', 'يمسحه بكاميرا الهاتف. نفس الرابط لمرة واحدة.')) + '</small></div>';
+    if (qr && feature('invite_qr')) h += '<div class="qr-box"><img src="' + qr + '" alt="QR" onclick="viewPhoto(this.src)"><button class="btn sec sm" onclick="saveQr(' + jsArg(qr) + ',' + jsArg('binayati-invite-' + d.code + '.png') + ')">' + esc(t('Save QR image', 'احفظ صورة الرمز')) + '</button><small class="muted">' + esc(t('They scan it with the phone camera. Same one-time link.', 'يمسحه بكاميرا الهاتف. نفس الرابط لمرة واحدة.')) + '</small></div>';
     h += '<div class="foot"><button class="btn sec" onclick="copyText(' + jsArg(link) + ')">' + esc(t('Copy', 'نسخ')) + '</button><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=' + esc(encodeURIComponent(msg)) + '">WhatsApp</a></div>';
     return h;
   }
@@ -1033,6 +1033,7 @@ function renderSettingsSec() {
   h += '<button class="li" onclick="exportData()"><div class="ic">⬇︎</div><div class="grow"><b>' + esc(t('Download a copy', 'تنزيل نسخة')) + '</b><small>' + esc(t('Everything in this building, as a file', 'كل بيانات البناية في ملف')) + '</small></div></button>';
   h += '<button class="li" onclick="openSheet(\'server\')"><div class="ic">☁︎</div><div class="grow"><b>' + esc(t('Server', 'الخادم')) + '</b><small>' + esc(isCloud() ? t('Connected · syncing between phones', 'متصل · مزامنة بين الهواتف') : t('Not connected · this phone only', 'غير متصل · هذا الهاتف فقط')) + '</small></div><span class="chev">›</span></button>';
   h += '</div></div>';
+  h += renderSupportCard();
   return h;
 }
 function switchRow(key, on, title, sub) {
@@ -1103,6 +1104,7 @@ SHEETS.menu = function() {
     h += '<button class="li" onclick="demoSignIn(' + (asMgr ? '\'collector\'' : '\'manager\'') + ')"><div class="ic">⇄</div><div class="grow"><b>' + esc(asMgr ? t('Switch to the collector (Anas)', 'بدّل إلى الجابي (أنس)') : t('Switch to the manager (Rima)', 'بدّل إلى المدير (ريما)')) + '</b><small>' + esc(t('Demo: see the same building from the other side', 'تجربة: نفس البناية من الجهة الأخرى')) + '</small></div></button>';
     h += '<button class="li" onclick="demoReset()"><div class="ic">↺</div><div class="grow"><b>' + esc(t('Reset the demo data', 'أعد بيانات التجربة')) + '</b><small>' + esc(t('Back to the original sample', 'العودة للنموذج الأصلي')) + '</small></div></button>';
   }
+  if (IS_ADMIN && !S.support) h += '<button class="li" onclick="openAdmin()"><div class="ic">🛠</div><div class="grow"><b>Binayati admin</b><small>Features, lists, client support</small></div></button>';
   h += '<button class="li" onclick="closeSheet();setLang()"><div class="ic">ع</div><div class="grow"><b>' + esc(LANG === 'ar' ? 'English' : 'العربية') + '</b></div></button>';
   if (isManager()) h += '<button class="li" onclick="closeSheet();go(\'building\');UI.bsec=\'settings\';render()"><div class="ic">⚙️</div><div class="grow"><b>' + esc(t('Settings', 'الإعدادات')) + '</b></div></button>';
   if (isCloud()) h += '<button class="li" onclick="signOut()"><div class="ic">⎋</div><div class="grow"><b>' + esc(t('Sign out', 'تسجيل الخروج')) + '</b></div></button>';
@@ -1123,8 +1125,8 @@ SHEETS.add = function() {
   if (isManager()) {
     items.push(['pay', '↓', t('Record a payment', 'سجّل دفعة'), t('Any amount, oldest charges first', 'أي مبلغ، الأقدم أولاً')]);
     items.push(['expense', '↑', t('Money spent', 'مصروف'), t('Fuel, repairs, cleaning…', 'مازوت، تصليح، تنظيف…')]);
-    if (aiReady()) items.splice(1, 0, ['scanpay', '📷', t('Read a transfer screenshot', 'اقرأ لقطة تحويل'), t('Whish, OMT, bank: fills the payment for you', 'Whish، OMT، بنك: تملأ الدفعة عنك')]);
-    if (aiReady()) items.push(['scanexp', '🧾', t('Scan a receipt', 'امسح إيصالاً'), t('Photo of an invoice becomes an expense', 'صورة الفاتورة تصبح مصروفاً')]);
+    if (aiReady() && feature('transfer_scan')) items.splice(1, 0, ['scanpay', '📷', t('Read a transfer screenshot', 'اقرأ لقطة تحويل'), t('Whish, OMT, bank: fills the payment for you', 'Whish، OMT، بنك: تملأ الدفعة عنك')]);
+    if (aiReady() && feature('expense_scan')) items.push(['scanexp', '🧾', t('Scan a receipt', 'امسح إيصالاً'), t('Photo of an invoice becomes an expense', 'صورة الفاتورة تصبح مصروفاً')]);
     items.push(['charge', '🧾', t('Add a charge', 'أضف رسماً'), t('A bill to split, a fee, a supplier service', 'فاتورة، رسم، خدمة مورّد')]);
     items.push(['month', '📅', t('Open the next month', 'افتح الشهر التالي'), t('Copies repeating charges for you to review', 'ينسخ الرسوم المتكررة لتراجعها')]);
     if (collectorsHolding().length) items.push(['handrecv', '⇄', t('Cash received from a collector', 'استلمت نقداً من الجابي'), t('Even if they didn\'t send a handover', 'حتى لو لم يرسل تسليماً')]);
@@ -1133,7 +1135,7 @@ SHEETS.add = function() {
   } else {
     items.push(['pay', '↓', t('Record a payment', 'سجّل دفعة'), t('Someone paid part of their bill', 'دفع أحدهم جزءاً من فاتورته')]);
     items.push(['expense', '↑', t('I spent building cash', 'صرفت من مال البناية'), t('Comes off what you hand over', 'يُخصم مما تسلّمه')]);
-    if (aiReady()) items.push(['scanexp', '🧾', t('Scan a receipt', 'امسح إيصالاً'), t('Take a photo, the form fills itself', 'صوّر والإستمارة تمتلئ')]);
+    if (aiReady() && feature('expense_scan')) items.push(['scanexp', '🧾', t('Scan a receipt', 'امسح إيصالاً'), t('Take a photo, the form fills itself', 'صوّر والإستمارة تمتلئ')]);
     items.push(['handreq', '⇄', t('Hand over cash', 'سلّم النقد'), t('To the manager', 'للمدير')]);
   }
   var need = { pay: 'pay', scanpay: 'pay', expense: 'spend', scanexp: 'spend', charge: 'charges', month: 'charges', project: 'charges', task: 'tasks' };
@@ -1306,7 +1308,7 @@ function saveQr(dataUrl, name) {
 }
 
 /* Contacts: Android Chrome has a contact picker; iPhone Safari does not (yet), so the button only shows where it works. */
-function contactsOk() { return !!(navigator.contacts && navigator.contacts.select && window.isSecureContext); }
+function contactsOk() { return feature('contacts_pick') && !!(navigator.contacts && navigator.contacts.select && window.isSecureContext); }
 function pickContact() {
   if (!contactsOk()) return;
   navigator.contacts.select(['name', 'tel'], { multiple: false }).then(function(list) {

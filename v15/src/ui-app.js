@@ -27,6 +27,7 @@ function render() {
     case 'overview': h = renderOverview(); break;
     case 'resident': h = renderResident(); break;
     case 'error': h = renderFatal(); break;
+    case 'admin': h = renderAdmin(); break;
     default: h = renderApp();
   }
   APP.innerHTML = h + renderSheet();
@@ -113,7 +114,7 @@ function renderApp() {
   else if (UI.tab === 'books') body = renderBooks();
   else if (UI.tab === 'tasks') body = renderTasksScreen();
   else body = renderBuilding();
-  return '<div class="shell">' + body + '</div>' + renderDock();
+  return supportBanner() + '<div class="shell' + (S.support ? ' in-support' : '') + '">' + body + '</div>' + renderDock();
 }
 function renderFatal() {
   return '<div class="shell"><div class="sec"><div class="card pad"><h2 class="h-title">' + esc(t('Something went wrong', 'حدث خطأ')) + '</h2><p class="muted">' + esc(UI.fatal || '') + '</p><button class="btn pri" onclick="location.reload()">' + esc(t('Try again', 'حاول مجدداً')) + '</button></div></div></div>';
@@ -639,7 +640,7 @@ function setupGo(k) {
 }
 function setupSkip(k) { var st = setupState(), sk = st.skipped || {}; sk[k] = 1; setupState({ skipped: sk }); render(); }
 function renderSetupCard() {
-  if (!isManager() || !S.building) return '';
+  if (!isManager() || !S.building || !feature('setup_checklist') || S.support) return '';
   var st = setupState();
   if (!st.open) return '';
   var steps = setupSteps(), sk = st.skipped || {};

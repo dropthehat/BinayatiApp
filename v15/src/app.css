@@ -389,3 +389,13 @@ input.input[type="date"]::-webkit-date-and-time-value { text-align: start; margi
 .hero-multi .hm-blk .bh { width: 100%; max-height: 200px; margin: 0; }
 .hero-multi .hm-blk + .hm-blk { margin-inline-start: -10%; }
 .hero-multi small { font-size: 12px; }
+
+/* Admin */
+.pill-st { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px; vertical-align: 2px; margin-inline-start: 4px; background: var(--bg2); color: var(--mut); }
+.pill-st.st-live { background: var(--okbg); color: var(--ok); }
+.pill-st.st-beta, .pill-st.st-custom { background: var(--soft); color: var(--acc-ink); }
+.pill-st.st-idea { background: var(--wbg); color: var(--warn); }
+.pill-st.st-off { background: var(--badbg); color: var(--bad); }
+.support-bar { position: sticky; top: 0; z-index: 60; display: flex; align-items: center; gap: 10px; padding: calc(8px + env(safe-area-inset-top)) 16px 8px; background: var(--warn); color: #fff; font-size: 13px; }
+.support-bar span { flex: 1; opacity: .9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.support-bar button { background: rgba(255,255,255,.22); color: #fff; border: 0; border-radius: 999px; padding: 6px 14px; font-weight: 700; }

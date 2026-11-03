@@ -64,7 +64,7 @@ SHEETS.remind = function(d) {
   });
   h += '</div>';
   h += '<div class="seg" style="margin-bottom:8px"><button class="' + (d.len === 'long' ? 'on' : '') + '" onclick="UI.sheet.data.len=\'long\';UI.sheet.data.text=null;UI.sheet.data.ai=false;UI.sheet.data.scan=null;render()">' + esc(t('Detailed', 'مفصّلة')) + '</button><button class="' + (d.len === 'short' ? 'on' : '') + '" onclick="UI.sheet.data.len=\'short\';UI.sheet.data.text=null;UI.sheet.data.ai=false;UI.sheet.data.scan=null;render()">' + esc(t('Short', 'قصيرة')) + '</button></div>';
-  if (aiReady()) h += '<button class="btn sec block" onclick="aiReminder()">✨ ' + esc(d.ai ? t('Write it again', 'أعد الكتابة') : t('Write it in this tone', 'اكتبها بهذه النبرة')) + '</button>';
+  if (aiReady() && feature('ai_reminders')) h += '<button class="btn sec block" onclick="aiReminder()">✨ ' + esc(d.ai ? t('Write it again', 'أعد الكتابة') : t('Write it in this tone', 'اكتبها بهذه النبرة')) + '</button>';
   }
   h += scanStatus(d);
   h += '<label class="field"><span>' + esc(t('Message (you can edit it)', 'الرسالة (يمكنك تعديلها)')) + '</span><textarea class="input" id="rm-text" dir="auto" style="min-height:' + (d.len === 'long' ? 220 : 140) + 'px;font-size:15px">' + esc(d.text) + '</textarea></label>';

@@ -42,6 +42,7 @@ ${qrlib}
 <script>
 ${src('core.js')}
 ${src('presets.js')}
+${src('config.js')}
 ${src('translate.js')}
 ${src('scene.js')}
 ${src('store.js')}
@@ -53,6 +54,7 @@ ${src('ui-resident.js')}
 ${src('ui-multi.js')}
 ${src('ai-docs.js')}
 ${src('ai-remind.js')}
+${src('admin.js')}
 boot();
 </script>
 </body>

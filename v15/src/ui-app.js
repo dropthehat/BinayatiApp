@@ -127,7 +127,7 @@ function heroHtml(cyc, opts) {
   var wins = units.map(function(u) {
     var st = opts.only ? (u.id === opts.only ? unitCycle(u, cyc).state : 'closed') : (opts.hideWho ? 'closed' : unitCycle(u, cyc).state);
     var state = st === 'paid' ? 'paid' : (st === 'closed' || st === 'none' ? 'closed' : 'owes');
-    var lbl = u.code + ' · ' + (state === 'paid' ? t('paid', 'مسدد') : state === 'owes' ? t('still owes', 'لم يسدد بعد') : '');
+    var lbl = unitTag(u) + ' · ' + (state === 'paid' ? t('paid', 'مسدد') : state === 'owes' ? t('still owes', 'لم يسدد بعد') : '');
     return { state: state, label: lbl, onclick: opts.noTap ? null : 'openSheet(\'unit\',{id:' + jsArg(u.id) + '})' };
   });
   if (!wins.length) wins = [{ state: 'closed' }];
@@ -304,7 +304,7 @@ function renderHomeCollector() {
     h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Doors to knock on', 'أبواب لطرقها')) + '</h2><button onclick="go(\'collect\')">' + esc(t('All', 'الكل')) + '</button></div><div class="card list">';
     owing.slice(0, 5).forEach(function(o) {
       var late = pairUsd(o.arr) > 0.005;
-      h += '<button class="li" onclick="openSheet(\'unit\',{id:' + jsArg(o.u.id) + '})"><div class="ic' + (late ? ' out' : '') + '">' + esc(o.u.code) + '</div><div class="grow"><b>' + esc(unitName(o.u) || o.u.code) + '</b><small' + (late ? ' style="color:var(--bad)"' : '') + '>' + esc(late ? t('Also owes earlier months', 'عليه أشهر سابقة') : t('This month', 'هذا الشهر')) + '</small></div><span class="amt">' + esc(fmtPair({ USD: o.now.USD + o.arr.USD, LBP: o.now.LBP + o.arr.LBP })) + '</span></button>';
+      h += '<button class="li" onclick="openSheet(\'unit\',{id:' + jsArg(o.u.id) + '})"><div class="ic' + (late ? ' out' : '') + '">' + esc(unitTag(o.u)) + '</div><div class="grow"><b>' + esc(unitName(o.u) || unitTag(o.u)) + '</b><small' + (late ? ' style="color:var(--bad)"' : '') + '>' + esc(late ? t('Also owes earlier months', 'عليه أشهر سابقة') : t('This month', 'هذا الشهر')) + '</small></div><span class="amt">' + esc(fmtPair({ USD: o.now.USD + o.arr.USD, LBP: o.now.LBP + o.arr.LBP })) + '</span></button>';
     });
     h += '</div></div>';
   } else if (units.length) h += '<div class="sec"><div class="card empty">' + esc(t('Everyone has paid ✓', 'الجميع سدّد ✓')) + '</div></div>';
@@ -353,14 +353,14 @@ function renderCollect() {
   }
   if (isManager()) {
     var ch = defaultChannel();
-    h += '<div class="sec" style="margin-top:8px"><div class="sec-h"><h2 style="font-size:13px;color:var(--mut)">' + esc(t('A tick means the money went to', 'العلامة تعني أن المبلغ ذهب إلى')) + '</h2></div><div class="seg">';
-    h += '<button class="' + (ch === 'manager' ? 'on' : '') + '" onclick="UI.channel=\'manager\';render()">' + esc(t('Me', 'أنا')) + '</button>';
+    h += '<div class="sec" style="margin-top:8px"><div class="sec-h"><h2 style="font-size:13px;color:var(--mut)">' + esc(t('When you tick a payment, the money is', 'عند تأشير دفعة، المبلغ')) + '</h2></div><div class="seg">';
+    h += '<button class="' + (ch === 'manager' ? 'on' : '') + '" onclick="UI.channel=\'manager\';render()">' + esc(t('Cash to me', 'نقداً معي')) + '</button>';
     collectors().forEach(function(m) {
       var k = 'collector:' + m.user_id;
       h += '<button class="' + (ch === k ? 'on' : '') + '" onclick="UI.channel=' + jsArg(k) + ';render()">' + esc(m.display_name || t('Collector', 'الجابي')) + '</button>';
     });
-    h += '<button class="' + (ch === 'transfer' ? 'on' : '') + '" onclick="UI.channel=\'transfer\';render()">' + esc(t('Transfer', 'تحويل')) + '</button>';
-    h += '</div></div>';
+    h += '<button class="' + (ch === 'transfer' ? 'on' : '') + '" onclick="UI.channel=\'transfer\';render()">' + esc(t('Paid by transfer', 'تحويل مصرفي')) + '</button>';
+    h += '</div><p class="hint" style="margin-top:6px">' + esc(ch === 'transfer' ? t('Bank, Whish or OMT straight to the building. Goes into the safe total.', 'مصرف أو Whish أو OMT مباشرة للبناية. يُضاف إلى الصندوق.') : ch === 'manager' ? t('You received the cash in hand. It counts in the safe.', 'استلمت النقد بيدك. يُحسب في الصندوق.') : t('The collector holds this cash until they hand it over.', 'الجابي يحمل هذا النقد حتى يسلّمه.')) + '</p></div>';
   }
   var units = activeUnits().filter(function(u) { return !UI.block || blocks().length < 2 || blockOf(u) === UI.block; });
   var rows = units.map(function(u) { return { u: u, r: unitCycle(u, cyc), b: unitBalance(u, cyc) }; });
@@ -392,7 +392,7 @@ function unitCard(u, cyc, r, b) {
   var st = !r.cells.length ? 'none' : (owes ? (pairUsd(r.paid) > 0 ? 'part' : 'owes') : 'paid');
   var stTxt = st === 'paid' ? t('Paid', 'مسدد') : st === 'none' ? t('Nothing due', 'لا مستحقات') : t('Owes', 'عليه') + ' ' + fmtPair(r.allLeft);
   var h = '<div class="card unit' + (st === 'paid' ? ' settled' : '') + '">';
-  h += '<div class="unit-h" role="button" tabindex="0" onclick="openSheet(\'unit\',{id:' + jsArg(u.id) + '})"><div class="ucode">' + esc(u.code) + '</div><div class="grow"><div class="uname">' + esc(unitName(u) || t('Apartment ', 'شقة ') + u.code) + '</div>';
+  h += '<div class="unit-h" role="button" tabindex="0" onclick="openSheet(\'unit\',{id:' + jsArg(u.id) + '})"><div class="ucode">' + esc(unitTag(u)) + '</div><div class="grow"><div class="uname">' + esc(unitName(u) || t('Apartment ', 'شقة ') + unitTag(u)) + '</div>';
   if (blockOf(u) && blocks().length > 1 && !UI.block) h += '<div class="umeta">' + esc(blockLabel(blockOf(u))) + '</div>';
   if (num(u.weight) !== 1) h += '<div class="umeta">' + esc(t('Share ×' + num(u.weight), 'حصة ×' + num(u.weight))) + '</div>';
   h += '</div><span class="status ' + st + '">' + esc(stTxt) + '</span></div>';
@@ -437,7 +437,7 @@ function payAll(uId, cycId) {
   if (!rows.length) return;
   dbInsertMany('payments', rows).then(function() {
     render();
-    toast(t(u.code + ' is settled for ' + cycleTitle(byId(S.cycles, cycId)), u.code + ' سدد ' + cycleTitle(byId(S.cycles, cycId))));
+    toast(t(unitTag(u) + ' is settled for ' + cycleTitle(byId(S.cycles, cycId)), unitTag(u) + ' سدد ' + cycleTitle(byId(S.cycles, cycId))));
   }, fail);
   render();
 }
@@ -450,7 +450,7 @@ SHEETS.cell = function(d) {
   var ch = byId(S.charges, d.ch), u = byId(S.units, d.u);
   if (!ch || !u) return '';
   var c = cell(ch, u);
-  var h = '<h3>' + esc(u.code + ' · ' + L(ch)) + '</h3><p class="lead">' + esc(t('Due', 'المستحق')) + ' ' + esc(fmt(c.due, ch.cur)) + ' · ' + esc(t('Paid', 'المدفوع')) + ' ' + esc(fmt(c.paid, ch.cur)) + '</p>';
+  var h = '<h3>' + esc(unitTag(u) + ' · ' + L(ch)) + '</h3><p class="lead">' + esc(t('Due', 'المستحق')) + ' ' + esc(fmt(c.due, ch.cur)) + ' · ' + esc(t('Paid', 'المدفوع')) + ' ' + esc(fmt(c.paid, ch.cur)) + '</p>';
   h += '<div class="card list">';
   c.payments.forEach(function(p) {
     var where = p.channel === 'collector' ? (handoverConfirmed(p.handover_id) ? t('handed over to the safe', 'سُلّم للصندوق') : t('with ', 'مع ') + memberName(p.received_by)) : p.channel === 'transfer' ? (p.method || t('transfer', 'تحويل')) : t('received by ', 'استلمه ') + memberName(p.received_by);
@@ -535,12 +535,12 @@ function waText(u, cyc, lang) {
     var name = lg === 'ar' ? (u.name_ar || u.name) : u.name;
     var s = '🏢 *' + bname + '* · ' + cycleTitle(cyc, lg) + '\n\n';
     if (owes) {
-      s += T('Hello ', 'مرحباً ') + (name ? '*' + name + '* ' : '') + '(' + u.code + ') 👋\n' + lines.join('\n') + '\n\n';
+      s += T('Hello ', 'مرحباً ') + (name ? '*' + name + '* ' : '') + '(' + unitTag(u) + ') 👋\n' + lines.join('\n') + '\n\n';
       s += '*' + T('Left to pay: ', 'المتبقي: ') + fmtPair(r.allLeft) + '*';
       if (pairUsd(b.arrears) > 0.005) s += '\n' + T('Plus earlier months: ', 'إضافة لأشهر سابقة: ') + fmtPair(b.arrears);
       s += '\n' + T('You can hand it to ', 'يمكنك تسليمه إلى ') + (collectors().length ? collectorLabel(lg) : T('the building manager', 'مدير البناية')) + '.';
     } else {
-      s += '🧾 *' + T('Receipt', 'إيصال') + '*\n' + T('Thank you ', 'شكراً ') + (name ? '*' + name + '* ' : '') + '(' + u.code + ') 🌸\n' + lines.join('\n') + '\n\n';
+      s += '🧾 *' + T('Receipt', 'إيصال') + '*\n' + T('Thank you ', 'شكراً ') + (name ? '*' + name + '* ' : '') + '(' + unitTag(u) + ') 🌸\n' + lines.join('\n') + '\n\n';
       s += '✅ *' + T('Fully paid for ', 'مسدد بالكامل عن ') + cycleTitle(cyc, lg) + '*';
     }
     if (u.resident_token) s += '\n\n' + T('Your bill, receipts and the building\'s books:', 'فاتورتك وإيصالاتك وحسابات البناية:') + '\n' + residentLink(u);

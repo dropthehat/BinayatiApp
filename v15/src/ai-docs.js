@@ -51,11 +51,11 @@ var PHOTO_URLS = {};
 function photoImg(path, cls) {
   if (!path) return '';
   var id = 'ph-' + path.replace(/[^a-z0-9]/gi, '').slice(-16);
-  if (PHOTO_URLS[path]) return '<img id="' + id + '" class="' + (cls || 'doc-thumb') + '" src="' + esc(PHOTO_URLS[path]) + '" alt="" onclick="window.open(this.src)">';
+  if (PHOTO_URLS[path]) return '<img id="' + id + '" class="' + (cls || 'doc-thumb') + '" src="' + esc(PHOTO_URLS[path]) + '" alt="" onclick="viewPhoto(this.src)">';
   if (isCloud()) SB.storage.from('receipts').createSignedUrl(path, 3600).then(function(r) {
     if (r.data && r.data.signedUrl) { PHOTO_URLS[path] = r.data.signedUrl; var el = document.getElementById(id); if (el) el.src = r.data.signedUrl; }
   });
-  return '<img id="' + id + '" class="' + (cls || 'doc-thumb') + '" alt="" onclick="if(this.src)window.open(this.src)">';
+  return '<img id="' + id + '" class="' + (cls || 'doc-thumb') + '" alt="" onclick="if(this.src)viewPhoto(this.src)">';
 }
 function scanStatus(d) {
   if (d.scan === 'reading') return '<div class="scan-state"><span class="spin"></span>' + esc(t('Reading the photo…', 'جارٍ قراءة الصورة…')) + '</div>';
@@ -67,7 +67,7 @@ function scanStatus(d) {
 /* ---------------- 1. Receipts → expenses ---------------- */
 function scanBlockExpense(d, e) {
   var h = '<div class="scan-row">';
-  if (d.photo) h += '<img class="doc-thumb" src="' + esc(d.photo) + '" alt="" onclick="window.open(this.src)">';
+  if (d.photo) h += '<img class="doc-thumb" src="' + esc(d.photo) + '" alt="" onclick="viewPhoto(this.src)">';
   else if (e && e.photo_path) h += photoImg(e.photo_path);
   if (!e) {
     h += aiReady()
@@ -152,7 +152,7 @@ function scanBlockPay(d) {
   var h = '';
   if (isManager()) {
     h += '<div class="scan-row">';
-    if (d.photo) h += '<img class="doc-thumb" src="' + esc(d.photo) + '" alt="" onclick="window.open(this.src)">';
+    if (d.photo) h += '<img class="doc-thumb" src="' + esc(d.photo) + '" alt="" onclick="viewPhoto(this.src)">';
     h += aiReady() ? '<button class="btn sec sm grow scan-btn" onclick="scanTransfer()">📷 ' + esc(d.photo ? t('Another screenshot', 'لقطة أخرى') : t('Read a transfer screenshot', 'اقرأ لقطة تحويل')) + '</button>' : '';
     h += '</div>';
   }
@@ -164,4 +164,17 @@ function keepPay() {
   if (document.getElementById('pay-unit')) d.unit = val('pay-unit');
   if (document.getElementById('pay-amt')) d.amount = val('pay-amt');
   if (document.getElementById('pay-ch')) d.channel = val('pay-ch');
+}
+
+/* Full-size photo over the app. iPhone Safari blocks opening a photo in a new tab, so it stays in-page.
+   Pinch to zoom works natively; tap the dim area or Close to go back. */
+function viewPhoto(src) {
+  if (!src) return;
+  var old = document.getElementById('photo-view'); if (old) old.remove();
+  var el = document.createElement('div');
+  el.id = 'photo-view'; el.className = 'photo-view'; el.setAttribute('role', 'dialog');
+  el.innerHTML = '<div class="pv-scroll"><img alt=""></div><button class="pv-close" type="button">' + esc(t('Close', 'إغلاق')) + '</button>';
+  el.querySelector('img').src = src;
+  el.addEventListener('click', function(e) { if (e.target === el || e.target.classList.contains('pv-scroll') || e.target.classList.contains('pv-close')) el.remove(); });
+  document.body.appendChild(el);
 }

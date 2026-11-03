@@ -96,6 +96,18 @@ function pairUsd(p) { return (p.USD || 0) + (p.LBP || 0) / rate(); }
 function setting(k) { return S.building && S.building.settings ? S.building.settings[k] : undefined; }
 function bName() { if (!S.building) return ''; return LANG === 'ar' ? (S.building.name_ar || S.building.name) : S.building.name; }
 function L(row, key) { key = key || 'title'; return LANG === 'ar' ? (row[key + '_ar'] || row[key]) : row[key]; }
+/* Unit label shown to people. When two blocks reuse a code (1A in A and in B), add the block: B-1A. */
+var _tagKey = '', _tagDup = {};
+function unitTag(u) {
+  if (!u) return '';
+  var key = S.units.length + ':' + (S._rev || 0);
+  if (key !== _tagKey) {
+    _tagKey = key; _tagDup = {};
+    var seen = {};
+    S.units.forEach(function(x) { var c = String(x.code).toUpperCase(); if (seen[c] != null && seen[c] !== blockOf(x)) _tagDup[c] = 1; if (seen[c] == null) seen[c] = blockOf(x); });
+  }
+  return _tagDup[String(u.code).toUpperCase()] && blockOf(u) ? blockOf(u) + '-' + u.code : u.code;
+}
 function unitName(u) { return u ? (LANG === 'ar' ? (u.name_ar || u.name) : u.name) : ''; }
 
 function dateLabel(iso, withTime) {
@@ -157,6 +169,33 @@ function weightSum(cyc, ch) {
     .reduce(function(s, u) { return s + num(u.weight == null ? 1 : u.weight); }, 0) || 1;
 }
 
+/* Split a total: apartments with a typed amount keep it; the rest of the total
+   is spread over the others by share, so the bill still adds up to the total. */
+function splitPool(ch, cyc) {
+  var ov = ch.overrides || {};
+  return activeUnits().filter(function(u) { return unitInCycle(u, cyc) && inSplit(u, ch) && inBlock(u, ch); })
+    .map(function(u) { return { u: u, fixed: ov[u.id] != null && ov[u.id] !== '' }; });
+}
+function splitRest(ch, cyc) {
+  var ov = ch.overrides || {}, used = 0;
+  splitPool(ch, cyc).forEach(function(x) { if (x.fixed) used += num(ov[x.u.id]); });
+  return Math.max(0, num(ch.amount) - used);
+}
+function splitRestWeight(ch, cyc) {
+  return splitPool(ch, cyc).filter(function(x) { return !x.fixed; })
+    .reduce(function(s, x) { return s + num(x.u.weight == null ? 1 : x.u.weight); }, 0) || 1;
+}
+/* Exact split in cents (whole lira for LBP): largest remainder, so the parts add up to the total. */
+function splitAlloc(ch, cyc) {
+  var unit = ch.cur === 'LBP' ? 1 : 100, rest = Math.round(splitRest(ch, cyc) * unit), ws = splitRestWeight(ch, cyc);
+  var free = splitPool(ch, cyc).filter(function(x) { return !x.fixed; });
+  var parts = free.map(function(x) { var raw = rest * num(x.u.weight == null ? 1 : x.u.weight) / ws; return { id: x.u.id, base: Math.floor(raw + 1e-9), frac: raw - Math.floor(raw + 1e-9) }; });
+  var left = rest - parts.reduce(function(s, x) { return s + x.base; }, 0);
+  parts.slice().sort(function(a, b) { return b.frac - a.frac; }).forEach(function(x) { if (left > 0 && x.frac > 1e-9) { x.base++; left--; } });
+  var out = {};
+  parts.forEach(function(x) { out[x.id] = x.base / unit; });
+  return out;
+}
 /* What one apartment owes for one charge. */
 function dueFor(ch, u) {
   if (!u || u.active === false) return 0;
@@ -167,7 +206,7 @@ function dueFor(ch, u) {
   if (ch.pass_through || ch.split === 'custom') return 0;
   var w = num(u.weight == null ? 1 : u.weight);
   if (ch.split === 'weight') return round(num(ch.amount) * w, ch.cur);
-  if (ch.split === 'total') return inSplit(u, ch) ? round(num(ch.amount) * w / weightSum(cyc, ch), ch.cur) : 0;
+  if (ch.split === 'total') return inSplit(u, ch) ? (splitAlloc(ch, cyc)[u.id] || 0) : 0;
   return num(ch.amount);
 }
 function chargesOf(cycleId) {

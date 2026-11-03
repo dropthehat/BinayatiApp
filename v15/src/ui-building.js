@@ -40,7 +40,7 @@ function renderUnitsSec() {
     if (bl.length > 1) h += '<div class="daylbl">' + esc(g.b ? blockLabel(g.b) : t('No block', 'بلا بلوك')) + '</div>';
     h += '<div class="card list">';
     g.us.slice().sort(function(a, b) { return (a.sort || 0) - (b.sort || 0) || String(a.code).localeCompare(String(b.code), 'en', { numeric: true }); }).forEach(function(u) {
-      h += '<button class="li" onclick="openSheet(\'unitEdit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(u.code) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc([u.phone ? '\u2066' + u.phone + '\u2069' : t('no phone', 'بلا هاتف'), num(u.weight) !== 1 ? t('share ×', 'حصة ×') + num(u.weight) : '', u.active === false ? t('inactive', 'غير فعّالة') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
+      h += '<button class="li" onclick="openSheet(\'unitEdit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(unitTag(u)) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc([u.phone ? '\u2066' + u.phone + '\u2069' : t('no phone', 'بلا هاتف'), num(u.weight) !== 1 ? t('share ×', 'حصة ×') + num(u.weight) : '', u.active === false ? t('inactive', 'غير فعّالة') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
     });
     h += '</div>';
   });
@@ -51,8 +51,8 @@ function renderUnitsSec() {
 SHEETS.unitEdit = function(d) {
   var u = d.id ? byId(S.units, d.id) : null;
   var v = u || { code: '', name: '', name_ar: '', phone: '', lang: 'both', weight: 1, active: true };
-  var h = '<h3>' + esc(u ? t('Apartment ', 'الشقة ') + u.code : t('New apartment', 'شقة جديدة')) + '</h3>';
-  h += '<div class="two"><label class="field"><span>' + esc(t('Code', 'الرمز')) + '</span><input class="input" id="u-code" value="' + esc(v.code) + '" placeholder="2B"' + (u ? '' : ' data-autofocus') + '></label>';
+  var h = '<h3>' + esc(u ? t('Apartment ', 'الشقة ') + unitTag(u) : t('New apartment', 'شقة جديدة')) + '</h3>';
+  h += '<div class="two"><label class="field"><span>' + esc(t('Code', 'الرمز')) + '</span><input class="input" id="u-code" value="' + esc(v.code) + '" placeholder="' + esc(t('2B or Shop 1', '2B أو محل 1')) + '"' + (u ? '' : ' data-autofocus') + '></label>';
   h += '<label class="field"><span>' + esc(t('Share', 'الحصة')) + '</span><input class="input" id="u-w" inputmode="decimal" value="' + esc(v.weight == null ? 1 : v.weight) + '"></label></div>';
   var blist = blocks();
   h += '<label class="field"><span>' + esc(t('Block (only for compounds with several blocks)', 'البلوك (للمجمّعات فقط)')) + '</span><input class="input" id="u-block" list="u-blocks" value="' + esc(v.block || (d.block || '')) + '" placeholder="' + esc(t('e.g. A', 'مثلاً A')) + '"><datalist id="u-blocks">' + blist.map(function(b) { return '<option value="' + esc(b) + '">'; }).join('') + '</datalist></label>';
@@ -87,7 +87,7 @@ SHEETS.unit = function(d) {
   var u = byId(S.units, d.id);
   if (!u) return '';
   var cyc = currentCycle(), r = unitCycle(u, cyc), b = unitBalance(u, cyc);
-  var h = '<div class="row"><div class="ucode">' + esc(u.code) + '</div><div class="grow"><h3 style="margin:0">' + esc(unitName(u) || t('Apartment ', 'شقة ') + u.code) + '</h3><div class="muted" style="font-size:13px"><bdi dir="ltr">' + esc(u.phone || '') + '</bdi></div></div></div>';
+  var h = '<div class="row"><div class="ucode">' + esc(unitTag(u)) + '</div><div class="grow"><h3 style="margin:0">' + esc(unitName(u) || t('Apartment ', 'شقة ') + unitTag(u)) + '</h3><div class="muted" style="font-size:13px"><bdi dir="ltr">' + esc(u.phone || '') + '</bdi></div></div></div>';
   h += '<div class="card pad" style="margin-top:12px"><div style="font-size:12.5px;font-weight:800;color:var(--mut)">' + esc(cycleTitle(cyc)) + '</div>';
   r.cells.forEach(function(x) { h += '<div class="kv"><span>' + esc(L(x.ch)) + '</span><b>' + (x.c.state === 'paid' ? '<span style="color:var(--ok)">✓ </span>' : '') + esc(fmt(x.c.due, x.ch.cur)) + '</b></div>'; });
   if (!r.cells.length) h += '<div class="muted">' + esc(t('Nothing due this month', 'لا مستحقات هذا الشهر')) + '</div>';
@@ -265,7 +265,7 @@ function renderChargeBlocks(chs) {
       h += '<div class="chg-people">';
       spread.people.forEach(function(p) {
         var paid = paidFor(ch, p.u);
-        h += '<div class="who' + (p.changed ? ' ov' : '') + '"><span>' + esc(p.u.code + (unitName(p.u) ? ' · ' + unitName(p.u) : '')) + (p.changed ? ' <span class="pill-ov">' + esc(t('changed', 'معدّل')) + '</span>' : '');
+        h += '<div class="who' + (p.changed ? ' ov' : '') + '"><span>' + esc(unitTag(p.u) + (unitName(p.u) ? ' · ' + unitName(p.u) : '')) + (p.changed ? ' <span class="pill-ov">' + esc(t('changed', 'معدّل')) + '</span>' : '');
         if (paid > 0) h += '<small class="muted" style="display:block">' + esc(t('paid ', 'مدفوع ') + fmtDual(paid, ch)) + '</small>';
         h += '</span><b>' + esc(p.off ? t('Not charged', 'غير مُطالب') : fmtDual(p.due, ch)) + '</b></div>';
       });
@@ -324,8 +324,8 @@ function renderAptMonth(cyc) {
     });
     arrLines.forEach(function(x) { addLine(arrBag, x.ch, x.left); });
     var arrAny = !tiny(arrBag.usd, 'USD') || !tiny(arrBag.lbp, 'LBP');
-    h += '<div class="apt-bill"><button class="rowbtn" onclick="toggleApt(' + jsArg(u.id) + ')"><div class="ucode" style="width:40px;height:40px;min-width:40px">' + esc(u.code) + '</div><div class="grow">';
-    h += '<b>' + esc(unitName(u) || t('Apartment ', 'شقة ') + u.code) + '</b>';
+    h += '<div class="apt-bill"><button class="rowbtn" onclick="toggleApt(' + jsArg(u.id) + ')"><div class="ucode" style="width:40px;height:40px;min-width:40px">' + esc(unitTag(u)) + '</div><div class="grow">';
+    h += '<b>' + esc(unitName(u) || t('Apartment ', 'شقة ') + unitTag(u)) + '</b>';
     h += '<small>' + esc(t('This month', 'هذا الشهر') + ' · ' + bagText(nowBag)) + '</small>';
     if (arrAny) h += '<small style="color:var(--bad)">' + esc(t('Earlier months', 'أشهر سابقة') + ' · ' + bagText(arrBag)) + '</small>';
     h += '</div><span class="chev">' + (open ? '▾' : closed) + '</span></button>';
@@ -355,8 +355,7 @@ function renderChargesSec() {
   }
   h += '<div class="sec-h month-head" style="margin-top:12px"><h2>' + esc(cycleTitle(cyc)) + '</h2>';
   if (isManager()) {
-    h += '<span class="month-acts"><button onclick="openSheet(\'extra\',{cycle:' + jsArg(cyc.id) + '})">＋ ' + esc(t('One-off', 'لمرة واحدة')) + '</button>';
-    h += '<button onclick="openSheet(\'charge\',{cycle:' + jsArg(cyc.id) + '})">＋ ' + esc(t('Add', 'إضافة')) + '</button></span>';
+    h += '<span class="month-acts"><button onclick="openSheet(\'charge\',{cycle:' + jsArg(cyc.id) + '})">＋ ' + esc(t('Add', 'إضافة')) + '</button></span>';
   }
   h += '</div>';
   var chs = chargesOf(cyc.id);
@@ -384,6 +383,7 @@ SHEETS.charge = function(d) {
   h += '<div class="seg" style="margin-top:8px">';
   ['fixed', 'due', 'service'].forEach(function(k) { h += '<button class="' + (kind === k ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.kind=\'' + k + '\';UI.sheet.data.split=null;render()">' + esc(LANG === 'ar' ? KIND_INFO[k][1] : KIND_INFO[k][0]) + '</button>'; });
   h += '</div><p class="hint">' + esc(LANG === 'ar' ? KIND_INFO[kind][3] : KIND_INFO[kind][2]) + '</p>';
+  if (kind === 'due' && !ch) h += '<button type="button" class="btn ghost sm" style="margin:-4px 0 8px" onclick="openSheet(\'extra\',{cycle:' + jsArg(d.cycle || UI.cycleId) + ',who:\'one\'})">' + esc(t('Charge one apartment only ›', 'حمّل شقة واحدة فقط ›')) + '</button>';
   h += '<label class="field"><span>' + esc(t('Common ones', 'الشائعة')) + '</span>' + presetSelect('c-pre', CHARGE_PRESETS[kind], 'chargePreset(this.value)') + '</label>';
   h += '<label class="field"><span>' + esc(t('Name', 'الاسم')) + '</span><input class="input" id="c-title" data-tr="c-title-ar" data-tr-kind="phrase" value="' + esc(st.title != null ? st.title : v.title) + '" placeholder="' + esc(kind === 'service' ? 'Moteur' : kind === 'due' ? t('Water bill', 'فاتورة المياه') : t('Maintenance', 'الصيانة')) + '"><div class="tr-box" id="trs-c-title"></div></label>';
   h += '<label class="field"><span>' + esc(t('Name in Arabic (optional)', 'الاسم بالعربية (اختياري)')) + '</span><input class="input" id="c-title-ar" data-tr="c-title" data-tr-kind="phrase" dir="rtl" value="' + esc(st.title_ar != null ? st.title_ar : (v.title_ar || '')) + '"><div class="tr-box" id="trs-c-title-ar"></div></label>';
@@ -401,7 +401,7 @@ SHEETS.charge = function(d) {
     [['each', t('Same for each', 'نفس المبلغ لكل شقة')], ['total', t('Split a total', 'تقسيم مبلغ كلي')], ['weight', t('Each × share', 'لكل شقة × الحصة')]].forEach(function(x) {
       h += '<button class="' + (split === x[0] ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.split=\'' + x[0] + '\';render()">' + esc(x[1]) + '</button>';
     });
-    h += '</div></label>';
+    h += '</div><small class="hint" style="display:block;margin-top:6px">' + esc(split === 'total' ? t('One bill, divided between apartments by their share. Type an amount for one apartment and the rest re-divide.', 'فاتورة واحدة تُقسّم على الشقق حسب حصتها. اكتب مبلغ شقة وتُعاد قسمة الباقي.') : split === 'weight' ? t('An amount per apartment, multiplied by its share (set in Apartments). A share of 1.5 pays 1.5×.', 'مبلغ لكل شقة مضروب بحصتها (من صفحة الشقق). حصة 1.5 تدفع 1.5×.') : t('Every apartment pays the same amount, whatever its size.', 'كل شقة تدفع المبلغ نفسه مهما كان حجمها.')) + '</small></label>';
     h += '<label class="field"><span>' + esc(split === 'total' ? t('Total to split', 'المبلغ الكلي') : t('Amount per apartment', 'المبلغ لكل شقة')) + '</span><div class="money-in"><input class="input" id="c-amt" inputmode="decimal" value="' + esc(st.amount != null ? st.amount : v.amount) + '" oninput="keepCharge();chargePreview()"><div class="seg"><button class="' + (cur === 'USD' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.cur=\'USD\';render()">USD</button><button class="' + (cur === 'LBP' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.cur=\'LBP\';render()">LBP</button></div></div></label>';
   } else {
     h += '<label class="field"><span>' + esc(t('Currency', 'العملة')) + '</span><div class="seg"><button class="' + (cur === 'USD' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.cur=\'USD\';render()">USD</button><button class="' + (cur === 'LBP' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.cur=\'LBP\';render()">LBP</button></div></label>';
@@ -467,18 +467,38 @@ function chargePreview() {
   if (d.meter) {
     activeUnits().filter(function(u) { return inBlock(u, tmp); }).forEach(function(u) {
       var k = d.meter.kwh[u.id], a = meterAmount(d.meter, k, d.cur);
-      h += '<div class="kv" style="align-items:center;gap:8px"><span class="grow">' + esc(u.code + (unitName(u) ? ' · ' + unitName(u) : '')) + paidMark(ch0, u) + '</span><input class="input" style="max-width:86px;min-height:38px;padding:6px 10px;font-size:15px;text-align:end" inputmode="decimal" placeholder="kWh" value="' + esc(k != null ? k : '') + '" oninput="kwhSet(' + jsArg(u.id) + ',this.value)"><b id="kw-' + esc(u.id) + '" style="min-width:74px;text-align:end">' + esc(a == null ? '—' : fmt(a, d.cur)) + '</b></div>';
+      h += '<div class="kv" style="align-items:center;gap:8px"><span class="grow">' + esc(unitTag(u) + (unitName(u) ? ' · ' + unitName(u) : '')) + paidMark(ch0, u) + '</span><input class="input" style="max-width:86px;min-height:38px;padding:6px 10px;font-size:15px;text-align:end" inputmode="decimal" placeholder="kWh" value="' + esc(k != null ? k : '') + '" oninput="kwhSet(' + jsArg(u.id) + ',this.value)"><b id="kw-' + esc(u.id) + '" style="min-width:74px;text-align:end">' + esc(a == null ? '—' : fmt(a, d.cur)) + '</b></div>';
     });
     el.innerHTML = h || '<div class="muted">' + esc(t('Add apartments first', 'أضف الشقق أولاً')) + '</div>';
     return;
   }
   activeUnits().filter(function(u) { return inBlock(u, tmp); }).forEach(function(u) {
     var calc = dueFor(tmp, u), o = d.ov[u.id];
-    h += '<div class="kv" style="align-items:center"><span>' + esc(u.code + (unitName(u) ? ' · ' + unitName(u) : '')) + paidMark(ch0, u) + '</span><input class="input" style="max-width:130px;min-height:38px;padding:6px 10px;font-size:15px;text-align:end" inputmode="decimal" placeholder="' + esc(d.kind === 'service' ? '—' : String(calc)) + '" value="' + esc(o != null ? o : '') + '" oninput="ovSet(' + jsArg(u.id) + ',this.value)"></div>';
+    h += '<div class="kv" style="align-items:center"><span>' + esc(unitTag(u) + (unitName(u) ? ' · ' + unitName(u) : '')) + paidMark(ch0, u) + '</span><input class="input" data-ov="' + esc(u.id) + '" style="max-width:130px;min-height:38px;padding:6px 10px;font-size:15px;text-align:end" inputmode="decimal" placeholder="' + esc(d.kind === 'service' ? '—' : String(calc)) + '" value="' + esc(o != null ? o : '') + '" oninput="ovSet(' + jsArg(u.id) + ',this.value)"></div>';
   });
+  if (h && d.split === 'total' && d.kind !== 'service') h += '<div class="kv" id="c-sum" style="border-top:1px solid var(--line);margin-top:4px"></div>';
   el.innerHTML = h || '<div class="muted">' + esc(t('Add apartments first', 'أضف الشقق أولاً')) + '</div>';
+  ovRefresh();
 }
-function ovSet(uid, v) { if (v === '') delete UI.sheet.data.ov[uid]; else UI.sheet.data.ov[uid] = num(v); }
+/* Recompute the grey amounts in place (keeps focus while typing) and the running sum. */
+function ovRefresh() {
+  var d = UI.sheet && UI.sheet.data;
+  if (!d || d.meter || d.kind === 'service') return;
+  var ch0 = d.id ? byId(S.charges, d.id) : null;
+  var tmp = { amount: num(d.amount), cur: d.cur, split: d.split, overrides: d.ov || {}, pass_through: false, cycle_id: d.cycle || (ch0 || {}).cycle_id, block: d.block != null ? d.block : (ch0 || {}).block, created_at: (ch0 || {}).created_at };
+  var sum = 0;
+  activeUnits().filter(function(u) { return inBlock(u, tmp); }).forEach(function(u) {
+    var due = dueFor(tmp, u), inp = document.querySelector('[data-ov="' + u.id + '"]');
+    sum += due;
+    if (inp) inp.placeholder = String(due);
+  });
+  var el = document.getElementById('c-sum');
+  if (!el) return;
+  var tot = num(d.amount), off = Math.abs(sum - tot) > (d.cur === 'LBP' ? 1 : 0.009);
+  el.innerHTML = '<span class="muted">' + esc(t('Adds up to', 'المجموع')) + '</span><b style="' + (off ? 'color:var(--bad)' : '') + '">' + esc(fmt(round(sum, d.cur), d.cur) + ' / ' + fmt(tot, d.cur)) + '</b>';
+  if (off) el.innerHTML += '<small class="muted" style="display:block;width:100%">' + esc(t('The typed amounts are more than the total. Lower one or raise the total.', 'المبالغ المكتوبة أكثر من المجموع. خفّض واحداً أو ارفع المجموع.')) + '</small>';
+}
+function ovSet(uid, v) { if (v === '') delete UI.sheet.data.ov[uid]; else UI.sheet.data.ov[uid] = num(v); ovRefresh(); }
 /* True when the edit is safe to save. Payments are never rewritten here. */
 function confirmChargeEdit(ch, row) {
   var preview = JSON.parse(JSON.stringify(row));
@@ -494,7 +514,7 @@ function confirmChargeEdit(ch, row) {
   var under = [];
   activeUnits().forEach(function(u) {
     var due = dueFor(tmp, u), paid = paidFor(ch, u);
-    if (paid - due > (preview.cur === 'LBP' ? 1 : 0.009)) under.push(u.code + ': ' + fmt(paid, preview.cur) + ' → ' + fmt(due, preview.cur));
+    if (paid - due > (preview.cur === 'LBP' ? 1 : 0.009)) under.push(unitTag(u) + ': ' + fmt(paid, preview.cur) + ' → ' + fmt(due, preview.cur));
   });
   if (!under.length) return true;
   return confirm(t(
@@ -574,6 +594,9 @@ function waiveUnpaid(id) {
   var ov = JSON.parse(JSON.stringify(ch.overrides || {}));
   var meter = ch.meter ? JSON.parse(JSON.stringify(ch.meter)) : null;
   if (meter && !meter.kwh) meter.kwh = {};
+  // A split total re-spreads what is left; pin everyone's current amount first so
+  // dropping one apartment's debt never moves it onto apartments that paid.
+  if (ch.split === 'total') activeUnits().forEach(function(u) { if (inBlock(u, ch) && ov[u.id] == null) ov[u.id] = dueFor(ch, u); });
   activeUnits().forEach(function(u) {
     if (!inBlock(u, ch)) return;
     var paid = paidFor(ch, u), due = dueFor(ch, u);
@@ -624,7 +647,7 @@ SHEETS.chargeRemove = function(d) {
   var seen = {};
   pays.forEach(function(p) {
     var u = byId(S.units, p.unit_id), k = p.unit_id + '|' + p.cur;
-    if (!seen[k]) seen[k] = { code: u ? u.code : '?', cur: p.cur, amt: 0 };
+    if (!seen[k]) seen[k] = { code: u ? unitTag(u) : '?', cur: p.cur, amt: 0 };
     seen[k].amt += num(p.amount);
   });
   Object.keys(seen).forEach(function(k) {
@@ -657,13 +680,13 @@ function extraHint(d) {
   if (!(amt > 0)) return t('Enter an amount to see who pays.', 'أدخل المبلغ لترى من يدفع.');
   if (who === 'one') {
     var one = byId(S.units, d.unit);
-    return one ? t(one.code + ' owes ' + fmt(amt, cur) + '. Other apartments are not charged.', one.code + ' تدفع ' + fmt(amt, cur) + '. الشقق الأخرى لا تُحاسب.') : t('Pick an apartment', 'اختر شقة');
+    return one ? t(unitTag(one) + ' owes ' + fmt(amt, cur) + '. Other apartments are not charged.', unitTag(one) + ' تدفع ' + fmt(amt, cur) + '. الشقق الأخرى لا تُحاسب.') : t('Pick an apartment', 'اختر شقة');
   }
   var tmp = { amount: amt, cur: cur, split: who === 'shares' ? 'total' : 'each', overrides: {}, pass_through: false, cycle_id: d.cycle || UI.cycleId, block: d.block || null };
   var n = 0, sample = '';
   activeUnits().forEach(function(u) {
     var due = dueFor(tmp, u);
-    if (due > 0) { n++; if (!sample) sample = u.code + ' ' + fmt(due, cur); }
+    if (due > 0) { n++; if (!sample) sample = unitTag(u) + ' ' + fmt(due, cur); }
   });
   if (!n) return t('No apartment is charged. Check the block.', 'لا شقة تُحاسب. تحقق من البلوك.');
   if (who === 'shares') return t('Split ' + fmt(amt, cur) + ' by share across ' + n + ' apartments. Example: ' + sample, 'يُقسّم ' + fmt(amt, cur) + ' بالحصص على ' + n + ' شقق. مثال: ' + sample);
@@ -690,7 +713,7 @@ SHEETS.extra = function(d) {
   h += '</div>';
   if (who === 'one') {
     h += '<label class="field"><span>' + esc(t('Apartment', 'الشقة')) + '</span><select class="input" id="x-unit" onchange="extraPreview()">';
-    units.forEach(function(u) { h += '<option value="' + esc(u.id) + '"' + (u.id === d.unit ? ' selected' : '') + '>' + esc(u.code + (unitName(u) ? ' · ' + unitName(u) : '') + (blockOf(u) && blocks().length > 1 ? ' · ' + blockOf(u) : '')) + '</option>'; });
+    units.forEach(function(u) { h += '<option value="' + esc(u.id) + '"' + (u.id === d.unit ? ' selected' : '') + '>' + esc(unitTag(u) + (unitName(u) ? ' · ' + unitName(u) : '') + (blockOf(u) && blocks().length > 1 ? ' · ' + blockOf(u) : '')) + '</option>'; });
     h += '</select></label>';
   } else if (blocks().length > 1) {
     h += '<label class="field"><span>' + esc(t('Applies to', 'ينطبق على')) + '</span><select class="input" id="x-block" onchange="keepExtra();extraPreview()"><option value="">' + esc(t('Whole building', 'كل البناية')) + '</option>';
@@ -883,6 +906,8 @@ SHEETS.invite = function(d) {
     var link = ((window.BINAYATI_CONFIG || {}).publicUrl || (location.origin + location.pathname)) + '?join=' + d.code;
     h += '<p class="lead">' + esc(t('Send this link. It works once and expires in 14 days.', 'أرسل هذا الرابط. يعمل مرة واحدة وينتهي بعد 14 يوماً.')) + '</p><div class="linkbox"><span class="grow">' + esc(link) + '</span></div>';
     var msg = t('Hi ' + (d.name || '') + ', join ' + bName() + ' on Binayati: ', 'مرحباً ' + (d.name || '') + '، انضم إلى ' + bName() + ' على بنايتي: ') + link;
+    var qr = qrImage(link, (role === 'collector' ? t('Collector invite', 'دعوة جابي') : t('Co-manager invite', 'دعوة مدير مساعد')) + (d.name ? ' · ' + d.name : ''), bName());
+    if (qr) h += '<div class="qr-box"><img src="' + qr + '" alt="QR" onclick="viewPhoto(this.src)"><button class="btn sec sm" onclick="saveQr(' + jsArg(qr) + ',' + jsArg('binayati-invite-' + d.code + '.png') + ')">' + esc(t('Save QR image', 'احفظ صورة الرمز')) + '</button><small class="muted">' + esc(t('They scan it with the phone camera. Same one-time link.', 'يمسحه بكاميرا الهاتف. نفس الرابط لمرة واحدة.')) + '</small></div>';
     h += '<div class="foot"><button class="btn sec" onclick="copyText(' + jsArg(link) + ')">' + esc(t('Copy', 'نسخ')) + '</button><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=' + esc(encodeURIComponent(msg)) + '">WhatsApp</a></div>';
     return h;
   }
@@ -1224,3 +1249,29 @@ function saveMemberName(uid) {
   p.then(function() { m.display_name = en || m.display_name; m.display_name_ar = ar || null; closeSheet(); toast(t('Saved', 'تم الحفظ')); if (isCloud()) reloadBuilding(); }, function(e) { sheetErr(e.message); });
 }
 
+
+/* A QR code as a PNG with a caption, so it can be saved, printed or forwarded. */
+function qrImage(text, line1, line2) {
+  if (typeof qrcode !== 'function') return '';
+  try {
+    var q = qrcode(0, 'M'); q.addData(text); q.make();
+    var n = q.getModuleCount(), cell = Math.max(6, Math.floor(480 / (n + 8))), quiet = cell * 4, side = n * cell + quiet * 2, foot = 96;
+    var cv = document.createElement('canvas'); cv.width = side; cv.height = side + foot;
+    var g = cv.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height);
+    g.fillStyle = '#111';
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) g.fillRect(quiet + c * cell, quiet + r * cell, cell, cell);
+    g.textAlign = 'center'; g.direction = LANG === 'ar' ? 'rtl' : 'ltr';
+    g.font = '700 26px "Plus Jakarta Sans","IBM Plex Sans Arabic",sans-serif'; g.fillText(line2 || '', side / 2, side + 30);
+    g.font = '500 20px "Plus Jakarta Sans","IBM Plex Sans Arabic",sans-serif'; g.fillStyle = '#555'; g.fillText(line1 || '', side / 2, side + 62);
+    return cv.toDataURL('image/png');
+  } catch (e) { return ''; }
+}
+function saveQr(dataUrl, name) {
+  fetch(dataUrl).then(function(r) { return r.blob(); }).then(function(b) {
+    var f = typeof File === 'function' ? new File([b], name, { type: 'image/png' }) : null;
+    if (f && navigator.canShare && navigator.canShare({ files: [f] })) return navigator.share({ files: [f] }).catch(function() {});
+    var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  });
+}

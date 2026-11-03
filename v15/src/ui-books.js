@@ -79,7 +79,7 @@ function ledger(cycleId) {
   });
   out.forEach(function(g) {
     var p = g.p;
-    g.title = (g.unit ? g.unit.code + (unitName(g.unit) ? ' · ' + unitName(g.unit) : '') : t('Apartment', 'شقة'));
+    g.title = (g.unit ? unitTag(g.unit) + (unitName(g.unit) ? ' · ' + unitName(g.unit) : '') : t('Apartment', 'شقة'));
     var who = p.channel === 'collector' ? (handoverConfirmed(p.handover_id) ? memberName(p.received_by) + ' → ' + t('safe', 'الصندوق') : t('with ', 'مع ') + memberName(p.received_by)) : p.channel === 'transfer' ? (p.method || t('Transfer', 'تحويل')) : memberName(p.received_by);
     g.sub = g.titles.join(', ') + ' · ' + who;
     if (g.unit) g.onclick = 'openSheet(\'unit\',{id:' + jsArg(g.unit.id) + '})';
@@ -140,7 +140,7 @@ function eventText(e) {
   var old = (e.data && e.data.old) || {};
   var who = e.actor_name || memberName(e.actor);
   var u = d.unit_id && byId(S.units, d.unit_id), ch = d.charge_id && byId(S.charges, d.charge_id);
-  var code = u ? u.code : '';
+  var code = u ? unitTag(u) : '';
   switch (e.tbl) {
     case 'payments':
       if (e.action === 'insert') return t(who + ' recorded ' + fmt(d.amount, d.cur) + ' from ' + code + (ch ? ' · ' + ch.title : ''), who + ' سجّل ' + fmt(d.amount, d.cur) + ' من ' + code + (ch ? ' · ' + (ch.title_ar || ch.title) : ''));
@@ -278,7 +278,7 @@ SHEETS.pay = function(d) {
   var amount = d.amount != null ? d.amount : (owed[cur] || '');
   var h = '<h3>' + esc(t('Record a payment', 'سجّل دفعة')) + '</h3><p class="lead">' + esc(t('Any amount. It pays off the oldest charges first.', 'أي مبلغ. يغطي الرسوم الأقدم أولاً.')) + '</p>';
   h += scanBlockPay(d);
-  h += '<label class="field"><span>' + esc(t('Apartment', 'الشقة')) + '</span><select class="input" id="pay-unit" onchange="UI.sheet.data.unit=this.value;if(!UI.sheet.data.scan)UI.sheet.data.amount=null;else if(UI.sheet.data.scan===\'error\'&&!/duplicate|مكرر/.test(UI.sheet.data.scanErr||\'\'))UI.sheet.data.scan=\'done\';render()">' + units.map(function(x) { return '<option value="' + esc(x.id) + '"' + (x.id === u.id ? ' selected' : '') + '>' + esc(x.code + (unitName(x) ? ' · ' + unitName(x) : '')) + '</option>'; }).join('') + '</select></label>';
+  h += '<label class="field"><span>' + esc(t('Apartment', 'الشقة')) + '</span><select class="input" id="pay-unit" onchange="UI.sheet.data.unit=this.value;if(!UI.sheet.data.scan)UI.sheet.data.amount=null;else if(UI.sheet.data.scan===\'error\'&&!/duplicate|مكرر/.test(UI.sheet.data.scanErr||\'\'))UI.sheet.data.scan=\'done\';render()">' + units.map(function(x) { return '<option value="' + esc(x.id) + '"' + (x.id === u.id ? ' selected' : '') + '>' + esc(unitTag(x) + (unitName(x) ? ' · ' + unitName(x) : '')) + '</option>'; }).join('') + '</select></label>';
   h += '<div class="hint">' + esc(t('Owes in total: ', 'المستحق الكلي: ') + fmtPair(owed)) + '</div>';
   h += '<label class="field"><span>' + esc(t('Amount', 'المبلغ')) + '</span><div class="money-in"><input class="input" id="pay-amt" inputmode="decimal" value="' + esc(amount) + '" oninput="payPreview()"><div class="seg"><button class="' + (cur === 'USD' ? 'on' : '') + '" onclick="UI.sheet.data.cur=\'USD\';UI.sheet.data.amount=null;render()">USD</button><button class="' + (cur === 'LBP' ? 'on' : '') + '" onclick="UI.sheet.data.cur=\'LBP\';UI.sheet.data.amount=null;render()">LBP</button></div></div></label>';
   if (isManager()) {
@@ -319,7 +319,7 @@ function savePay() {
   uploadPhoto(d.photoBlob).then(function(photo) {
     var rows = a.rows.map(function(x) { return { charge_id: x.ch.id, unit_id: u.id, amount: x.amount, cur: cur, channel: r.channel, method: r.method, received_by: r.received_by, received_at: nowIso(), note: note, photo_path: photo }; });
     return dbInsertMany('payments', rows);
-  }).then(function() { closeSheet(); toast(t('Recorded ' + fmt(amt - Math.max(0, a.extra), cur) + ' from ' + u.code, 'سُجّل ' + fmt(amt - Math.max(0, a.extra), cur) + ' من ' + u.code)); }, function(e) { if (btn) btn.disabled = false; sheetErr(e.message); });
+  }).then(function() { closeSheet(); toast(t('Recorded ' + fmt(amt - Math.max(0, a.extra), cur) + ' from ' + unitTag(u), 'سُجّل ' + fmt(amt - Math.max(0, a.extra), cur) + ' من ' + unitTag(u))); }, function(e) { if (btn) btn.disabled = false; sheetErr(e.message); });
 }
 
 /* ---------------------------------------------------------------------------

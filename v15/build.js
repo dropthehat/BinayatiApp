@@ -1,6 +1,7 @@
 const fs = require('fs'), path = require('path');
 const D = __dirname, src = f => fs.readFileSync(path.join(D, 'src', f), 'utf8');
 const vendor = fs.readFileSync(path.join(D, 'vendor', 'supabase.js'), 'utf8'); // supabase-js 2.117.3 UMD
+const qrlib = fs.readFileSync(path.join(D, 'vendor', 'qrcode.js'), 'utf8'); // qrcode-generator 1.4.4 (MIT, Kazuhiko Arase)
 function page(config) {
   return `<!doctype html>
 <html lang="en" dir="ltr">
@@ -33,6 +34,10 @@ window.BINAYATI_CONFIG = ${JSON.stringify(config, null, 2)};
 <script>
 /* supabase-js 2.117.3 (MIT) bundled so the app needs no CDN */
 ${vendor}
+</script>
+<script>
+/* qrcode-generator 1.4.4 (MIT) for invite QR codes */
+${qrlib}
 </script>
 <script>
 ${src('core.js')}

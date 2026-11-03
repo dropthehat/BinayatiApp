@@ -215,8 +215,17 @@ function chargesOf(cycleId) {
     return (ko[a.kind] - ko[b.kind]) || ((a.sort || 0) - (b.sort || 0)) || String(a.created_at || '').localeCompare(String(b.created_at || ''));
   });
 }
-/* " (120 kWh)" after a kWh-priced charge for one apartment */
-function kwhNote(ch, u) { var k = ch && ch.meter && u && ch.meter.kwh ? ch.meter.kwh[u.id] : null; return k != null ? ' (' + k + ' kWh)' : ''; }
+/* Metered charges: a generator is priced per kWh, water per m³. Readings live in meter.kwh either way. */
+function meterUnit(m) { return m && m.unit === 'm3' ? 'm³' : 'kWh'; }
+/* Which meter a charge name suggests: 'kwh' for a generator, 'm3' for water, '' for anything else. */
+function meterKindFor(title) {
+  var s = String(title || '').toLowerCase();
+  if (/water|m3|m³|مياه|ماء/.test(s)) return 'm3';
+  if (/generat|moteur|motor|kwh|مولد|مولّد|موتور/.test(s)) return 'kwh';
+  return '';
+}
+/* " (120 kWh)" or " (14 m³)" after a metered charge for one apartment */
+function kwhNote(ch, u) { var k = ch && ch.meter && u && ch.meter.kwh ? ch.meter.kwh[u.id] : null; return k != null ? ' (' + k + ' ' + meterUnit(ch.meter) + ')' : ''; }
 function chargeTotal(ch) { return activeUnits().reduce(function(s, u) { return s + dueFor(ch, u); }, 0); }
 
 function livePayments() { return S.payments.filter(function(p) { return !p.voided_at; }); }

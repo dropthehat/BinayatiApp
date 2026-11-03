@@ -182,10 +182,15 @@ function admLoadBuildings() {
 }
 function admBuildings() {
   if (!ADM.buildings) { admLoadBuildings(); return '<div class="sec"><div class="card pad muted">Loading…</div></div>'; }
-  var h = '<div class="sec"><div class="card list">';
+  var full = CFG.supportMode === 'full';
+  var h = '<div class="sec"><div class="card pad"><div class="switch-row" style="border:0;padding:0"><div><b>Support mode: ' + (full ? 'Testing · full access' : 'Privacy') + '</b><small>' + (full
+      ? 'You can open and change any building without asking. Every open is still logged in its activity. Switch to Privacy before real clients join.'
+      : 'You can only look (read-only) at buildings whose owner turned support access on, until it expires.') + '</small></div><button class="sw' + (full ? ' on' : '') + '" onclick="admSupportMode(' + (full ? "'consent'" : "'full'") + ')"></button></div>' +
+      (full ? '<div class="banner warn" style="margin-top:10px"><div class="grow"><b>Full access is on</b>Fine for testing. Not OK once real buildings use the app.</div></div>' : '') + '</div></div>';
+  h += '<div class="sec"><div class="card list">';
   ADM.buildings.forEach(function(b) {
-    var open = b.support_until && b.support_until > nowIso();
-    h += '<button class="li" onclick="openSheet(\'admBuilding\',{id:' + jsArg(b.id) + '})"><div class="ic">' + (open ? '🟢' : '🏢') + '</div><div class="grow"><b>' + esc(b.name) + '</b><small>' + esc([b.owner || '—', b.units + ' apartments', b.members + ' people', open ? 'support open until ' + dateLabel(b.support_until, true) : '', b.custom ? b.custom + ' custom switch' + (b.custom > 1 ? 'es' : '') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
+    var open = full || (b.support_until && b.support_until > nowIso());
+    h += '<button class="li" onclick="openSheet(\'admBuilding\',{id:' + jsArg(b.id) + '})"><div class="ic">' + (open ? '🟢' : '🏢') + '</div><div class="grow"><b>' + esc(b.name) + '</b><small>' + esc([b.owner || '—', b.units + ' apartments', b.members + ' people', !full && open ? 'support open until ' + dateLabel(b.support_until, true) : '', b.custom ? b.custom + ' custom switch' + (b.custom > 1 ? 'es' : '') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
   });
   h += '</div><p class="hint">You can look inside a building only while its owner has support access turned on (Building → Settings). Every look is logged and shows in their activity.</p></div>';
   return h;
@@ -194,9 +199,9 @@ SHEETS.admBuilding = function(d) {
   var b = (ADM.buildings || []).filter(function(x) { return x.id === d.id; })[0];
   if (!b) return '';
   if (!d.bf) { d.bf = {}; cloudCall(SB.from('building_features').select('*').eq('building_id', b.id)).then(function(rows) { (rows || []).forEach(function(r) { d.bf[r.key] = r; }); d.loaded = true; render(); }); }
-  var open = b.support_until && b.support_until > nowIso();
+  var full = CFG.supportMode === 'full', open = full || (b.support_until && b.support_until > nowIso());
   var h = '<h3>' + esc(b.name) + '</h3><p class="lead">' + esc((b.owner || '—') + ' · ' + b.units + ' apartments · since ' + dateLabel(b.created_at)) + '</p>';
-  h += open ? '<button class="btn pri block" onclick="adminOpenBuilding(' + jsArg(b.id) + ')">Open their building (read-only)</button><p class="hint">Support access until ' + esc(dateLabel(b.support_until, true)) + '.</p>'
+  h += open ? '<button class="btn pri block" onclick="adminOpenBuilding(' + jsArg(b.id) + ')">' + (full ? 'Open their building (full access)' : 'Open their building (read-only)') + '</button><p class="hint">' + (full ? 'Testing mode: you can change things. It shows in their activity.' : 'Support access until ' + esc(dateLabel(b.support_until, true)) + '.') + '</p>'
             : '<div class="banner info"><div class="grow"><b>Support access is off</b>Ask the owner to turn it on: Building → Settings → Support access.</div></div>';
   h += '<div class="sec-h" style="margin-top:14px"><h2>Switches for this building</h2></div>';
   var feats = Object.keys(CFG.features).map(function(k) { return CFG.features[k]; }).filter(function(f) { return f.switchable; }).sort(function(a, b) { return a.sort - b.sort; });
@@ -225,7 +230,7 @@ function admBuildingReset(bid, key) {
 /* Read-only look inside a client's building. */
 function adminOpenBuilding(bid) {
   rpc('support_open', { p_building: bid }).then(function() { return cloudBuildingState(bid); }).then(function(ns) {
-    ns.role = 'manager'; ns.support = true; ns.myBlocks = null;
+    ns.role = 'manager'; ns.support = true; ns.supportFull = CFG.supportMode === 'full'; ns.myBlocks = null;
     S = ns; UI.sheet = null; UI.screen = 'app'; UI.tab = 'home'; UI.bsec = null; UI.block = null; UI.cycleId = null;
     return loadConfig(bid);
   }).then(function() { render(); window.scrollTo(0, 0); }, fail);
@@ -237,17 +242,17 @@ function exitSupport() {
 }
 function supportBanner() {
   if (!S.support) return '';
-  return '<div class="support-bar"><b>Support view · read-only</b><span>' + esc(bName()) + '</span><button onclick="exitSupport()">Exit</button></div>';
+  return '<div class="support-bar' + (S.supportFull ? ' full' : '') + '"><b>' + (S.supportFull ? 'Support · full access' : 'Support view · read-only') + '</b><span>' + esc(bName()) + '</span><button onclick="exitSupport()">Exit</button></div>';
 }
 /* Nothing is written while looking at a client's building. The server refuses it anyway. */
 (function() {
   var ro = function() { return Promise.reject(new Error(t('Support view is read-only', 'عرض الدعم للقراءة فقط'))); };
   ['dbInsert', 'dbInsertMany', 'dbUpdate', 'dbDelete'].forEach(function(n) {
     var orig = window[n];
-    window[n] = function() { return S.support ? ro() : orig.apply(this, arguments); };
+    window[n] = function() { return S.support && !S.supportFull ? ro() : orig.apply(this, arguments); };
   });
   var origRpc = window.rpc;
-  window.rpc = function(name) { return S.support && ['support_open', 'admin_buildings', 'am_admin'].indexOf(name) < 0 ? ro() : origRpc.apply(this, arguments); };
+  window.rpc = function(name) { return S.support && !S.supportFull && ['support_open', 'admin_buildings', 'am_admin'].indexOf(name) < 0 ? ro() : origRpc.apply(this, arguments); };
 })();
 
 /* ---------- Owner side: support access in Settings ---------- */
@@ -273,5 +278,12 @@ function setSupport(hours) {
   rpc('set_support', { p_building: S.building.id, p_hours: hours }).then(function(until) {
     SUPPORT.until = until || null; render();
     toast(hours ? t('Support can look until ' + dateLabel(until, true), 'يمكن للدعم الاطّلاع حتى ' + dateLabel(until, true)) : t('Support access is off', 'وصول الدعم متوقف'));
+  }, fail);
+}
+
+function admSupportMode(mode) {
+  if (mode === 'full' && !confirm('Turn on full access? You will be able to open and change any building without the owner allowing it.')) return;
+  cloudCall(SB.from('app_settings').upsert({ key: 'support_mode', value: mode, updated_at: nowIso() })).then(function() {
+    CFG.supportMode = mode; admLoadBuildings(); toast(mode === 'full' ? 'Full access on (testing)' : 'Privacy mode on');
   }, fail);
 }

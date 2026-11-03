@@ -143,7 +143,7 @@ function eventText(e) {
   var code = u ? unitTag(u) : '';
   switch (e.tbl) {
     case 'support':
-      if (e.action === 'view') return t('Binayati support looked at the building (read-only)', 'اطّلع دعم بنايتي على البناية (قراءة فقط)');
+      if (e.action === 'view') return d.mode === 'full' ? t('Binayati support opened the building', 'فتح دعم بنايتي البناية') : t('Binayati support looked at the building (read-only)', 'اطّلع دعم بنايتي على البناية (قراءة فقط)');
       if (e.action === 'grant') return t(who + ' let Binayati support look until ' + dateLabel(d.until, true), who + ' سمح لدعم بنايتي بالاطّلاع حتى ' + dateLabel(d.until, true));
       if (e.action === 'revoke') return t(who + ' turned off support access', who + ' أوقف وصول الدعم');
       return null;

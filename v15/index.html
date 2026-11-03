@@ -412,6 +412,7 @@ input.input[type="date"]::-webkit-date-and-time-value { text-align: start; margi
 .support-bar { position: sticky; top: 0; z-index: 60; display: flex; align-items: center; gap: 10px; padding: calc(8px + env(safe-area-inset-top)) 16px 8px; background: var(--warn); color: #fff; font-size: 13px; }
 .support-bar span { flex: 1; opacity: .9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .support-bar button { background: rgba(255,255,255,.22); color: #fff; border: 0; border-radius: 999px; padding: 6px 14px; font-weight: 700; }
+.support-bar.full { background: var(--bad); }
 
 /* ---- living building scene ---- */
 .bh { position: relative; margin: 0 16px 12px; border-radius: 26px; overflow: hidden; aspect-ratio: 366 / 256; box-shadow: var(--shadow-lg); background: var(--sky2); }
@@ -3570,7 +3571,7 @@ function presetSelect(id, list, onchange, label) {
    every open app within seconds. The lists in presets.js / core.js are the
    built-in fallback when the server can't be reached.
    ============================================================================ */
-var CFG = { features: {}, bfeat: {}, lists: [], loaded: false };
+var CFG = { features: {}, bfeat: {}, lists: [], loaded: false, supportMode: 'consent' };
 var IS_ADMIN = false;
 var PAY_METHODS = [{ key: 'Whish', en: 'Whish', ar: 'ويش' }, { key: 'OMT', en: 'OMT', ar: 'OMT' }, { key: 'Bank', en: 'Bank transfer', ar: 'تحويل مصرفي' }];
 var CATS_ALL = null; // every category ever defined, hidden ones too, so old expenses keep their name
@@ -3595,7 +3596,8 @@ function loadConfig(bid) {
     SB.from('app_features').select('*'),
     bid ? SB.from('building_features').select('*').eq('building_id', bid) : Promise.resolve({ data: [] }),
     bid ? SB.from('app_lists').select('*').or('building_id.is.null,building_id.eq.' + bid).order('sort') : SB.from('app_lists').select('*').is('building_id', null).order('sort'),
-    SB.rpc('am_admin')
+    SB.rpc('am_admin'),
+    SB.from('app_settings').select('*')
   ];
   return Promise.all(q).then(function(r) {
     if (r[0].error && r[2].error) return; // tables not there yet: keep the built-in lists
@@ -3603,6 +3605,7 @@ function loadConfig(bid) {
     CFG.bfeat = {}; (r[1].data || []).forEach(function(f) { CFG.bfeat[f.key] = f.on; });
     CFG.lists = r[2].data || [];
     IS_ADMIN = !!(r[3] && r[3].data);
+    (r[4].data || []).forEach(function(x) { if (x.key === 'support_mode') CFG.supportMode = x.value === 'full' ? 'full' : 'consent'; });
     CFG.loaded = true;
     applyLists();
     watchConfig(bid);
@@ -3645,7 +3648,7 @@ function watchConfig(bid) {
   if (!isCloud() || (CFG_CHANNEL && CFG_CHANNEL._bid === (bid || ''))) return;
   if (CFG_CHANNEL) { SB.removeChannel(CFG_CHANNEL); CFG_CHANNEL = null; }
   var ch = SB.channel('cfg-' + (bid || 'none'));
-  ['app_lists', 'app_features', 'building_features', 'support_grants'].forEach(function(tb) {
+  ['app_lists', 'app_features', 'building_features', 'support_grants', 'app_settings'].forEach(function(tb) {
     ch = ch.on('postgres_changes', { event: '*', schema: 'public', table: tb }, function() {
       clearTimeout(_cfgT);
       _cfgT = setTimeout(function() {
@@ -5593,7 +5596,7 @@ function eventText(e) {
   var code = u ? unitTag(u) : '';
   switch (e.tbl) {
     case 'support':
-      if (e.action === 'view') return t('Binayati support looked at the building (read-only)', 'اطّلع دعم بنايتي على البناية (قراءة فقط)');
+      if (e.action === 'view') return d.mode === 'full' ? t('Binayati support opened the building', 'فتح دعم بنايتي البناية') : t('Binayati support looked at the building (read-only)', 'اطّلع دعم بنايتي على البناية (قراءة فقط)');
       if (e.action === 'grant') return t(who + ' let Binayati support look until ' + dateLabel(d.until, true), who + ' سمح لدعم بنايتي بالاطّلاع حتى ' + dateLabel(d.until, true));
       if (e.action === 'revoke') return t(who + ' turned off support access', who + ' أوقف وصول الدعم');
       return null;
@@ -8472,10 +8475,15 @@ function admLoadBuildings() {
 }
 function admBuildings() {
   if (!ADM.buildings) { admLoadBuildings(); return '<div class="sec"><div class="card pad muted">Loading…</div></div>'; }
-  var h = '<div class="sec"><div class="card list">';
+  var full = CFG.supportMode === 'full';
+  var h = '<div class="sec"><div class="card pad"><div class="switch-row" style="border:0;padding:0"><div><b>Support mode: ' + (full ? 'Testing · full access' : 'Privacy') + '</b><small>' + (full
+      ? 'You can open and change any building without asking. Every open is still logged in its activity. Switch to Privacy before real clients join.'
+      : 'You can only look (read-only) at buildings whose owner turned support access on, until it expires.') + '</small></div><button class="sw' + (full ? ' on' : '') + '" onclick="admSupportMode(' + (full ? "'consent'" : "'full'") + ')"></button></div>' +
+      (full ? '<div class="banner warn" style="margin-top:10px"><div class="grow"><b>Full access is on</b>Fine for testing. Not OK once real buildings use the app.</div></div>' : '') + '</div></div>';
+  h += '<div class="sec"><div class="card list">';
   ADM.buildings.forEach(function(b) {
-    var open = b.support_until && b.support_until > nowIso();
-    h += '<button class="li" onclick="openSheet(\'admBuilding\',{id:' + jsArg(b.id) + '})"><div class="ic">' + (open ? '🟢' : '🏢') + '</div><div class="grow"><b>' + esc(b.name) + '</b><small>' + esc([b.owner || '—', b.units + ' apartments', b.members + ' people', open ? 'support open until ' + dateLabel(b.support_until, true) : '', b.custom ? b.custom + ' custom switch' + (b.custom > 1 ? 'es' : '') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
+    var open = full || (b.support_until && b.support_until > nowIso());
+    h += '<button class="li" onclick="openSheet(\'admBuilding\',{id:' + jsArg(b.id) + '})"><div class="ic">' + (open ? '🟢' : '🏢') + '</div><div class="grow"><b>' + esc(b.name) + '</b><small>' + esc([b.owner || '—', b.units + ' apartments', b.members + ' people', !full && open ? 'support open until ' + dateLabel(b.support_until, true) : '', b.custom ? b.custom + ' custom switch' + (b.custom > 1 ? 'es' : '') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
   });
   h += '</div><p class="hint">You can look inside a building only while its owner has support access turned on (Building → Settings). Every look is logged and shows in their activity.</p></div>';
   return h;
@@ -8484,9 +8492,9 @@ SHEETS.admBuilding = function(d) {
   var b = (ADM.buildings || []).filter(function(x) { return x.id === d.id; })[0];
   if (!b) return '';
   if (!d.bf) { d.bf = {}; cloudCall(SB.from('building_features').select('*').eq('building_id', b.id)).then(function(rows) { (rows || []).forEach(function(r) { d.bf[r.key] = r; }); d.loaded = true; render(); }); }
-  var open = b.support_until && b.support_until > nowIso();
+  var full = CFG.supportMode === 'full', open = full || (b.support_until && b.support_until > nowIso());
   var h = '<h3>' + esc(b.name) + '</h3><p class="lead">' + esc((b.owner || '—') + ' · ' + b.units + ' apartments · since ' + dateLabel(b.created_at)) + '</p>';
-  h += open ? '<button class="btn pri block" onclick="adminOpenBuilding(' + jsArg(b.id) + ')">Open their building (read-only)</button><p class="hint">Support access until ' + esc(dateLabel(b.support_until, true)) + '.</p>'
+  h += open ? '<button class="btn pri block" onclick="adminOpenBuilding(' + jsArg(b.id) + ')">' + (full ? 'Open their building (full access)' : 'Open their building (read-only)') + '</button><p class="hint">' + (full ? 'Testing mode: you can change things. It shows in their activity.' : 'Support access until ' + esc(dateLabel(b.support_until, true)) + '.') + '</p>'
             : '<div class="banner info"><div class="grow"><b>Support access is off</b>Ask the owner to turn it on: Building → Settings → Support access.</div></div>';
   h += '<div class="sec-h" style="margin-top:14px"><h2>Switches for this building</h2></div>';
   var feats = Object.keys(CFG.features).map(function(k) { return CFG.features[k]; }).filter(function(f) { return f.switchable; }).sort(function(a, b) { return a.sort - b.sort; });
@@ -8515,7 +8523,7 @@ function admBuildingReset(bid, key) {
 /* Read-only look inside a client's building. */
 function adminOpenBuilding(bid) {
   rpc('support_open', { p_building: bid }).then(function() { return cloudBuildingState(bid); }).then(function(ns) {
-    ns.role = 'manager'; ns.support = true; ns.myBlocks = null;
+    ns.role = 'manager'; ns.support = true; ns.supportFull = CFG.supportMode === 'full'; ns.myBlocks = null;
     S = ns; UI.sheet = null; UI.screen = 'app'; UI.tab = 'home'; UI.bsec = null; UI.block = null; UI.cycleId = null;
     return loadConfig(bid);
   }).then(function() { render(); window.scrollTo(0, 0); }, fail);
@@ -8527,17 +8535,17 @@ function exitSupport() {
 }
 function supportBanner() {
   if (!S.support) return '';
-  return '<div class="support-bar"><b>Support view · read-only</b><span>' + esc(bName()) + '</span><button onclick="exitSupport()">Exit</button></div>';
+  return '<div class="support-bar' + (S.supportFull ? ' full' : '') + '"><b>' + (S.supportFull ? 'Support · full access' : 'Support view · read-only') + '</b><span>' + esc(bName()) + '</span><button onclick="exitSupport()">Exit</button></div>';
 }
 /* Nothing is written while looking at a client's building. The server refuses it anyway. */
 (function() {
   var ro = function() { return Promise.reject(new Error(t('Support view is read-only', 'عرض الدعم للقراءة فقط'))); };
   ['dbInsert', 'dbInsertMany', 'dbUpdate', 'dbDelete'].forEach(function(n) {
     var orig = window[n];
-    window[n] = function() { return S.support ? ro() : orig.apply(this, arguments); };
+    window[n] = function() { return S.support && !S.supportFull ? ro() : orig.apply(this, arguments); };
   });
   var origRpc = window.rpc;
-  window.rpc = function(name) { return S.support && ['support_open', 'admin_buildings', 'am_admin'].indexOf(name) < 0 ? ro() : origRpc.apply(this, arguments); };
+  window.rpc = function(name) { return S.support && !S.supportFull && ['support_open', 'admin_buildings', 'am_admin'].indexOf(name) < 0 ? ro() : origRpc.apply(this, arguments); };
 })();
 
 /* ---------- Owner side: support access in Settings ---------- */
@@ -8563,6 +8571,13 @@ function setSupport(hours) {
   rpc('set_support', { p_building: S.building.id, p_hours: hours }).then(function(until) {
     SUPPORT.until = until || null; render();
     toast(hours ? t('Support can look until ' + dateLabel(until, true), 'يمكن للدعم الاطّلاع حتى ' + dateLabel(until, true)) : t('Support access is off', 'وصول الدعم متوقف'));
+  }, fail);
+}
+
+function admSupportMode(mode) {
+  if (mode === 'full' && !confirm('Turn on full access? You will be able to open and change any building without the owner allowing it.')) return;
+  cloudCall(SB.from('app_settings').upsert({ key: 'support_mode', value: mode, updated_at: nowIso() })).then(function() {
+    CFG.supportMode = mode; admLoadBuildings(); toast(mode === 'full' ? 'Full access on (testing)' : 'Privacy mode on');
   }, fail);
 }
 

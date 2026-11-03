@@ -5,7 +5,7 @@
    every open app within seconds. The lists in presets.js / core.js are the
    built-in fallback when the server can't be reached.
    ============================================================================ */
-var CFG = { features: {}, bfeat: {}, lists: [], loaded: false };
+var CFG = { features: {}, bfeat: {}, lists: [], loaded: false, supportMode: 'consent' };
 var IS_ADMIN = false;
 var PAY_METHODS = [{ key: 'Whish', en: 'Whish', ar: 'ويش' }, { key: 'OMT', en: 'OMT', ar: 'OMT' }, { key: 'Bank', en: 'Bank transfer', ar: 'تحويل مصرفي' }];
 var CATS_ALL = null; // every category ever defined, hidden ones too, so old expenses keep their name
@@ -30,7 +30,8 @@ function loadConfig(bid) {
     SB.from('app_features').select('*'),
     bid ? SB.from('building_features').select('*').eq('building_id', bid) : Promise.resolve({ data: [] }),
     bid ? SB.from('app_lists').select('*').or('building_id.is.null,building_id.eq.' + bid).order('sort') : SB.from('app_lists').select('*').is('building_id', null).order('sort'),
-    SB.rpc('am_admin')
+    SB.rpc('am_admin'),
+    SB.from('app_settings').select('*')
   ];
   return Promise.all(q).then(function(r) {
     if (r[0].error && r[2].error) return; // tables not there yet: keep the built-in lists
@@ -38,6 +39,7 @@ function loadConfig(bid) {
     CFG.bfeat = {}; (r[1].data || []).forEach(function(f) { CFG.bfeat[f.key] = f.on; });
     CFG.lists = r[2].data || [];
     IS_ADMIN = !!(r[3] && r[3].data);
+    (r[4].data || []).forEach(function(x) { if (x.key === 'support_mode') CFG.supportMode = x.value === 'full' ? 'full' : 'consent'; });
     CFG.loaded = true;
     applyLists();
     watchConfig(bid);
@@ -80,7 +82,7 @@ function watchConfig(bid) {
   if (!isCloud() || (CFG_CHANNEL && CFG_CHANNEL._bid === (bid || ''))) return;
   if (CFG_CHANNEL) { SB.removeChannel(CFG_CHANNEL); CFG_CHANNEL = null; }
   var ch = SB.channel('cfg-' + (bid || 'none'));
-  ['app_lists', 'app_features', 'building_features', 'support_grants'].forEach(function(tb) {
+  ['app_lists', 'app_features', 'building_features', 'support_grants', 'app_settings'].forEach(function(tb) {
     ch = ch.on('postgres_changes', { event: '*', schema: 'public', table: tb }, function() {
       clearTimeout(_cfgT);
       _cfgT = setTimeout(function() {

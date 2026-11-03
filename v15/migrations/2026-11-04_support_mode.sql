@@ -1,0 +1,6 @@
+-- Binayati V15 · 2026-11-04 · Support mode switch (applied live as support_mode_switch_2026_11_04)
+-- app_settings.support_mode: 'full' (testing: admin opens and changes any building, logged)
+-- or 'consent' (privacy: owner grants time-limited read-only access).
+-- See the migration in Supabase for the exact SQL: app_settings table, private.support_full(),
+-- private.support_ok() now also true in full mode, bny_support_write policies (full mode only),
+-- support_open() logs the mode.

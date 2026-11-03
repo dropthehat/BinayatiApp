@@ -399,3 +399,4 @@ input.input[type="date"]::-webkit-date-and-time-value { text-align: start; margi
 .support-bar { position: sticky; top: 0; z-index: 60; display: flex; align-items: center; gap: 10px; padding: calc(8px + env(safe-area-inset-top)) 16px 8px; background: var(--warn); color: #fff; font-size: 13px; }
 .support-bar span { flex: 1; opacity: .9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .support-bar button { background: rgba(255,255,255,.22); color: #fff; border: 0; border-radius: 999px; padding: 6px 14px; font-weight: 700; }
+.support-bar.full { background: var(--bad); }

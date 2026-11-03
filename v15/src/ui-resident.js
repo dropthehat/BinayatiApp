@@ -26,6 +26,7 @@ function loadResident(tok) {
     UI.resident = { ok: true };
     render();
     loadResidentContacts(tok);
+    loadResidentNews(tok);
   }, function(e) { UI.resident = { error: niceError(e) }; render(); });
 }
 
@@ -40,6 +41,7 @@ function renderResident() {
   var r = unitCycle(u, cyc), b = unitBalance(u, cyc);
   var h = '<div class="shell" style="padding-bottom:24px">';
   h += '<div class="res-head row between"><div><small>' + esc(bName()) + '</small><h1>' + esc(t('Apartment ', 'الشقة ') + unitTag(u)) + '</h1>' + (unitName(u) ? '<div class="muted" style="font-weight:600">' + esc(unitName(u)) + '</div>' : '') + '</div><button class="iconbtn" onclick="setLang()">' + (LANG === 'ar' ? 'EN' : 'ع') + '</button></div>';
+  h += renderResidentNews();
   h += heroHtml(cyc, { block: blockOf(u) || null, idp: 'rs', noTap: true, noSafe: !S.resident.booksPublic, only: S.resident.who ? null : u.id });
 
   // The bill

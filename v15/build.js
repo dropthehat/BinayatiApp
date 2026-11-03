@@ -56,6 +56,7 @@ ${src('ai-docs.js')}
 ${src('ai-remind.js')}
 ${src('admin.js')}
 ${src('contacts.js')}
+${src('news.js')}
 boot();
 </script>
 </body>

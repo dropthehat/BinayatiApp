@@ -18,8 +18,8 @@ function openAdmin() {
 }
 function admTabs() {
   var h = '<div class="seg" style="margin:4px 16px 0">';
-  [['features', 'Features'], ['lists', 'Lists'], ['support', 'Buildings']].forEach(function(x) {
-    h += '<button class="' + (ADM.tab === x[0] ? 'on' : '') + '" onclick="ADM.tab=\'' + x[0] + '\';if(ADM.tab===\'support\')admLoadBuildings();render()">' + x[1] + '</button>';
+  [['features', 'Features'], ['lists', 'Lists'], ['news', 'News'], ['support', 'Buildings']].forEach(function(x) {
+    h += '<button class="' + (ADM.tab === x[0] ? 'on' : '') + '" onclick="ADM.tab=\'' + x[0] + '\';if(ADM.tab===\'support\'||ADM.tab===\'news\')admLoadBuildings();if(ADM.tab===\'news\'){loadNews().then(admLoadNewsStats);}render()">' + x[1] + '</button>';
   });
   return h + '</div>';
 }
@@ -30,6 +30,7 @@ function renderAdmin() {
   h += admTabs();
   if (ADM.tab === 'features') h += admFeatures();
   else if (ADM.tab === 'lists') h += admLists();
+  else if (ADM.tab === 'news') h += admNews();
   else h += admBuildings();
   return h + '</div>';
 }

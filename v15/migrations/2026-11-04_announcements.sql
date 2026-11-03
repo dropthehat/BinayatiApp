@@ -1,0 +1,5 @@
+-- Binayati V15 · 2026-11-04 · News from Binayati (applied live as announcements_2026_11_04)
+-- announcements (kind news/feature/tip/offer, audience all/managers/collectors/residents,
+-- optional building, EN/AR title+body, link, start/end), announcement_reads (per user),
+-- resident_announcements(token) (respects buildings.settings.offers_off),
+-- admin_announcement_reads(), app_features row 'announcements'.

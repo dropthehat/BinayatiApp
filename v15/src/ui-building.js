@@ -1029,6 +1029,7 @@ function renderSettingsSec() {
   h += '</div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('What residents see', 'ما يراه السكان')) + '</h2></div><div class="card pad">';
   h += switchRow('books_public', st.books_public !== false, t('The building\'s books', 'حسابات البناية'), t('Money in, money out and the safe, on every resident\'s page', 'المقبوض والمصروف والصندوق في صفحة كل ساكن'));
+  h += switchRow('offers_on', !st.offers_off, t('Offers from Binayati partners', 'عروض شركاء بنايتي'), t('Occasional deals from service companies, marked as offers. Off hides them for everyone in this building.', 'عروض من شركات خدمات أحياناً، مُعلّمة كعروض. مطفأ يخفيها عن الجميع في هذه البناية.'));
   h += switchRow('show_who_paid', !!st.show_who_paid, t('Who has paid', 'من سدّد'), t('Light up neighbours\' windows on their page. Off keeps it private.', 'إظهار شبابيك الجيران المضاءة. الإيقاف يبقيها خاصة.'));
   h += '</div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Data', 'البيانات')) + '</h2></div><div class="card list">';
@@ -1043,7 +1044,7 @@ function switchRow(key, on, title, sub) {
   return '<div class="switch-row"><div><b>' + esc(title) + '</b><small>' + esc(sub) + '</small></div><button class="sw' + (on ? ' on' : '') + '" onclick="toggleSetting(\'' + key + '\',' + !on + ')"></button></div>';
 }
 function toggleSetting(k, v) {
-  var st = Object.assign({}, S.building.settings || {}); if (k === 'base_cur_usd') { k = 'base_cur'; v = v ? 'USD' : null; } if (k === 'safe_per_block') { if (!confirm(t('This changes how the cash is counted: ' + (v ? 'each block gets its own safe; past money is counted by the apartment\'s block.' : 'all blocks share one safe again.') + ' Nothing is deleted. Continue?', 'هذا يغيّر طريقة احتساب النقد: ' + (v ? 'لكل بلوك صندوقه؛ المال السابق يُحتسب حسب بلوك الشقة.' : 'كل البلوكات تعود لصندوق واحد.') + ' لا شيء يُحذف. متابعة؟'))) return; k = 'safe_mode'; v = v ? 'block' : null; } st[k] = v;
+  var st = Object.assign({}, S.building.settings || {}); if (k === 'base_cur_usd') { k = 'base_cur'; v = v ? 'USD' : null; } if (k === 'offers_on') { k = 'offers_off'; v = !v; } if (k === 'safe_per_block') { if (!confirm(t('This changes how the cash is counted: ' + (v ? 'each block gets its own safe; past money is counted by the apartment\'s block.' : 'all blocks share one safe again.') + ' Nothing is deleted. Continue?', 'هذا يغيّر طريقة احتساب النقد: ' + (v ? 'لكل بلوك صندوقه؛ المال السابق يُحتسب حسب بلوك الشقة.' : 'كل البلوكات تعود لصندوق واحد.') + ' لا شيء يُحذف. متابعة؟'))) return; k = 'safe_mode'; v = v ? 'block' : null; } st[k] = v;
   dbUpdate('buildings', S.building.id, { settings: st }).then(render, fail);
   S.building.settings = st; render();
 }
@@ -1107,6 +1108,7 @@ SHEETS.menu = function() {
     h += '<button class="li" onclick="demoSignIn(' + (asMgr ? '\'collector\'' : '\'manager\'') + ')"><div class="ic">⇄</div><div class="grow"><b>' + esc(asMgr ? t('Switch to the collector (Anas)', 'بدّل إلى الجابي (أنس)') : t('Switch to the manager (Rima)', 'بدّل إلى المدير (ريما)')) + '</b><small>' + esc(t('Demo: see the same building from the other side', 'تجربة: نفس البناية من الجهة الأخرى')) + '</small></div></button>';
     h += '<button class="li" onclick="demoReset()"><div class="ic">↺</div><div class="grow"><b>' + esc(t('Reset the demo data', 'أعد بيانات التجربة')) + '</b><small>' + esc(t('Back to the original sample', 'العودة للنموذج الأصلي')) + '</small></div></button>';
   }
+  if (isCloud() && feature('announcements') && visibleNews().length) h += '<button class="li" onclick="openSheet(\'news\')"><div class="ic">📣</div><div class="grow"><b>' + esc(t('News from Binayati', 'أخبار بنايتي')) + '</b><small>' + esc(t('New features, tips and offers', 'ميزات جديدة ونصائح وعروض')) + '</small></div></button>';
   if (IS_ADMIN && !S.support) h += '<button class="li" onclick="openAdmin()"><div class="ic">🛠</div><div class="grow"><b>Binayati admin</b><small>Features, lists, client support</small></div></button>';
   h += '<button class="li" onclick="closeSheet();setLang()"><div class="ic">ع</div><div class="grow"><b>' + esc(LANG === 'ar' ? 'English' : 'العربية') + '</b></div></button>';
   if (isManager()) h += '<button class="li" onclick="closeSheet();go(\'building\');UI.bsec=\'settings\';render()"><div class="ic">⚙️</div><div class="grow"><b>' + esc(t('Settings', 'الإعدادات')) + '</b></div></button>';

@@ -223,6 +223,7 @@ function renderHomeManager() {
   var cash = cashState();
   var h = renderTopbar();
   h += blocks().length > 1 ? blockChips(true) + (UI.block && blocks().indexOf(UI.block) >= 0 ? heroHtml(cyc) : heroCompound(cyc)) : heroHtml(cyc);
+  h += renderNewsCard();
   h += renderSetupCard();
   h += renderContactsCard();
 
@@ -297,6 +298,7 @@ function renderHomeCollector() {
   owing.sort(function(a, b) { return (pairUsd(b.arr) > 0.005) - (pairUsd(a.arr) > 0.005) || b.tot - a.tot; });
   var h = renderTopbar();
   h += blockChips();
+  h += renderNewsCard();
   h += renderContactsCard();
   h += '<div class="sec"><div class="tiles">';
   h += tile(t('In your pocket', 'معك الآن'), fmtPairBig({ USD: mine.USD, LBP: mine.LBP }), pend ? t('Handover waiting for the manager', 'تسليم بانتظار المدير') : t('Cash you collected, not handed over yet', 'نقد جمعته ولم تسلّمه بعد'), pairUsd(mine) > 0.005 && !pend ? 'openSheet(\'handreq\')' : '', 'var(--warn)');

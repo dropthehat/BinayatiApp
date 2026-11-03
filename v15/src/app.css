@@ -405,3 +405,10 @@ input.input[type="date"]::-webkit-date-and-time-value { text-align: start; margi
 .li.contact .cbtn { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--bg2); text-decoration: none; font-size: 18px; margin-inline-start: 6px; }
 .li.contact .cbtn.wa { background: var(--okbg); }
 .li .ic.sos { background: var(--badbg); }
+
+/* News from Binayati */
+.news-item .news-k { font-size: 12px; font-weight: 700; color: var(--acc-ink); margin-bottom: 4px; }
+.news-item.offer .news-k { color: var(--warn); }
+.news-item b { display: block; font-size: 16px; }
+.news-item p { margin: 6px 0 8px; color: var(--mut); line-height: 1.45; }
+.news-card { border-color: var(--acc); background: linear-gradient(180deg, var(--soft), var(--card)); }

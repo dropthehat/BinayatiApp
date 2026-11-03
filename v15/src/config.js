@@ -43,7 +43,10 @@ function loadConfig(bid) {
     CFG.loaded = true;
     applyLists();
     watchConfig(bid);
-    if (bid && typeof loadSupport === 'function') return loadSupport();
+    var after = [];
+    if (bid && typeof loadSupport === 'function') after.push(loadSupport());
+    if (typeof loadNews === 'function') after.push(loadNews());
+    return Promise.all(after);
   }).catch(function(e) { console.warn('config', e); });
 }
 
@@ -82,7 +85,7 @@ function watchConfig(bid) {
   if (!isCloud() || (CFG_CHANNEL && CFG_CHANNEL._bid === (bid || ''))) return;
   if (CFG_CHANNEL) { SB.removeChannel(CFG_CHANNEL); CFG_CHANNEL = null; }
   var ch = SB.channel('cfg-' + (bid || 'none'));
-  ['app_lists', 'app_features', 'building_features', 'support_grants', 'app_settings'].forEach(function(tb) {
+  ['app_lists', 'app_features', 'building_features', 'support_grants', 'app_settings', 'announcements'].forEach(function(tb) {
     ch = ch.on('postgres_changes', { event: '*', schema: 'public', table: tb }, function() {
       clearTimeout(_cfgT);
       _cfgT = setTimeout(function() {

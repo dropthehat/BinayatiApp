@@ -4610,7 +4610,7 @@ function cloudBuildingState(bid, light) {
 function cloudLoadBuilding(bid) {
   setSync('busy');
   return cloudBuildingState(bid).then(function(ns) {
-    S = ns;
+    S = scopeToMyBlocks(ns);
     setSync('live');
     subscribe(bid);
   });
@@ -4648,6 +4648,22 @@ function setSync(s) {
   SYNC = s;
   var el = document.getElementById('sync-dot');
   if (el) el.className = 'sync ' + (isCloud() ? s : 'local');
+}
+
+/* A person limited to some blocks only sees those blocks: their apartments, payments,
+   expenses and charges. The database enforces the same rule on writes. */
+function scopeToMyBlocks(ns) {
+  var me = ns && ns.me && (ns.members || []).filter(function(m) { return m.user_id === ns.me.id; })[0];
+  var mine = me && me.role !== 'manager' && me.blocks && me.blocks.length ? me.blocks : null;
+  ns.myBlocks = mine;
+  if (!mine) return ns;
+  var keep = {};
+  ns.units = (ns.units || []).filter(function(u) { var ok = mine.indexOf(u.block || '') >= 0; if (ok) keep[u.id] = 1; return ok; });
+  ns.payments = (ns.payments || []).filter(function(p) { return keep[p.unit_id]; });
+  var shared = !(ns.building && ns.building.settings && ns.building.settings.safe_mode === 'block');
+  ns.expenses = (ns.expenses || []).filter(function(e) { return e.block ? mine.indexOf(e.block) >= 0 : (shared || e.paid_by === ns.me.id); });
+  ns.charges = (ns.charges || []).filter(function(c) { return !c.block || mine.indexOf(c.block) >= 0; });
+  return ns;
 }
 
 /* ============================================================================
@@ -6633,7 +6649,7 @@ function saveProject() {
 function renderTeamSec() {
   var h = '<div class="sec"><div class="card list">';
   S.members.forEach(function(m) {
-    h += '<div class="li"><div class="ic">' + esc((m.display_name || '?').charAt(0).toUpperCase()) + '</div><div class="grow"><b>' + esc(m.display_name || '—') + (m.display_name_ar ? ' · ' + esc(m.display_name_ar) : '') + (S.me && m.user_id === S.me.id ? ' · ' + esc(t('you', 'أنت')) : '') + '</b><small>' + esc(roleLabel(m.role)) + '</small></div>';
+    h += '<div class="li"><div class="ic">' + esc((m.display_name || '?').charAt(0).toUpperCase()) + '</div><div class="grow"><b>' + esc(m.display_name || '—') + (m.display_name_ar ? ' · ' + esc(m.display_name_ar) : '') + (S.me && m.user_id === S.me.id ? ' · ' + esc(t('you', 'أنت')) : '') + '</b><small>' + esc(roleLabel(m.role) + (m.role !== 'manager' && m.blocks && m.blocks.length && blocks().length > 1 ? ' · ' + m.blocks.map(blockLabel).join(', ') : '')) + '</small></div>';
     if (S.role === 'manager' && m.role !== 'manager') h += '<button class="btn sm sec" onclick="openSheet(\'member\',{uid:' + jsArg(m.user_id) + '})">' + esc(t('Access', 'الصلاحيات')) + '</button>';
     else if (S.me && m.user_id === S.me.id) h += '<button class="btn sm sec" onclick="openSheet(\'memberName\',{uid:' + jsArg(m.user_id) + '})">' + esc(t('Name', 'الاسم')) + '</button>';
     h += '</div>';
@@ -6668,18 +6684,20 @@ SHEETS.invite = function(d) {
     h += '<div class="foot"><button class="btn sec" onclick="copyText(' + jsArg(link) + ')">' + esc(t('Copy', 'نسخ')) + '</button><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=' + esc(encodeURIComponent(msg)) + '">WhatsApp</a></div>';
     return h;
   }
-  h += '<label class="field"><span>' + esc(t('Their name', 'اسمه')) + '</span><input class="input" id="inv-name" data-tr="inv-name-ar" data-tr-kind="name" placeholder="' + esc(role === 'collector' ? t('e.g. Anas', 'مثلاً أنس') : '') + '" data-autofocus><div class="tr-box" id="trs-inv-name"></div></label><label class="field"><span>' + esc(t('Name in Arabic', 'الاسم بالعربية')) + '</span><input class="input" id="inv-name-ar" dir="rtl" data-tr="inv-name" data-tr-kind="name" placeholder="أنس"><div class="tr-box" id="trs-inv-name-ar"></div></label><div id="sheet-err" class="err"></div>';
+  h += '<label class="field"><span>' + esc(t('Their name', 'اسمه')) + '</span><input class="input" id="inv-name" data-tr="inv-name-ar" data-tr-kind="name" value="' + esc(d.invName || '') + '" placeholder="' + esc(role === 'collector' ? t('e.g. Anas', 'مثلاً أنس') : '') + '" data-autofocus><div class="tr-box" id="trs-inv-name"></div></label><label class="field"><span>' + esc(t('Name in Arabic', 'الاسم بالعربية')) + '</span><input class="input" id="inv-name-ar" dir="rtl" data-tr="inv-name" data-tr-kind="name" value="' + esc(d.invNameAr || '') + '" placeholder="أنس"><div class="tr-box" id="trs-inv-name-ar"></div></label><div id="sheet-err" class="err"></div>';
   if (!isCloud()) {
     h += '<p class="hint">' + esc(t('The server isn\'t connected, so this adds them on this phone only, to preview their view.', 'الخادم غير متصل، فسيُضاف على هذا الهاتف فقط للمعاينة.')) + '</p>';
     h += '<div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Cancel', 'إلغاء')) + '</button><button class="btn pri" onclick="localAddMember(' + jsArg(role) + ')">' + esc(t('Add', 'إضافة')) + '</button></div>';
     return h;
   }
+  h += blockPicker(d, S.myBlocks, S.myBlocks);
   h += '<div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Cancel', 'إلغاء')) + '</button><button class="btn pri" onclick="makeInvite(' + jsArg(role) + ')">' + esc(t('Create link', 'أنشئ الرابط')) + '</button></div>';
   return h;
 };
 function makeInvite(role) {
   var name = val('inv-name').trim(), nameAr = val('inv-name-ar').trim();
-  rpc('create_invite', { p_building: S.building.id, p_role: role, p_display_name: name }).then(function(code) {
+  var ib = pickedBlocks(UI.sheet.data, S.myBlocks);
+  rpc('create_invite', { p_building: S.building.id, p_role: role, p_display_name: name, p_blocks: ib }).then(function(code) {
     if (nameAr) cloudCall(SB.from('invites').update({ display_name_ar: nameAr }).eq('code', code)).catch(function() {});
     UI.sheet.data.code = code; UI.sheet.data.name = name; render();
   }, function(e) { sheetErr(e.message); });
@@ -7088,6 +7106,7 @@ SHEETS.member = function(d) {
     var on = pm[p[0]] != null ? !!pm[p[0]] : permDefault(role, p[0]);
     h += '<div class="switch-row"><div><b>' + esc(LANG === 'ar' ? p[2] : p[1]) + '</b><small>' + esc(LANG === 'ar' ? p[4] : p[3]) + '</small></div><button class="sw' + (on ? ' on' : '') + '" onclick="UI.sheet.data.perms[' + jsArg(p[0]) + ']=' + (on ? 'false' : 'true') + ';render()"></button></div>';
   });
+  h += blockPicker(d, m.blocks);
   h += '<button class="btn ghost sm" style="margin-top:6px" onclick="openSheet(\'memberName\',{uid:' + jsArg(m.user_id) + '})">' + esc(t('Change their name', 'غيّر الاسم')) + '</button>';
   var held = (cashState().pockets || {})[m.user_id];
   if (held && (Math.abs(held.USD) > 0.005 || Math.abs(held.LBP) > 1)) h += '<p class="hint" style="color:var(--warn)">' + esc(t('They still hold ' + fmtPair(held) + '. Record the handover before removing them, or it stays under their name.', 'ما زال معه ' + fmtPair(held) + '. سجّل التسليم قبل إزالته، وإلا يبقى باسمه.')) + '</p>';
@@ -7100,15 +7119,49 @@ function saveMemberAccess(uid) {
   var role = d.role || m.role, perms = {};
   // Store only what differs from the role's usual access, so changing defaults later still reaches everyone else.
   PERMS.forEach(function(p) { var v = d.perms[p[0]]; if (v != null && !!v !== permDefault(role, p[0])) perms[p[0]] = !!v; });
-  var patch = { role: role, perms: perms };
+  var bl = pickedBlocks(d, m.blocks);
+  var patch = { role: role, perms: perms, blocks: bl };
   var pr = isCloud() ? cloudCall(SB.from('members').update(patch).eq('building_id', S.building.id).eq('user_id', uid).select())
                      : dbUpdate('members', m.id, patch);
-  pr.then(function() { m.role = role; m.perms = perms; closeSheet(); toast(t('Access updated', 'حُدّثت الصلاحيات')); if (isCloud()) reloadBuilding(); }, function(e) { sheetErr(e.message); });
+  pr.then(function() { m.role = role; m.perms = perms; m.blocks = bl; closeSheet(); toast(t('Access updated', 'حُدّثت الصلاحيات')); if (isCloud()) reloadBuilding(); }, function(e) { sheetErr(e.message); });
 }
 function cancelInvite(code) {
   if (!confirm(t('Cancel this link? Nobody can join with it after this.', 'إلغاء هذا الرابط؟ لن يستطيع أحد الانضمام به بعد الآن.'))) return;
   var pr = isCloud() ? cloudCall(SB.from('invites').delete().eq('code', code)) : Promise.resolve();
   pr.then(function() { S.invites = (S.invites || []).filter(function(i) { return i.code !== code; }); render(); toast(t('Link cancelled', 'أُلغي الرابط')); }, fail);
+}
+
+/* Which blocks a person handles. Empty = every block. limit = the blocks the person choosing may hand out. */
+function blockPicker(d, current, limit) {
+  var bl = blocks();
+  if (limit) bl = bl.filter(function(b) { return limit.indexOf(b) >= 0; });
+  if (blocks().length < 2) return '';
+  if (d.blocks === undefined) d.blocks = (current && current.length) ? current.slice() : [];
+  var all = !d.blocks.length;
+  var h = '<div class="field" style="margin-top:10px"><span>' + esc(t('Blocks they handle', 'البلوكات التي يتولاها')) + '</span><div class="chips" style="flex-wrap:wrap;padding:2px 0">';
+  if (!limit) h += '<button type="button" class="chip' + (all ? ' on' : '') + '" onclick="UI.sheet.data.blocks=[];render()">' + esc(t('All blocks', 'كل البلوكات')) + '</button>';
+  bl.forEach(function(b) {
+    var on = d.blocks.indexOf(b) >= 0;
+    h += '<button type="button" class="chip' + (on ? ' on' : '') + '" onclick="toggleBlockPick(' + jsArg(b) + ')">' + esc(blockLabel(b)) + '</button>';
+  });
+  h += '</div><small class="hint" style="display:block">' + esc(all ? t('They see and handle every block.', 'يرى ويتولى كل البلوكات.') : t('They only see these blocks: their apartments, payments, expenses and charges. Compound-wide months and charges stay with you.', 'يرى هذه البلوكات فقط: شققها ودفعاتها ومصاريفها ورسومها. الأشهر والرسوم العامة تبقى معك.')) + '</small></div>';
+  return h;
+}
+function toggleBlockPick(b) {
+  if (UI.sheet.name === 'invite') keepInviteName();
+  var d = UI.sheet.data, i = d.blocks.indexOf(b);
+  if (i >= 0) d.blocks.splice(i, 1); else d.blocks.push(b);
+  if (d.blocks.length === blocks().length) d.blocks = [];
+  render();
+}
+function pickedBlocks(d, fallback) {
+  if (blocks().length < 2) return null;
+  var b = d.blocks !== undefined ? d.blocks : fallback;
+  return b && b.length ? b.slice().sort() : null;
+}
+function keepInviteName() {
+  var d = UI.sheet.data, n = document.getElementById('inv-name'), na = document.getElementById('inv-name-ar');
+  if (n) d.invName = n.value; if (na) d.invNameAr = na.value;
 }
 
 /* ============================================================================

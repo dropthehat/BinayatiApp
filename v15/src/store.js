@@ -361,7 +361,7 @@ function cloudBuildingState(bid, light) {
 function cloudLoadBuilding(bid) {
   setSync('busy');
   return cloudBuildingState(bid).then(function(ns) {
-    S = ns;
+    S = scopeToMyBlocks(ns);
     setSync('live');
     subscribe(bid);
   });
@@ -399,4 +399,20 @@ function setSync(s) {
   SYNC = s;
   var el = document.getElementById('sync-dot');
   if (el) el.className = 'sync ' + (isCloud() ? s : 'local');
+}
+
+/* A person limited to some blocks only sees those blocks: their apartments, payments,
+   expenses and charges. The database enforces the same rule on writes. */
+function scopeToMyBlocks(ns) {
+  var me = ns && ns.me && (ns.members || []).filter(function(m) { return m.user_id === ns.me.id; })[0];
+  var mine = me && me.role !== 'manager' && me.blocks && me.blocks.length ? me.blocks : null;
+  ns.myBlocks = mine;
+  if (!mine) return ns;
+  var keep = {};
+  ns.units = (ns.units || []).filter(function(u) { var ok = mine.indexOf(u.block || '') >= 0; if (ok) keep[u.id] = 1; return ok; });
+  ns.payments = (ns.payments || []).filter(function(p) { return keep[p.unit_id]; });
+  var shared = !(ns.building && ns.building.settings && ns.building.settings.safe_mode === 'block');
+  ns.expenses = (ns.expenses || []).filter(function(e) { return e.block ? mine.indexOf(e.block) >= 0 : (shared || e.paid_by === ns.me.id); });
+  ns.charges = (ns.charges || []).filter(function(c) { return !c.block || mine.indexOf(c.block) >= 0; });
+  return ns;
 }

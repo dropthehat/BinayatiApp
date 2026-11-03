@@ -28,7 +28,7 @@ function render() {
     case 'resident': h = renderResident(); break;
     case 'error': h = renderFatal(); break;
     case 'admin': h = renderAdmin(); break;
-    default: h = renderApp();
+    default: h = deskActive() ? renderDesk() : renderApp();
   }
   APP.innerHTML = h + renderSheet();
   afterRender();

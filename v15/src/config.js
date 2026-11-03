@@ -6,7 +6,7 @@
    built-in fallback when the server can't be reached.
    ============================================================================ */
 var CFG = { features: {}, bfeat: {}, lists: [], loaded: false, supportMode: 'consent' };
-var IS_ADMIN = false;
+var IS_ADMIN = false, WANT_ADMIN = false;
 var PAY_METHODS = [{ key: 'Whish', en: 'Whish', ar: 'ويش' }, { key: 'OMT', en: 'OMT', ar: 'OMT' }, { key: 'Bank', en: 'Bank transfer', ar: 'تحويل مصرفي' }];
 var CATS_ALL = null; // every category ever defined, hidden ones too, so old expenses keep their name
 var CODE_LISTS = null;
@@ -39,6 +39,7 @@ function loadConfig(bid) {
     CFG.bfeat = {}; (r[1].data || []).forEach(function(f) { CFG.bfeat[f.key] = f.on; });
     CFG.lists = r[2].data || [];
     IS_ADMIN = !!(r[3] && r[3].data);
+    if (WANT_ADMIN && IS_ADMIN) { WANT_ADMIN = false; setTimeout(openAdmin, 0); }
     (r[4].data || []).forEach(function(x) { if (x.key === 'support_mode') CFG.supportMode = x.value === 'full' ? 'full' : 'consent'; });
     CFG.loaded = true;
     applyLists();

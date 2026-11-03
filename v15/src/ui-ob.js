@@ -325,6 +325,8 @@ function afterSignIn() {
 function boot() {
   var q = new URLSearchParams(location.search);
   var r = q.get('r'), join = q.get('join');
+  if (q.get('admin')) WANT_ADMIN = true;
+  if (q.get('desk')) { try { localStorage.setItem('binayati-desk', 'on'); } catch (e) {} }
   render();
   initCloud().catch(function(e) { console.warn(e); SB = null; toast(t('Couldn\'t reach the server. Working on this phone.', 'تعذّر الوصول للخادم. العمل على هذا الهاتف.')); })
     .then(function() {

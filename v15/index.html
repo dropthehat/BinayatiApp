@@ -5607,7 +5607,15 @@ function renderBuilding() {
 
 /* ---------------- Apartments ---------------- */
 function renderUnitsSec() {
-  var h = '<div class="sec"><button class="card li" style="border-radius:18px" onclick="openSheet(\'layout\',{})"><div class="ic">🏢</div><div class="grow"><b>' + esc(t('Floors, apartments & blocks', 'الطوابق والشقق والبلوكات')) + '</b><small>' + esc(blocks().length > 1 ? blocks().map(function(b) { return b + ': ' + layoutSummary(currentLayout(b)); }).join(' · ') : layoutSummary(currentLayout())) + '</small></div><span class="chev">›</span></button></div>';
+  var h = '';
+  var missing = activeUnits().filter(function(u) { return !unitName(u) || !u.phone; }).length;
+  if (UI.fillNames && missing) {
+    h += '<div class="sec"><div class="banner info"><div class="grow"><b>' + esc(t('Your building is ready. Next: who lives where', 'بنايتك جاهزة. التالي: من يسكن أين')) + '</b>' +
+      esc(t('Tap each apartment to add the resident\'s name and WhatsApp number' + (contactsOk() ? ', or pick them from your contacts.' : '.') + ' Bills and receipts go to that number.',
+            'اضغط كل شقة لإضافة اسم الساكن ورقم واتساب' + (contactsOk() ? '، أو اختره من جهات الاتصال.' : '.') + ' الفواتير والإيصالات تُرسل لهذا الرقم.')) +
+      '</div></div><div class="row" style="margin-top:8px"><button class="btn pri sm grow" onclick="nextUnnamed()">' + esc(t('Start with the first one', 'ابدأ بالأولى')) + '</button><button class="btn ghost sm" onclick="UI.fillNames=false;render()">' + esc(t('Later', 'لاحقاً')) + '</button></div></div>';
+  }
+  h += '<div class="sec"><button class="card li" style="border-radius:18px" onclick="openSheet(\'layout\',{})"><div class="ic">🏢</div><div class="grow"><b>' + esc(t('Floors, apartments & blocks', 'الطوابق والشقق والبلوكات')) + '</b><small>' + esc(blocks().length > 1 ? blocks().map(function(b) { return b + ': ' + layoutSummary(currentLayout(b)); }).join(' · ') : layoutSummary(currentLayout())) + '</small></div><span class="chev">›</span></button></div>';
   var bl = blocks();
   var groups = bl.length > 1 ? bl.map(function(b) { return { b: b, us: S.units.filter(function(u) { return blockOf(u) === b; }) }; }).concat([{ b: '', us: S.units.filter(function(u) { return !blockOf(u) || bl.indexOf(blockOf(u)) < 0; }) }])
                              : [{ b: '', us: S.units }];
@@ -5635,12 +5643,12 @@ SHEETS.unitEdit = function(d) {
   h += '<label class="field"><span>' + esc(t('Block (only for compounds with several blocks)', 'البلوك (للمجمّعات فقط)')) + '</span><input class="input" id="u-block" list="u-blocks" value="' + esc(v.block || (d.block || '')) + '" placeholder="' + esc(t('e.g. A', 'مثلاً A')) + '"><datalist id="u-blocks">' + blist.map(function(b) { return '<option value="' + esc(b) + '">'; }).join('') + '</datalist></label>';
   h += '<label class="field"><span>' + esc(t('Resident name', 'اسم الساكن')) + '</span><input class="input" id="u-name" data-tr="u-name-ar" data-tr-kind="name" value="' + esc(v.name) + '"><div class="tr-box" id="trs-u-name"></div></label>';
   h += '<label class="field"><span>' + esc(t('Name in Arabic (optional)', 'الاسم بالعربية (اختياري)')) + '</span><input class="input" id="u-name-ar" data-tr="u-name" data-tr-kind="name" dir="rtl" value="' + esc(v.name_ar || '') + '"><div class="tr-box" id="trs-u-name-ar"></div></label>';
-  h += '<label class="field"><span>' + esc(t('WhatsApp number', 'رقم واتساب')) + '</span><input class="input" id="u-ph" inputmode="tel" value="' + esc(v.phone || '') + '" placeholder="03 123 456"></label>';
+  h += '<label class="field"><span>' + esc(t('WhatsApp number', 'رقم واتساب')) + '</span><div class="money-in"><input class="input" id="u-ph" type="tel" inputmode="tel" autocomplete="tel" value="' + esc(v.phone || '') + '" placeholder="03 123 456">' + (contactsOk() ? '<button type="button" class="btn sec sm" onclick="pickContact()">👤 ' + esc(t('Contacts', 'جهات الاتصال')) + '</button>' : '') + '</div></label>';
   h += '<label class="field"><span>' + esc(t('Messages in', 'الرسائل بـ')) + '</span><select class="input" id="u-lang"><option value="both"' + (v.lang === 'both' ? ' selected' : '') + '>' + esc(t('Arabic + English', 'عربي + إنكليزي')) + '</option><option value="ar"' + (v.lang === 'ar' ? ' selected' : '') + '>العربية</option><option value="en"' + (v.lang === 'en' ? ' selected' : '') + '>English</option></select></label>';
   h += '<div class="switch-row"><div><b>' + esc(t('Active', 'فعّالة')) + '</b><small>' + esc(t('Inactive apartments are not charged', 'الشقق غير الفعّالة لا تُحتسب')) + '</small></div><button class="sw' + (v.active !== false ? ' on' : '') + '" id="u-act" onclick="this.classList.toggle(\'on\')" aria-label="active"></button></div>';
   h += '<div id="sheet-err" class="err"></div><div class="foot">';
   if (u) h += '<button class="btn danger" onclick="deleteUnit(' + jsArg(u.id) + ')">' + esc(t('Remove', 'حذف')) + '</button>';
-  h += '<button class="btn sec" onclick="closeSheet()">' + esc(t('Cancel', 'إلغاء')) + '</button><button class="btn pri" onclick="saveUnit(' + jsArg(u ? u.id : '') + ')">' + esc(t('Save', 'حفظ')) + '</button></div>';
+  h += '<button class="btn sec" onclick="closeSheet()">' + esc(t('Cancel', 'إلغاء')) + '</button><button class="btn pri" onclick="saveUnit(' + jsArg(u ? u.id : '') + ')">' + esc(UI.fillNames && u ? t('Save ›', 'حفظ ›') : t('Save', 'حفظ')) + '</button></div>';
   return h;
 };
 function saveUnit(id) {
@@ -5650,7 +5658,7 @@ function saveUnit(id) {
   if (!row.code) return sheetErr(t('Give it a code like 2B', 'أعطها رمزاً مثل 2B'));
   if (S.units.some(function(x) { return x.code === row.code && blockOf(x) === (row.block || '') && x.id !== id; })) return sheetErr(t('That code is already used', 'هذا الرمز مستعمل'));
   if (!id) { row.resident_token = token(); row.sort = S.units.length; }
-  (id ? dbUpdate('units', id, row) : dbInsert('units', row)).then(function() { closeSheet(); toast(t('Saved', 'تم الحفظ')); }, function(e) { sheetErr(e.message); });
+  (id ? dbUpdate('units', id, row) : dbInsert('units', row)).then(function() { closeSheet(); toast(t('Saved', 'تم الحفظ')); if (UI.fillNames && id) setTimeout(function() { nextUnnamed(id); }, 250); }, function(e) { sheetErr(e.message); });
 }
 function deleteUnit(id) {
   var has = S.payments.some(function(p) { return p.unit_id === id && !p.voided_at; });
@@ -6853,6 +6861,26 @@ function saveQr(dataUrl, name) {
   });
 }
 
+/* Contacts: Android Chrome has a contact picker; iPhone Safari does not (yet), so the button only shows where it works. */
+function contactsOk() { return !!(navigator.contacts && navigator.contacts.select && window.isSecureContext); }
+function pickContact() {
+  if (!contactsOk()) return;
+  navigator.contacts.select(['name', 'tel'], { multiple: false }).then(function(list) {
+    var c = list && list[0]; if (!c) return;
+    var tel = (c.tel || [])[0], nm = (c.name || [])[0];
+    if (tel) { var ph = document.getElementById('u-ph'); if (ph) ph.value = String(tel).replace(/[^\d+ ]/g, '').trim(); }
+    var ne = document.getElementById('u-name'); if (nm && ne && !ne.value.trim()) { ne.value = nm; ne.dispatchEvent(new Event('input', { bubbles: true })); }
+  }).catch(function() {});
+}
+/* Open the next apartment still missing a name or number (after the one just saved). */
+function nextUnnamed(afterId) {
+  var list = activeUnits(), start = afterId ? list.findIndex(function(u) { return u.id === afterId; }) + 1 : 0;
+  var rest = list.slice(start).concat(list.slice(0, start));
+  var u = rest.find(function(x) { return x.id !== afterId && (!unitName(x) || !x.phone); });
+  if (u) openSheet('unitEdit', { id: u.id });
+  else { UI.fillNames = false; render(); toast(t('Every apartment has a name and number', 'كل الشقق لها اسم ورقم')); }
+}
+
 /* ============================================================================
    First run: show the building first, ask for an account last.
    Full screen, one idea per step, never scrolls.
@@ -7017,7 +7045,8 @@ function finishSetup(displayName) {
       var askInvite = OB.who === 'other' && isCloud();
       var name = OB.colName, nameAr = OB.colNameAr;
       OB = null;
-      UI.screen = 'app'; UI.tab = 'home'; HERO_REVEAL = true;
+      // Next step after setup: the apartments directory, to fill in residents' names and WhatsApp numbers.
+      UI.screen = 'app'; UI.tab = 'building'; UI.bsec = 'units'; UI.fillNames = true; HERO_REVEAL = true;
       render(); window.scrollTo(0, 0); launchConfetti();
       if (askInvite) setTimeout(function() { openSheet('invite', { role: 'collector' }); setTimeout(function() { var el = document.getElementById('inv-name'); if (el) el.value = name || ''; var ea = document.getElementById('inv-name-ar'); if (ea) ea.value = nameAr || ''; }, 50); }, 1600);
     })

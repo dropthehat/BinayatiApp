@@ -162,7 +162,8 @@ function finishSetup(displayName) {
       var askInvite = OB.who === 'other' && isCloud();
       var name = OB.colName, nameAr = OB.colNameAr;
       OB = null;
-      UI.screen = 'app'; UI.tab = 'home'; HERO_REVEAL = true;
+      // Next step after setup: the apartments directory, to fill in residents' names and WhatsApp numbers.
+      UI.screen = 'app'; UI.tab = 'building'; UI.bsec = 'units'; UI.fillNames = true; HERO_REVEAL = true;
       render(); window.scrollTo(0, 0); launchConfetti();
       if (askInvite) setTimeout(function() { openSheet('invite', { role: 'collector' }); setTimeout(function() { var el = document.getElementById('inv-name'); if (el) el.value = name || ''; var ea = document.getElementById('inv-name-ar'); if (ea) ea.value = nameAr || ''; }, 50); }, 1600);
     })

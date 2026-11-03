@@ -1,5 +1,5 @@
 /* ============================================================================
-   Binayati V15 — core helpers and the money model
+   Natour V15 — core helpers and the money model
    Everything here is pure: it reads the loaded building in S and computes.
    ============================================================================ */
 var LANG = 'en';

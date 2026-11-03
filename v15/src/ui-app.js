@@ -18,7 +18,7 @@ function render() {
   document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
   var h = '';
   switch (UI.screen) {
-    case 'splash': h = '<div class="splash"><div class="logo">ب</div></div>'; break;
+    case 'splash': h = '<div class="splash"><div class="logo">ن</div></div>'; break;
     case 'welcome': h = renderWelcome(); break;
     case 'ob': h = renderOnboarding(); break;
     case 'auth': h = renderAuth(); break;

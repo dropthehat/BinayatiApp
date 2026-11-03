@@ -406,7 +406,7 @@ input.input[type="date"]::-webkit-date-and-time-value { text-align: start; margi
 .li.contact .cbtn.wa { background: var(--okbg); }
 .li .ic.sos { background: var(--badbg); }
 
-/* News from Binayati */
+/* News from Natour */
 .news-item .news-k { font-size: 12px; font-weight: 700; color: var(--acc-ink); margin-bottom: 4px; }
 .news-item.offer .news-k { color: var(--warn); }
 .news-item b { display: block; font-size: 16px; }

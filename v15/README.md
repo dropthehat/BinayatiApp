@@ -1,6 +1,8 @@
-# Binayati V15
+# Natour V15 (formerly Binayati)
 
-One file, `index.html`. It is already connected to your Supabase project **BINAYATI**, and the database (tables, security rules, audit log, functions) is installed there.
+Brand: **Natour** · ناطور. Handles and domains: yanatour / natour.app (to confirm). The GitHub repo and URL still say BinayatiApp until renamed.
+
+One file, `index.html`. It is already connected to the Supabase project **BINAYATI** (project name unchanged), and the database (tables, security rules, audit log, functions) is installed there.
 
 ## Before the first sign-up (2 minutes)
 1. People sign up with a **username** (no email needed, good for Natours) or an email if they prefer.

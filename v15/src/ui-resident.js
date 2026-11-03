@@ -32,7 +32,7 @@ function loadResident(tok) {
 
 function renderResident() {
   var R = UI.resident;
-  if (!R) return '<div class="splash"><div class="logo">ب</div></div>';
+  if (!R) return '<div class="splash"><div class="logo">ن</div></div>';
   if (!R.ok) {
     return '<div class="shell"><div class="res-head"><h1>' + esc(R.missing ? t('This link doesn\'t work anymore', 'هذا الرابط لم يعد يعمل') : t('Couldn\'t open your page', 'تعذّر فتح صفحتك')) + '</h1><p class="muted">' + esc(R.missing ? t('Ask your building manager for a new one.', 'اطلب رابطاً جديداً من مدير البناية.') : R.error || '') + '</p></div></div>';
   }
@@ -99,6 +99,6 @@ function renderResident() {
     h += '</div>';
   }
   if (feature('contacts')) h += renderResidentContacts();
-  h += '<div class="foot-note">' + esc(t('This page is private to your apartment. Binayati · بنايتي', 'هذه الصفحة خاصة بشقتك. بنايتي · Binayati')) + '</div></div>';
+  h += '<div class="foot-note">' + esc(t('This page is private to your apartment. Natour · ناطور', 'هذه الصفحة خاصة بشقتك. ناطور · Natour')) + '</div></div>';
   return h;
 }

@@ -7,8 +7,8 @@ var OB_TIMER = null;
 
 function renderWelcome() {
   var h = '<div class="ob"><div class="ob-in">';
-  h += '<div class="ob-top"><span style="font-weight:800;font-size:15px">' + esc(t('Binayati', 'بنايتي')) + '</span><button class="iconbtn" onclick="setLang()">' + (LANG === 'ar' ? 'EN' : 'ع') + '</button></div>';
-  h += '<div class="ob-stage">' + obScene(welcomeLit(), 9, 'Binayati', true) + '</div>';
+  h += '<div class="ob-top"><span style="font-weight:800;font-size:15px">' + esc(t('Natour', 'ناطور')) + '</span><button class="iconbtn" onclick="setLang()">' + (LANG === 'ar' ? 'EN' : 'ع') + '</button></div>';
+  h += '<div class="ob-stage">' + obScene(welcomeLit(), 9, 'Natour', true) + '</div>';
   h += '<div class="ob-body"><h1>' + esc(t('Every apartment, every dollar, clear to everyone.', 'كل شقة، كل دولار، واضح للجميع.')) + '</h1>';
   h += '<div class="features">';
   h += '<div class="feat"><i>✓</i><span>' + esc(t('Tick who paid. The window lights up.', 'علّم من سدّد، فيضيء شباكه.')) + '<small>' + esc(t('Dollars and lira, fees, bills, moteur.', 'دولار وليرة، رسوم، فواتير، موتور.')) + '</small></span></div>';
@@ -42,7 +42,7 @@ function tickWelcome() {
   OB_TIMER = setInterval(function() {
     if (UI.screen !== 'welcome') { clearInterval(OB_TIMER); return; }
     var st = document.querySelector('.ob-stage');
-    if (st) st.innerHTML = obScene(welcomeLit(), 9, 'Binayati', true);
+    if (st) st.innerHTML = obScene(welcomeLit(), 9, 'Natour', true);
   }, 700);
 }
 
@@ -211,7 +211,7 @@ function renderAuth() {
   var a = UI.auth || { mode: 'in' };
   var up = a.mode === 'up';
   var h = '<div class="ob"><div class="ob-in"><div class="ob-top"><button class="iconbtn" onclick="authBack()">' + (LANG === 'ar' ? '›' : '‹') + '</button><span></span><button class="iconbtn" onclick="setLang()">' + (LANG === 'ar' ? 'EN' : 'ع') + '</button></div>';
-  h += '<div class="ob-stage" style="flex:0 1 200px">' + obScene(up ? 99 : 3, OB ? obUnits() : (a.invite ? 6 : 8), OB ? OB.name : (a.invite ? a.invite.building : 'Binayati'), up && !!OB) + '</div>';
+  h += '<div class="ob-stage" style="flex:0 1 200px">' + obScene(up ? 99 : 3, OB ? obUnits() : (a.invite ? 6 : 8), OB ? OB.name : (a.invite ? a.invite.building : 'Natour'), up && !!OB) + '</div>';
   h += '<div class="ob-body">';
   if (a.invite) h += '<h1>' + esc(t('Join ' + a.invite.building, 'انضم إلى ' + (a.invite.building_ar || a.invite.building))) + '</h1><p class="sub">' + esc(t('You were invited as ' + roleLabel(a.invite.role).toLowerCase() + '.', 'دُعيت ك' + roleLabel(a.invite.role) + '.')) + '</p>';
   else h += '<h1>' + esc(up ? t('Create your account', 'أنشئ حسابك') : t('Welcome back', 'أهلاً بعودتك')) + '</h1>';
@@ -283,7 +283,7 @@ function renderJoin() {
   if (j.info && j.info.valid) {
     h += '<button class="btn pri block" onclick="UI.screen=\'auth\';UI.auth={mode:\'up\',invite:Object.assign({code:UI.join.code},UI.join.info)};render()">' + esc(t('Create my account', 'أنشئ حسابي')) + '</button>';
     h += '<button class="btn ghost block" onclick="UI.screen=\'auth\';UI.auth={mode:\'in\',invite:Object.assign({code:UI.join.code},UI.join.info)};render()">' + esc(t('I already have an account', 'لدي حساب')) + '</button>';
-  } else if (j.info || j.error) h += '<button class="btn sec block" onclick="location.href=location.pathname">' + esc(t('Open Binayati', 'افتح بنايتي')) + '</button>';
+  } else if (j.info || j.error) h += '<button class="btn sec block" onclick="location.href=location.pathname">' + esc(t('Open Natour', 'افتح ناطور')) + '</button>';
   return h + '</div></div></div>';
 }
 

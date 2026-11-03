@@ -10,8 +10,8 @@ function page(config) {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F1F5F4">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Binayati">
-<title>Binayati · بنايتي</title>
+<meta name="apple-mobile-web-app-title" content="Natour">
+<title>Natour · ناطور</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%235B4CF5'/%3E%3Crect x='20' y='14' width='24' height='38' rx='3' fill='%23fff'/%3E%3Crect x='25' y='20' width='5' height='5' fill='%23FFC35E'/%3E%3Crect x='34' y='20' width='5' height='5' fill='%23FFC35E'/%3E%3Crect x='25' y='30' width='5' height='5' fill='%23FFC35E'/%3E%3Crect x='34' y='30' width='5' height='5' fill='%235B4CF5' opacity='.3'/%3E%3Crect x='29' y='42' width='6' height='10' fill='%235B4CF5'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">

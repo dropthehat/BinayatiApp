@@ -931,7 +931,7 @@ SHEETS.invite = function(d) {
   if (d.code) {
     var link = ((window.BINAYATI_CONFIG || {}).publicUrl || (location.origin + location.pathname)) + '?join=' + d.code;
     h += '<p class="lead">' + esc(t('Send this link. It works once and expires in 14 days.', 'أرسل هذا الرابط. يعمل مرة واحدة وينتهي بعد 14 يوماً.')) + '</p><div class="linkbox"><span class="grow">' + esc(link) + '</span></div>';
-    var msg = t('Hi ' + (d.name || '') + ', join ' + bName() + ' on Binayati: ', 'مرحباً ' + (d.name || '') + '، انضم إلى ' + bName() + ' على بنايتي: ') + link;
+    var msg = t('Hi ' + (d.name || '') + ', join ' + bName() + ' on Natour: ', 'مرحباً ' + (d.name || '') + '، انضم إلى ' + bName() + ' على ناطور: ') + link;
     var qr = qrImage(link, (role === 'collector' ? t('Collector invite', 'دعوة جابي') : t('Co-manager invite', 'دعوة مدير مساعد')) + (d.name ? ' · ' + d.name : ''), bName());
     if (qr && feature('invite_qr')) h += '<div class="qr-box"><img src="' + qr + '" alt="QR" onclick="viewPhoto(this.src)"><button class="btn sec sm" onclick="saveQr(' + jsArg(qr) + ',' + jsArg('binayati-invite-' + d.code + '.png') + ')">' + esc(t('Save QR image', 'احفظ صورة الرمز')) + '</button><small class="muted">' + esc(t('They scan it with the phone camera. Same one-time link.', 'يمسحه بكاميرا الهاتف. نفس الرابط لمرة واحدة.')) + '</small></div>';
     h += '<div class="foot"><button class="btn sec" onclick="copyText(' + jsArg(link) + ')">' + esc(t('Copy', 'نسخ')) + '</button><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=' + esc(encodeURIComponent(msg)) + '">WhatsApp</a></div>';
@@ -1029,7 +1029,7 @@ function renderSettingsSec() {
   h += '</div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('What residents see', 'ما يراه السكان')) + '</h2></div><div class="card pad">';
   h += switchRow('books_public', st.books_public !== false, t('The building\'s books', 'حسابات البناية'), t('Money in, money out and the safe, on every resident\'s page', 'المقبوض والمصروف والصندوق في صفحة كل ساكن'));
-  h += switchRow('offers_on', !st.offers_off, t('Offers from Binayati partners', 'عروض شركاء بنايتي'), t('Occasional deals from service companies, marked as offers. Off hides them for everyone in this building.', 'عروض من شركات خدمات أحياناً، مُعلّمة كعروض. مطفأ يخفيها عن الجميع في هذه البناية.'));
+  h += switchRow('offers_on', !st.offers_off, t('Offers from Natour partners', 'عروض شركاء ناطور'), t('Occasional deals from service companies, marked as offers. Off hides them for everyone in this building.', 'عروض من شركات خدمات أحياناً، مُعلّمة كعروض. مطفأ يخفيها عن الجميع في هذه البناية.'));
   h += switchRow('show_who_paid', !!st.show_who_paid, t('Who has paid', 'من سدّد'), t('Light up neighbours\' windows on their page. Off keeps it private.', 'إظهار شبابيك الجيران المضاءة. الإيقاف يبقيها خاصة.'));
   h += '</div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Data', 'البيانات')) + '</h2></div><div class="card list">';
@@ -1055,7 +1055,7 @@ function saveSettings() {
   dbUpdate('buildings', S.building.id, patch).then(function() { Object.assign(S.building, patch); toast(t('Saved', 'تم الحفظ')); render(); }, fail);
 }
 function exportData() {
-  var data = { exported_at: nowIso(), app: 'Binayati V15' };
+  var data = { exported_at: nowIso(), app: 'Natour V15' };
   ['building', 'members', 'units', 'cycles', 'charges', 'payments', 'handovers', 'expenses', 'tasks', 'events'].forEach(function(k) { data[k] = S[k]; });
   var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   var a = document.createElement('a');
@@ -1108,9 +1108,9 @@ SHEETS.menu = function() {
     h += '<button class="li" onclick="demoSignIn(' + (asMgr ? '\'collector\'' : '\'manager\'') + ')"><div class="ic">⇄</div><div class="grow"><b>' + esc(asMgr ? t('Switch to the collector (Anas)', 'بدّل إلى الجابي (أنس)') : t('Switch to the manager (Rima)', 'بدّل إلى المدير (ريما)')) + '</b><small>' + esc(t('Demo: see the same building from the other side', 'تجربة: نفس البناية من الجهة الأخرى')) + '</small></div></button>';
     h += '<button class="li" onclick="demoReset()"><div class="ic">↺</div><div class="grow"><b>' + esc(t('Reset the demo data', 'أعد بيانات التجربة')) + '</b><small>' + esc(t('Back to the original sample', 'العودة للنموذج الأصلي')) + '</small></div></button>';
   }
-  if (isCloud() && feature('announcements') && visibleNews().length) h += '<button class="li" onclick="openSheet(\'news\')"><div class="ic">📣</div><div class="grow"><b>' + esc(t('News from Binayati', 'أخبار بنايتي')) + '</b><small>' + esc(t('New features, tips and offers', 'ميزات جديدة ونصائح وعروض')) + '</small></div></button>';
+  if (isCloud() && feature('announcements') && visibleNews().length) h += '<button class="li" onclick="openSheet(\'news\')"><div class="ic">📣</div><div class="grow"><b>' + esc(t('News from Natour', 'أخبار ناطور')) + '</b><small>' + esc(t('New features, tips and offers', 'ميزات جديدة ونصائح وعروض')) + '</small></div></button>';
   if (isManager() && window.innerWidth >= 760 && !deskActive()) h += '<button class="li" onclick="closeSheet();setDesk(true)"><div class="ic">💻</div><div class="grow"><b>' + esc(t('Laptop view', 'عرض الحاسوب')) + '</b><small>' + esc(t('Tables, the year at a glance, reports to print or download', 'جداول، السنة بنظرة، تقارير للطباعة أو التنزيل')) + '</small></div></button>';
-  if (IS_ADMIN && !S.support) h += '<button class="li" onclick="openAdmin()"><div class="ic">🛠</div><div class="grow"><b>Binayati admin</b><small>Features, lists, client support</small></div></button>';
+  if (IS_ADMIN && !S.support) h += '<button class="li" onclick="openAdmin()"><div class="ic">🛠</div><div class="grow"><b>Natour admin</b><small>Features, lists, client support</small></div></button>';
   h += '<button class="li" onclick="closeSheet();setLang()"><div class="ic">ع</div><div class="grow"><b>' + esc(LANG === 'ar' ? 'English' : 'العربية') + '</b></div></button>';
   if (isManager()) h += '<button class="li" onclick="closeSheet();go(\'building\');UI.bsec=\'settings\';render()"><div class="ic">⚙️</div><div class="grow"><b>' + esc(t('Settings', 'الإعدادات')) + '</b></div></button>';
   if (isCloud()) h += '<button class="li" onclick="signOut()"><div class="ic">⎋</div><div class="grow"><b>' + esc(t('Sign out', 'تسجيل الخروج')) + '</b></div></button>';

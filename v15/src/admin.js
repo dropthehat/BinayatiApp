@@ -1,5 +1,5 @@
 /* ============================================================================
-   Binayati admin (Carl only): the feature map, feature switches, the app's
+   Natour admin (Carl only): the feature map, feature switches, the app's
    live lists, and support for clients who turned support access on.
    Internal tool, English only. The server allows all of this only for
    accounts in app_admins; the app just hides the door for everyone else.
@@ -26,7 +26,7 @@ function admTabs() {
 function renderAdmin() {
   if (!IS_ADMIN) return '<div class="shell"><div class="sec"><div class="card pad">Not allowed.</div></div></div>';
   var h = '<div class="shell"><header class="topbar"><button class="iconbtn" onclick="UI.screen=\'app\';render()" aria-label="Back">' + (LANG === 'ar' ? '›' : '‹') + '</button>';
-  h += '<div class="grow"><b style="font-size:20px;font-weight:800">Binayati admin</b><small class="muted" style="display:block">Changes reach every app within seconds</small></div></header>';
+  h += '<div class="grow"><b style="font-size:20px;font-weight:800">Natour admin</b><small class="muted" style="display:block">Changes reach every app within seconds</small></div></header>';
   h += admTabs();
   if (ADM.tab === 'features') h += admFeatures();
   else if (ADM.tab === 'lists') h += admLists();
@@ -268,8 +268,8 @@ function renderSupportCard() {
   if (S.role !== 'manager' || S.support || !isCloud()) return '';
   var on = SUPPORT.until && SUPPORT.until > nowIso();
   var h = '<div class="sec"><div class="sec-h"><h2>' + esc(t('Support access', 'وصول الدعم')) + '</h2></div><div class="card pad">';
-  h += '<p class="muted" style="margin-top:0">' + esc(on ? t('Binayati support can look at your building (read-only) until ' + dateLabel(SUPPORT.until, true) + '. Every look shows in your activity.', 'يمكن لدعم بنايتي رؤية بنايتك (قراءة فقط) حتى ' + dateLabel(SUPPORT.until, true) + '. كل اطّلاع يظهر في نشاطك.')
-                                         : t('If you need help, let Binayati support see your building for a while. They can look, not change anything. You can turn it off any time.', 'إذا احتجت مساعدة، اسمح لدعم بنايتي برؤية بنايتك لفترة. يرون فقط ولا يغيّرون شيئاً. يمكنك إيقافه متى شئت.')) + '</p>';
+  h += '<p class="muted" style="margin-top:0">' + esc(on ? t('Natour support can look at your building (read-only) until ' + dateLabel(SUPPORT.until, true) + '. Every look shows in your activity.', 'يمكن لدعم ناطور رؤية بنايتك (قراءة فقط) حتى ' + dateLabel(SUPPORT.until, true) + '. كل اطّلاع يظهر في نشاطك.')
+                                         : t('If you need help, let Natour support see your building for a while. They can look, not change anything. You can turn it off any time.', 'إذا احتجت مساعدة، اسمح لدعم ناطور برؤية بنايتك لفترة. يرون فقط ولا يغيّرون شيئاً. يمكنك إيقافه متى شئت.')) + '</p>';
   h += '<div class="row" style="gap:8px;flex-wrap:wrap">';
   if (on) h += '<button class="btn danger sm grow" onclick="setSupport(0)">' + esc(t('Turn off now', 'أوقفه الآن')) + '</button>';
   h += '<button class="btn sec sm grow" onclick="setSupport(24)">' + esc(t('Allow for 24 hours', 'اسمح لمدة 24 ساعة')) + '</button><button class="btn sec sm grow" onclick="setSupport(72)">' + esc(t('3 days', '3 أيام')) + '</button>';

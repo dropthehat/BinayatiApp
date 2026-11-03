@@ -470,3 +470,5 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
   .desk-t td, .desk-t th { border-color: #ccc; color: #000; }
 }
 .dc-col { max-width: 72px; } .desk-chart { justify-content: flex-start; }
+
+.scrim.still, .sheet.still { animation: none; }

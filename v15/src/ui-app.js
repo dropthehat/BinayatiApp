@@ -30,7 +30,9 @@ function render() {
     case 'admin': h = renderAdmin(); break;
     default: h = deskActive() ? renderDesk() : renderApp();
   }
+  var oldSheet = APP.querySelector('.sheet'), keepScroll = oldSheet && UI.sheet && UI._sheetShown === UI.sheet ? oldSheet.scrollTop : 0;
   APP.innerHTML = h + renderSheet();
+  if (keepScroll) { var ns = APP.querySelector('.sheet'); if (ns) ns.scrollTop = keepScroll; }
   afterRender();
 }
 function afterRender() {
@@ -70,7 +72,9 @@ function renderSheet() {
   if (!UI.sheet) return '';
   var fn = SHEETS[UI.sheet.name];
   if (!fn) return '';
-  return '<div class="scrim" onclick="if(event.target===this)closeSheet()"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>' + fn(UI.sheet.data) + '</div></div>';
+  // Re-renders of an open sheet (a tap on a tab inside it) must not replay the opening animation.
+  var still = UI._sheetShown === UI.sheet; UI._sheetShown = UI.sheet;
+  return '<div class="scrim' + (still ? ' still' : '') + '" onclick="if(event.target===this)closeSheet()"><div class="sheet' + (still ? ' still' : '') + '" role="dialog" aria-modal="true"><div class="grab"></div>' + fn(UI.sheet.data) + '</div></div>';
 }
 var SHEETS = {};
 function val(id) { var el = document.getElementById(id); return el ? el.value : ''; }

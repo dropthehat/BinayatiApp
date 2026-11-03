@@ -900,15 +900,25 @@ function renderTeamSec() {
   var h = '<div class="sec"><div class="card list">';
   S.members.forEach(function(m) {
     h += '<div class="li"><div class="ic">' + esc((m.display_name || '?').charAt(0).toUpperCase()) + '</div><div class="grow"><b>' + esc(m.display_name || '—') + (m.display_name_ar ? ' · ' + esc(m.display_name_ar) : '') + (S.me && m.user_id === S.me.id ? ' · ' + esc(t('you', 'أنت')) : '') + '</b><small>' + esc(roleLabel(m.role)) + '</small></div>';
-    if (S.me && (m.user_id === S.me.id || isManager())) h += '<button class="btn sm sec" onclick="openSheet(\'memberName\',{uid:' + jsArg(m.user_id) + '})">' + esc(t('Name', 'الاسم')) + '</button>';
-    if (S.role === 'manager' && m.role !== 'manager') h += '<button class="btn sm danger" onclick="removeMember(' + jsArg(m.user_id) + ')">' + esc(t('Remove', 'إزالة')) + '</button>';
+    if (S.role === 'manager' && m.role !== 'manager') h += '<button class="btn sm sec" onclick="openSheet(\'member\',{uid:' + jsArg(m.user_id) + '})">' + esc(t('Access', 'الصلاحيات')) + '</button>';
+    else if (S.me && m.user_id === S.me.id) h += '<button class="btn sm sec" onclick="openSheet(\'memberName\',{uid:' + jsArg(m.user_id) + '})">' + esc(t('Name', 'الاسم')) + '</button>';
     h += '</div>';
   });
   h += '</div></div>';
+  var pend = (S.invites || []).filter(function(i) { return !i.used_by && (!i.expires_at || i.expires_at > nowIso()); });
+  if (pend.length && can('team')) {
+    h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Links not used yet', 'روابط لم تُستعمل بعد')) + '</h2></div><div class="card list">';
+    pend.forEach(function(i) {
+      h += '<div class="li"><div class="ic">🔗</div><div class="grow"><b>' + esc(i.display_name || roleLabel(i.role)) + '</b><small>' + esc(roleLabel(i.role) + ' · ' + t('expires ', 'ينتهي ') + dateLabel(i.expires_at)) + '</small></div><button class="btn sm danger" onclick="cancelInvite(' + jsArg(i.code) + ')">' + esc(t('Cancel link', 'ألغِ الرابط')) + '</button></div>';
+    });
+    h += '</div></div>';
+  }
+  if (can('team')) {
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Invite someone', 'ادعُ شخصاً')) + '</h2></div><div class="card list">';
   h += '<button class="li" onclick="openSheet(\'invite\',{role:\'collector\'})"><div class="ic">💵</div><div class="grow"><b>' + esc(t('A collector', 'جابٍ')) + '</b><small>' + esc(t('Natour, concierge or a neighbour who collects. Ticks payments, holds cash until handover.', 'ناطور أو حارس أو جار يجمع المال. يسجّل الدفعات ويحمل النقد حتى التسليم.')) + '</small></div><span class="chev">›</span></button>';
-  h += '<button class="li" onclick="openSheet(\'invite\',{role:\'comanager\'})"><div class="ic">🤝</div><div class="grow"><b>' + esc(t('A co-manager', 'مدير مساعد')) + '</b><small>' + esc(t('Can do everything you can, except remove people.', 'يستطيع كل شيء ما عدا إزالة الأشخاص.')) + '</small></div><span class="chev">›</span></button>';
+  h += '<button class="li" onclick="openSheet(\'invite\',{role:\'comanager\'})"><div class="ic">🤝</div><div class="grow"><b>' + esc(t('A co-manager', 'مدير مساعد')) + '</b><small>' + esc(t('Can do everything you allow. Only you change access or remove people.', 'يستطيع ما تسمح به. أنت وحدك تغيّر الصلاحيات أو تزيل الأشخاص.')) + '</small></div><span class="chev">›</span></button>';
   h += '</div></div>';
+  }
   if (!isCloud()) h += '<div class="sec"><div class="banner info"><div class="grow"><b>' + esc(t('Working on this phone only', 'تعمل على هذا الهاتف فقط')) + '</b>' + esc(t('Invites need the server. Until then you can preview what a collector sees from the building menu.', 'الدعوات تحتاج الخادم. حتى ذلك يمكنك معاينة ما يراه الجابي من قائمة البناية.')) + '</div></div></div>';
   return h;
 }
@@ -951,7 +961,7 @@ function removeMember(uid) {
   if (!confirm(t('Remove ' + (m && m.display_name) + '?', 'إزالة ' + (m && m.display_name) + '؟'))) return;
   var p = isCloud() ? cloudCall(SB.from('members').delete().eq('building_id', S.building.id).eq('user_id', uid)).then(function() { S.members = S.members.filter(function(x) { return x.user_id !== uid; }); })
                     : dbDelete('members', m.id);
-  p.then(render, fail);
+  p.then(function() { UI.sheet = null; render(); toast(t('Access removed', 'أُزيل الوصول')); }, fail);
 }
 
 /* ---------------- Tasks ---------------- */
@@ -1009,6 +1019,7 @@ function renderSettingsSec() {
   h += '<button class="btn pri block" style="margin-top:14px" onclick="saveSettings()">' + esc(t('Save', 'حفظ')) + '</button></div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('The building', 'البناية')) + '</h2></div><div class="card pad">';
   h += switchRow('base_cur_usd', setting('base_cur') === 'USD', t('Keep the books in dollars', 'الحسابات بالدولار'), t('Bills entered in LBP are converted at your dollar rate when saved. Totals show in $ only.', 'الفواتير بالليرة تُحوَّل بسعر الدولار عند الحفظ، والمجاميع بالدولار فقط.'));
+  if (blocks().length > 1) h += switchRow('safe_per_block', st.safe_mode === 'block', t('A safe per block', 'صندوق لكل بلوك'), t('Each block keeps its own cash and expenses. Off: one shared safe for the compound.', 'كل بلوك له نقده ومصاريفه. مطفأ: صندوق واحد للمجمّع.'));
   h += switchRow('elevator', !!st.elevator, t('Has an elevator', 'فيها مصعد'), t('Shown on the building picture, going up and down', 'يظهر في صورة البناية صاعداً ونازلاً'));
   h += '</div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('What residents see', 'ما يراه السكان')) + '</h2></div><div class="card pad">';
@@ -1026,7 +1037,7 @@ function switchRow(key, on, title, sub) {
   return '<div class="switch-row"><div><b>' + esc(title) + '</b><small>' + esc(sub) + '</small></div><button class="sw' + (on ? ' on' : '') + '" onclick="toggleSetting(\'' + key + '\',' + !on + ')"></button></div>';
 }
 function toggleSetting(k, v) {
-  var st = Object.assign({}, S.building.settings || {}); if (k === 'base_cur_usd') { k = 'base_cur'; v = v ? 'USD' : null; } st[k] = v;
+  var st = Object.assign({}, S.building.settings || {}); if (k === 'base_cur_usd') { k = 'base_cur'; v = v ? 'USD' : null; } if (k === 'safe_per_block') { if (!confirm(t('This changes how the cash is counted: ' + (v ? 'each block gets its own safe; past money is counted by the apartment\'s block.' : 'all blocks share one safe again.') + ' Nothing is deleted. Continue?', 'هذا يغيّر طريقة احتساب النقد: ' + (v ? 'لكل بلوك صندوقه؛ المال السابق يُحتسب حسب بلوك الشقة.' : 'كل البلوكات تعود لصندوق واحد.') + ' لا شيء يُحذف. متابعة؟'))) return; k = 'safe_mode'; v = v ? 'block' : null; } st[k] = v;
   dbUpdate('buildings', S.building.id, { settings: st }).then(render, fail);
   S.building.settings = st; render();
 }
@@ -1123,7 +1134,10 @@ SHEETS.add = function() {
     if (aiReady()) items.push(['scanexp', '🧾', t('Scan a receipt', 'امسح إيصالاً'), t('Take a photo, the form fills itself', 'صوّر والإستمارة تمتلئ')]);
     items.push(['handreq', '⇄', t('Hand over cash', 'سلّم النقد'), t('To the manager', 'للمدير')]);
   }
+  var need = { pay: 'pay', scanpay: 'pay', expense: 'spend', scanexp: 'spend', charge: 'charges', month: 'charges', project: 'charges', task: 'tasks' };
+  items = items.filter(function(x) { return !need[x[0]] || can(need[x[0]]); });
   var h = '<h3>' + esc(t('Add', 'إضافة')) + '</h3><div class="card list menu" style="margin-top:10px">';
+  if (!items.length) h += '<p class="muted">' + esc(t('Nothing to add with your permissions.', 'لا شيء لإضافته بصلاحياتك.')) + '</p>';
   items.forEach(function(x) { h += '<button class="li" onclick="addPick(\'' + x[0] + '\')"><div class="ic">' + x[1] + '</div><div class="grow"><b>' + esc(x[2]) + '</b><small>' + esc(x[3]) + '</small></div></button>'; });
   return h + '</div>';
 };
@@ -1322,4 +1336,43 @@ function meterRowRefresh(title) {
   if (d.kind === 'due' && mk === 'kwh') mk = '';
   row.hidden = !mk;
   if (mk) { var x = meterSwitchText(mk); document.getElementById('m-lbl').textContent = x[0]; document.getElementById('m-sub').textContent = x[1]; }
+}
+
+/* ---------------- Team access: the owner picks what each person can do ---------------- */
+SHEETS.member = function(d) {
+  var m = member(d.uid);
+  if (!m || S.role !== 'manager') return '';
+  var pm = d.perms || (d.perms = Object.assign({}, m.perms || {}));
+  var h = '<h3>' + esc(mName(m) || m.display_name || '—') + '</h3><p class="lead">' + esc(roleLabel(m.role)) + '</p>';
+  h += '<div class="seg" style="margin:8px 0">';
+  [['collector', t('Collector', 'جابٍ')], ['comanager', t('Co-manager', 'مدير مساعد')]].forEach(function(r) {
+    h += '<button class="' + ((d.role || m.role) === r[0] ? 'on' : '') + '" onclick="UI.sheet.data.role=\'' + r[0] + '\';UI.sheet.data.perms={};render()">' + esc(r[1]) + '</button>';
+  });
+  h += '</div><p class="hint">' + esc(t('Switching role resets the switches below to that role\'s usual access.', 'تغيير الدور يعيد المفاتيح أدناه للصلاحيات المعتادة لهذا الدور.')) + '</p>';
+  var role = d.role || m.role;
+  PERMS.forEach(function(p) {
+    var on = pm[p[0]] != null ? !!pm[p[0]] : permDefault(role, p[0]);
+    h += '<div class="switch-row"><div><b>' + esc(LANG === 'ar' ? p[2] : p[1]) + '</b><small>' + esc(LANG === 'ar' ? p[4] : p[3]) + '</small></div><button class="sw' + (on ? ' on' : '') + '" onclick="UI.sheet.data.perms[' + jsArg(p[0]) + ']=' + (on ? 'false' : 'true') + ';render()"></button></div>';
+  });
+  h += '<button class="btn ghost sm" style="margin-top:6px" onclick="openSheet(\'memberName\',{uid:' + jsArg(m.user_id) + '})">' + esc(t('Change their name', 'غيّر الاسم')) + '</button>';
+  var held = (cashState().pockets || {})[m.user_id];
+  if (held && (Math.abs(held.USD) > 0.005 || Math.abs(held.LBP) > 1)) h += '<p class="hint" style="color:var(--warn)">' + esc(t('They still hold ' + fmtPair(held) + '. Record the handover before removing them, or it stays under their name.', 'ما زال معه ' + fmtPair(held) + '. سجّل التسليم قبل إزالته، وإلا يبقى باسمه.')) + '</p>';
+  h += '<div id="sheet-err" class="err"></div><div class="foot"><button class="btn danger" onclick="removeMember(' + jsArg(m.user_id) + ')">' + esc(t('Remove access', 'أزل الوصول')) + '</button><button class="btn sec" onclick="closeSheet()">' + esc(t('Cancel', 'إلغاء')) + '</button><button class="btn pri" onclick="saveMemberAccess(' + jsArg(m.user_id) + ')">' + esc(t('Save', 'حفظ')) + '</button></div>';
+  return h;
+};
+function saveMemberAccess(uid) {
+  var m = member(uid), d = UI.sheet.data;
+  if (!m || S.role !== 'manager') return;
+  var role = d.role || m.role, perms = {};
+  // Store only what differs from the role's usual access, so changing defaults later still reaches everyone else.
+  PERMS.forEach(function(p) { var v = d.perms[p[0]]; if (v != null && !!v !== permDefault(role, p[0])) perms[p[0]] = !!v; });
+  var patch = { role: role, perms: perms };
+  var pr = isCloud() ? cloudCall(SB.from('members').update(patch).eq('building_id', S.building.id).eq('user_id', uid).select())
+                     : dbUpdate('members', m.id, patch);
+  pr.then(function() { m.role = role; m.perms = perms; closeSheet(); toast(t('Access updated', 'حُدّثت الصلاحيات')); if (isCloud()) reloadBuilding(); }, function(e) { sheetErr(e.message); });
+}
+function cancelInvite(code) {
+  if (!confirm(t('Cancel this link? Nobody can join with it after this.', 'إلغاء هذا الرابط؟ لن يستطيع أحد الانضمام به بعد الآن.'))) return;
+  var pr = isCloud() ? cloudCall(SB.from('invites').delete().eq('code', code)) : Promise.resolve();
+  pr.then(function() { S.invites = (S.invites || []).filter(function(i) { return i.code !== code; }); render(); toast(t('Link cancelled', 'أُلغي الرابط')); }, fail);
 }

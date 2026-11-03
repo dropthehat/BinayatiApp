@@ -382,3 +382,10 @@ input.input[type="date"]::-webkit-date-and-time-value { text-align: start; margi
 .setup .prog { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin: 8px 0 4px; }
 .setup .prog i { display: block; height: 100%; background: var(--acc); border-radius: 3px; }
 .ob-multi .ob-blk + .ob-blk { margin-inline-start: -16%; }
+
+/* Home, all blocks: the compound's buildings side by side */
+.hero-multi { display: flex; align-items: flex-end; gap: 4px; margin: 4px 16px 0; padding: 14px 6px 10px; border-radius: 24px; background: linear-gradient(180deg, var(--soft), transparent); min-height: 210px; }
+.hero-multi .hm-blk { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: 0; padding: 0; color: var(--mut); font-weight: 700; }
+.hero-multi .hm-blk .bh { width: 100%; max-height: 200px; margin: 0; }
+.hero-multi .hm-blk + .hm-blk { margin-inline-start: -10%; }
+.hero-multi small { font-size: 12px; }

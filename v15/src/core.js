@@ -357,8 +357,21 @@ function totalArrears(cyc) {
 /* ---------------------------------------------------------------------------
    Where the cash is: in the safe, with each collector, owed to suppliers
    --------------------------------------------------------------------------- */
-function cashState() {
-  var safe = { USD: num(setting('opening_usd')), LBP: num(setting('opening_lbp')) };
+/* A safe per block (settings.safe_mode = 'block'): money is counted by the apartment's block,
+   expenses by the block chosen when logging them. Without a block it is the whole compound. */
+function safePerBlock() { return setting('safe_mode') === 'block' && blocks().length > 1; }
+function cashState(blk) {
+  var per = !!blk && safePerBlock();
+  var first = blocks()[0];
+  var safe = per ? { USD: num(setting('opening_usd_' + blk) != null ? setting('opening_usd_' + blk) : (blk === first ? setting('opening_usd') : 0)),
+                     LBP: num(setting('opening_lbp_' + blk) != null ? setting('opening_lbp_' + blk) : (blk === first ? setting('opening_lbp') : 0)) }
+                 : { USD: num(setting('opening_usd')), LBP: num(setting('opening_lbp')) };
+  if (!per && safePerBlock()) blocks().forEach(function(b) {
+    if (b === first) { if (setting('opening_usd_' + b) != null) { safe.USD += num(setting('opening_usd_' + b)) - num(setting('opening_usd')); safe.LBP += num(setting('opening_lbp_' + b)) - num(setting('opening_lbp')); } }
+    else { safe.USD += num(setting('opening_usd_' + b)); safe.LBP += num(setting('opening_lbp_' + b)); }
+  });
+  var unitBlock = {};
+  if (per) S.units.forEach(function(u) { unitBlock[u.id] = blockOf(u); });
   var pockets = {}; // user_id -> {USD, LBP, pending: pair, pendingId}
   var supplier = pair();
   function pk(uid) { return pockets[uid] = pockets[uid] || { USD: 0, LBP: 0, pending: pair(), pendingId: null }; }
@@ -366,6 +379,7 @@ function cashState() {
   S.charges.forEach(function(c) { if (c.pass_through) passIds[c.id] = true; });
 
   livePayments().forEach(function(p) {
+    if (per && unitBlock[p.unit_id] !== blk) return;
     var v = num(p.amount);
     if (passIds[p.charge_id]) addTo(supplier, p.cur, v);
     if (p.channel !== 'collector' || handoverConfirmed(p.handover_id)) { addTo(safe, p.cur, v); return; }
@@ -374,6 +388,7 @@ function cashState() {
     if (p.handover_id) { addTo(pocket.pending, p.cur, v); pocket.pendingId = p.handover_id; }
   });
   liveExpenses().forEach(function(e) {
+    if (per && (e.block || first) !== blk) return;
     var v = num(e.amount);
     if (e.charge_id && passIds[e.charge_id]) addTo(supplier, e.cur, -v);
     if (e.paid_from !== 'collector' || handoverConfirmed(e.handover_id)) { addTo(safe, e.cur, -v); return; }
@@ -418,6 +433,27 @@ function memberName(uid, lang) {
 }
 function collectors() { return S.members.filter(function(m) { return m.role === 'collector'; }); }
 function isManager() { return S.role === 'manager' || S.role === 'comanager'; }
+/* Permissions the owner can switch per person (members.perms). Same rules as private.can() on the server. */
+var PERMS = [
+  ['pay', 'Tick payments', 'تأشير الدفعات', 'Mark apartments as paid', 'تأشير الشقق كمدفوعة'],
+  ['spend', 'Log money spent', 'تسجيل المصاريف', 'Expenses from the safe or their pocket', 'مصاريف من الصندوق أو من جيبه'],
+  ['charges', 'Change charges & apartments', 'تعديل الرسوم والشقق', 'Fees, bills to split, months, apartment list', 'الرسوم والفواتير والأشهر وقائمة الشقق'],
+  ['books', 'See the books', 'رؤية الحسابات', 'Totals, the safe, every payment and expense', 'المجاميع والصندوق وكل دفعة ومصروف'],
+  ['tasks', 'Tasks & reminders', 'المهام والتذكيرات', 'Tick tasks off (co-managers also add them)', 'تأشير المهام (المدير المساعد يضيفها أيضاً)'],
+  ['team', 'Invite people', 'دعوة أشخاص', 'Create collector or co-manager links', 'إنشاء روابط للجابي أو المدير المساعد']
+];
+function permDefault(role, p) { return role === 'manager' || role === 'comanager' || (role === 'collector' && ['pay', 'spend', 'books', 'tasks'].indexOf(p) >= 0); }
+function memberCan(m, p) {
+  if (!m) return false;
+  if (m.role === 'manager') return true;
+  var pm = m.perms || {};
+  return pm[p] != null ? !!pm[p] : permDefault(m.role, p);
+}
+function can(p) {
+  if (S.role === 'manager') return true;
+  var me = S.me && S.members.filter(function(m) { return m.user_id === S.me.id; })[0];
+  return me ? memberCan(me, p) : permDefault(S.role, p);
+}
 function collectorLabel(lang) {
   var c = collectors()[0];
   if (c && mName(c, lang)) return mName(c, lang);

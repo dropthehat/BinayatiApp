@@ -87,7 +87,7 @@ function ledger(cycleId) {
   liveExpenses().forEach(function(e) {
     if (cycleId && e.cycle_id !== cycleId && !(e.charge_id && cycCharges[e.charge_id])) return;
     out.push({ kind: 'out', icon: catIcon(e.charge_id ? 'supplier' : e.cat), at: (e.spent_on === dayKey(e.created_at) ? e.created_at : e.spent_on + 'T12:00:00'), amount: num(e.amount), cur: e.cur,
-               title: e.title, sub: catName(e.charge_id ? 'supplier' : e.cat) + ' · ' + (e.paid_from === 'collector' ? t('paid by ', 'دفعه ') + memberName(e.paid_by) : t('from the safe', 'من الصندوق')) + (e.ref ? ' · #' + e.ref : '') + origNote(e),
+               title: L(e), sub: catName(e.charge_id ? 'supplier' : e.cat) + ' · ' + (e.paid_from === 'collector' ? t('paid by ', 'دفعه ') + memberName(e.paid_by) : t('from the safe', 'من الصندوق')) + (e.ref ? ' · #' + e.ref : '') + origNote(e),
                onclick: isManager() || e.paid_by === (S.me && S.me.id) ? 'openSheet(\'expense\',{id:' + jsArg(e.id) + '})' : '' });
   });
   if (!cycleId) S.handovers.forEach(function(ho) {
@@ -112,7 +112,7 @@ function shareReport(cycId) {
   if (spent.length) {
     lines.push('');
     lines.push('*' + t('Spent', 'المصاريف') + '*');
-    spent.forEach(function(e) { lines.push('• ' + e.title + ': ' + fmt(e.amount, e.cur)); });
+    spent.forEach(function(e) { lines.push('• ' + L(e) + ': ' + fmt(e.amount, e.cur)); });
   }
   lines.push('');
   lines.push(t('In the safe now: ', 'في الصندوق الآن: ') + fmtPair(cash.safe));
@@ -209,7 +209,7 @@ SHEETS.handover = function(d) {
   h += '<div class="card pad"><div class="kv"><span>' + esc(t('Collected from ' + pays.length + ' payments', 'من ' + pays.length + ' دفعات')) + '</span><b>' + esc(fmtPair(pays.reduce(function(s, p) { return addTo(s, p.cur, num(p.amount)); }, pair()))) + '</b></div>';
   if (exps.length) h += '<div class="kv"><span>' + esc(t('Spent by the collector', 'صرفها الجابي')) + '</span><b>−' + esc(fmtPair(exps.reduce(function(s, e) { return addTo(s, e.cur, num(e.amount)); }, pair()))) + '</b></div>';
   h += '<div class="kv"><span>' + esc(t('Cash to receive', 'المبلغ المستلم')) + '</span><b>' + esc(fmtPair({ USD: num(ho.usd), LBP: num(ho.lbp) })) + '</b></div></div>';
-  if (exps.length) h += '<div class="card list" style="margin-top:10px">' + exps.map(function(e) { return '<div class="li"><div class="ic out">' + catIcon(e.cat) + '</div><div class="grow"><b>' + esc(e.title) + '</b><small>' + esc(dateLabel(e.spent_on)) + '</small></div><span class="amt out">−' + esc(fmt(e.amount, e.cur)) + '</span></div>'; }).join('') + '</div>';
+  if (exps.length) h += '<div class="card list" style="margin-top:10px">' + exps.map(function(e) { return '<div class="li"><div class="ic out">' + catIcon(e.cat) + '</div><div class="grow"><b>' + esc(L(e)) + '</b><small>' + esc(dateLabel(e.spent_on)) + '</small></div><span class="amt out">−' + esc(fmt(e.amount, e.cur)) + '</span></div>'; }).join('') + '</div>';
   h += '<div id="sheet-err" class="err"></div><div class="foot"><button class="btn danger" onclick="resolveHandover(' + jsArg(ho.id) + ',false)">' + esc(t('Didn\'t get it', 'لم أستلم')) + '</button><button class="btn ok" onclick="resolveHandover(' + jsArg(ho.id) + ',true)">' + esc(t('Received, put in safe', 'استلمت، للصندوق')) + '</button></div>';
   return h;
 };
@@ -347,7 +347,13 @@ SHEETS.expense = function(d) {
     h += '</div>';
   }
   if (!sup && !e) h += '<label class="field"><span>' + esc(t('Common expenses', 'مصاريف شائعة')) + '</span>' + presetSelect('ex-pre', EXPENSE_PRESETS, 'expensePreset(this.value)') + '</label>';
-  h += '<label class="field"><span>' + esc(t('What for', 'لماذا')) + '</span><input class="input" id="ex-title" value="' + esc(st.title != null ? st.title : v.title) + '" placeholder="' + esc(t('e.g. 200L diesel', 'مثلاً 200 ليتر مازوت')) + '"></label>';
+  h += '<label class="field"><span>' + esc(t('What for', 'لماذا')) + '</span><input class="input" id="ex-title" dir="ltr" data-tr="ex-title-ar" data-tr-kind="phrase" value="' + esc(st.title != null ? st.title : v.title) + '" placeholder="' + esc(t('e.g. 200L diesel', 'مثلاً 200L diesel')) + '"><div class="tr-box" id="trs-ex-title"></div></label>';
+  h += '<label class="field"><span>' + esc(t('In Arabic (optional)', 'بالعربية (اختياري)')) + '</span><input class="input" id="ex-title-ar" dir="rtl" data-tr="ex-title" data-tr-kind="phrase" value="' + esc(st.title_ar != null ? st.title_ar : (v.title_ar || '')) + '" placeholder="' + esc('مثلاً 200 ليتر مازوت') + '"><div class="tr-box" id="trs-ex-title-ar"></div></label>';
+  if (blocks().length > 1 && setting('safe_mode') === 'block') {
+    var eb = st.block != null ? st.block : (v.block || UI.block || blocks()[0]);
+    h += '<label class="field"><span>' + esc(t('Whose safe', 'صندوق أي بلوك')) + '</span><div class="seg">' + blocks().map(function(b) { return '<button class="' + (eb === b ? 'on' : '') + '" onclick="keepExpense();UI.sheet.data.block=' + jsArg(b) + ';render()">' + esc(blockLabel(b)) + '</button>'; }).join('') + '</div></label>';
+    UI.sheet.data.block = eb;
+  }
   h += '<label class="field"><span>' + esc(t('Amount', 'المبلغ')) + '</span><div class="money-in"><input class="input" id="ex-amt" inputmode="decimal" value="' + esc(st.amount != null ? st.amount : v.amount) + '"><div class="seg"><button class="' + (v.cur === 'USD' ? 'on' : '') + '" onclick="keepExpense();UI.sheet.data.cur=\'USD\';render()">USD</button><button class="' + (v.cur === 'LBP' ? 'on' : '') + '" onclick="keepExpense();UI.sheet.data.cur=\'LBP\';render()">LBP</button></div></div></label>';
   h += fxField('ex-fx', v.cur, st.fx || v.fx || (v.orig_cur === 'LBP' ? v.fx : null), 'ex-amt');
   if (isManager()) {
@@ -368,26 +374,27 @@ function expensePreset(i) {
   if (i === '') return;
   keepExpense();
   var p = EXPENSE_PRESETS[i];
-  UI.sheet.data.title = LANG === 'ar' ? p.ar + ' · ' + p.en : p.en + ' · ' + p.ar;
+  UI.sheet.data.title = p.en; UI.sheet.data.title_ar = p.ar;
   UI.sheet.data.cat = p.cat;
   render();
 }
 function keepExpense() {
   var d = UI.sheet.data;
   if (document.getElementById('ex-fx')) d.fx = val('ex-fx');
-  d.title = val('ex-title'); d.amount = val('ex-amt'); d.date = val('ex-date'); d.cyc = val('ex-cyc'); d.ref = val('ex-ref');
+  d.title = val('ex-title'); if (document.getElementById('ex-title-ar')) d.title_ar = val('ex-title-ar'); d.amount = val('ex-amt'); d.date = val('ex-date'); d.cyc = val('ex-cyc'); d.ref = val('ex-ref');
 }
 function saveExpense(id, supId) {
   keepExpense();
   var d = UI.sheet.data, e = id ? byId(S.expenses, id) : null;
   var cat = d.cat || (e && e.cat) || (supId ? 'supplier' : 'other');
-  var row = { title: (d.title || '').trim(), amount: num(d.amount), cur: d.cur || (e && e.cur) || (supId ? byId(S.charges, supId).cur : 'USD'), cat: cat,
+  var row = { title: (d.title || '').trim() || (d.title_ar || '').trim(), title_ar: (d.title_ar || '').trim() || null, amount: num(d.amount), cur: d.cur || (e && e.cur) || (supId ? byId(S.charges, supId).cur : 'USD'), cat: cat,
               spent_on: d.date || todayIso(), cycle_id: d.cyc || null, ref: d.ref || null,
               paid_from: isManager() ? (d.from || (e && e.paid_from) || 'safe') : 'collector' };
   if (row.cur === 'LBP') row.fx = num(d.fx) || rate();
   if (!row.title) return sheetErr(t('Say what it was for', 'اذكر السبب'));
   if (!(row.amount > 0)) return sheetErr(t('Enter an amount', 'أدخل المبلغ'));
   if (supId) row.charge_id = supId;
+  if (blocks().length > 1 && setting('safe_mode') === 'block') row.block = d.block || null;
   if (!e) row.paid_by = row.paid_from === 'collector' && isManager() ? (collectors()[0] || {}).user_id : S.me.id;
   var btn = document.querySelector('.sheet .foot .btn.pri'); if (btn) btn.disabled = true;
   uploadPhoto(d.photoBlob).then(function(photo) {

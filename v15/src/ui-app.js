@@ -58,7 +58,12 @@ function go(tab) { UI.tab = tab; UI.bsec = null; render(); window.scrollTo(0, 0)
 /* ---------------------------------------------------------------------------
    Sheets (bottom panels)
    --------------------------------------------------------------------------- */
-function openSheet(name, data) { UI.sheet = { name: name, data: data || {} }; render(); }
+var SHEET_PERM = { pay: 'pay', cell: 'pay', expense: 'spend', charge: 'charges', extra: 'charges', project: 'charges', layout: 'charges', unitEdit: 'charges', task: 'tasks', invite: 'team' };
+function noPerm() { toast(t('The building manager turned this off for you', 'مدير البناية أوقف هذا لك')); }
+function openSheet(name, data) {
+  if (SHEET_PERM[name] && !can(SHEET_PERM[name])) return noPerm();
+  UI.sheet = { name: name, data: data || {} }; render();
+}
 function closeSheet() { UI.sheet = null; render(); }
 function renderSheet() {
   if (!UI.sheet) return '';
@@ -92,6 +97,7 @@ function renderDock() {
   var tabs = isManager()
     ? [['home', t('Home', 'الرئيسية')], ['collect', t('Collect', 'التحصيل')], ['fab'], ['books', t('Books', 'الحسابات')], ['building', t('Building', 'البناية')]]
     : [['home', t('Home', 'الرئيسية')], ['collect', t('Collect', 'التحصيل')], ['fab'], ['books', t('Books', 'الحسابات')], ['tasks', t('Tasks', 'المهام')]];
+  if (!can('books')) tabs = tabs.filter(function(x) { return x[0] !== 'books'; });
   var h = '<nav class="dock">';
   tabs.forEach(function(x) {
     if (x[0] === 'fab') { h += '<button class="fab" onclick="openSheet(\'add\')" aria-label="' + esc(t('Add', 'إضافة')) + '">+</button>'; return; }
@@ -215,7 +221,7 @@ function renderHomeManager() {
   var cyc = homeCycle();
   var cash = cashState();
   var h = renderTopbar();
-  h += blockChips() + heroHtml(cyc);
+  h += blocks().length > 1 ? blockChips(true) + (UI.block && blocks().indexOf(UI.block) >= 0 ? heroHtml(cyc) : heroCompound(cyc)) : heroHtml(cyc);
   h += renderSetupCard();
 
   cash.pending.forEach(function(ho) {
@@ -420,6 +426,7 @@ function channelRow() {
   return { channel: 'manager', received_by: S.me.id, method: 'Cash' };
 }
 function tapCell(chId, uId) {
+  if (!can('pay')) return noPerm();
   var ch = byId(S.charges, chId), u = byId(S.units, uId);
   if (!ch || !u) return;
   var c = cell(ch, u);
@@ -491,6 +498,7 @@ function taskLists(open) {
   return h;
 }
 function tickTask(id) {
+  if (!can('tasks')) return noPerm();
   var x = byId(S.tasks, id);
   if (!x) return;
   if (x.done_at) { dbUpdate('tasks', id, { done_at: null, done_by: null }).then(render, fail); render(); return; }
@@ -646,4 +654,20 @@ function renderSetupCard() {
       (x.done || skipped ? '<span class="chev">›</span>' : '<button class="btn ghost sm" onclick="event.stopPropagation();setupSkip(' + jsArg(x.k) + ')">' + esc(t('Skip', 'تخطَّ')) + '</button>') + '</div>';
   });
   return h + '</div></div>';
+}
+
+/* Home with several blocks and "All blocks" picked: every building side by side, lit by who paid.
+   Tap one to open its full scene. */
+function heroCompound(cyc) {
+  var bl = blocks().slice(0, 4), h = '<div class="hero-multi">';
+  bl.forEach(function(b, i) {
+    var units = activeUnits().filter(function(u) { return blockOf(u) === b; });
+    var paid = 0;
+    var wins = units.map(function(u) { var st = cyc ? unitCycle(u, cyc).state : 'none'; if (st === 'paid') paid++; return { state: st === 'paid' ? 'paid' : (st === 'none' || st === 'closed') ? 'closed' : 'owes' }; });
+    if (!wins.length) wins = [{ state: 'closed' }];
+    var levels = units.length ? levelsFor(units.map(function(u, k) { return { code: u.code, win: wins[k] }; })) : null;
+    var art = buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, wins: wins, levels: levels, signText: (S.building.name + ' ' + b).slice(0, 14), elevator: !!setting('elevator'), idp: 'cb' + i, extraCls: 'studio bh-bare nopop' });
+    h += '<button class="hm-blk" onclick="UI.block=' + jsArg(b) + ';render()">' + art + '<small>' + esc(blockLabel(b) + ' · ' + t(paid + '/' + units.length + ' paid', paid + '/' + units.length + ' سدّد')) + '</small></button>';
+  });
+  return h + '</div>';
 }

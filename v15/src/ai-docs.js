@@ -83,7 +83,7 @@ function scanReceipt() {
     d.photo = img.dataUrl; d.photoBlob = img.blob; d.scan = 'reading'; render();
     readDoc('receipt', img.b64, { cats: Object.keys(CATS).filter(function(k) { return k !== 'supplier'; }) }).then(function(f) {
       if (!UI.sheet || UI.sheet.data !== d) return;
-      if (f.title || f.title_ar) d.title = f.title && f.title_ar ? (LANG === 'ar' ? f.title_ar + ' · ' + f.title : f.title + ' · ' + f.title_ar) : (f.title || f.title_ar);
+      if (f.title || f.title_ar) { var sp = splitBilingual(f.title || ''); d.title = sp.en || f.title || f.title_ar; d.title_ar = f.title_ar || sp.ar || ''; }
       if (f.supplier && d.title && d.title.indexOf(f.supplier) < 0) d.title += ' (' + f.supplier + ')';
       if (f.amount) d.amount = f.amount;
       if (f.cur) d.cur = f.cur;
@@ -177,4 +177,11 @@ function viewPhoto(src) {
   el.querySelector('img').src = src;
   el.addEventListener('click', function(e) { if (e.target === el || e.target.classList.contains('pv-scroll') || e.target.classList.contains('pv-close')) el.remove(); });
   document.body.appendChild(el);
+}
+
+/* "Generator Invoice · فاتورة مولد" → { en: 'Generator Invoice', ar: 'فاتورة مولد' }. Text in one script stays whole. */
+function splitBilingual(str) {
+  var parts = String(str || '').split(/\s*[·•|/]\s*|\s+[-–—]\s+/).filter(Boolean), ar = /[\u0600-\u06FF]/;
+  var en = parts.filter(function(p) { return !ar.test(p); }).join(' · '), a = parts.filter(function(p) { return ar.test(p); }).join(' · ');
+  return en && a ? { en: en, ar: a } : { en: '', ar: '' };
 }

@@ -90,7 +90,7 @@ function renderResident() {
     h += '</div>';
     if (spent.length) {
       h += '<div class="card list" style="margin-top:10px">';
-      spent.forEach(function(e) { h += '<div class="li"><div class="ic out">' + catIcon(e.cat) + '</div><div class="grow"><b>' + esc(e.title) + '</b><small>' + esc(dateLabel(e.spent_on) + ' · ' + catName(e.cat)) + '</small></div><span class="amt out">' + esc(fmt(e.amount, e.cur)) + '</span></div>'; });
+      spent.forEach(function(e) { h += '<div class="li"><div class="ic out">' + catIcon(e.cat) + '</div><div class="grow"><b>' + esc(L(e)) + '</b><small>' + esc(dateLabel(e.spent_on) + ' · ' + catName(e.cat)) + '</small></div><span class="amt out">' + esc(fmt(e.amount, e.cur)) + '</span></div>'; });
       h += '</div>';
     }
     h += '</div>';

@@ -382,6 +382,20 @@ input.input[type="date"]::-webkit-date-and-time-value { text-align: start; margi
 .qr-box { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 12px 0 4px; text-align: center; }
 .qr-box img { width: 200px; height: auto; border-radius: 14px; background: #fff; cursor: zoom-in; }
 
+/* Onboarding with several blocks: one building per block, side by side */
+.ob-stage.ob-multi { gap: 4px; padding: 6px 8px 0; }
+.ob-multi .ob-blk { flex: 1 1 0; min-width: 0; display: flex; align-items: flex-end; justify-content: center; height: 100%; }
+.ob-multi .ob-blk .bh { max-height: 100%; width: 100%; }
+/* Apartment badges: never wrap a block-prefixed code like A-1A */
+.li .ic, .ucode { white-space: nowrap; }
+.li .ic { width: auto; min-width: 36px; padding: 0 6px; }
+/* Setup checklist on Home */
+.setup .li.done b { text-decoration: line-through; color: var(--mut); }
+.setup .li .ic.ok { background: var(--okbg); color: var(--ok); }
+.setup .prog { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin: 8px 0 4px; }
+.setup .prog i { display: block; height: 100%; background: var(--acc); border-radius: 3px; }
+.ob-multi .ob-blk + .ob-blk { margin-inline-start: -16%; }
+
 /* ---- living building scene ---- */
 .bh { position: relative; margin: 0 16px 12px; border-radius: 26px; overflow: hidden; aspect-ratio: 366 / 256; box-shadow: var(--shadow-lg); background: var(--sky2); }
 .bh svg.bh-art { display: block; width: 100%; height: 100%; }
@@ -4811,6 +4825,7 @@ function renderHomeManager() {
   var cash = cashState();
   var h = renderTopbar();
   h += blockChips() + heroHtml(cyc);
+  h += renderSetupCard();
 
   cash.pending.forEach(function(ho) {
     h += '<div class="sec"><div class="banner warn"><div class="grow"><b>' + esc(t(memberName(ho.collector_id) + ' handed over ' + fmtPair({ USD: num(ho.usd), LBP: num(ho.lbp) }), memberName(ho.collector_id) + ' سلّم ' + fmtPair({ USD: num(ho.usd), LBP: num(ho.lbp) }))) + '</b>' + esc(t('Confirm once the cash is in your hands.', 'أكّد عند استلام المبلغ.')) + '</div><button class="btn sm ok" onclick="openSheet(\'handover\',{id:' + jsArg(ho.id) + '})">' + esc(t('Review', 'مراجعة')) + '</button></div></div>';
@@ -5182,6 +5197,65 @@ function waLink(u, cyc) {
   });
 })();
 
+
+/* ---------------------------------------------------------------------------
+   Getting started: a checklist on Home after setup. Each step goes to the
+   right place; skipping one never ends the tour. Remembered per building on
+   this phone. Steps tick themselves when the thing is actually done.
+   --------------------------------------------------------------------------- */
+function setupKey() { return 'binayati-setup-' + ((S.building && S.building.id) || ''); }
+function setupState(patch) {
+  var st = {};
+  try { st = JSON.parse(localStorage.getItem(setupKey()) || '{}') || {}; } catch (e) { st = UI._setup || {}; }
+  if (patch) {
+    Object.keys(patch).forEach(function(k) { st[k] = patch[k]; });
+    UI._setup = st;
+    try { localStorage.setItem(setupKey(), JSON.stringify(st)); } catch (e) {}
+  }
+  return st;
+}
+function setupSteps() {
+  var units = activeUnits(), st = setupState(), mark = st.marked || {};
+  var named = units.filter(function(u) { return u.phone; }).length;
+  return [
+    { k: 'charges', ic: '🧾', en: 'Check this month\'s charges', ar: 'راجع رسوم هذا الشهر', sen: 'The monthly fee you set, plus any bill to split', sar: 'الرسم الشهري وأي فاتورة للتقسيم',
+      done: !!mark.charges, go: "UI.tab='building';UI.bsec='charges';render();window.scrollTo(0,0)" },
+    { k: 'names', ic: '🏠', en: 'Add residents\' names and WhatsApp', ar: 'أضف أسماء السكان وواتساب', sen: named + ' of ' + units.length + ' have a number. Bills and receipts go there.', sar: named + ' من ' + units.length + ' لها رقم. الفواتير والإيصالات تُرسل إليه.',
+      done: units.length > 0 && named === units.length, go: "UI.tab='building';UI.bsec='units';UI.fillNames=true;render();window.scrollTo(0,0)" },
+    { k: 'collector', ic: '💵', en: 'Invite your collector', ar: 'ادعُ الجابي', sen: 'Natour or a neighbour who collects cash', sar: 'الناطور أو جار يجمع النقد',
+      done: collectors().length > 0 || !!mark.collector, go: "openSheet('invite',{role:'collector'})" },
+    { k: 'pay', ic: '✓', en: 'Tick a payment', ar: 'أشّر على دفعة', sen: 'In Collect, tap a charge when an apartment pays', sar: 'في التحصيل، اضغط الرسم عندما تدفع شقة',
+      done: livePayments().length > 0, go: "go('collect')" },
+    { k: 'expense', ic: '📷', en: 'Log money spent', ar: 'سجّل مصروفاً', sen: 'Snap a receipt: diesel, a repair, cleaning', sar: 'صوّر الإيصال: مازوت، تصليح، تنظيف',
+      done: liveExpenses().length > 0, go: "openSheet('expense',{})" },
+    { k: 'task', ic: '🔔', en: 'See tasks and reminders', ar: 'شاهد المهام والتذكيرات', sen: 'Tank cleaning, bins, anything that repeats', sar: 'تنظيف الخزانات، المستوعبات، أي شيء يتكرر',
+      done: !!mark.task, go: "UI.tab='building';UI.bsec='tasks';render();window.scrollTo(0,0)" }
+  ];
+}
+function setupGo(k) {
+  var st = setupState(), mark = st.marked || {};
+  if (k === 'charges' || k === 'task') { mark[k] = 1; setupState({ marked: mark }); }
+  var step = setupSteps().filter(function(x) { return x.k === k; })[0];
+  if (step) (new Function(step.go))();
+}
+function setupSkip(k) { var st = setupState(), sk = st.skipped || {}; sk[k] = 1; setupState({ skipped: sk }); render(); }
+function renderSetupCard() {
+  if (!isManager() || !S.building) return '';
+  var st = setupState();
+  if (!st.open) return '';
+  var steps = setupSteps(), sk = st.skipped || {};
+  var done = steps.filter(function(x) { return x.done; }).length;
+  if (done === steps.length) { setupState({ open: false }); return ''; }
+  var h = '<div class="sec setup"><div class="card pad"><div class="row between"><b>' + esc(t('Get your building going', 'جهّز بنايتك')) + '</b><button class="btn ghost sm" onclick="setupState({open:false});render()">' + esc(t('Hide', 'إخفاء')) + '</button></div>';
+  h += '<div class="prog"><i style="width:' + Math.round(done * 100 / steps.length) + '%"></i></div><small class="muted">' + esc(t(done + ' of ' + steps.length + ' done. Do them in any order.', done + ' من ' + steps.length + '. بأي ترتيب.')) + '</small></div>';
+  h += '<div class="card list" style="margin-top:8px">';
+  steps.forEach(function(x) {
+    var skipped = !x.done && sk[x.k];
+    h += '<div class="li' + (x.done ? ' done' : '') + '" style="cursor:pointer" onclick="setupGo(' + jsArg(x.k) + ')"><div class="ic' + (x.done ? ' ok' : '') + '">' + (x.done ? '✓' : x.ic) + '</div><div class="grow"><b>' + esc(LANG === 'ar' ? x.ar : x.en) + '</b><small>' + esc(skipped ? t('Skipped. Tap to do it now.', 'تم التخطي. اضغط لتقوم به الآن.') : (LANG === 'ar' ? x.sar : x.sen)) + '</small></div>' +
+      (x.done || skipped ? '<span class="chev">›</span>' : '<button class="btn ghost sm" onclick="event.stopPropagation();setupSkip(' + jsArg(x.k) + ')">' + esc(t('Skip', 'تخطَّ')) + '</button>') + '</div>';
+  });
+  return h + '</div></div>';
+}
 
 /* ============================================================================
    Books: where the money is, every movement, and who did what
@@ -5619,10 +5693,10 @@ function renderUnitsSec() {
   var h = '';
   var missing = activeUnits().filter(function(u) { return !unitName(u) || !u.phone; }).length;
   if (UI.fillNames && missing) {
-    h += '<div class="sec"><div class="banner info"><div class="grow"><b>' + esc(t('Your building is ready. Next: who lives where', 'بنايتك جاهزة. التالي: من يسكن أين')) + '</b>' +
+    h += '<div class="sec"><div class="banner info"><div class="grow"><b>' + esc(t('Who lives where', 'من يسكن أين')) + '</b>' +
       esc(t('Tap each apartment to add the resident\'s name and WhatsApp number' + (contactsOk() ? ', or pick them from your contacts.' : '.') + ' Bills and receipts go to that number.',
             'اضغط كل شقة لإضافة اسم الساكن ورقم واتساب' + (contactsOk() ? '، أو اختره من جهات الاتصال.' : '.') + ' الفواتير والإيصالات تُرسل لهذا الرقم.')) +
-      '</div></div><div class="row" style="margin-top:8px"><button class="btn pri sm grow" onclick="nextUnnamed()">' + esc(t('Start with the first one', 'ابدأ بالأولى')) + '</button><button class="btn ghost sm" onclick="UI.fillNames=false;render()">' + esc(t('Later', 'لاحقاً')) + '</button></div></div>';
+      '</div></div><div class="row" style="margin-top:8px"><button class="btn pri sm grow" onclick="nextUnnamed()">' + esc(t('Start with the first one', 'ابدأ بالأولى')) + '</button><button class="btn ghost sm" onclick="UI.fillNames=false;go(\'home\')">' + esc(t('Later', 'لاحقاً')) + '</button></div></div>';
   }
   h += '<div class="sec"><button class="card li" style="border-radius:18px" onclick="openSheet(\'layout\',{})"><div class="ic">🏢</div><div class="grow"><b>' + esc(t('Floors, apartments & blocks', 'الطوابق والشقق والبلوكات')) + '</b><small>' + esc(blocks().length > 1 ? blocks().map(function(b) { return b + ': ' + layoutSummary(currentLayout(b)); }).join(' · ') : layoutSummary(currentLayout())) + '</small></div><span class="chev">›</span></button></div>';
   var bl = blocks();
@@ -5634,7 +5708,7 @@ function renderUnitsSec() {
     if (bl.length > 1) h += '<div class="daylbl">' + esc(g.b ? blockLabel(g.b) : t('No block', 'بلا بلوك')) + '</div>';
     h += '<div class="card list">';
     g.us.slice().sort(function(a, b) { return (a.sort || 0) - (b.sort || 0) || String(a.code).localeCompare(String(b.code), 'en', { numeric: true }); }).forEach(function(u) {
-      h += '<button class="li" onclick="openSheet(\'unitEdit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(unitTag(u)) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc([u.phone ? '\u2066' + u.phone + '\u2069' : t('no phone', 'بلا هاتف'), num(u.weight) !== 1 ? t('share ×', 'حصة ×') + num(u.weight) : '', u.active === false ? t('inactive', 'غير فعّالة') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
+      h += '<button class="li" onclick="openSheet(\'unitEdit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(bl.length > 1 ? u.code : unitTag(u)) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc([u.phone ? '\u2066' + u.phone + '\u2069' : t('no phone', 'بلا هاتف'), num(u.weight) !== 1 ? t('share ×', 'حصة ×') + num(u.weight) : '', u.active === false ? t('inactive', 'غير فعّالة') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
     });
     h += '</div>';
   });
@@ -6892,7 +6966,7 @@ function nextUnnamed(afterId) {
   var rest = list.slice(start).concat(list.slice(0, start));
   var u = rest.find(function(x) { return x.id !== afterId && (!unitName(x) || !x.phone); });
   if (u) openSheet('unitEdit', { id: u.id });
-  else { UI.fillNames = false; render(); toast(t('Every apartment has a name and number', 'كل الشقق لها اسم ورقم')); }
+  else { UI.fillNames = false; go('home'); toast(t('Every apartment has a name and number', 'كل الشقق لها اسم ورقم')); }
 }
 
 function meterSwitchText(mk) {
@@ -6946,7 +7020,7 @@ function obScene(lit, n, sign, celebrate, extra) {
   var wins = [];
   for (var i = 0; i < count; i++) wins.push({ state: i < lit ? 'paid' : 'closed' });
   var levels = codes ? levelsFor(codes.map(function(c, i) { return { code: c, win: wins[i] }; })) : null;
-  return buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, wins: wins, levels: levels, signText: sign || 'Building', idp: 'ob',
+  return buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, wins: wins, levels: levels, signText: sign || 'Building', idp: (extra && extra.idp) || 'ob',
                               safe: extra && extra.safe, solar: true, extraCls: 'studio bh-bare bh-ob nopop', celebrate: celebrate });
 }
 function tickWelcome() {
@@ -6979,7 +7053,16 @@ function renderOnboarding() {
   h += '<div class="ob-top"><button class="iconbtn" onclick="obBack()" aria-label="' + esc(t('Back', 'رجوع')) + '">' + (LANG === 'ar' ? '›' : '‹') + '</button><div class="ob-dots">';
   for (var i = 1; i <= OB_STEPS; i++) h += '<i class="' + (i <= Math.min(step, OB_STEPS) ? 'on' : '') + '"></i>';
   h += '</div><button class="iconbtn" onclick="setLang()">' + (LANG === 'ar' ? 'EN' : 'ع') + '</button></div>';
-  h += '<div class="ob-stage">' + obScene(lit, obUnits(), OB.name || t('Your building', 'بنايتك'), step === 6, { safe: safe }) + '</div>';
+  var nb = Math.min(4, OB.blocks || 1), sign = OB.name || t('Your building', 'بنايتك');
+  if (nb > 1) {
+    // One building per block, side by side; the safe sits with the first one (one compound, one safe).
+    var codes = obUnits(), per = codes.length, sc = '';
+    for (var bi = 0; bi < nb; bi++) {
+      var litB = Math.max(0, Math.min(per, lit - bi * per));
+      sc += '<div class="ob-blk">' + obScene(litB, codes, (sign + ' ' + String.fromCharCode(65 + bi)).slice(0, 14), step === 6, { safe: bi === 0 ? safe : null, idp: 'ob' + bi }) + '</div>';
+    }
+    h += '<div class="ob-stage ob-multi">' + sc + '</div>';
+  } else h += '<div class="ob-stage">' + obScene(lit, obUnits(), sign, step === 6, { safe: safe }) + '</div>';
   h += '<div class="ob-body">';
   if (step === 1) {
     h += '<h1>' + esc(t('What\'s the building called?', 'ما اسم البناية؟')) + '</h1><p class="sub">' + esc(t('It goes on the sign and on every receipt.', 'يظهر على اللافتة وعلى كل إيصال.')) + '</p>';
@@ -7075,7 +7158,7 @@ function finishSetup(displayName) {
       var name = OB.colName, nameAr = OB.colNameAr;
       OB = null;
       // Next step after setup: the apartments directory, to fill in residents' names and WhatsApp numbers.
-      UI.screen = 'app'; UI.tab = 'building'; UI.bsec = 'units'; UI.fillNames = true; HERO_REVEAL = true;
+      UI.screen = 'app'; UI.tab = 'home'; HERO_REVEAL = true; setupState({ open: true });
       render(); window.scrollTo(0, 0); launchConfetti();
       if (askInvite) setTimeout(function() { openSheet('invite', { role: 'collector' }); setTimeout(function() { var el = document.getElementById('inv-name'); if (el) el.value = name || ''; var ea = document.getElementById('inv-name-ar'); if (ea) ea.value = nameAr || ''; }, 50); }, 1600);
     })

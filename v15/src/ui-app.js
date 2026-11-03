@@ -216,6 +216,7 @@ function renderHomeManager() {
   var cash = cashState();
   var h = renderTopbar();
   h += blockChips() + heroHtml(cyc);
+  h += renderSetupCard();
 
   cash.pending.forEach(function(ho) {
     h += '<div class="sec"><div class="banner warn"><div class="grow"><b>' + esc(t(memberName(ho.collector_id) + ' handed over ' + fmtPair({ USD: num(ho.usd), LBP: num(ho.lbp) }), memberName(ho.collector_id) + ' سلّم ' + fmtPair({ USD: num(ho.usd), LBP: num(ho.lbp) }))) + '</b>' + esc(t('Confirm once the cash is in your hands.', 'أكّد عند استلام المبلغ.')) + '</div><button class="btn sm ok" onclick="openSheet(\'handover\',{id:' + jsArg(ho.id) + '})">' + esc(t('Review', 'مراجعة')) + '</button></div></div>';
@@ -587,3 +588,62 @@ function waLink(u, cyc) {
   });
 })();
 
+
+/* ---------------------------------------------------------------------------
+   Getting started: a checklist on Home after setup. Each step goes to the
+   right place; skipping one never ends the tour. Remembered per building on
+   this phone. Steps tick themselves when the thing is actually done.
+   --------------------------------------------------------------------------- */
+function setupKey() { return 'binayati-setup-' + ((S.building && S.building.id) || ''); }
+function setupState(patch) {
+  var st = {};
+  try { st = JSON.parse(localStorage.getItem(setupKey()) || '{}') || {}; } catch (e) { st = UI._setup || {}; }
+  if (patch) {
+    Object.keys(patch).forEach(function(k) { st[k] = patch[k]; });
+    UI._setup = st;
+    try { localStorage.setItem(setupKey(), JSON.stringify(st)); } catch (e) {}
+  }
+  return st;
+}
+function setupSteps() {
+  var units = activeUnits(), st = setupState(), mark = st.marked || {};
+  var named = units.filter(function(u) { return u.phone; }).length;
+  return [
+    { k: 'charges', ic: '🧾', en: 'Check this month\'s charges', ar: 'راجع رسوم هذا الشهر', sen: 'The monthly fee you set, plus any bill to split', sar: 'الرسم الشهري وأي فاتورة للتقسيم',
+      done: !!mark.charges, go: "UI.tab='building';UI.bsec='charges';render();window.scrollTo(0,0)" },
+    { k: 'names', ic: '🏠', en: 'Add residents\' names and WhatsApp', ar: 'أضف أسماء السكان وواتساب', sen: named + ' of ' + units.length + ' have a number. Bills and receipts go there.', sar: named + ' من ' + units.length + ' لها رقم. الفواتير والإيصالات تُرسل إليه.',
+      done: units.length > 0 && named === units.length, go: "UI.tab='building';UI.bsec='units';UI.fillNames=true;render();window.scrollTo(0,0)" },
+    { k: 'collector', ic: '💵', en: 'Invite your collector', ar: 'ادعُ الجابي', sen: 'Natour or a neighbour who collects cash', sar: 'الناطور أو جار يجمع النقد',
+      done: collectors().length > 0 || !!mark.collector, go: "openSheet('invite',{role:'collector'})" },
+    { k: 'pay', ic: '✓', en: 'Tick a payment', ar: 'أشّر على دفعة', sen: 'In Collect, tap a charge when an apartment pays', sar: 'في التحصيل، اضغط الرسم عندما تدفع شقة',
+      done: livePayments().length > 0, go: "go('collect')" },
+    { k: 'expense', ic: '📷', en: 'Log money spent', ar: 'سجّل مصروفاً', sen: 'Snap a receipt: diesel, a repair, cleaning', sar: 'صوّر الإيصال: مازوت، تصليح، تنظيف',
+      done: liveExpenses().length > 0, go: "openSheet('expense',{})" },
+    { k: 'task', ic: '🔔', en: 'See tasks and reminders', ar: 'شاهد المهام والتذكيرات', sen: 'Tank cleaning, bins, anything that repeats', sar: 'تنظيف الخزانات، المستوعبات، أي شيء يتكرر',
+      done: !!mark.task, go: "UI.tab='building';UI.bsec='tasks';render();window.scrollTo(0,0)" }
+  ];
+}
+function setupGo(k) {
+  var st = setupState(), mark = st.marked || {};
+  if (k === 'charges' || k === 'task') { mark[k] = 1; setupState({ marked: mark }); }
+  var step = setupSteps().filter(function(x) { return x.k === k; })[0];
+  if (step) (new Function(step.go))();
+}
+function setupSkip(k) { var st = setupState(), sk = st.skipped || {}; sk[k] = 1; setupState({ skipped: sk }); render(); }
+function renderSetupCard() {
+  if (!isManager() || !S.building) return '';
+  var st = setupState();
+  if (!st.open) return '';
+  var steps = setupSteps(), sk = st.skipped || {};
+  var done = steps.filter(function(x) { return x.done; }).length;
+  if (done === steps.length) { setupState({ open: false }); return ''; }
+  var h = '<div class="sec setup"><div class="card pad"><div class="row between"><b>' + esc(t('Get your building going', 'جهّز بنايتك')) + '</b><button class="btn ghost sm" onclick="setupState({open:false});render()">' + esc(t('Hide', 'إخفاء')) + '</button></div>';
+  h += '<div class="prog"><i style="width:' + Math.round(done * 100 / steps.length) + '%"></i></div><small class="muted">' + esc(t(done + ' of ' + steps.length + ' done. Do them in any order.', done + ' من ' + steps.length + '. بأي ترتيب.')) + '</small></div>';
+  h += '<div class="card list" style="margin-top:8px">';
+  steps.forEach(function(x) {
+    var skipped = !x.done && sk[x.k];
+    h += '<div class="li' + (x.done ? ' done' : '') + '" style="cursor:pointer" onclick="setupGo(' + jsArg(x.k) + ')"><div class="ic' + (x.done ? ' ok' : '') + '">' + (x.done ? '✓' : x.ic) + '</div><div class="grow"><b>' + esc(LANG === 'ar' ? x.ar : x.en) + '</b><small>' + esc(skipped ? t('Skipped. Tap to do it now.', 'تم التخطي. اضغط لتقوم به الآن.') : (LANG === 'ar' ? x.sar : x.sen)) + '</small></div>' +
+      (x.done || skipped ? '<span class="chev">›</span>' : '<button class="btn ghost sm" onclick="event.stopPropagation();setupSkip(' + jsArg(x.k) + ')">' + esc(t('Skip', 'تخطَّ')) + '</button>') + '</div>';
+  });
+  return h + '</div></div>';
+}

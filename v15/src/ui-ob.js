@@ -34,7 +34,7 @@ function obScene(lit, n, sign, celebrate, extra) {
   var wins = [];
   for (var i = 0; i < count; i++) wins.push({ state: i < lit ? 'paid' : 'closed' });
   var levels = codes ? levelsFor(codes.map(function(c, i) { return { code: c, win: wins[i] }; })) : null;
-  return buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, wins: wins, levels: levels, signText: sign || 'Building', idp: 'ob',
+  return buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, wins: wins, levels: levels, signText: sign || 'Building', idp: (extra && extra.idp) || 'ob',
                               safe: extra && extra.safe, solar: true, extraCls: 'studio bh-bare bh-ob nopop', celebrate: celebrate });
 }
 function tickWelcome() {
@@ -67,7 +67,16 @@ function renderOnboarding() {
   h += '<div class="ob-top"><button class="iconbtn" onclick="obBack()" aria-label="' + esc(t('Back', 'رجوع')) + '">' + (LANG === 'ar' ? '›' : '‹') + '</button><div class="ob-dots">';
   for (var i = 1; i <= OB_STEPS; i++) h += '<i class="' + (i <= Math.min(step, OB_STEPS) ? 'on' : '') + '"></i>';
   h += '</div><button class="iconbtn" onclick="setLang()">' + (LANG === 'ar' ? 'EN' : 'ع') + '</button></div>';
-  h += '<div class="ob-stage">' + obScene(lit, obUnits(), OB.name || t('Your building', 'بنايتك'), step === 6, { safe: safe }) + '</div>';
+  var nb = Math.min(4, OB.blocks || 1), sign = OB.name || t('Your building', 'بنايتك');
+  if (nb > 1) {
+    // One building per block, side by side; the safe sits with the first one (one compound, one safe).
+    var codes = obUnits(), per = codes.length, sc = '';
+    for (var bi = 0; bi < nb; bi++) {
+      var litB = Math.max(0, Math.min(per, lit - bi * per));
+      sc += '<div class="ob-blk">' + obScene(litB, codes, (sign + ' ' + String.fromCharCode(65 + bi)).slice(0, 14), step === 6, { safe: bi === 0 ? safe : null, idp: 'ob' + bi }) + '</div>';
+    }
+    h += '<div class="ob-stage ob-multi">' + sc + '</div>';
+  } else h += '<div class="ob-stage">' + obScene(lit, obUnits(), sign, step === 6, { safe: safe }) + '</div>';
   h += '<div class="ob-body">';
   if (step === 1) {
     h += '<h1>' + esc(t('What\'s the building called?', 'ما اسم البناية؟')) + '</h1><p class="sub">' + esc(t('It goes on the sign and on every receipt.', 'يظهر على اللافتة وعلى كل إيصال.')) + '</p>';
@@ -163,7 +172,7 @@ function finishSetup(displayName) {
       var name = OB.colName, nameAr = OB.colNameAr;
       OB = null;
       // Next step after setup: the apartments directory, to fill in residents' names and WhatsApp numbers.
-      UI.screen = 'app'; UI.tab = 'building'; UI.bsec = 'units'; UI.fillNames = true; HERO_REVEAL = true;
+      UI.screen = 'app'; UI.tab = 'home'; HERO_REVEAL = true; setupState({ open: true });
       render(); window.scrollTo(0, 0); launchConfetti();
       if (askInvite) setTimeout(function() { openSheet('invite', { role: 'collector' }); setTimeout(function() { var el = document.getElementById('inv-name'); if (el) el.value = name || ''; var ea = document.getElementById('inv-name-ar'); if (ea) ea.value = nameAr || ''; }, 50); }, 1600);
     })

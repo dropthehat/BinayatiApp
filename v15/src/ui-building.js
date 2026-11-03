@@ -33,10 +33,10 @@ function renderUnitsSec() {
   var h = '';
   var missing = activeUnits().filter(function(u) { return !unitName(u) || !u.phone; }).length;
   if (UI.fillNames && missing) {
-    h += '<div class="sec"><div class="banner info"><div class="grow"><b>' + esc(t('Your building is ready. Next: who lives where', 'بنايتك جاهزة. التالي: من يسكن أين')) + '</b>' +
+    h += '<div class="sec"><div class="banner info"><div class="grow"><b>' + esc(t('Who lives where', 'من يسكن أين')) + '</b>' +
       esc(t('Tap each apartment to add the resident\'s name and WhatsApp number' + (contactsOk() ? ', or pick them from your contacts.' : '.') + ' Bills and receipts go to that number.',
             'اضغط كل شقة لإضافة اسم الساكن ورقم واتساب' + (contactsOk() ? '، أو اختره من جهات الاتصال.' : '.') + ' الفواتير والإيصالات تُرسل لهذا الرقم.')) +
-      '</div></div><div class="row" style="margin-top:8px"><button class="btn pri sm grow" onclick="nextUnnamed()">' + esc(t('Start with the first one', 'ابدأ بالأولى')) + '</button><button class="btn ghost sm" onclick="UI.fillNames=false;render()">' + esc(t('Later', 'لاحقاً')) + '</button></div></div>';
+      '</div></div><div class="row" style="margin-top:8px"><button class="btn pri sm grow" onclick="nextUnnamed()">' + esc(t('Start with the first one', 'ابدأ بالأولى')) + '</button><button class="btn ghost sm" onclick="UI.fillNames=false;go(\'home\')">' + esc(t('Later', 'لاحقاً')) + '</button></div></div>';
   }
   h += '<div class="sec"><button class="card li" style="border-radius:18px" onclick="openSheet(\'layout\',{})"><div class="ic">🏢</div><div class="grow"><b>' + esc(t('Floors, apartments & blocks', 'الطوابق والشقق والبلوكات')) + '</b><small>' + esc(blocks().length > 1 ? blocks().map(function(b) { return b + ': ' + layoutSummary(currentLayout(b)); }).join(' · ') : layoutSummary(currentLayout())) + '</small></div><span class="chev">›</span></button></div>';
   var bl = blocks();
@@ -48,7 +48,7 @@ function renderUnitsSec() {
     if (bl.length > 1) h += '<div class="daylbl">' + esc(g.b ? blockLabel(g.b) : t('No block', 'بلا بلوك')) + '</div>';
     h += '<div class="card list">';
     g.us.slice().sort(function(a, b) { return (a.sort || 0) - (b.sort || 0) || String(a.code).localeCompare(String(b.code), 'en', { numeric: true }); }).forEach(function(u) {
-      h += '<button class="li" onclick="openSheet(\'unitEdit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(unitTag(u)) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc([u.phone ? '\u2066' + u.phone + '\u2069' : t('no phone', 'بلا هاتف'), num(u.weight) !== 1 ? t('share ×', 'حصة ×') + num(u.weight) : '', u.active === false ? t('inactive', 'غير فعّالة') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
+      h += '<button class="li" onclick="openSheet(\'unitEdit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(bl.length > 1 ? u.code : unitTag(u)) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc([u.phone ? '\u2066' + u.phone + '\u2069' : t('no phone', 'بلا هاتف'), num(u.weight) !== 1 ? t('share ×', 'حصة ×') + num(u.weight) : '', u.active === false ? t('inactive', 'غير فعّالة') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
     });
     h += '</div>';
   });
@@ -1306,7 +1306,7 @@ function nextUnnamed(afterId) {
   var rest = list.slice(start).concat(list.slice(0, start));
   var u = rest.find(function(x) { return x.id !== afterId && (!unitName(x) || !x.phone); });
   if (u) openSheet('unitEdit', { id: u.id });
-  else { UI.fillNames = false; render(); toast(t('Every apartment has a name and number', 'كل الشقق لها اسم ورقم')); }
+  else { UI.fillNames = false; go('home'); toast(t('Every apartment has a name and number', 'كل الشقق لها اسم ورقم')); }
 }
 
 function meterSwitchText(mk) {

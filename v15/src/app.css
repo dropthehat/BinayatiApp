@@ -368,3 +368,17 @@ input.input[type="date"]::-webkit-date-and-time-value { text-align: start; margi
 /* Invite QR */
 .qr-box { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 12px 0 4px; text-align: center; }
 .qr-box img { width: 200px; height: auto; border-radius: 14px; background: #fff; cursor: zoom-in; }
+
+/* Onboarding with several blocks: one building per block, side by side */
+.ob-stage.ob-multi { gap: 4px; padding: 6px 8px 0; }
+.ob-multi .ob-blk { flex: 1 1 0; min-width: 0; display: flex; align-items: flex-end; justify-content: center; height: 100%; }
+.ob-multi .ob-blk .bh { max-height: 100%; width: 100%; }
+/* Apartment badges: never wrap a block-prefixed code like A-1A */
+.li .ic, .ucode { white-space: nowrap; }
+.li .ic { width: auto; min-width: 36px; padding: 0 6px; }
+/* Setup checklist on Home */
+.setup .li.done b { text-decoration: line-through; color: var(--mut); }
+.setup .li .ic.ok { background: var(--okbg); color: var(--ok); }
+.setup .prog { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin: 8px 0 4px; }
+.setup .prog i { display: block; height: 100%; background: var(--acc); border-radius: 3px; }
+.ob-multi .ob-blk + .ob-blk { margin-inline-start: -16%; }

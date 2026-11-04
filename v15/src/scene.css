@@ -134,18 +134,34 @@
 .bh.lift .bh-core{fill:#263049;animation:none;stroke:rgba(0,0,0,.25);stroke-width:.4}
 .bh.night.lift .bh-core,.bh.eve.lift .bh-core{fill:#141A33}
 
-/* The building cat */
-.bh-catSit{cursor:pointer;animation:catSit 50s linear infinite;transform-box:fill-box;transform-origin:50% 100%}
-.bh-catSit.pet{animation:catSit 50s linear infinite,catHop .5s ease}
-.bh-catTail{transform-box:fill-box;transform-origin:100% 100%;animation:catTail 2.6s ease-in-out infinite}
-.bh-catEye{fill:#3A2A1A}
-.bh.night .bh-catEye,.bh.eve .bh-catEye{fill:#FFE27A}
-.bh-catWalk{animation:catWalk 50s linear infinite;opacity:0}
-.bh-catLegA{animation:catLeg .5s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 0}
-.bh-catLegB{animation:catLeg .5s ease-in-out infinite reverse;transform-box:fill-box;transform-origin:50% 0}
-@keyframes catTail{0%,100%{transform:rotate(0)}50%{transform:rotate(-24deg)}}
-@keyframes catLeg{0%,100%{transform:rotate(18deg)}50%{transform:rotate(-18deg)}}
+/* The building cat (black). One 60 s day: nap on balcony A, walk the ledge, nap on B, stroll the pavement. */
+.bh-cat{cursor:pointer;opacity:0;transform-box:fill-box}
+.bh-catSitA{animation:catA 60s linear infinite}
+.bh-catSitB{animation:catB 60s linear infinite}
+.bh-catLedge{animation:catLedge 60s linear infinite}
+.bh-catWalk{animation:catStreet 60s linear infinite}
+.bh-cat.pet>*,.bh-cat .pet{animation:catHop .45s ease}
+.bh-catTail{transform-box:fill-box;transform-origin:100% 100%;animation:catTail 2.8s ease-in-out infinite}
+.bh-catEarR{transform-box:fill-box;transform-origin:50% 100%;animation:catEar 7s ease-in-out infinite}
+.bh-catEyes{transform-box:fill-box;transform-origin:50% 50%;animation:catBlink 5.5s steps(1) infinite}
+.bh-catBody{transform-box:fill-box;transform-origin:50% 100%;animation:catBreath 3.2s ease-in-out infinite}
+.bh-catEye{fill:#E8D35A}
+.bh.night .bh-catEye,.bh.eve .bh-catEye{fill:#FFE27A;filter:drop-shadow(0 0 1px #FFE27A)}
+.bh.night .bh-cat,.bh.eve .bh-cat{filter:drop-shadow(0 0 .6px rgba(255,255,255,.55))}
+.bh-catLegA{animation:catLeg .46s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 0}
+.bh-catLegB{animation:catLeg .46s ease-in-out infinite reverse;transform-box:fill-box;transform-origin:50% 0}
+@keyframes catTail{0%,100%{transform:rotate(0)}50%{transform:rotate(-26deg)}}
+@keyframes catEar{0%,88%,100%{transform:rotate(0)}91%{transform:rotate(18deg)}94%{transform:rotate(0)}}
+@keyframes catBlink{0%,92%,100%{transform:scaleY(1)}94%{transform:scaleY(.1)}}
+@keyframes catBreath{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.04)}}
+@keyframes catLeg{0%,100%{transform:rotate(20deg)}50%{transform:rotate(-20deg)}}
 @keyframes catHop{0%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
-@keyframes catSit{0%,58%{opacity:1}60%,96%{opacity:0}98%,100%{opacity:1}}
-@keyframes catWalk{0%,61%{opacity:0;transform:translateX(-20px)}62%{opacity:1;transform:translateX(-20px)}94%{opacity:1;transform:translateX(390px)}95%,100%{opacity:0;transform:translateX(390px)}}
-@media (prefers-reduced-motion: reduce){.bh-catWalk{display:none}.bh-catSit,.bh-catTail{animation:none}}
+@keyframes catA{0%,34%{opacity:1}35%,92%{opacity:0}93%,100%{opacity:1}}
+@keyframes catLedge{0%,34.5%{opacity:0;transform:translateX(0)}35%{opacity:1;transform:translateX(0)}46%{opacity:1;transform:translateX(var(--dx))}46.5%,100%{opacity:0;transform:translateX(var(--dx))}}
+@keyframes catB{0%,46%{opacity:0}47%,71%{opacity:1}72%,100%{opacity:0}}
+@keyframes catStreet{0%,73%{opacity:0;transform:translateX(-20px)}74%{opacity:1;transform:translateX(-20px)}91%{opacity:1;transform:translateX(390px)}92%,100%{opacity:0;transform:translateX(390px)}}
+.bh-say{position:absolute;z-index:5;transform:translate(-50%,-100%);background:#FFFFFF;color:#17142B;font-size:13px;font-weight:700;padding:7px 11px;border-radius:14px;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.25);pointer-events:none;animation:saySay .25s cubic-bezier(.2,.9,.3,1.3)}
+.bh-say::after{content:"";position:absolute;left:calc(50% + var(--tail, 0px) - 6px);bottom:-5px;width:12px;height:12px;background:#FFFFFF;transform:rotate(45deg);border-radius:2px}
+.bh-say.out{opacity:0;transform:translate(-50%,-115%);transition:opacity .4s,transform .4s}
+@keyframes saySay{from{opacity:0;transform:translate(-50%,-80%) scale(.7)}to{opacity:1;transform:translate(-50%,-100%) scale(1)}}
+@media (prefers-reduced-motion: reduce){.bh-catWalk,.bh-catLedge,.bh-catSitB{display:none}.bh-catSitA{animation:none;opacity:1}.bh-catTail,.bh-catEarR,.bh-catEyes,.bh-catBody{animation:none}}

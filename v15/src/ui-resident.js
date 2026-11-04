@@ -99,6 +99,6 @@ function renderResident() {
     h += '</div>';
   }
   if (feature('contacts')) h += renderResidentContacts();
-  h += '<div class="foot-note">' + esc(t('This page is private to your apartment. Natour · ناطور', 'هذه الصفحة خاصة بشقتك. ناطور · Natour')) + '</div></div>';
+  h += '<div class="foot-note">' + esc(t('This page is private to your apartment. Natour app · تطبيق ناطور', 'هذه الصفحة خاصة بشقتك. تطبيق ناطور · Natour app')) + '</div></div>';
   return h;
 }

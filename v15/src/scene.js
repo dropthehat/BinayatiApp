@@ -279,7 +279,7 @@ function buildBuildingScene(o) {
    var ft2 = lobbyTop - (fl + 1) * fh;
    row.wins.slice(0, 6).forEach(function(w, j) {
      var x = winX(j, row.wins.length);
-     perches.push({ x: x + ww * 0.68, y: ft2 + fh * 0.64 });
+     perches.push({ x: x + ww * 0.68, y: ft2 + fh * 0.64, fl: fl, j: j, n: row.wins.length });
      rails += heroRailPath(x, ww, ft2 + fh * 0.64, ft2 + fh * 0.89);
      drawWin(w, x, ft2 + fh * 0.21, wh);
      plant(x + 1, ft2 + fh * 0.64, wi * 2); plant(x + ww - 7, ft2 + fh * 0.64, wi * 2 + 1);
@@ -343,12 +343,20 @@ function buildBuildingScene(o) {
  // Railings drawn over the windows
  if (rails) s += '<path class="bh-rail" d="' + rails + '" style="stroke-width:.6"/>';
  s += plants;
- // Easter egg: the building's ginger cat. It naps on a different balcony each day, and now
- // and then strolls along the pavement. Tap it.
+ // Easter egg: the building's black cat. Each day it starts on a different balcony, naps
+ // (tail, ears, blinks), walks along the ledge to the neighbour's balcony, sits there, then
+ // goes down for a stroll along the pavement. Tap it and it talks, in a bubble next to it.
  if (!o.bare && o.interactive && perches.length && (typeof feature !== 'function' || feature('hero_cat'))) {
-   var day = Math.floor(Date.now() / 864e5), pc = perches[day % perches.length], cs = Math.max(0.55, Math.min(1.1, fh / 26));
-   s += '<g transform="translate(' + heroR(pc.x) + ' ' + heroR(pc.y) + ') scale(' + heroR(cs) + ')"><g class="bh-catSit" onclick="catTap(event,this)" role="button" aria-label="' + esc(t('The building cat', 'قطة البناية')) + '">' + catSitSvg() + '</g></g>';
-   if (!basements) s += '<g transform="translate(0 231)"><g class="bh-catWalk">' + catWalkSvg() + '</g></g>';
+   var day = Math.floor(Date.now() / 864e5), pa = perches[day % perches.length], cs = Math.max(0.55, Math.min(1.1, fh / 26));
+   var pb = perches.filter(function(q) { return q.fl === pa.fl && Math.abs(q.j - pa.j) === 1; })[0] || null;
+   var catLbl = ' role="button" aria-label="' + esc(t('The building cat', 'قطة البناية')) + '" onclick="catTap(event,this)"';
+   s += '<g transform="translate(' + heroR(pa.x) + ' ' + heroR(pa.y) + ') scale(' + heroR(cs) + ')"><g class="bh-cat bh-catSitA"' + catLbl + '>' + catSitSvg() + '</g></g>';
+   if (pb) {
+     var dx = pb.x - pa.x;
+     s += '<g transform="translate(' + heroR(pa.x) + ' ' + heroR(pa.y) + ')"><g class="bh-cat bh-catLedge" style="--dx:' + heroR(dx) + 'px"><g transform="scale(' + heroR(dx < 0 ? -cs : cs) + ' ' + heroR(cs) + ')"' + catLbl + '>' + catWalkSvg() + '</g></g></g>';
+     s += '<g transform="translate(' + heroR(pb.x) + ' ' + heroR(pb.y) + ') scale(' + heroR(cs) + ')"><g class="bh-cat bh-catSitB"' + catLbl + '>' + catSitSvg() + '</g></g>';
+   }
+   if (!basements) s += '<g transform="translate(0 231)"><g class="bh-cat bh-catWalk"><g' + catLbl + '>' + catWalkSvg() + '</g></g></g>';
  }
  // Ground-floor plinth: a wide light slab with a soft lip, like a podium
  if (basements) {
@@ -579,30 +587,45 @@ function liftTick(now) {
 }
 if (typeof requestAnimationFrame !== 'undefined' && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) requestAnimationFrame(liftTick);
 
-/* The building cat (Easter egg): a ginger street cat, drawn small in scene units, base at y=0. */
+/* The building cat (Easter egg): a black street cat, drawn small in scene units, base at y=0. */
+var CAT_FUR = '#1D1A22', CAT_SHADE = '#34303D';
 function catSitSvg() {
-  return '<rect x="-7" y="-17" width="15" height="18" fill="transparent"/>' +
-    '<path class="bh-catTail" d="M-3.2 -0.8 Q-7.5 -1.4 -6.6 -6.4" style="fill:none;stroke:#C46F22;stroke-width:1.5;stroke-linecap:round"/>' +
-    '<ellipse cx="0" cy="-4.2" rx="4" ry="4.4" fill="#E08A3C"/>' +
-    '<ellipse cx="1.4" cy="-3.2" rx="1.6" ry="2.4" fill="#F6E3C8"/>' +
-    '<circle cx="2.4" cy="-9.6" r="3" fill="#E08A3C"/>' +
-    '<path d="M0.3 -11.6 L0.9 -14.9 L2.5 -12.5 Z M3.3 -12.5 L4.9 -14.9 L5.3 -11.6 Z" fill="#E08A3C"/>' +
-    '<path d="M-1.6 -6.8 H1 M-2 -5 H0.6" style="stroke:#C46F22;stroke-width:.6"/>' +
-    '<circle class="bh-catEye" cx="1.6" cy="-9.9" r=".5"/><circle class="bh-catEye" cx="3.6" cy="-9.9" r=".5"/>';
+  return '<rect x="-8" y="-17" width="16" height="18" fill="transparent"/>' +
+    '<path class="bh-catTail" d="M-3.2 -0.8 Q-8 -1.2 -7 -6.8" style="fill:none;stroke:' + CAT_FUR + ';stroke-width:1.6;stroke-linecap:round"/>' +
+    '<ellipse class="bh-catBody" cx="0" cy="-4.2" rx="4" ry="4.4" fill="' + CAT_FUR + '"/>' +
+    '<ellipse cx="1.3" cy="-3.4" rx="1.4" ry="2.2" fill="' + CAT_SHADE + '"/>' +
+    '<g class="bh-catHead"><circle cx="2.4" cy="-9.6" r="3" fill="' + CAT_FUR + '"/>' +
+    '<path class="bh-catEarL" d="M0.3 -11.6 L0.9 -14.9 L2.5 -12.5 Z" fill="' + CAT_FUR + '"/><path class="bh-catEarR" d="M3.3 -12.5 L4.9 -14.9 L5.3 -11.6 Z" fill="' + CAT_FUR + '"/>' +
+    '<g class="bh-catEyes"><ellipse class="bh-catEye" cx="1.5" cy="-9.9" rx=".62" ry=".72"/><ellipse class="bh-catEye" cx="3.7" cy="-9.9" rx=".62" ry=".72"/></g>' +
+    '<path d="M2.3 -8.4 L2.6 -8.1 L2.9 -8.4" style="fill:none;stroke:#E59AA8;stroke-width:.35"/></g>';
 }
 function catWalkSvg() {
-  return '<path class="bh-catTail" d="M-5.2 -5.4 Q-9 -7 -8 -11" style="fill:none;stroke:#C46F22;stroke-width:1.4;stroke-linecap:round"/>' +
-    '<rect class="bh-catLegA" x="-4.4" y="-3.2" width="1.3" height="3.2" rx=".6" fill="#C46F22"/><rect class="bh-catLegB" x="-2.2" y="-3.2" width="1.3" height="3.2" rx=".6" fill="#C46F22"/>' +
-    '<rect class="bh-catLegB" x="2.4" y="-3.2" width="1.3" height="3.2" rx=".6" fill="#C46F22"/><rect class="bh-catLegA" x="4.4" y="-3.2" width="1.3" height="3.2" rx=".6" fill="#C46F22"/>' +
-    '<ellipse cx="0" cy="-5" rx="6" ry="2.9" fill="#E08A3C"/>' +
-    '<circle cx="6.6" cy="-7.4" r="2.6" fill="#E08A3C"/>' +
-    '<path d="M5 -9.2 L5.4 -12 L6.8 -9.9 Z M7.4 -9.9 L8.6 -12 L9 -9 Z" fill="#E08A3C"/>' +
-    '<circle class="bh-catEye" cx="7.6" cy="-7.7" r=".45"/>';
+  return '<rect x="-10" y="-13" width="21" height="14" fill="transparent"/>' +
+    '<path class="bh-catTail" d="M-5.2 -5.4 Q-9.5 -7 -8.2 -11.5" style="fill:none;stroke:' + CAT_FUR + ';stroke-width:1.5;stroke-linecap:round"/>' +
+    '<rect class="bh-catLegA" x="-4.4" y="-3.4" width="1.3" height="3.4" rx=".6" fill="' + CAT_FUR + '"/><rect class="bh-catLegB" x="-2.2" y="-3.4" width="1.3" height="3.4" rx=".6" fill="' + CAT_FUR + '"/>' +
+    '<rect class="bh-catLegB" x="2.4" y="-3.4" width="1.3" height="3.4" rx=".6" fill="' + CAT_FUR + '"/><rect class="bh-catLegA" x="4.4" y="-3.4" width="1.3" height="3.4" rx=".6" fill="' + CAT_FUR + '"/>' +
+    '<ellipse class="bh-catBody" cx="0" cy="-5.2" rx="6" ry="2.9" fill="' + CAT_FUR + '"/>' +
+    '<circle cx="6.6" cy="-7.6" r="2.6" fill="' + CAT_FUR + '"/>' +
+    '<path d="M5 -9.4 L5.4 -12.2 L6.8 -10.1 Z M7.4 -10.1 L8.6 -12.2 L9 -9.2 Z" fill="' + CAT_FUR + '"/>' +
+    '<ellipse class="bh-catEye" cx="7.7" cy="-7.9" rx=".55" ry=".62"/>';
 }
-var CAT_SAYS = [['Mrrrow 🐾', 'مياو 🐾'], ['Purr… the books are balanced', 'خرخر… الحسابات مضبوطة'], ['Has 4B paid yet?', 'هل دفعت 4B؟'], ['Feed me, I guard the safe', 'أطعمني، أنا أحرس الصندوق']];
+var CAT_SAYS = [['Mrrrrn…', 'مرررن…'], ['Mrrrow 🐾', 'مياو 🐾'], ['Purrr… the books are balanced', 'خرررر… الحسابات مضبوطة'], ['Has 4B paid yet?', 'هل دفعت 4B؟'], ['Feed me, I guard the safe', 'أطعمني، أنا أحرس الصندوق'], ['Prrt?', 'برررت؟'], ['Ya Natour! 🐾', 'يا ناطور! 🐾']];
 function catTap(ev, el) {
   if (ev) ev.stopPropagation();
   var m = CAT_SAYS[Math.floor(Math.random() * CAT_SAYS.length)];
-  toast(LANG === 'ar' ? m[1] : m[0]);
+  var box = el.closest('.bh'), r = el.getBoundingClientRect();
+  if (box) {
+    var b = box.getBoundingClientRect(), old = box.querySelector('.bh-say'); if (old) old.remove();
+    var say = document.createElement('div');
+    say.className = 'bh-say';
+    say.textContent = LANG === 'ar' ? m[1] : m[0];
+    var cx = r.left - b.left + r.width / 2;
+    say.style.left = Math.max(70, Math.min(b.width - 70, cx)) + 'px';
+    say.style.top = Math.max(8, r.top - b.top - 4) + 'px';
+    say.style.setProperty('--tail', (cx - Math.max(70, Math.min(b.width - 70, cx))) + 'px');
+    box.appendChild(say);
+    setTimeout(function() { say.classList.add('out'); }, 2200);
+    setTimeout(function() { say.remove(); }, 2700);
+  } else toast(LANG === 'ar' ? m[1] : m[0]);
   el.classList.remove('pet'); void el.getBoundingClientRect(); el.classList.add('pet');
 }

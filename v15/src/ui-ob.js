@@ -283,7 +283,7 @@ function renderJoin() {
   if (j.info && j.info.valid) {
     h += '<button class="btn pri block" onclick="UI.screen=\'auth\';UI.auth={mode:\'up\',invite:Object.assign({code:UI.join.code},UI.join.info)};render()">' + esc(t('Create my account', 'أنشئ حسابي')) + '</button>';
     h += '<button class="btn ghost block" onclick="UI.screen=\'auth\';UI.auth={mode:\'in\',invite:Object.assign({code:UI.join.code},UI.join.info)};render()">' + esc(t('I already have an account', 'لدي حساب')) + '</button>';
-  } else if (j.info || j.error) h += '<button class="btn sec block" onclick="location.href=location.pathname">' + esc(t('Open Natour', 'افتح ناطور')) + '</button>';
+  } else if (j.info || j.error) h += '<button class="btn sec block" onclick="location.href=location.pathname">' + esc(t('Open the Natour app', 'افتح تطبيق ناطور')) + '</button>';
   return h + '</div></div></div>';
 }
 

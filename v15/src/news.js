@@ -1,5 +1,5 @@
 /* ============================================================================
-   News from Natour: announcements the admin sends (new features, tips,
+   News from the Natour app: announcements the admin sends (new features, tips,
    offers). Newest unread shows as a card on Home; all of them in the menu.
    Managers can turn partner offers off for their building.
    ============================================================================ */
@@ -63,7 +63,7 @@ function newsDismiss(id) {
 }
 SHEETS.news = function() {
   var list = visibleNews();
-  var h = '<h3>' + esc(t('News from Natour', 'أخبار ناطور')) + '</h3>';
+  var h = '<h3>' + esc(t('News from the Natour app', 'أخبار تطبيق ناطور')) + '</h3>';
   h += list.length ? list.map(function(a) { return '<div class="card pad" style="margin-bottom:8px">' + newsItem(a, false) + '<small class="muted">' + esc(dateLabel(a.starts_at)) + '</small></div>'; }).join('') : '<p class="muted">' + esc(t('Nothing new.', 'لا جديد.')) + '</p>';
   list.forEach(function(a) { if (!NEWS.read[a.id]) { NEWS.read[a.id] = 1; if (isCloud()) cloudCall(SB.from('announcement_reads').upsert({ announcement_id: a.id })).catch(function() {}); } });
   return h + '<div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Close', 'إغلاق')) + '</button></div>';

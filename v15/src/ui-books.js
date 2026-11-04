@@ -143,8 +143,8 @@ function eventText(e) {
   var code = u ? unitTag(u) : '';
   switch (e.tbl) {
     case 'support':
-      if (e.action === 'view') return d.mode === 'full' ? t('Natour support opened the building', 'فتح دعم ناطور البناية') : t('Natour support looked at the building (read-only)', 'اطّلع دعم ناطور على البناية (قراءة فقط)');
-      if (e.action === 'grant') return t(who + ' let Natour support look until ' + dateLabel(d.until, true), who + ' سمح لدعم ناطور بالاطّلاع حتى ' + dateLabel(d.until, true));
+      if (e.action === 'view') return d.mode === 'full' ? t('Natour app support opened the building', 'فتح دعم تطبيق ناطور البناية') : t('Natour app support looked at the building (read-only)', 'اطّلع دعم تطبيق ناطور على البناية (قراءة فقط)');
+      if (e.action === 'grant') return t(who + ' let Natour app support look until ' + dateLabel(d.until, true), who + ' سمح لدعم تطبيق ناطور بالاطّلاع حتى ' + dateLabel(d.until, true));
       if (e.action === 'revoke') return t(who + ' turned off support access', who + ' أوقف وصول الدعم');
       return null;
     case 'payments':

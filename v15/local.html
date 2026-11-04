@@ -419,7 +419,7 @@ input.input[type="date"]::-webkit-date-and-time-value { text-align: start; margi
 .li.contact .cbtn.wa { background: var(--okbg); }
 .li .ic.sos { background: var(--badbg); }
 
-/* News from Natour */
+/* News from the Natour app */
 .news-item .news-k { font-size: 12px; font-weight: 700; color: var(--acc-ink); margin-bottom: 4px; }
 .news-item.offer .news-k { color: var(--warn); }
 .news-item b { display: block; font-size: 16px; }
@@ -623,21 +623,37 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .bh.lift .bh-core{fill:#263049;animation:none;stroke:rgba(0,0,0,.25);stroke-width:.4}
 .bh.night.lift .bh-core,.bh.eve.lift .bh-core{fill:#141A33}
 
-/* The building cat */
-.bh-catSit{cursor:pointer;animation:catSit 50s linear infinite;transform-box:fill-box;transform-origin:50% 100%}
-.bh-catSit.pet{animation:catSit 50s linear infinite,catHop .5s ease}
-.bh-catTail{transform-box:fill-box;transform-origin:100% 100%;animation:catTail 2.6s ease-in-out infinite}
-.bh-catEye{fill:#3A2A1A}
-.bh.night .bh-catEye,.bh.eve .bh-catEye{fill:#FFE27A}
-.bh-catWalk{animation:catWalk 50s linear infinite;opacity:0}
-.bh-catLegA{animation:catLeg .5s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 0}
-.bh-catLegB{animation:catLeg .5s ease-in-out infinite reverse;transform-box:fill-box;transform-origin:50% 0}
-@keyframes catTail{0%,100%{transform:rotate(0)}50%{transform:rotate(-24deg)}}
-@keyframes catLeg{0%,100%{transform:rotate(18deg)}50%{transform:rotate(-18deg)}}
+/* The building cat (black). One 60 s day: nap on balcony A, walk the ledge, nap on B, stroll the pavement. */
+.bh-cat{cursor:pointer;opacity:0;transform-box:fill-box}
+.bh-catSitA{animation:catA 60s linear infinite}
+.bh-catSitB{animation:catB 60s linear infinite}
+.bh-catLedge{animation:catLedge 60s linear infinite}
+.bh-catWalk{animation:catStreet 60s linear infinite}
+.bh-cat.pet>*,.bh-cat .pet{animation:catHop .45s ease}
+.bh-catTail{transform-box:fill-box;transform-origin:100% 100%;animation:catTail 2.8s ease-in-out infinite}
+.bh-catEarR{transform-box:fill-box;transform-origin:50% 100%;animation:catEar 7s ease-in-out infinite}
+.bh-catEyes{transform-box:fill-box;transform-origin:50% 50%;animation:catBlink 5.5s steps(1) infinite}
+.bh-catBody{transform-box:fill-box;transform-origin:50% 100%;animation:catBreath 3.2s ease-in-out infinite}
+.bh-catEye{fill:#E8D35A}
+.bh.night .bh-catEye,.bh.eve .bh-catEye{fill:#FFE27A;filter:drop-shadow(0 0 1px #FFE27A)}
+.bh.night .bh-cat,.bh.eve .bh-cat{filter:drop-shadow(0 0 .6px rgba(255,255,255,.55))}
+.bh-catLegA{animation:catLeg .46s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 0}
+.bh-catLegB{animation:catLeg .46s ease-in-out infinite reverse;transform-box:fill-box;transform-origin:50% 0}
+@keyframes catTail{0%,100%{transform:rotate(0)}50%{transform:rotate(-26deg)}}
+@keyframes catEar{0%,88%,100%{transform:rotate(0)}91%{transform:rotate(18deg)}94%{transform:rotate(0)}}
+@keyframes catBlink{0%,92%,100%{transform:scaleY(1)}94%{transform:scaleY(.1)}}
+@keyframes catBreath{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.04)}}
+@keyframes catLeg{0%,100%{transform:rotate(20deg)}50%{transform:rotate(-20deg)}}
 @keyframes catHop{0%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
-@keyframes catSit{0%,58%{opacity:1}60%,96%{opacity:0}98%,100%{opacity:1}}
-@keyframes catWalk{0%,61%{opacity:0;transform:translateX(-20px)}62%{opacity:1;transform:translateX(-20px)}94%{opacity:1;transform:translateX(390px)}95%,100%{opacity:0;transform:translateX(390px)}}
-@media (prefers-reduced-motion: reduce){.bh-catWalk{display:none}.bh-catSit,.bh-catTail{animation:none}}
+@keyframes catA{0%,34%{opacity:1}35%,92%{opacity:0}93%,100%{opacity:1}}
+@keyframes catLedge{0%,34.5%{opacity:0;transform:translateX(0)}35%{opacity:1;transform:translateX(0)}46%{opacity:1;transform:translateX(var(--dx))}46.5%,100%{opacity:0;transform:translateX(var(--dx))}}
+@keyframes catB{0%,46%{opacity:0}47%,71%{opacity:1}72%,100%{opacity:0}}
+@keyframes catStreet{0%,73%{opacity:0;transform:translateX(-20px)}74%{opacity:1;transform:translateX(-20px)}91%{opacity:1;transform:translateX(390px)}92%,100%{opacity:0;transform:translateX(390px)}}
+.bh-say{position:absolute;z-index:5;transform:translate(-50%,-100%);background:#FFFFFF;color:#17142B;font-size:13px;font-weight:700;padding:7px 11px;border-radius:14px;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.25);pointer-events:none;animation:saySay .25s cubic-bezier(.2,.9,.3,1.3)}
+.bh-say::after{content:"";position:absolute;left:calc(50% + var(--tail, 0px) - 6px);bottom:-5px;width:12px;height:12px;background:#FFFFFF;transform:rotate(45deg);border-radius:2px}
+.bh-say.out{opacity:0;transform:translate(-50%,-115%);transition:opacity .4s,transform .4s}
+@keyframes saySay{from{opacity:0;transform:translate(-50%,-80%) scale(.7)}to{opacity:1;transform:translate(-50%,-100%) scale(1)}}
+@media (prefers-reduced-motion: reduce){.bh-catWalk,.bh-catLedge,.bh-catSitB{display:none}.bh-catSitA{animation:none;opacity:1}.bh-catTail,.bh-catEarR,.bh-catEyes,.bh-catBody{animation:none}}
 
 </style>
 </head>
@@ -4157,7 +4173,7 @@ function buildBuildingScene(o) {
    var ft2 = lobbyTop - (fl + 1) * fh;
    row.wins.slice(0, 6).forEach(function(w, j) {
      var x = winX(j, row.wins.length);
-     perches.push({ x: x + ww * 0.68, y: ft2 + fh * 0.64 });
+     perches.push({ x: x + ww * 0.68, y: ft2 + fh * 0.64, fl: fl, j: j, n: row.wins.length });
      rails += heroRailPath(x, ww, ft2 + fh * 0.64, ft2 + fh * 0.89);
      drawWin(w, x, ft2 + fh * 0.21, wh);
      plant(x + 1, ft2 + fh * 0.64, wi * 2); plant(x + ww - 7, ft2 + fh * 0.64, wi * 2 + 1);
@@ -4221,12 +4237,20 @@ function buildBuildingScene(o) {
  // Railings drawn over the windows
  if (rails) s += '<path class="bh-rail" d="' + rails + '" style="stroke-width:.6"/>';
  s += plants;
- // Easter egg: the building's ginger cat. It naps on a different balcony each day, and now
- // and then strolls along the pavement. Tap it.
+ // Easter egg: the building's black cat. Each day it starts on a different balcony, naps
+ // (tail, ears, blinks), walks along the ledge to the neighbour's balcony, sits there, then
+ // goes down for a stroll along the pavement. Tap it and it talks, in a bubble next to it.
  if (!o.bare && o.interactive && perches.length && (typeof feature !== 'function' || feature('hero_cat'))) {
-   var day = Math.floor(Date.now() / 864e5), pc = perches[day % perches.length], cs = Math.max(0.55, Math.min(1.1, fh / 26));
-   s += '<g transform="translate(' + heroR(pc.x) + ' ' + heroR(pc.y) + ') scale(' + heroR(cs) + ')"><g class="bh-catSit" onclick="catTap(event,this)" role="button" aria-label="' + esc(t('The building cat', 'قطة البناية')) + '">' + catSitSvg() + '</g></g>';
-   if (!basements) s += '<g transform="translate(0 231)"><g class="bh-catWalk">' + catWalkSvg() + '</g></g>';
+   var day = Math.floor(Date.now() / 864e5), pa = perches[day % perches.length], cs = Math.max(0.55, Math.min(1.1, fh / 26));
+   var pb = perches.filter(function(q) { return q.fl === pa.fl && Math.abs(q.j - pa.j) === 1; })[0] || null;
+   var catLbl = ' role="button" aria-label="' + esc(t('The building cat', 'قطة البناية')) + '" onclick="catTap(event,this)"';
+   s += '<g transform="translate(' + heroR(pa.x) + ' ' + heroR(pa.y) + ') scale(' + heroR(cs) + ')"><g class="bh-cat bh-catSitA"' + catLbl + '>' + catSitSvg() + '</g></g>';
+   if (pb) {
+     var dx = pb.x - pa.x;
+     s += '<g transform="translate(' + heroR(pa.x) + ' ' + heroR(pa.y) + ')"><g class="bh-cat bh-catLedge" style="--dx:' + heroR(dx) + 'px"><g transform="scale(' + heroR(dx < 0 ? -cs : cs) + ' ' + heroR(cs) + ')"' + catLbl + '>' + catWalkSvg() + '</g></g></g>';
+     s += '<g transform="translate(' + heroR(pb.x) + ' ' + heroR(pb.y) + ') scale(' + heroR(cs) + ')"><g class="bh-cat bh-catSitB"' + catLbl + '>' + catSitSvg() + '</g></g>';
+   }
+   if (!basements) s += '<g transform="translate(0 231)"><g class="bh-cat bh-catWalk"><g' + catLbl + '>' + catWalkSvg() + '</g></g></g>';
  }
  // Ground-floor plinth: a wide light slab with a soft lip, like a podium
  if (basements) {
@@ -4457,31 +4481,46 @@ function liftTick(now) {
 }
 if (typeof requestAnimationFrame !== 'undefined' && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) requestAnimationFrame(liftTick);
 
-/* The building cat (Easter egg): a ginger street cat, drawn small in scene units, base at y=0. */
+/* The building cat (Easter egg): a black street cat, drawn small in scene units, base at y=0. */
+var CAT_FUR = '#1D1A22', CAT_SHADE = '#34303D';
 function catSitSvg() {
-  return '<rect x="-7" y="-17" width="15" height="18" fill="transparent"/>' +
-    '<path class="bh-catTail" d="M-3.2 -0.8 Q-7.5 -1.4 -6.6 -6.4" style="fill:none;stroke:#C46F22;stroke-width:1.5;stroke-linecap:round"/>' +
-    '<ellipse cx="0" cy="-4.2" rx="4" ry="4.4" fill="#E08A3C"/>' +
-    '<ellipse cx="1.4" cy="-3.2" rx="1.6" ry="2.4" fill="#F6E3C8"/>' +
-    '<circle cx="2.4" cy="-9.6" r="3" fill="#E08A3C"/>' +
-    '<path d="M0.3 -11.6 L0.9 -14.9 L2.5 -12.5 Z M3.3 -12.5 L4.9 -14.9 L5.3 -11.6 Z" fill="#E08A3C"/>' +
-    '<path d="M-1.6 -6.8 H1 M-2 -5 H0.6" style="stroke:#C46F22;stroke-width:.6"/>' +
-    '<circle class="bh-catEye" cx="1.6" cy="-9.9" r=".5"/><circle class="bh-catEye" cx="3.6" cy="-9.9" r=".5"/>';
+  return '<rect x="-8" y="-17" width="16" height="18" fill="transparent"/>' +
+    '<path class="bh-catTail" d="M-3.2 -0.8 Q-8 -1.2 -7 -6.8" style="fill:none;stroke:' + CAT_FUR + ';stroke-width:1.6;stroke-linecap:round"/>' +
+    '<ellipse class="bh-catBody" cx="0" cy="-4.2" rx="4" ry="4.4" fill="' + CAT_FUR + '"/>' +
+    '<ellipse cx="1.3" cy="-3.4" rx="1.4" ry="2.2" fill="' + CAT_SHADE + '"/>' +
+    '<g class="bh-catHead"><circle cx="2.4" cy="-9.6" r="3" fill="' + CAT_FUR + '"/>' +
+    '<path class="bh-catEarL" d="M0.3 -11.6 L0.9 -14.9 L2.5 -12.5 Z" fill="' + CAT_FUR + '"/><path class="bh-catEarR" d="M3.3 -12.5 L4.9 -14.9 L5.3 -11.6 Z" fill="' + CAT_FUR + '"/>' +
+    '<g class="bh-catEyes"><ellipse class="bh-catEye" cx="1.5" cy="-9.9" rx=".62" ry=".72"/><ellipse class="bh-catEye" cx="3.7" cy="-9.9" rx=".62" ry=".72"/></g>' +
+    '<path d="M2.3 -8.4 L2.6 -8.1 L2.9 -8.4" style="fill:none;stroke:#E59AA8;stroke-width:.35"/></g>';
 }
 function catWalkSvg() {
-  return '<path class="bh-catTail" d="M-5.2 -5.4 Q-9 -7 -8 -11" style="fill:none;stroke:#C46F22;stroke-width:1.4;stroke-linecap:round"/>' +
-    '<rect class="bh-catLegA" x="-4.4" y="-3.2" width="1.3" height="3.2" rx=".6" fill="#C46F22"/><rect class="bh-catLegB" x="-2.2" y="-3.2" width="1.3" height="3.2" rx=".6" fill="#C46F22"/>' +
-    '<rect class="bh-catLegB" x="2.4" y="-3.2" width="1.3" height="3.2" rx=".6" fill="#C46F22"/><rect class="bh-catLegA" x="4.4" y="-3.2" width="1.3" height="3.2" rx=".6" fill="#C46F22"/>' +
-    '<ellipse cx="0" cy="-5" rx="6" ry="2.9" fill="#E08A3C"/>' +
-    '<circle cx="6.6" cy="-7.4" r="2.6" fill="#E08A3C"/>' +
-    '<path d="M5 -9.2 L5.4 -12 L6.8 -9.9 Z M7.4 -9.9 L8.6 -12 L9 -9 Z" fill="#E08A3C"/>' +
-    '<circle class="bh-catEye" cx="7.6" cy="-7.7" r=".45"/>';
+  return '<rect x="-10" y="-13" width="21" height="14" fill="transparent"/>' +
+    '<path class="bh-catTail" d="M-5.2 -5.4 Q-9.5 -7 -8.2 -11.5" style="fill:none;stroke:' + CAT_FUR + ';stroke-width:1.5;stroke-linecap:round"/>' +
+    '<rect class="bh-catLegA" x="-4.4" y="-3.4" width="1.3" height="3.4" rx=".6" fill="' + CAT_FUR + '"/><rect class="bh-catLegB" x="-2.2" y="-3.4" width="1.3" height="3.4" rx=".6" fill="' + CAT_FUR + '"/>' +
+    '<rect class="bh-catLegB" x="2.4" y="-3.4" width="1.3" height="3.4" rx=".6" fill="' + CAT_FUR + '"/><rect class="bh-catLegA" x="4.4" y="-3.4" width="1.3" height="3.4" rx=".6" fill="' + CAT_FUR + '"/>' +
+    '<ellipse class="bh-catBody" cx="0" cy="-5.2" rx="6" ry="2.9" fill="' + CAT_FUR + '"/>' +
+    '<circle cx="6.6" cy="-7.6" r="2.6" fill="' + CAT_FUR + '"/>' +
+    '<path d="M5 -9.4 L5.4 -12.2 L6.8 -10.1 Z M7.4 -10.1 L8.6 -12.2 L9 -9.2 Z" fill="' + CAT_FUR + '"/>' +
+    '<ellipse class="bh-catEye" cx="7.7" cy="-7.9" rx=".55" ry=".62"/>';
 }
-var CAT_SAYS = [['Mrrrow 🐾', 'مياو 🐾'], ['Purr… the books are balanced', 'خرخر… الحسابات مضبوطة'], ['Has 4B paid yet?', 'هل دفعت 4B؟'], ['Feed me, I guard the safe', 'أطعمني، أنا أحرس الصندوق']];
+var CAT_SAYS = [['Mrrrrn…', 'مرررن…'], ['Mrrrow 🐾', 'مياو 🐾'], ['Purrr… the books are balanced', 'خرررر… الحسابات مضبوطة'], ['Has 4B paid yet?', 'هل دفعت 4B؟'], ['Feed me, I guard the safe', 'أطعمني، أنا أحرس الصندوق'], ['Prrt?', 'برررت؟'], ['Ya Natour! 🐾', 'يا ناطور! 🐾']];
 function catTap(ev, el) {
   if (ev) ev.stopPropagation();
   var m = CAT_SAYS[Math.floor(Math.random() * CAT_SAYS.length)];
-  toast(LANG === 'ar' ? m[1] : m[0]);
+  var box = el.closest('.bh'), r = el.getBoundingClientRect();
+  if (box) {
+    var b = box.getBoundingClientRect(), old = box.querySelector('.bh-say'); if (old) old.remove();
+    var say = document.createElement('div');
+    say.className = 'bh-say';
+    say.textContent = LANG === 'ar' ? m[1] : m[0];
+    var cx = r.left - b.left + r.width / 2;
+    say.style.left = Math.max(70, Math.min(b.width - 70, cx)) + 'px';
+    say.style.top = Math.max(8, r.top - b.top - 4) + 'px';
+    say.style.setProperty('--tail', (cx - Math.max(70, Math.min(b.width - 70, cx))) + 'px');
+    box.appendChild(say);
+    setTimeout(function() { say.classList.add('out'); }, 2200);
+    setTimeout(function() { say.remove(); }, 2700);
+  } else toast(LANG === 'ar' ? m[1] : m[0]);
   el.classList.remove('pet'); void el.getBoundingClientRect(); el.classList.add('pet');
 }
 
@@ -5741,8 +5780,8 @@ function eventText(e) {
   var code = u ? unitTag(u) : '';
   switch (e.tbl) {
     case 'support':
-      if (e.action === 'view') return d.mode === 'full' ? t('Natour support opened the building', 'فتح دعم ناطور البناية') : t('Natour support looked at the building (read-only)', 'اطّلع دعم ناطور على البناية (قراءة فقط)');
-      if (e.action === 'grant') return t(who + ' let Natour support look until ' + dateLabel(d.until, true), who + ' سمح لدعم ناطور بالاطّلاع حتى ' + dateLabel(d.until, true));
+      if (e.action === 'view') return d.mode === 'full' ? t('Natour app support opened the building', 'فتح دعم تطبيق ناطور البناية') : t('Natour app support looked at the building (read-only)', 'اطّلع دعم تطبيق ناطور على البناية (قراءة فقط)');
+      if (e.action === 'grant') return t(who + ' let Natour app support look until ' + dateLabel(d.until, true), who + ' سمح لدعم تطبيق ناطور بالاطّلاع حتى ' + dateLabel(d.until, true));
       if (e.action === 'revoke') return t(who + ' turned off support access', who + ' أوقف وصول الدعم');
       return null;
     case 'payments':
@@ -6942,7 +6981,7 @@ SHEETS.invite = function(d) {
   if (d.code) {
     var link = ((window.BINAYATI_CONFIG || {}).publicUrl || (location.origin + location.pathname)) + '?join=' + d.code;
     h += '<p class="lead">' + esc(t('Send this link. It works once and expires in 14 days.', 'أرسل هذا الرابط. يعمل مرة واحدة وينتهي بعد 14 يوماً.')) + '</p><div class="linkbox"><span class="grow">' + esc(link) + '</span></div>';
-    var msg = t('Hi ' + (d.name || '') + ', join ' + bName() + ' on Natour: ', 'مرحباً ' + (d.name || '') + '، انضم إلى ' + bName() + ' على ناطور: ') + link;
+    var msg = t('Hi ' + (d.name || '') + ', join ' + bName() + ' on the Natour app: ', 'مرحباً ' + (d.name || '') + '، انضم إلى ' + bName() + ' على تطبيق ناطور: ') + link;
     var qr = qrImage(link, (role === 'collector' ? t('Collector invite', 'دعوة جابي') : t('Co-manager invite', 'دعوة مدير مساعد')) + (d.name ? ' · ' + d.name : ''), bName());
     if (qr && feature('invite_qr')) h += '<div class="qr-box"><img src="' + qr + '" alt="QR" onclick="viewPhoto(this.src)"><button class="btn sec sm" onclick="saveQr(' + jsArg(qr) + ',' + jsArg('binayati-invite-' + d.code + '.png') + ')">' + esc(t('Save QR image', 'احفظ صورة الرمز')) + '</button><small class="muted">' + esc(t('They scan it with the phone camera. Same one-time link.', 'يمسحه بكاميرا الهاتف. نفس الرابط لمرة واحدة.')) + '</small></div>';
     h += '<div class="foot"><button class="btn sec" onclick="copyText(' + jsArg(link) + ')">' + esc(t('Copy', 'نسخ')) + '</button><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=' + esc(encodeURIComponent(msg)) + '">WhatsApp</a></div>';
@@ -7040,7 +7079,7 @@ function renderSettingsSec() {
   h += '</div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('What residents see', 'ما يراه السكان')) + '</h2></div><div class="card pad">';
   h += switchRow('books_public', st.books_public !== false, t('The building\'s books', 'حسابات البناية'), t('Money in, money out and the safe, on every resident\'s page', 'المقبوض والمصروف والصندوق في صفحة كل ساكن'));
-  h += switchRow('offers_on', !st.offers_off, t('Offers from Natour partners', 'عروض شركاء ناطور'), t('Occasional deals from service companies, marked as offers. Off hides them for everyone in this building.', 'عروض من شركات خدمات أحياناً، مُعلّمة كعروض. مطفأ يخفيها عن الجميع في هذه البناية.'));
+  h += switchRow('offers_on', !st.offers_off, t('Offers from Natour app partners', 'عروض شركاء تطبيق ناطور'), t('Occasional deals from service companies, marked as offers. Off hides them for everyone in this building.', 'عروض من شركات خدمات أحياناً، مُعلّمة كعروض. مطفأ يخفيها عن الجميع في هذه البناية.'));
   h += switchRow('show_who_paid', !!st.show_who_paid, t('Who has paid', 'من سدّد'), t('Light up neighbours\' windows on their page. Off keeps it private.', 'إظهار شبابيك الجيران المضاءة. الإيقاف يبقيها خاصة.'));
   h += '</div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Data', 'البيانات')) + '</h2></div><div class="card list">';
@@ -7119,9 +7158,9 @@ SHEETS.menu = function() {
     h += '<button class="li" onclick="demoSignIn(' + (asMgr ? '\'collector\'' : '\'manager\'') + ')"><div class="ic">⇄</div><div class="grow"><b>' + esc(asMgr ? t('Switch to the collector (Anas)', 'بدّل إلى الجابي (أنس)') : t('Switch to the manager (Rima)', 'بدّل إلى المدير (ريما)')) + '</b><small>' + esc(t('Demo: see the same building from the other side', 'تجربة: نفس البناية من الجهة الأخرى')) + '</small></div></button>';
     h += '<button class="li" onclick="demoReset()"><div class="ic">↺</div><div class="grow"><b>' + esc(t('Reset the demo data', 'أعد بيانات التجربة')) + '</b><small>' + esc(t('Back to the original sample', 'العودة للنموذج الأصلي')) + '</small></div></button>';
   }
-  if (isCloud() && feature('announcements') && visibleNews().length) h += '<button class="li" onclick="openSheet(\'news\')"><div class="ic">📣</div><div class="grow"><b>' + esc(t('News from Natour', 'أخبار ناطور')) + '</b><small>' + esc(t('New features, tips and offers', 'ميزات جديدة ونصائح وعروض')) + '</small></div></button>';
+  if (isCloud() && feature('announcements') && visibleNews().length) h += '<button class="li" onclick="openSheet(\'news\')"><div class="ic">📣</div><div class="grow"><b>' + esc(t('News from the Natour app', 'أخبار تطبيق ناطور')) + '</b><small>' + esc(t('New features, tips and offers', 'ميزات جديدة ونصائح وعروض')) + '</small></div></button>';
   if (isManager() && window.innerWidth >= 760 && !deskActive()) h += '<button class="li" onclick="closeSheet();setDesk(true)"><div class="ic">💻</div><div class="grow"><b>' + esc(t('Laptop view', 'عرض الحاسوب')) + '</b><small>' + esc(t('Tables, the year at a glance, reports to print or download', 'جداول، السنة بنظرة، تقارير للطباعة أو التنزيل')) + '</small></div></button>';
-  if (IS_ADMIN && !S.support) h += '<button class="li" onclick="openAdmin()"><div class="ic">🛠</div><div class="grow"><b>Natour admin</b><small>Features, lists, client support</small></div></button>';
+  if (IS_ADMIN && !S.support) h += '<button class="li" onclick="openAdmin()"><div class="ic">🛠</div><div class="grow"><b>Natour app admin</b><small>Features, lists, client support</small></div></button>';
   h += '<button class="li" onclick="closeSheet();setLang()"><div class="ic">ع</div><div class="grow"><b>' + esc(LANG === 'ar' ? 'English' : 'العربية') + '</b></div></button>';
   if (isManager()) h += '<button class="li" onclick="closeSheet();go(\'building\');UI.bsec=\'settings\';render()"><div class="ic">⚙️</div><div class="grow"><b>' + esc(t('Settings', 'الإعدادات')) + '</b></div></button>';
   if (isCloud()) h += '<button class="li" onclick="signOut()"><div class="ic">⎋</div><div class="grow"><b>' + esc(t('Sign out', 'تسجيل الخروج')) + '</b></div></button>';
@@ -7718,7 +7757,7 @@ function renderJoin() {
   if (j.info && j.info.valid) {
     h += '<button class="btn pri block" onclick="UI.screen=\'auth\';UI.auth={mode:\'up\',invite:Object.assign({code:UI.join.code},UI.join.info)};render()">' + esc(t('Create my account', 'أنشئ حسابي')) + '</button>';
     h += '<button class="btn ghost block" onclick="UI.screen=\'auth\';UI.auth={mode:\'in\',invite:Object.assign({code:UI.join.code},UI.join.info)};render()">' + esc(t('I already have an account', 'لدي حساب')) + '</button>';
-  } else if (j.info || j.error) h += '<button class="btn sec block" onclick="location.href=location.pathname">' + esc(t('Open Natour', 'افتح ناطور')) + '</button>';
+  } else if (j.info || j.error) h += '<button class="btn sec block" onclick="location.href=location.pathname">' + esc(t('Open the Natour app', 'افتح تطبيق ناطور')) + '</button>';
   return h + '</div></div></div>';
 }
 
@@ -7891,7 +7930,7 @@ function renderResident() {
     h += '</div>';
   }
   if (feature('contacts')) h += renderResidentContacts();
-  h += '<div class="foot-note">' + esc(t('This page is private to your apartment. Natour · ناطور', 'هذه الصفحة خاصة بشقتك. ناطور · Natour')) + '</div></div>';
+  h += '<div class="foot-note">' + esc(t('This page is private to your apartment. Natour app · تطبيق ناطور', 'هذه الصفحة خاصة بشقتك. تطبيق ناطور · Natour app')) + '</div></div>';
   return h;
 }
 
@@ -8476,7 +8515,7 @@ function admTabs() {
 function renderAdmin() {
   if (!IS_ADMIN) return '<div class="shell"><div class="sec"><div class="card pad">Not allowed.</div></div></div>';
   var h = '<div class="shell"><header class="topbar"><button class="iconbtn" onclick="UI.screen=\'app\';render()" aria-label="Back">' + (LANG === 'ar' ? '›' : '‹') + '</button>';
-  h += '<div class="grow"><b style="font-size:20px;font-weight:800">Natour admin</b><small class="muted" style="display:block">Changes reach every app within seconds</small></div></header>';
+  h += '<div class="grow"><b style="font-size:20px;font-weight:800">Natour app admin</b><small class="muted" style="display:block">Changes reach every app within seconds</small></div></header>';
   h += admTabs();
   if (ADM.tab === 'features') h += admFeatures();
   else if (ADM.tab === 'lists') h += admLists();
@@ -8718,8 +8757,8 @@ function renderSupportCard() {
   if (S.role !== 'manager' || S.support || !isCloud()) return '';
   var on = SUPPORT.until && SUPPORT.until > nowIso();
   var h = '<div class="sec"><div class="sec-h"><h2>' + esc(t('Support access', 'وصول الدعم')) + '</h2></div><div class="card pad">';
-  h += '<p class="muted" style="margin-top:0">' + esc(on ? t('Natour support can look at your building (read-only) until ' + dateLabel(SUPPORT.until, true) + '. Every look shows in your activity.', 'يمكن لدعم ناطور رؤية بنايتك (قراءة فقط) حتى ' + dateLabel(SUPPORT.until, true) + '. كل اطّلاع يظهر في نشاطك.')
-                                         : t('If you need help, let Natour support see your building for a while. They can look, not change anything. You can turn it off any time.', 'إذا احتجت مساعدة، اسمح لدعم ناطور برؤية بنايتك لفترة. يرون فقط ولا يغيّرون شيئاً. يمكنك إيقافه متى شئت.')) + '</p>';
+  h += '<p class="muted" style="margin-top:0">' + esc(on ? t('Natour app support can look at your building (read-only) until ' + dateLabel(SUPPORT.until, true) + '. Every look shows in your activity.', 'يمكن لدعم تطبيق ناطور رؤية بنايتك (قراءة فقط) حتى ' + dateLabel(SUPPORT.until, true) + '. كل اطّلاع يظهر في نشاطك.')
+                                         : t('If you need help, let Natour app support see your building for a while. They can look, not change anything. You can turn it off any time.', 'إذا احتجت مساعدة، اسمح لدعم تطبيق ناطور برؤية بنايتك لفترة. يرون فقط ولا يغيّرون شيئاً. يمكنك إيقافه متى شئت.')) + '</p>';
   h += '<div class="row" style="gap:8px;flex-wrap:wrap">';
   if (on) h += '<button class="btn danger sm grow" onclick="setSupport(0)">' + esc(t('Turn off now', 'أوقفه الآن')) + '</button>';
   h += '<button class="btn sec sm grow" onclick="setSupport(24)">' + esc(t('Allow for 24 hours', 'اسمح لمدة 24 ساعة')) + '</button><button class="btn sec sm grow" onclick="setSupport(72)">' + esc(t('3 days', '3 أيام')) + '</button>';
@@ -8861,7 +8900,7 @@ function renderResidentContacts() {
 }
 
 /* ============================================================================
-   News from Natour: announcements the admin sends (new features, tips,
+   News from the Natour app: announcements the admin sends (new features, tips,
    offers). Newest unread shows as a card on Home; all of them in the menu.
    Managers can turn partner offers off for their building.
    ============================================================================ */
@@ -8925,7 +8964,7 @@ function newsDismiss(id) {
 }
 SHEETS.news = function() {
   var list = visibleNews();
-  var h = '<h3>' + esc(t('News from Natour', 'أخبار ناطور')) + '</h3>';
+  var h = '<h3>' + esc(t('News from the Natour app', 'أخبار تطبيق ناطور')) + '</h3>';
   h += list.length ? list.map(function(a) { return '<div class="card pad" style="margin-bottom:8px">' + newsItem(a, false) + '<small class="muted">' + esc(dateLabel(a.starts_at)) + '</small></div>'; }).join('') : '<p class="muted">' + esc(t('Nothing new.', 'لا جديد.')) + '</p>';
   list.forEach(function(a) { if (!NEWS.read[a.id]) { NEWS.read[a.id] = 1; if (isCloud()) cloudCall(SB.from('announcement_reads').upsert({ announcement_id: a.id })).catch(function() {}); } });
   return h + '<div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Close', 'إغلاق')) + '</button></div>';
@@ -9026,7 +9065,7 @@ function renderDesk() {
     h += '<div class="desk-sub">' + esc(t('Block', 'البلوك')) + '</div><select class="input" onchange="UI.block=this.value||null;render()"><option value="">' + esc(t('All blocks', 'كل البلوكات')) + '</option>' + blocks().map(function(b) { return '<option value="' + esc(b) + '"' + (UI.block === b ? ' selected' : '') + '>' + esc(blockLabel(b)) + '</option>'; }).join('') + '</select>';
   }
   h += '<div class="grow"></div>';
-  if (IS_ADMIN && !S.support) h += '<button class="desk-nav" onclick="openAdmin()"><span>🛠</span>Natour admin</button>';
+  if (IS_ADMIN && !S.support) h += '<button class="desk-nav" onclick="openAdmin()"><span>🛠</span>Natour app admin</button>';
   h += '<button class="desk-nav" onclick="setLang()"><span>ع</span>' + (LANG === 'ar' ? 'English' : 'العربية') + '</button>';
   h += '<button class="desk-nav" onclick="setDesk(false)"><span>📱</span>' + esc(t('Phone view', 'عرض الهاتف')) + '</button>';
   h += '</aside><main class="desk-main">';

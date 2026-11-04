@@ -24,7 +24,7 @@ function renderDesk() {
     h += '<div class="desk-sub">' + esc(t('Block', 'البلوك')) + '</div><select class="input" onchange="UI.block=this.value||null;render()"><option value="">' + esc(t('All blocks', 'كل البلوكات')) + '</option>' + blocks().map(function(b) { return '<option value="' + esc(b) + '"' + (UI.block === b ? ' selected' : '') + '>' + esc(blockLabel(b)) + '</option>'; }).join('') + '</select>';
   }
   h += '<div class="grow"></div>';
-  if (IS_ADMIN && !S.support) h += '<button class="desk-nav" onclick="openAdmin()"><span>🛠</span>Natour admin</button>';
+  if (IS_ADMIN && !S.support) h += '<button class="desk-nav" onclick="openAdmin()"><span>🛠</span>Natour app admin</button>';
   h += '<button class="desk-nav" onclick="setLang()"><span>ع</span>' + (LANG === 'ar' ? 'English' : 'العربية') + '</button>';
   h += '<button class="desk-nav" onclick="setDesk(false)"><span>📱</span>' + esc(t('Phone view', 'عرض الهاتف')) + '</button>';
   h += '</aside><main class="desk-main">';

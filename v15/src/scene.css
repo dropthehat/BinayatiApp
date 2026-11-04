@@ -133,3 +133,19 @@
 /* With an elevator, the middle windows are dark glass so the cabin light shows */
 .bh.lift .bh-core{fill:#263049;animation:none;stroke:rgba(0,0,0,.25);stroke-width:.4}
 .bh.night.lift .bh-core,.bh.eve.lift .bh-core{fill:#141A33}
+
+/* The building cat */
+.bh-catSit{cursor:pointer;animation:catSit 50s linear infinite;transform-box:fill-box;transform-origin:50% 100%}
+.bh-catSit.pet{animation:catSit 50s linear infinite,catHop .5s ease}
+.bh-catTail{transform-box:fill-box;transform-origin:100% 100%;animation:catTail 2.6s ease-in-out infinite}
+.bh-catEye{fill:#3A2A1A}
+.bh.night .bh-catEye,.bh.eve .bh-catEye{fill:#FFE27A}
+.bh-catWalk{animation:catWalk 50s linear infinite;opacity:0}
+.bh-catLegA{animation:catLeg .5s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 0}
+.bh-catLegB{animation:catLeg .5s ease-in-out infinite reverse;transform-box:fill-box;transform-origin:50% 0}
+@keyframes catTail{0%,100%{transform:rotate(0)}50%{transform:rotate(-24deg)}}
+@keyframes catLeg{0%,100%{transform:rotate(18deg)}50%{transform:rotate(-18deg)}}
+@keyframes catHop{0%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+@keyframes catSit{0%,58%{opacity:1}60%,96%{opacity:0}98%,100%{opacity:1}}
+@keyframes catWalk{0%,61%{opacity:0;transform:translateX(-20px)}62%{opacity:1;transform:translateX(-20px)}94%{opacity:1;transform:translateX(390px)}95%,100%{opacity:0;transform:translateX(390px)}}
+@media (prefers-reduced-motion: reduce){.bh-catWalk{display:none}.bh-catSit,.bh-catTail{animation:none}}

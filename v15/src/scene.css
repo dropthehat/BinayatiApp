@@ -147,7 +147,8 @@
 .bh-catBody{transform-box:fill-box;transform-origin:50% 100%;animation:catBreath 3.2s ease-in-out infinite}
 .bh-catEye{fill:#E8D35A}
 .bh.night .bh-catEye,.bh.eve .bh-catEye{fill:#FFE27A;filter:drop-shadow(0 0 1px #FFE27A)}
-.bh.night .bh-cat,.bh.eve .bh-cat{filter:drop-shadow(0 0 .6px rgba(255,255,255,.55))}
+.bh-cat{filter:drop-shadow(0 0 .5px rgba(255,255,255,.9)) drop-shadow(0 1px 1.5px rgba(0,0,0,.25))}
+.bh.night .bh-cat,.bh.eve .bh-cat{filter:drop-shadow(0 0 .6px #F3EEFF) drop-shadow(0 0 2.5px rgba(214,206,255,.75))}
 .bh-catLegA{animation:catLeg .46s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 0}
 .bh-catLegB{animation:catLeg .46s ease-in-out infinite reverse;transform-box:fill-box;transform-origin:50% 0}
 @keyframes catTail{0%,100%{transform:rotate(0)}50%{transform:rotate(-26deg)}}

@@ -636,7 +636,8 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .bh-catBody{transform-box:fill-box;transform-origin:50% 100%;animation:catBreath 3.2s ease-in-out infinite}
 .bh-catEye{fill:#E8D35A}
 .bh.night .bh-catEye,.bh.eve .bh-catEye{fill:#FFE27A;filter:drop-shadow(0 0 1px #FFE27A)}
-.bh.night .bh-cat,.bh.eve .bh-cat{filter:drop-shadow(0 0 .6px rgba(255,255,255,.55))}
+.bh-cat{filter:drop-shadow(0 0 .5px rgba(255,255,255,.9)) drop-shadow(0 1px 1.5px rgba(0,0,0,.25))}
+.bh.night .bh-cat,.bh.eve .bh-cat{filter:drop-shadow(0 0 .6px #F3EEFF) drop-shadow(0 0 2.5px rgba(214,206,255,.75))}
 .bh-catLegA{animation:catLeg .46s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 0}
 .bh-catLegB{animation:catLeg .46s ease-in-out infinite reverse;transform-box:fill-box;transform-origin:50% 0}
 @keyframes catTail{0%,100%{transform:rotate(0)}50%{transform:rotate(-26deg)}}
@@ -4241,7 +4242,7 @@ function buildBuildingScene(o) {
  // (tail, ears, blinks), walks along the ledge to the neighbour's balcony, sits there, then
  // goes down for a stroll along the pavement. Tap it and it talks, in a bubble next to it.
  if (!o.bare && o.interactive && perches.length && (typeof feature !== 'function' || feature('hero_cat'))) {
-   var day = Math.floor(Date.now() / 864e5), pa = perches[day % perches.length], cs = Math.max(0.55, Math.min(1.1, fh / 26));
+   var day = Math.floor(Date.now() / 864e5), pa = perches[day % perches.length], cs = Math.max(0.75, Math.min(1.4, fh / 21));
    var pb = perches.filter(function(q) { return q.fl === pa.fl && Math.abs(q.j - pa.j) === 1; })[0] || null;
    var catLbl = ' role="button" aria-label="' + esc(t('The building cat', 'قطة البناية')) + '" onclick="catTap(event,this)"';
    s += '<g transform="translate(' + heroR(pa.x) + ' ' + heroR(pa.y) + ') scale(' + heroR(cs) + ')"><g class="bh-cat bh-catSitA"' + catLbl + '>' + catSitSvg() + '</g></g>';

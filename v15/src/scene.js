@@ -347,7 +347,7 @@ function buildBuildingScene(o) {
  // (tail, ears, blinks), walks along the ledge to the neighbour's balcony, sits there, then
  // goes down for a stroll along the pavement. Tap it and it talks, in a bubble next to it.
  if (!o.bare && o.interactive && perches.length && (typeof feature !== 'function' || feature('hero_cat'))) {
-   var day = Math.floor(Date.now() / 864e5), pa = perches[day % perches.length], cs = Math.max(0.55, Math.min(1.1, fh / 26));
+   var day = Math.floor(Date.now() / 864e5), pa = perches[day % perches.length], cs = Math.max(0.75, Math.min(1.4, fh / 21));
    var pb = perches.filter(function(q) { return q.fl === pa.fl && Math.abs(q.j - pa.j) === 1; })[0] || null;
    var catLbl = ' role="button" aria-label="' + esc(t('The building cat', 'قطة البناية')) + '" onclick="catTap(event,this)"';
    s += '<g transform="translate(' + heroR(pa.x) + ' ' + heroR(pa.y) + ') scale(' + heroR(cs) + ')"><g class="bh-cat bh-catSitA"' + catLbl + '>' + catSitSvg() + '</g></g>';

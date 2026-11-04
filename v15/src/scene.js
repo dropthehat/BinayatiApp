@@ -343,20 +343,18 @@ function buildBuildingScene(o) {
  // Railings drawn over the windows
  if (rails) s += '<path class="bh-rail" d="' + rails + '" style="stroke-width:.6"/>';
  s += plants;
- // Easter egg: the building's black cat. Each day it starts on a different balcony, naps
- // (tail, ears, blinks), walks along the ledge to the neighbour's balcony, sits there, then
- // goes down for a stroll along the pavement. Tap it and it talks, in a bubble next to it.
+ // Easter egg: the building's black cat. It never vanishes: each day it lives on one balcony,
+ // naps there (tail, ears, blinks, breathing), gets up, walks the ledge to the neighbour's
+ // balcony, naps there, and walks back. Tap it and it talks, in a bubble next to it.
  if (!o.bare && o.interactive && perches.length && (typeof feature !== 'function' || feature('hero_cat'))) {
-   var day = Math.floor(Date.now() / 864e5), pa = perches[day % perches.length], cs = Math.max(0.75, Math.min(1.4, fh / 21));
+   var day = Math.floor(Date.now() / 864e5), pa = perches[day % perches.length], cs = Math.max(0.95, Math.min(1.6, fh / 18));
    var pb = perches.filter(function(q) { return q.fl === pa.fl && Math.abs(q.j - pa.j) === 1; })[0] || null;
-   var catLbl = ' role="button" aria-label="' + esc(t('The building cat', 'قطة البناية')) + '" onclick="catTap(event,this)"';
-   s += '<g transform="translate(' + heroR(pa.x) + ' ' + heroR(pa.y) + ') scale(' + heroR(cs) + ')"><g class="bh-cat bh-catSitA"' + catLbl + '>' + catSitSvg() + '</g></g>';
-   if (pb) {
-     var dx = pb.x - pa.x;
-     s += '<g transform="translate(' + heroR(pa.x) + ' ' + heroR(pa.y) + ')"><g class="bh-cat bh-catLedge" style="--dx:' + heroR(dx) + 'px"><g transform="scale(' + heroR(dx < 0 ? -cs : cs) + ' ' + heroR(cs) + ')"' + catLbl + '>' + catWalkSvg() + '</g></g></g>';
-     s += '<g transform="translate(' + heroR(pb.x) + ' ' + heroR(pb.y) + ') scale(' + heroR(cs) + ')"><g class="bh-cat bh-catSitB"' + catLbl + '>' + catSitSvg() + '</g></g>';
-   }
-   if (!basements) s += '<g transform="translate(0 231)"><g class="bh-cat bh-catWalk"><g' + catLbl + '>' + catWalkSvg() + '</g></g></g>';
+   var dx = pb ? pb.x - pa.x : 0, dir = dx < 0 ? -1 : 1;
+   s += '<g transform="translate(' + heroR(pa.x) + ' ' + heroR(pa.y) + ')"><g class="bh-cat' + (pb ? ' bh-catMove' : '') + '" style="--dx:' + heroR(dx) + 'px" role="button" aria-label="' + esc(t('The building cat', 'قطة البناية')) + '" onclick="catTap(event,this)"><g class="bh-catHop">' +
+     '<g transform="scale(' + heroR(cs * dir) + ' ' + heroR(cs) + ')"><g class="bh-catPoseSit">' + catSitSvg() + '</g>' +
+     (pb ? '<g class="bh-catPoseGo">' + catWalkSvg() + '</g>' : '') + '</g>' +
+     (pb ? '<g transform="scale(' + heroR(-cs * dir) + ' ' + heroR(cs) + ')"><g class="bh-catPoseBack">' + catWalkSvg() + '</g></g>' : '') +
+     '</g></g></g>';
  }
  // Ground-floor plinth: a wide light slab with a soft lip, like a podium
  if (basements) {
@@ -588,9 +586,10 @@ function liftTick(now) {
 if (typeof requestAnimationFrame !== 'undefined' && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) requestAnimationFrame(liftTick);
 
 /* The building cat (Easter egg): a black street cat, drawn small in scene units, base at y=0. */
-var CAT_FUR = '#1D1A22', CAT_SHADE = '#34303D';
+var CAT_FUR = '#1D1A22', CAT_SHADE = '#3A3546';
 function catSitSvg() {
   return '<rect x="-8" y="-17" width="16" height="18" fill="transparent"/>' +
+    '<path class="bh-catTail" d="M-3.2 -0.8 Q-8 -1.2 -7 -6.8" style="fill:none;stroke:rgba(236,232,255,.75);stroke-width:2.5;stroke-linecap:round"/>' +
     '<path class="bh-catTail" d="M-3.2 -0.8 Q-8 -1.2 -7 -6.8" style="fill:none;stroke:' + CAT_FUR + ';stroke-width:1.6;stroke-linecap:round"/>' +
     '<ellipse class="bh-catBody" cx="0" cy="-4.2" rx="4" ry="4.4" fill="' + CAT_FUR + '"/>' +
     '<ellipse cx="1.3" cy="-3.4" rx="1.4" ry="2.2" fill="' + CAT_SHADE + '"/>' +
@@ -601,6 +600,7 @@ function catSitSvg() {
 }
 function catWalkSvg() {
   return '<rect x="-10" y="-13" width="21" height="14" fill="transparent"/>' +
+    '<path class="bh-catTail" d="M-5.2 -5.4 Q-9.5 -7 -8.2 -11.5" style="fill:none;stroke:rgba(236,232,255,.75);stroke-width:2.4;stroke-linecap:round"/>' +
     '<path class="bh-catTail" d="M-5.2 -5.4 Q-9.5 -7 -8.2 -11.5" style="fill:none;stroke:' + CAT_FUR + ';stroke-width:1.5;stroke-linecap:round"/>' +
     '<rect class="bh-catLegA" x="-4.4" y="-3.4" width="1.3" height="3.4" rx=".6" fill="' + CAT_FUR + '"/><rect class="bh-catLegB" x="-2.2" y="-3.4" width="1.3" height="3.4" rx=".6" fill="' + CAT_FUR + '"/>' +
     '<rect class="bh-catLegB" x="2.4" y="-3.4" width="1.3" height="3.4" rx=".6" fill="' + CAT_FUR + '"/><rect class="bh-catLegA" x="4.4" y="-3.4" width="1.3" height="3.4" rx=".6" fill="' + CAT_FUR + '"/>' +

@@ -160,3 +160,6 @@ begin
   end;
   return new;
 end $$;
+
+-- natour_apply_db was then applied directly (migration natour_sync_water_database): it reads the Water Database
+-- Lines, Invoices and EDL tabs into rounds, and natour_sync_apply calls it after natour_apply_sync.

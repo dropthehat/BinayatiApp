@@ -8,6 +8,28 @@
 <meta name="apple-mobile-web-app-title" content="Natour">
 <title>Natour · ناطور</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%235B4CF5'/%3E%3Crect x='20' y='14' width='24' height='38' rx='3' fill='%23fff'/%3E%3Crect x='25' y='20' width='5' height='5' fill='%23FFC35E'/%3E%3Crect x='34' y='20' width='5' height='5' fill='%23FFC35E'/%3E%3Crect x='25' y='30' width='5' height='5' fill='%23FFC35E'/%3E%3Crect x='34' y='30' width='5' height='5' fill='%235B4CF5' opacity='.3'/%3E%3Crect x='29' y='42' width='6' height='10' fill='%235B4CF5'/%3E%3C/svg%3E">
+<script>
+/* Sealed preview. With ?preview, or whenever this page sits inside a frame, the app gets
+   no server, no network and memory-only storage, and runs on sample data. See preview.js. */
+(function () {
+  var framed = true; try { framed = window.self !== window.top; } catch (e) {}
+  var q = new URLSearchParams(location.search);
+  if (!q.has('preview') && !framed) return;
+  var P = { screen: q.get('preview') || 'home', flow: q.get('flow'), step: q.get('step'), lang: q.get('lang') === 'ar' ? 'ar' : 'en', theme: q.get('theme') === 'dark' ? 'dark' : 'light' };
+  window.NATOUR_PREVIEW = P;
+  var csp = document.createElement('meta'); csp.httpEquiv = 'Content-Security-Policy'; csp.content = "connect-src 'none'; form-action 'none'";
+  document.head.appendChild(csp);
+  function memory(seed) {
+    var m = seed || {};
+    return { getItem: function (k) { return Object.prototype.hasOwnProperty.call(m, k) ? m[k] : null; }, setItem: function (k, v) { m[k] = String(v); },
+             removeItem: function (k) { delete m[k]; }, clear: function () { m = {}; }, key: function (i) { return Object.keys(m)[i] || null; }, get length() { return Object.keys(m).length; } };
+  }
+  Object.defineProperty(window, 'localStorage', { value: memory({ bny15_lang: P.lang }) });
+  Object.defineProperty(window, 'sessionStorage', { value: memory() });
+  document.documentElement.setAttribute('data-theme', P.theme);
+  document.documentElement.classList.add('pv-boot');
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -479,6 +501,69 @@ input.input[type="date"]::-webkit-date-and-time-value { text-align: start; margi
   .adm-q { max-width: none; flex-basis: 100%; }
 }
 
+/* Admin: Screen wall and Workflows */
+#std-host { display: none; position: fixed; top: 0; bottom: 0; right: 0; left: 232px; z-index: 10; overflow: auto; background: var(--bg); }
+.std { padding: 26px 32px 60px; }
+.std-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 18px; }
+.std-seg { flex: none; }
+.std-seg button { min-height: 32px; font-size: 12.5px; }
+.std-pick { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--mut); }
+.std-pick .input, .std-mini { width: auto; min-height: 38px; padding: 4px 10px; font-size: 14px; color: var(--ink); }
+.std-zoom input { width: 110px; accent-color: var(--acc); }
+.std-wall { display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start; }
+.std-frame { margin: 0; flex: none; }
+.std-frame figcaption { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: var(--mut); }
+.std-frame figcaption span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.std-frame figcaption a { flex: none; color: var(--acc-ink); text-decoration: none; }
+.std-clip { position: relative; overflow: hidden; border-radius: 18px; border: 1px solid var(--line); background: var(--card); box-shadow: var(--shadow); }
+.std-frame.wide .std-clip { border-radius: 10px; }
+.std-clip iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; background: transparent; }
+.std-state { position: absolute; inset: 0; display: grid; place-items: center; padding: 12px; text-align: center; color: var(--mut); font-size: 13px; }
+.std-frame.ready:not(.bad) .std-state { display: none; }
+.std-frame.bad iframe { display: none; }
+.std-fl-grid { display: grid; grid-template-columns: 220px minmax(0, 1fr) 300px; gap: 22px; align-items: start; }
+.std-fl-list { display: flex; flex-direction: column; gap: 6px; }
+.std-fl { display: block; width: 100%; text-align: start; padding: 10px 12px; border-radius: 12px; border: 1px solid transparent; }
+.std-fl:hover { background: var(--bg2); }
+.std-fl.on { background: var(--soft); color: var(--acc-ink); }
+.std-fl b { display: block; font-size: 14px; }
+.std-fl small { color: var(--mut); font-size: 12px; }
+.std-fl-stage { min-width: 0; display: flex; flex-direction: column; align-items: center; }
+.std-fl-stage .std-bar { justify-content: center; }
+#std-flow-slot { width: 100%; display: flex; justify-content: center; }
+.std-fl-panel { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px 18px; }
+.std-fl-panel h2 { margin: 0 0 4px; font-size: 16px; }
+.std-fl-panel > p { margin: 0 0 12px; font-size: 13px; }
+.std-steps { list-style: none; margin: 0 0 14px; padding: 0; }
+.std-steps button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 0; text-align: start; color: var(--mut); font-size: 13.5px; }
+.std-steps b { font-weight: 600; }
+.std-steps span { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--bg2); font-size: 12px; font-weight: 700; }
+.std-steps .done span { background: var(--okbg); color: var(--ok); }
+.std-steps .on button { color: var(--ink); }
+.std-steps .on span { background: var(--acc); color: var(--on-acc); }
+.std-steps .on b { font-weight: 800; }
+.std-steps p { margin: 0 0 8px 34px; font-size: 13px; color: var(--mut); }
+.std-fl-nav { display: flex; gap: 8px; align-items: stretch; }
+.std-fl-nav .btn { flex: 1; height: 44px; min-height: 44px; padding-block: 0; }
+.std-fl-panel .banner { margin-bottom: 10px; }
+@media (max-width: 1250px) { .std-fl-grid { grid-template-columns: 180px minmax(0, 1fr) 260px; gap: 14px; } .std { padding: 22px 20px 50px; } }
+@media (max-width: 999px) {
+  #std-host { left: 0; }
+  .std { padding: 18px 16px 50px; }
+  .std-fl-grid { grid-template-columns: minmax(0, 1fr); }
+  .std-fl-list { flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
+  .std-fl { flex: none; width: auto; white-space: nowrap; }
+  .std-fl-panel { order: 3; }
+}
+/* Inside a preview frame */
+html.pv-boot #app { visibility: hidden; }
+.pv-msg { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: flex-end; justify-content: center; padding: 16px; background: var(--scrim); }
+.pv-msg-card { width: 100%; max-width: 440px; max-height: 88vh; overflow: auto; padding: 14px; border-radius: 20px; background: var(--sheet); }
+.pv-msg-card small { display: block; margin-bottom: 8px; color: var(--mut); font-weight: 600; }
+.pv-bubble { white-space: pre-wrap; overflow-wrap: anywhere; padding: 10px 12px; margin-bottom: 12px; border-radius: 12px; background: var(--okbg); color: var(--ink); font-size: 14px; line-height: 1.45; }
+.pv-hl { outline: 3px solid var(--acc); outline-offset: 2px; animation: pvPulse 1.4s ease-in-out infinite; }
+@keyframes pvPulse { 50% { outline-color: transparent; } }
+
 /* Contacts */
 .li.contact .cbtn { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--bg2); text-decoration: none; font-size: 18px; margin-inline-start: 6px; }
 .li.contact .cbtn.wa { background: var(--okbg); }
@@ -732,7 +817,7 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
    Fill these in once and every phone that opens this file connects to the same building data.
    Use the publishable key only (never the secret / service_role key).
    publicUrl: where you host this file, so WhatsApp links point there (optional). */
-window.BINAYATI_CONFIG = {
+window.BINAYATI_CONFIG = window.NATOUR_PREVIEW ? { url: '', key: '', publicUrl: '' } : {
   "url": "https://ehatjqqmdmgptqbkgrzb.supabase.co",
   "key": "sb_publishable_rnuIP7E5qOBxf1JG5a0Jzw_iyDJ74Zi",
   "publicUrl": "https://dropthehat.github.io/BinayatiApp/v15/"
@@ -5059,6 +5144,7 @@ function afterRender() {
   if (f && !f._focused) { f._focused = true; try { f.focus({ preventScroll: true }); } catch (e) {} }
   setSync(SYNC);
   trRefresh();
+  if (typeof stdSync === 'function') stdSync();
 }
 
 function toast(msg) {
@@ -7218,7 +7304,7 @@ SHEETS.menu = function() {
     if (S.role !== 'manager') h += '<button class="li" onclick="viewAs(\'u-manager\')"><div class="ic">👁</div><div class="grow"><b>' + esc(t('Back to the manager view', 'عودة لعرض المدير')) + '</b></div></button>';
     else cols.forEach(function(m) { h += '<button class="li" onclick="viewAs(' + jsArg(m.user_id) + ')"><div class="ic">👁</div><div class="grow"><b>' + esc(t('See what ' + m.display_name + ' sees', 'شاهد ما يراه ' + m.display_name)) + '</b><small>' + esc(roleLabel(m.role)) + '</small></div></button>'; });
     var u0 = activeUnits()[0];
-    if (u0 && isManager()) h += '<button class="li" onclick="location.href=' + jsArg('?r=' + u0.resident_token) + '"><div class="ic">👁</div><div class="grow"><b>' + esc(t('See a resident\'s page', 'شاهد صفحة ساكن')) + '</b><small>' + esc(u0.code) + '</small></div></button>';
+    if (u0 && isManager()) h += '<button class="li" onclick="seeResident(' + jsArg(u0.resident_token) + ')"><div class="ic">👁</div><div class="grow"><b>' + esc(t('See a resident\'s page', 'شاهد صفحة ساكن')) + '</b><small>' + esc(u0.code) + '</small></div></button>';
   }
   if (isCloud() && typeof isDemo === 'function' && isDemo()) {
     var asMgr = S.role === 'manager';
@@ -7725,7 +7811,7 @@ function finishSetup(displayName) {
 /* A filled-in example so people can poke around before committing. */
 function loadSample() {
   OB = { step: 6, name: 'Block C', nameAr: 'البلوك C', floors: 4, per: 2, under: 0, fee: 20, cur: 'USD', split: 'each', who: 'other', colName: 'Anas', colNameAr: 'أنس', openUsd: 450, openLbp: 18000000 };
-  finishSetup('Carl').then(function() {
+  return finishSetup('Carl').then(function() {
     var cyc = currentCycle(); if (!cyc) return;
     var us = activeUnits();
     var names = [['Ahmad El-Khatib', 'أحمد الخطيب'], ['Nadia Khoury', 'ناديا خوري'], ['Hadi Mansour', 'هادي منصور'], ['Karim Salameh', 'كريم سلامة'], ['Ziad Nader', 'زياد نادر'], ['Rania Haddad', 'رانيا حداد'], ['Omar Saab', 'عمر صعب'], ['Lina Farah', 'لينا فرح']];
@@ -8796,8 +8882,8 @@ function admSupportMode(mode) {
    news.js. All data comes from admin-only server functions.
    ============================================================================ */
 var ADM_PAGES = [
-  ['overview', '📊', 'Overview'], ['support', '🏢', 'Buildings'], ['features', '🧩', 'Features'],
-  ['lists', '🗂', 'Lists'], ['news', '📣', 'News']
+  ['overview', '📊', 'Overview'], ['support', '🏢', 'Buildings'], ['wall', '🖼', 'Screen wall'], ['flows', '🧭', 'Workflows'],
+  ['features', '🧩', 'Features'], ['lists', '🗂', 'Lists'], ['news', '📣', 'News']
 ];
 var STALL_DAYS = 3, QUIET_DAYS = 14;
 
@@ -8810,7 +8896,8 @@ function renderAdmin() {
     h += '<button class="desk-nav' + (page[0] === p[0] ? ' on' : '') + '"' + (page[0] === p[0] ? ' aria-current="page"' : '') + ' onclick="admGo(\'' + p[0] + '\')"><span>' + p[1] + '</span>' + p[2] + '</button>';
   });
   h += '<div class="grow"></div><button class="desk-nav" onclick="UI.screen=\'app\';render()"><span>‹</span>Back to the app</button></aside><main class="desk-main">';
-  if (page[0] === 'overview') h += admOverview();
+  if (page[0] === 'wall' || page[0] === 'flows') h += ''; // these two live in their own layer, see admin-studio.js
+  else if (page[0] === 'overview') h += admOverview();
   else if (page[0] === 'support') h += admBuildings();
   else {
     h += deskHead(page[2]) + '<p class="adm-sub">Changes reach every app within seconds.</p>';
@@ -9089,6 +9176,427 @@ function admDeleteTest(id) {
     closeSheet(); toast(b.name + ' removed'); admLoadBuildings();
   }, function(e) { sheetErr(e.message); });
 }
+
+/* ============================================================================
+   Sealed preview: the real app running on sample data, used by the admin's
+   Screen wall and Workflows. The switch is at the top of the page (see build.js):
+   any load with ?preview, or inside a frame, gets no server config, no network
+   access and storage that lives only in memory. Nothing here can reach a real
+   building. Internal captions are English only.
+   ============================================================================ */
+var PV = { st: {}, quiet: false, ready: false };
+
+function pvWait(ms) { return new Promise(function(r) { setTimeout(r, ms || 60); }); }
+function pvDb() { return localLoad(); }
+function pvPersona() { return pvDb().persona || 'u-manager'; }
+/* Be this person. Going back from the resident page reopens the building. */
+function pvAs(uid) {
+  var was = UI.screen === 'resident', same = pvPersona() === uid && S.role && !was;
+  UI.sheet = null; UI.screen = 'app';
+  if (same) return;
+  var db = pvDb(); db.persona = uid; localSave();
+  localLoadBuilding(db.current || db.buildings[0].id);
+  UI.tab = 'home'; UI.bsec = null;
+}
+function pvTab(uid, tab) { pvAs(uid); UI.sheet = null; UI.tab = tab; UI.bsec = null; render(); window.scrollTo(0, 0); }
+function pvSec(sec) { pvAs('u-manager'); UI.sheet = null; UI.tab = 'building'; UI.bsec = sec; render(); window.scrollTo(0, 0); }
+function pvSheet(uid, tab, name, data) { pvTab(uid, tab); openSheet(name, data || {}); }
+function pvDesk(page) { pvAs('u-manager'); DESK.page = page; UI.sheet = null; UI.tab = 'home'; render(); window.scrollTo(0, 0); }
+function pvWide() { return window.innerWidth >= 1000; }
+/* Sample people to point at: one who still owes, one who has paid. */
+function pvOwing() {
+  var cyc = currentCycle();
+  return activeUnits().filter(function(u) { return pairUsd(unitCycle(u, cyc).left) > 0.005; })[0] || activeUnits()[0];
+}
+function pvPaid() {
+  var cyc = currentCycle();
+  return activeUnits().filter(function(u) { return unitCycle(u, cyc).state === 'paid'; })[0] || activeUnits()[0];
+}
+function pvPaidCell() {
+  var cyc = currentCycle(), out = null;
+  activeUnits().forEach(function(u) { chargesOf(cyc.id).forEach(function(ch) { if (!out && cell(ch, u).payments.length) out = { ch: ch.id, u: u.id }; }); });
+  return out || {};
+}
+function pvResident(u) { pvAs('u-manager'); return loadResident((u || pvOwing()).resident_token).then(function() { window.scrollTo(0, 0); }); }
+function seeResident(tok) {
+  if (window.NATOUR_PREVIEW) loadResident(tok); else location.href = '?r=' + tok;
+}
+
+/* ---------- Every screen the wall can show ---------- */
+var PV_ROLES = { m: 'Manager', c: 'Collector', r: 'Resident' };
+var PV_SCREENS = [
+  { id: 'home', role: 'm', l: 'Home', desk: 'overview', run: function() { pvWide() ? pvDesk('overview') : pvTab('u-manager', 'home'); } },
+  { id: 'collect', role: 'm', l: 'Collect', desk: 'collect', run: function() { pvWide() ? pvDesk('collect') : pvTab('u-manager', 'collect'); } },
+  { id: 'books', role: 'm', l: 'Books · money', desk: 'books', run: function() { UI.booksView = 'money'; pvWide() ? pvDesk('books') : pvTab('u-manager', 'books'); } },
+  { id: 'activity', role: 'm', l: 'Books · activity', phone: true, run: function() { UI.booksView = 'activity'; pvTab('u-manager', 'books'); } },
+  { id: 'building', role: 'm', l: 'Building', phone: true, run: function() { pvTab('u-manager', 'building'); } },
+  { id: 'b-units', role: 'm', l: 'Apartments', phone: true, run: function() { pvSec('units'); } },
+  { id: 'b-charges', role: 'm', l: 'What each apartment pays', phone: true, run: function() { pvSec('charges'); } },
+  { id: 'b-cycles', role: 'm', l: 'Months & projects', phone: true, run: function() { pvSec('cycles'); } },
+  { id: 'b-team', role: 'm', l: 'Team', phone: true, run: function() { pvSec('team'); } },
+  { id: 'b-tasks', role: 'm', l: 'Tasks & reminders', phone: true, run: function() { pvSec('tasks'); } },
+  { id: 'b-contacts', role: 'm', l: 'Contacts', desk: 'contacts', run: function() { pvWide() ? pvDesk('contacts') : pvSec('contacts'); } },
+  { id: 'b-settings', role: 'm', l: 'Settings', phone: true, run: function() { pvSec('settings'); } },
+  { id: 'd-arrears', role: 'm', l: 'Arrears', laptop: true, run: function() { pvDesk('arrears'); } },
+  { id: 'd-reports', role: 'm', l: 'Reports', laptop: true, run: function() { pvDesk('reports'); } },
+  { id: 's-add', role: 'm', l: 'Add menu', sheet: true, run: function() { pvSheet('u-manager', 'home', 'add'); } },
+  { id: 's-menu', role: 'm', l: 'Building menu', sheet: true, run: function() { pvSheet('u-manager', 'home', 'menu'); } },
+  { id: 's-unit', role: 'm', l: 'Apartment card', sheet: true, run: function() { pvTab('u-manager', 'collect'); openSheet('unit', { id: pvOwing().id }); } },
+  { id: 's-cell', role: 'm', l: 'A paid charge', sheet: true, run: function() { pvTab('u-manager', 'collect'); openSheet('cell', pvPaidCell()); } },
+  { id: 's-pay', role: 'm', l: 'Record a payment', sheet: true, run: function() { pvTab('u-manager', 'collect'); openSheet('pay', { unit: pvOwing().id }); } },
+  { id: 's-remind', role: 'm', l: 'WhatsApp message', sheet: true, run: function() { pvTab('u-manager', 'collect'); openSheet('remind', { u: pvOwing().id, cyc: currentCycle().id }); } },
+  { id: 's-expense', role: 'm', l: 'Money spent', sheet: true, run: function() { pvSheet('u-manager', 'books', 'expense'); } },
+  { id: 's-charge', role: 'm', l: 'Add a charge', sheet: true, run: function() { pvSheet('u-manager', 'building', 'charge', { cycle: currentCycle().id }); } },
+  { id: 's-project', role: 'm', l: 'New project', sheet: true, run: function() { pvSheet('u-manager', 'building', 'project'); } },
+  { id: 's-task', role: 'm', l: 'Add a task', sheet: true, run: function() { pvSheet('u-manager', 'building', 'task'); } },
+  { id: 's-invite', role: 'm', l: 'Invite a collector', sheet: true, run: function() { pvSheet('u-manager', 'building', 'invite', { role: 'collector' }); } },
+  { id: 's-handrecv', role: 'm', l: 'Cash from a collector', sheet: true, run: function() { pvSheet('u-manager', 'home', 'handrecv'); } },
+  { id: 'c-home', role: 'c', l: 'Home', run: function() { pvTab('u-collector', 'home'); } },
+  { id: 'c-collect', role: 'c', l: 'Collect', run: function() { pvTab('u-collector', 'collect'); } },
+  { id: 'c-books', role: 'c', l: 'Books', run: function() { pvTab('u-collector', 'books'); } },
+  { id: 'c-tasks', role: 'c', l: 'Tasks', run: function() { pvTab('u-collector', 'tasks'); } },
+  { id: 'c-add', role: 'c', l: 'Add menu', sheet: true, run: function() { pvSheet('u-collector', 'home', 'add'); } },
+  { id: 'c-pay', role: 'c', l: 'Record a payment', sheet: true, run: function() { pvTab('u-collector', 'collect'); openSheet('pay', { unit: pvOwing().id }); } },
+  { id: 'c-expense', role: 'c', l: 'I spent building cash', sheet: true, run: function() { pvSheet('u-collector', 'home', 'expense'); } },
+  { id: 'c-handreq', role: 'c', l: 'Hand over cash', sheet: true, run: function() { pvSheet('u-collector', 'home', 'handreq'); } },
+  { id: 'r-owes', role: 'r', l: 'Page · still owes', run: function() { return pvResident(pvOwing()); } },
+  { id: 'r-paid', role: 'r', l: 'Page · fully paid', run: function() { return pvResident(pvPaid()); } }
+];
+
+/* ---------- Workflows: real steps, using the app's own functions ---------- */
+function pvFill(values) {
+  Object.keys(values).forEach(function(id) { var el = document.getElementById(id); if (el) { el.value = values[id]; el.dispatchEvent(new Event('input', { bubbles: true })); } });
+}
+var PV_FLOWS = [
+  { id: 'collect', title: 'Collect a payment', who: 'Manager', about: 'An apartment pays, the manager records it and sends a receipt.', steps: [
+    { t: 'Start on Home', n: 'Lit windows have paid. Dark ones still owe.', run: function() { pvTab('u-manager', 'home'); } },
+    { t: 'Open Collect', n: 'Everyone this month, with what each still owes.', run: function() { pvTab('u-manager', 'collect'); } },
+    { t: 'Open the apartment', n: 'The bill, what is owed, and every way to act on it.', hl: '[onclick*="openSheet(\'pay\'"]', run: function() { PV.st.u = pvOwing().id; openSheet('unit', { id: PV.st.u }); } },
+    { t: 'Record the payment', n: 'Any amount. It pays off the oldest charges first.', hl: '.sheet .foot .btn.pri', run: function() { openSheet('pay', { unit: PV.st.u, channel: 'manager' }); } },
+    { t: 'Saved', n: 'The money is on the books and the apartment moves on.', run: function() { savePay(); return pvWait(120); } },
+    { t: 'Send the receipt', n: 'The message is written for them, ready for WhatsApp. Nothing is sent from a preview.', hl: '.btn.wa', run: function() { openSheet('remind', { u: PV.st.u, cyc: currentCycle().id }); } },
+    { t: 'Back on Home', n: 'Their window is lit now.', run: function() { pvTab('u-manager', 'home'); } }
+  ] },
+  { id: 'cash', title: 'Collector cash to the safe', who: 'Collector → Manager', about: 'A collector holds cash, hands it over, and the manager confirms.', steps: [
+    { t: 'Collector\'s Home', n: 'What they are holding, and what is left to collect.', run: function() { pvTab('u-collector', 'home'); } },
+    { t: 'Open the add menu', n: 'Handing over cash is one tap away.', hl: '[onclick*="addPick(\'handreq\')"]', run: function() { openSheet('add'); } },
+    { t: 'Hand over the cash', n: 'The amount comes from what they ticked.', hl: '.sheet .foot .btn.pri', run: function() { openSheet('handreq'); } },
+    { t: 'Waiting for the manager', n: 'It stays with the collector until confirmed.', run: function() { requestHandover(); return pvWait(120); } },
+    { t: 'Manager sees it on Home', n: 'Now viewed as the manager.', run: function() { pvTab('u-manager', 'home'); } },
+    { t: 'Review the handover', n: 'Which payments it covers and the cash to receive.', hl: '.sheet .foot .btn.ok', run: function() {
+      var ho = S.handovers.filter(function(x) { return x.status === 'pending'; })[0]; PV.st.ho = ho && ho.id; openSheet('handover', { id: PV.st.ho });
+    } },
+    { t: 'In the safe', n: 'Confirmed. The cash has moved to the safe.', run: function() { resolveHandover(PV.st.ho, true); return pvWait(120); } },
+    { t: 'See it in the books', n: 'The safe and the collector\'s balance have both changed.', run: function() { UI.booksView = 'money'; pvTab('u-manager', 'books'); } }
+  ] },
+  { id: 'expense', title: 'Record money spent', who: 'Manager', about: 'A bill is paid from the safe and shows in the books.', steps: [
+    { t: 'Open the add menu', n: 'The + button is on every main screen.', hl: '[onclick*="addPick(\'expense\')"]', run: function() { pvTab('u-manager', 'books'); openSheet('add'); } },
+    { t: 'Fill in the expense', n: 'Filled in here as an example: a repair paid from the safe.', hl: '.sheet .foot .btn.pri', run: function() { openSheet('expense', { cat: 'elev' }); return pvWait(40).then(function() { pvFill({ 'ex-title': 'Elevator repair', 'ex-amt': '85' }); }); } },
+    { t: 'Saved', n: 'It comes off the safe straight away.', run: function() { saveExpense('', ''); return pvWait(120); } },
+    { t: 'See it in the books', n: 'Money in and out, in one list.', run: function() { UI.booksView = 'money'; pvTab('u-manager', 'books'); } }
+  ] },
+  { id: 'month', title: 'Open the next month', who: 'Manager', about: 'Repeating charges are copied into a draft to review before residents see it.', steps: [
+    { t: 'Open the add menu', n: 'Opening a month starts here.', hl: '[onclick*="addPick(\'month\')"]', run: function() { pvTab('u-manager', 'home'); openSheet('add'); } },
+    { t: 'Review the draft', n: 'Repeating charges are copied in. Residents don\'t see it until it is published.', run: function() { UI.sheet = null; newMonth(); return pvWait(160); } }
+  ] },
+  { id: 'bill', title: 'A resident gets their bill', who: 'Manager → Resident', about: 'The bill goes by WhatsApp with a private link, no login needed.', steps: [
+    { t: 'Open Collect', n: 'Bills go out from here.', run: function() { pvTab('u-manager', 'collect'); } },
+    { t: 'Write the message', n: 'The bill is written for that apartment, in their language.', hl: '.btn.wa', run: function() { PV.st.u = pvOwing().id; openSheet('remind', { u: PV.st.u, cyc: currentCycle().id }); } },
+    { t: 'What they receive', n: 'This is the message. Nothing is sent from a preview.', run: function() { pvMessage(val('rm-text')); } },
+    { t: 'They open the link', n: 'Their private page: bill, receipts and the building\'s books.', run: function() { pvMessage(null); return pvResident(byId(S.units, PV.st.u)); } }
+  ] },
+  { id: 'team', title: 'Add a collector', who: 'Manager', about: 'Invite someone and choose what they can do. On real buildings this makes a link.', steps: [
+    { t: 'Open Team', n: 'Who has access to the building.', run: function() { pvSec('team'); } },
+    { t: 'Invite them', n: 'On a real building this creates a one-time link and QR code.', run: function() { openSheet('invite', { role: 'collector' }); } }
+  ] },
+  { id: 'tasks', title: 'Finish a task', who: 'Collector', about: 'A repeating building chore gets ticked off and rolls to its next date.', steps: [
+    { t: 'Collector\'s tasks', n: 'What is due, then what comes later.', hl: '.check', run: function() { pvTab('u-collector', 'tasks'); } },
+    { t: 'Tick it', n: 'It rolls forward to the next date by itself.', run: function() { var x = openTasks()[0]; if (x) tickTask(x.id); return pvWait(120); } }
+  ] }
+];
+
+/* ---------- Showing a WhatsApp message instead of leaving the preview ---------- */
+function pvMessage(text) {
+  var old = document.getElementById('pv-msg'); if (old) old.remove();
+  if (text == null) return;
+  var el = document.createElement('div');
+  el.id = 'pv-msg'; el.className = 'pv-msg';
+  el.innerHTML = '<div class="pv-msg-card" dir="auto"><small>WhatsApp message · not sent in a preview</small><div class="pv-bubble">' + esc(text) + '</div><button class="btn sec block" onclick="pvMessage(null)">Close</button></div>';
+  document.body.appendChild(el);
+}
+function pvWaLink(url) {
+  var text = ''; try { text = new URL(url).searchParams.get('text') || ''; } catch (e) {}
+  pvMessage(text || 'A WhatsApp chat would open here.');
+}
+function pvHighlight(sel) {
+  document.querySelectorAll('.pv-hl').forEach(function(x) { x.classList.remove('pv-hl'); });
+  if (!sel) return;
+  var el = document.querySelector(sel);
+  if (el) { el.classList.add('pv-hl'); try { el.scrollIntoView({ block: 'nearest' }); } catch (e) {} }
+}
+
+/* ---------- Sample data beyond the app's own example ---------- */
+function pvSeed() {
+  var d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1);
+  var period = d.getFullYear() + '-' + pad2(d.getMonth() + 1), us = activeUnits();
+  var cyc = { kind: 'month', period: period, title: periodLabel(period, 'en'), title_ar: periodLabel(period, 'ar'), published: true };
+  var keep = UI.cycleId;
+  return dbInsert('cycles', cyc).then(function() {
+    return dbInsert('charges', { cycle_id: cyc.id, kind: 'fixed', title: 'Maintenance', title_ar: 'الصيانة', cur: 'USD', amount: 20, split: 'each', overrides: {}, pass_through: false, recurring: true, sort: 0 });
+  }).then(function() {
+    var ch = chargesOf(cyc.id)[0], when = new Date(d.getFullYear(), d.getMonth(), 12).toISOString();
+    return dbInsertMany('payments', us.slice(0, Math.max(0, us.length - 2)).map(function(u) { return { charge_id: ch.id, unit_id: u.id, amount: 20, cur: 'USD', channel: 'manager', method: 'Cash', received_by: 'u-manager', received_at: when }; }));
+  }).then(function() {
+    return dbInsertMany('contacts', [
+      { cat: 'elevator', name: 'Cedar Lifts', name_ar: 'مصاعد الأرز', phone: '+96170111222', emergency: true, show_residents: true, sort: 0 },
+      { cat: 'other', name: 'Plumber', name_ar: 'السنكري', phone: '+96171333444', emergency: false, show_residents: true, sort: 1 }
+    ]);
+  }).then(function() { UI.cycleId = keep; }, function(e) { console.warn('preview seed', e); UI.cycleId = keep; });
+}
+
+/* ---------- Start up and talk to the admin page ---------- */
+function pvPost(msg) { msg.natour = true; if (window.parent !== window) window.parent.postMessage(msg, '*'); }
+function pvFlow() { return PV_FLOWS.filter(function(f) { return f.id === window.NATOUR_PREVIEW.flow; })[0]; }
+function pvRunStep(i) {
+  var f = pvFlow(); if (!f || !f.steps[i]) return Promise.resolve();
+  var tt = document.getElementById('toast'); if (tt) tt.classList.remove('pop');
+  return Promise.resolve(f.steps[i].run()).then(function() { return pvWait(40); }).then(function() { pvHighlight(f.steps[i].hl); PV.step = i; });
+}
+function previewBoot() {
+  var P = window.NATOUR_PREVIEW, realToast = window.toast;
+  window.launchConfetti = function() {};
+  window.toast = function(m) { if (!PV.quiet) realToast(m); };
+  window.open = function(url) { pvWaLink(String(url || '')); return null; };
+  document.addEventListener('click', function(e) {
+    var a = e.target.closest && e.target.closest('a[href]'); if (!a) return;
+    var href = a.getAttribute('href') || '';
+    if (/^https?:|^tel:|^sms:/.test(href)) { e.preventDefault(); if (/wa\.me/.test(href)) pvWaLink(href); }
+  }, true);
+  window.addEventListener('message', function(e) {
+    if (e.source !== window.parent || !e.data || !e.data.natour || e.data.step == null) return;
+    PV.quiet = false;
+    pvRunStep(e.data.step).then(function() { pvPost({ stepDone: e.data.step }); }, function(err) { console.error(err); pvPost({ stepDone: e.data.step, error: String(err && err.message || err) }); });
+  });
+  PV.quiet = true;
+  render();
+  initCloud().then(loadSample).then(pvSeed).then(function() {
+    setupState({ open: false });
+    if (P.flow) {
+      var upto = Math.max(0, parseInt(P.step, 10) || 0), p = Promise.resolve();
+      for (var i = 0; i <= upto; i++) (function(n) { p = p.then(function() { return pvRunStep(n); }); })(i);
+      return p;
+    }
+    var sc = PV_SCREENS.filter(function(x) { return x.id === P.screen; })[0] || PV_SCREENS[0];
+    return sc.run();
+  }).then(function() {
+    return pvWait(40);
+  }).then(function() {
+    PV.quiet = false; PV.ready = true;
+    document.documentElement.classList.remove('pv-boot');
+    pvPost({ ready: true, screen: P.screen || null, flow: P.flow || null });
+  }).catch(function(e) {
+    console.error(e); PV.quiet = false;
+    document.documentElement.classList.remove('pv-boot');
+    pvPost({ ready: true, error: String(e && e.message || e) });
+  });
+}
+
+/* ============================================================================
+   Natour admin: Screen wall and Workflows. Frames run the sealed preview from
+   preview.js. They live in their own layer outside #app, so the app's normal
+   re-renders never reload them.
+   ============================================================================ */
+var STD_DEVICES = [
+  { id: 'se', l: 'iPhone SE', w: 375, h: 667 }, { id: 'ip', l: 'iPhone 15', w: 393, h: 852 }, { id: 'max', l: 'iPhone Pro Max', w: 430, h: 932 },
+  { id: 'and', l: 'Android', w: 360, h: 800 }, { id: 'ipad', l: 'iPad', w: 820, h: 1180, big: true }, { id: 'lap', l: 'Laptop', w: 1440, h: 900, big: true, wide: true }
+];
+var STD = {
+  page: null, mode: 'devices', role: 'm', screen: 'home', device: 'ip', lang: 'en', theme: 'light', zoom: 0.6,
+  flow: 'collect', step: 0, fdevice: 'ip', busy: false, err: null, queue: [], loading: 0, io: null
+};
+var STD_PAGES = { wall: 1, flows: 1 };
+
+function stdHost() {
+  var el = document.getElementById('std-host');
+  if (!el) { el = document.createElement('div'); el.id = 'std-host'; el.setAttribute('dir', 'ltr'); document.body.appendChild(el); }
+  return el;
+}
+/* Called after every app render: show, hide or leave the layer alone. */
+function stdSync() {
+  var active = UI.screen === 'admin' && IS_ADMIN && STD_PAGES[ADM.tab];
+  var el = document.getElementById('std-host');
+  if (!active) {
+    if (el && STD.page) { el.innerHTML = ''; el.style.display = 'none'; STD.page = null; stdStopLoading(); }
+    return;
+  }
+  el = stdHost(); el.style.display = 'block';
+  var side = document.querySelector('.adm .desk-side');
+  el.style.top = side && window.innerWidth < 1000 ? side.offsetHeight + 'px' : '0';
+  if (STD.page !== ADM.tab) { STD.page = ADM.tab; stdBuild(); }
+}
+function stdBuild() { stdStopLoading(); if (STD.page === 'wall') stdWall(); else if (STD.page === 'flows') stdFlows(); }
+function stdSrc(params) {
+  var q = new URLSearchParams(params);
+  return location.pathname + '?' + q.toString();
+}
+function stdFrameSandbox() { return 'allow-scripts allow-forms allow-modals'; }
+
+/* ---------- Loading a few frames at a time ---------- */
+function stdStopLoading() {
+  if (STD.io) { STD.io.disconnect(); STD.io = null; }
+  STD.queue = []; STD.loading = 0;
+}
+function stdPump() {
+  while (STD.loading < 3 && STD.queue.length) {
+    var f = STD.queue.shift();
+    if (!f.isConnected) continue;
+    STD.loading++;
+    f.setAttribute('src', f.getAttribute('data-src'));
+    f._limit = setTimeout((function(x) { return function() { stdFrameDone(x); }; })(f), 12000);
+  }
+}
+function stdFrameDone(f, err) {
+  if (!f || f._done) return;
+  f._done = true; clearTimeout(f._limit);
+  STD.loading = Math.max(0, STD.loading - 1);
+  var box = f.closest('.std-frame');
+  if (box) { box.classList.add('ready'); if (err) { box.classList.add('bad'); var c = box.querySelector('.std-state'); if (c) c.textContent = 'This screen failed: ' + err; } }
+  stdPump();
+}
+window.addEventListener('message', function(e) {
+  if (!e.data || !e.data.natour) return;
+  var frames = document.querySelectorAll('#std-host iframe'), f = null;
+  for (var i = 0; i < frames.length; i++) if (frames[i].contentWindow === e.source) f = frames[i];
+  if (!f) return;
+  if (e.data.ready) {
+    stdFrameDone(f, e.data.error);
+    if (f.id === 'std-flow-frame') { STD.busy = false; STD.err = e.data.error || null; stdFlowPanel(); }
+  }
+  if (e.data.stepDone != null && f.id === 'std-flow-frame') { STD.busy = false; STD.err = e.data.error || null; STD.step = e.data.stepDone; stdFlowPanel(); }
+});
+
+/* ---------- Screen wall ---------- */
+function stdSeg(key, opts, fn) {
+  return '<div class="seg std-seg">' + opts.map(function(o) { return '<button class="' + (STD[key] === o[0] ? 'on' : '') + '" onclick="stdSet(\'' + key + '\',\'' + o[0] + '\'' + (fn ? ',' + fn : '') + ')">' + o[1] + '</button>'; }).join('') + '</div>';
+}
+function stdSet(key, v, then) {
+  STD[key] = v;
+  if (key === 'role') {
+    var list = stdScreens();
+    if (!list.some(function(s) { return s.id === STD.screen; })) STD.screen = list[0].id;
+  }
+  stdBuild();
+}
+function stdScreens() { return PV_SCREENS.filter(function(s) { return s.role === STD.role; }); }
+function stdScreenOn(s, d) {
+  if (d.wide) return !s.phone;
+  return !s.laptop;
+}
+function stdCombos() {
+  var ls = STD.lang === 'both' ? ['en', 'ar'] : [STD.lang], ts = STD.theme === 'both' ? ['light', 'dark'] : [STD.theme], out = [];
+  ls.forEach(function(l) { ts.forEach(function(th) { out.push({ lang: l, theme: th }); }); });
+  return out;
+}
+function stdFrameHtml(s, d, c) {
+  var z = STD.zoom * (d.wide ? 0.62 : d.big ? 0.75 : 1);
+  var w = Math.round(d.w * z), h2 = Math.round(d.h * z);
+  var src = stdSrc({ preview: s.id, lang: c.lang, theme: c.theme });
+  var cap = [STD.mode === 'devices' ? d.l + ' · ' + d.w + '×' + d.h : s.l];
+  if (STD.lang === 'both') cap.push(c.lang === 'ar' ? 'Arabic' : 'English');
+  if (STD.theme === 'both') cap.push(c.theme === 'dark' ? 'Dark' : 'Light');
+  cap = cap.join(' · ');
+  return '<figure class="std-frame' + (d.wide ? ' wide' : '') + '" style="width:' + w + 'px"><figcaption><span title="' + esc(cap) + '">' + esc(cap) + '</span><a href="' + esc(src) + '" target="_blank" rel="noopener" title="Open full size in a new tab">Open</a></figcaption>' +
+    '<div class="std-clip" style="width:' + w + 'px;height:' + h2 + 'px"><span class="std-state">Loading…</span><iframe title="' + esc(cap) + '" data-src="' + esc(src) + '" sandbox="' + stdFrameSandbox() + '" width="' + d.w + '" height="' + d.h + '" style="transform:scale(' + z + ')"></iframe></div></figure>';
+}
+function stdWall() {
+  var el = stdHost(), list = stdScreens(), combos = stdCombos(), sc = list.filter(function(s) { return s.id === STD.screen; })[0] || list[0];
+  var h = '<div class="std"><div class="desk-head"><h1>Screen wall</h1><div class="desk-acts"><button class="btn ghost sm" onclick="stdBuild()">Reset sample data</button></div></div>';
+  h += '<p class="adm-sub">The real app on sample data. Nothing here can reach a real building or send a message, and you can tap around inside any frame.</p>';
+  h += '<div class="std-bar">' + stdSeg('mode', [['devices', 'One screen, every size'], ['all', 'One size, every screen']]);
+  h += stdSeg('role', Object.keys(PV_ROLES).map(function(k) { return [k, PV_ROLES[k]]; }));
+  if (STD.mode === 'devices') h += '<label class="std-pick"><span>Screen</span><select class="input" onchange="stdSet(\'screen\',this.value)">' + list.map(function(s) { return '<option value="' + s.id + '"' + (s.id === sc.id ? ' selected' : '') + '>' + esc(s.l) + '</option>'; }).join('') + '</select></label>';
+  else h += '<label class="std-pick"><span>Size</span><select class="input" onchange="stdSet(\'device\',this.value)">' + STD_DEVICES.map(function(d) { return '<option value="' + d.id + '"' + (d.id === STD.device ? ' selected' : '') + '>' + esc(d.l) + '</option>'; }).join('') + '</select></label>';
+  h += stdSeg('lang', [['en', 'English'], ['ar', 'Arabic'], ['both', 'Both']]) + stdSeg('theme', [['light', 'Light'], ['dark', 'Dark'], ['both', 'Both']]);
+  h += '<label class="std-pick std-zoom"><span>Zoom</span><input type="range" min="0.35" max="1" step="0.05" value="' + STD.zoom + '" aria-label="Zoom" onchange="STD.zoom=parseFloat(this.value);stdBuild()"></label></div>';
+  h += '<div class="std-wall">';
+  var n = 0;
+  if (STD.mode === 'devices') {
+    STD_DEVICES.filter(function(d) { return stdScreenOn(sc, d); }).forEach(function(d) { combos.forEach(function(c) { h += stdFrameHtml(sc, d, c); n++; }); });
+  } else {
+    var dev = STD_DEVICES.filter(function(d) { return d.id === STD.device; })[0] || STD_DEVICES[1];
+    list.filter(function(s) { return stdScreenOn(s, dev); }).forEach(function(s) { combos.forEach(function(c) { h += stdFrameHtml(s, dev, c); n++; }); });
+  }
+  if (!n) h += '<p class="muted">This screen has no version at that size.</p>';
+  h += '</div></div>';
+  el.innerHTML = h; el.scrollTop = 0;
+  stdStopLoading();
+  STD.io = new IntersectionObserver(function(entries) {
+    entries.forEach(function(en) {
+      if (!en.isIntersecting) return;
+      STD.io.unobserve(en.target);
+      var f = en.target.querySelector('iframe'); if (f) STD.queue.push(f);
+    });
+    stdPump();
+  }, { root: el, rootMargin: '200px' });
+  el.querySelectorAll('.std-frame').forEach(function(x) { STD.io.observe(x); });
+}
+
+/* ---------- Workflows ---------- */
+function stdFlow() { return PV_FLOWS.filter(function(f) { return f.id === STD.flow; })[0] || PV_FLOWS[0]; }
+function stdFlows() {
+  var el = stdHost();
+  if (STD.lang === 'both') STD.lang = 'en';
+  if (STD.theme === 'both') STD.theme = 'light';
+  var h = '<div class="std std-flows"><div class="desk-head"><h1>Workflows</h1></div><p class="adm-sub">Walk through what people actually do, step by step, in the real app on sample data. You can also tap inside the frame.</p>';
+  h += '<div class="std-fl-grid"><nav class="std-fl-list" aria-label="Workflows">' + PV_FLOWS.map(function(f) {
+    return '<button class="std-fl' + (f.id === STD.flow ? ' on' : '') + '" onclick="stdPickFlow(\'' + f.id + '\')"><b>' + esc(f.title) + '</b><small>' + esc(f.who) + ' · ' + f.steps.length + ' steps</small></button>';
+  }).join('') + '</nav>';
+  h += '<div class="std-fl-stage"><div class="std-bar">' + stdSeg('lang', [['en', 'English'], ['ar', 'Arabic']]).replace(/stdSet\('lang','(\w+)'\)/g, "stdFlowSet('lang','$1')") + stdSeg('theme', [['light', 'Light'], ['dark', 'Dark']]).replace(/stdSet\('theme','(\w+)'\)/g, "stdFlowSet('theme','$1')");
+  h += '<select class="input std-mini" aria-label="Size" onchange="stdFlowSet(\'fdevice\',this.value)">' + STD_DEVICES.map(function(d) { return '<option value="' + d.id + '"' + (d.id === STD.fdevice ? ' selected' : '') + '>' + esc(d.l) + '</option>'; }).join('') + '</select></div><div id="std-flow-slot"></div></div>';
+  h += '<aside id="std-flow-panel" class="std-fl-panel"></aside></div></div>';
+  el.innerHTML = h; el.scrollTop = 0;
+  stdFlowLoad();
+}
+function stdFlowLoad() {
+  var slot = document.getElementById('std-flow-slot'); if (!slot) return;
+  var d = STD_DEVICES.filter(function(x) { return x.id === STD.fdevice; })[0] || STD_DEVICES[1];
+  var room = Math.max(320, window.innerHeight - 200), roomW = Math.max(280, slot.offsetWidth || 400);
+  var z = Math.min(1, room / d.h, roomW / d.w);
+  var src = stdSrc({ preview: 'flow', flow: STD.flow, step: STD.step, lang: STD.lang === 'both' ? 'en' : STD.lang, theme: STD.theme === 'both' ? 'light' : STD.theme });
+  STD.busy = true; STD.err = null;
+  slot.innerHTML = '<div class="std-frame std-frame-solo" style="width:' + Math.round(d.w * z) + 'px"><div class="std-clip" style="width:' + Math.round(d.w * z) + 'px;height:' + Math.round(d.h * z) + 'px"><span class="std-state">Loading…</span><iframe id="std-flow-frame" title="' + esc(stdFlow().title) + '" src="' + esc(src) + '" sandbox="' + stdFrameSandbox() + '" width="' + d.w + '" height="' + d.h + '" style="transform:scale(' + z + ')"></iframe></div></div>';
+  stdFlowPanel();
+}
+function stdFlowPanel() {
+  var p = document.getElementById('std-flow-panel'); if (!p) return;
+  var f = stdFlow(), i = STD.step, s = f.steps[i];
+  var h = '<h2>' + esc(f.title) + '</h2><p class="muted">' + esc(f.about) + '</p>';
+  h += '<ol class="std-steps">' + f.steps.map(function(x, n) {
+    return '<li class="' + (n === i ? 'on' : n < i ? 'done' : '') + '"><button onclick="stdFlowJump(' + n + ')"' + (n === i ? ' aria-current="step"' : '') + '><span>' + (n + 1) + '</span><b>' + esc(x.t) + '</b></button>' + (n === i ? '<p>' + esc(x.n) + '</p>' : '') + '</li>';
+  }).join('') + '</ol>';
+  if (STD.err) h += '<div class="banner warn"><div class="grow"><b>This step failed</b>' + esc(STD.err) + '</div></div>';
+  h += '<div class="std-fl-nav"><button class="btn sec" onclick="stdFlowJump(' + (i - 1) + ')"' + (i <= 0 || STD.busy ? ' disabled' : '') + '>Back</button>';
+  h += i < f.steps.length - 1 ? '<button class="btn pri" onclick="stdFlowNext()"' + (STD.busy ? ' disabled' : '') + '>Next</button>' : '<button class="btn pri" onclick="stdFlowJump(0)"' + (STD.busy ? ' disabled' : '') + '>Start over</button>';
+  p.innerHTML = h + '</div>';
+}
+function stdPickFlow(id) { STD.flow = id; STD.step = 0; stdFlows(); }
+function stdFlowSet(key, v) { STD[key] = v; stdFlows(); }
+/* Going forward runs the next step in place. Going back replays from the start, so the data is always right. */
+function stdFlowJump(n) {
+  var f = stdFlow(); if (n < 0 || n >= f.steps.length) return;
+  STD.step = n; stdFlowLoad();
+}
+function stdFlowNext() {
+  var fr = document.getElementById('std-flow-frame'), f = stdFlow();
+  if (!fr || STD.busy || STD.step >= f.steps.length - 1) return;
+  STD.busy = true; stdFlowPanel();
+  fr.contentWindow.postMessage({ natour: true, step: STD.step + 1 }, '*');
+}
+document.addEventListener('keydown', function(e) {
+  if (STD.page !== 'flows' || /INPUT|SELECT|TEXTAREA/.test((e.target || {}).tagName || '')) return;
+  if (e.key === 'ArrowRight') stdFlowNext();
+  else if (e.key === 'ArrowLeft' && !STD.busy && STD.step > 0) stdFlowJump(STD.step - 1);
+});
 
 /* ============================================================================
    Building contacts: the call sheet. Elevator company, plumber, cleaning
@@ -9619,7 +10127,7 @@ function csvYear() {
   csvDownload(t('year', 'السنة'), rows);
 }
 
-boot();
+if (window.NATOUR_PREVIEW) previewBoot(); else boot();
 </script>
 </body>
 </html>

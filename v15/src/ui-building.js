@@ -1101,7 +1101,7 @@ SHEETS.menu = function() {
     if (S.role !== 'manager') h += '<button class="li" onclick="viewAs(\'u-manager\')"><div class="ic">👁</div><div class="grow"><b>' + esc(t('Back to the manager view', 'عودة لعرض المدير')) + '</b></div></button>';
     else cols.forEach(function(m) { h += '<button class="li" onclick="viewAs(' + jsArg(m.user_id) + ')"><div class="ic">👁</div><div class="grow"><b>' + esc(t('See what ' + m.display_name + ' sees', 'شاهد ما يراه ' + m.display_name)) + '</b><small>' + esc(roleLabel(m.role)) + '</small></div></button>'; });
     var u0 = activeUnits()[0];
-    if (u0 && isManager()) h += '<button class="li" onclick="location.href=' + jsArg('?r=' + u0.resident_token) + '"><div class="ic">👁</div><div class="grow"><b>' + esc(t('See a resident\'s page', 'شاهد صفحة ساكن')) + '</b><small>' + esc(u0.code) + '</small></div></button>';
+    if (u0 && isManager()) h += '<button class="li" onclick="seeResident(' + jsArg(u0.resident_token) + ')"><div class="ic">👁</div><div class="grow"><b>' + esc(t('See a resident\'s page', 'شاهد صفحة ساكن')) + '</b><small>' + esc(u0.code) + '</small></div></button>';
   }
   if (isCloud() && typeof isDemo === 'function' && isDemo()) {
     var asMgr = S.role === 'manager';

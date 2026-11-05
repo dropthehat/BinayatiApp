@@ -4,8 +4,8 @@
    news.js. All data comes from admin-only server functions.
    ============================================================================ */
 var ADM_PAGES = [
-  ['overview', '📊', 'Overview'], ['support', '🏢', 'Buildings'], ['features', '🧩', 'Features'],
-  ['lists', '🗂', 'Lists'], ['news', '📣', 'News']
+  ['overview', '📊', 'Overview'], ['support', '🏢', 'Buildings'], ['wall', '🖼', 'Screen wall'], ['flows', '🧭', 'Workflows'],
+  ['features', '🧩', 'Features'], ['lists', '🗂', 'Lists'], ['news', '📣', 'News']
 ];
 var STALL_DAYS = 3, QUIET_DAYS = 14;
 
@@ -18,7 +18,8 @@ function renderAdmin() {
     h += '<button class="desk-nav' + (page[0] === p[0] ? ' on' : '') + '"' + (page[0] === p[0] ? ' aria-current="page"' : '') + ' onclick="admGo(\'' + p[0] + '\')"><span>' + p[1] + '</span>' + p[2] + '</button>';
   });
   h += '<div class="grow"></div><button class="desk-nav" onclick="UI.screen=\'app\';render()"><span>‹</span>Back to the app</button></aside><main class="desk-main">';
-  if (page[0] === 'overview') h += admOverview();
+  if (page[0] === 'wall' || page[0] === 'flows') h += ''; // these two live in their own layer, see admin-studio.js
+  else if (page[0] === 'overview') h += admOverview();
   else if (page[0] === 'support') h += admBuildings();
   else {
     h += deskHead(page[2]) + '<p class="adm-sub">Changes reach every app within seconds.</p>';

@@ -184,7 +184,7 @@ function finishSetup(displayName) {
 /* A filled-in example so people can poke around before committing. */
 function loadSample() {
   OB = { step: 6, name: 'Block C', nameAr: 'البلوك C', floors: 4, per: 2, under: 0, fee: 20, cur: 'USD', split: 'each', who: 'other', colName: 'Anas', colNameAr: 'أنس', openUsd: 450, openLbp: 18000000 };
-  finishSetup('Carl').then(function() {
+  return finishSetup('Carl').then(function() {
     var cyc = currentCycle(); if (!cyc) return;
     var us = activeUnits();
     var names = [['Ahmad El-Khatib', 'أحمد الخطيب'], ['Nadia Khoury', 'ناديا خوري'], ['Hadi Mansour', 'هادي منصور'], ['Karim Salameh', 'كريم سلامة'], ['Ziad Nader', 'زياد نادر'], ['Rania Haddad', 'رانيا حداد'], ['Omar Saab', 'عمر صعب'], ['Lina Farah', 'لينا فرح']];

@@ -40,6 +40,7 @@ function afterRender() {
   if (f && !f._focused) { f._focused = true; try { f.focus({ preventScroll: true }); } catch (e) {} }
   setSync(SYNC);
   trRefresh();
+  if (typeof stdSync === 'function') stdSync();
 }
 
 function toast(msg) {

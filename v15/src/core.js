@@ -276,6 +276,9 @@ function visibleCycles() {
     return a.kind === 'month' ? -1 : 1;
   });
 }
+/* A shared book holds what several buildings share (water, EDL). Its bills arrive as published rounds, not months. */
+function isSharedBook() { return !!(S.building && S.building.kind === 'shared'); }
+function testBuild() { return !!(window.BINAYATI_CONFIG || {}).testBuild; }
 function monthCycles() { return visibleCycles().filter(function(c) { return c.kind === 'month'; }); }
 function latestMonth() {
   var cp = currentPeriod(), ms = monthCycles();

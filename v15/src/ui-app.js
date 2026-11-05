@@ -91,7 +91,8 @@ function currentCycle() {
   return c;
 }
 function renderTopbar(sub) {
-  var h = '<header class="topbar">';
+  var h = testBuild() ? '<div style="background:#b45309;color:#fff;text-align:center;font-size:12px;font-weight:700;padding:3px 8px;border-radius:8px;margin:6px 12px 0">' + esc(t('Test version', 'نسخة تجريبية')) + '</div>' : '';
+  h += '<header class="topbar">';
   if (UI.multi) h += '<button class="iconbtn" onclick="showOverview()" aria-label="' + esc(t('All my buildings', 'كل بناياتي')) + '">' + (LANG === 'ar' ? '›' : '‹') + ' 🏢</button>';
   h += '<button class="bpill" onclick="openSheet(\'menu\')" aria-label="' + esc(t('Building menu', 'قائمة البناية')) + '"><span class="logo">' + esc((bName() || 'B').trim().charAt(0).toUpperCase()) + '</span><span class="grow"><b>' + esc(bName()) + '</b>';
   h += '<small><span id="sync-dot" class="sync"></span>' + esc(sub || (roleLabel(S.role) + (isCloud() ? '' : ' · ' + t('on this phone', 'على هذا الهاتف')))) + '</small></span></button>';
@@ -229,7 +230,7 @@ function renderHomeManager() {
   var h = renderTopbar();
   h += blocks().length > 1 ? blockChips(true) + (UI.block && blocks().indexOf(UI.block) >= 0 ? heroHtml(cyc) : heroCompound(cyc)) : heroHtml(cyc);
   h += renderNewsCard();
-  h += renderSetupCard();
+  if (!isSharedBook()) h += renderSetupCard();
   h += renderContactsCard();
 
   cash.pending.forEach(function(ho) {
@@ -240,7 +241,8 @@ function renderHomeManager() {
   });
 
   if (!cyc) {
-    h += '<div class="sec"><div class="card pad"><b>' + esc(t('No month open yet', 'لا يوجد شهر مفتوح')) + '</b><p class="muted">' + esc(t('Open a month to start collecting.', 'افتح شهراً لبدء التحصيل.')) + '</p><button class="btn pri" onclick="newMonth()">' + esc(t('Open this month', 'افتح هذا الشهر')) + '</button></div></div>';
+    if (isSharedBook()) h += '<div class="sec"><div class="card empty">' + esc(t('No bills yet. Water and EDL bills appear here when they are published.', 'لا فواتير بعد. تظهر فواتير المياه والكهرباء هنا عند نشرها.')) + '</div></div>';
+    else h += '<div class="sec"><div class="card pad"><b>' + esc(t('No month open yet', 'لا يوجد شهر مفتوح')) + '</b><p class="muted">' + esc(t('Open a month to start collecting.', 'افتح شهراً لبدء التحصيل.')) + '</p><button class="btn pri" onclick="newMonth()">' + esc(t('Open this month', 'افتح هذا الشهر')) + '</button></div></div>';
     return h;
   }
   h += '<div class="sec">' + monthCard(cyc, true);
@@ -343,7 +345,7 @@ function cycleChips(cur, onPick) {
   visibleCycles().forEach(function(c) {
     h += '<button class="chip' + (cur && c.id === cur.id ? ' on' : '') + '" onclick="' + onPick + '(' + jsArg(c.id) + ')">' + (c.kind === 'project' ? '◆ ' : '') + esc(cycleTitle(c)) + (c.published === false ? ' · ' + esc(t('draft', 'مسودة')) : '') + '</button>';
   });
-  if (isManager()) h += '<button class="chip" onclick="openSheet(\'add\')">＋ ' + esc(t('Month or project', 'شهر أو مشروع')) + '</button>';
+  if (isManager() && !isSharedBook()) h += '<button class="chip" onclick="openSheet(\'add\')">＋ ' + esc(t('Month or project', 'شهر أو مشروع')) + '</button>';
   return h + '</div>';
 }
 /* Block switcher, shown only when the building has blocks. withAll adds an "All" chip. */
@@ -362,7 +364,7 @@ function renderCollect() {
   var cyc = currentCycle();
   var h = renderTopbar(t('Collect', 'التحصيل'));
   h += cycleChips(cyc, 'pickCycle');
-  if (!cyc) return h + '<div class="sec"><div class="card empty">' + esc(t('Open a month first.', 'افتح شهراً أولاً.')) + '</div></div>';
+  if (!cyc) return h + '<div class="sec"><div class="card empty">' + esc(isSharedBook() ? t('No bills yet. Water and EDL bills appear here when they are published.', 'لا فواتير بعد. تظهر فواتير المياه والكهرباء هنا عند نشرها.') : t('Open a month first.', 'افتح شهراً أولاً.')) + '</div></div>';
   h += cycleAdjustBar(cyc);
   var chs = chargesOf(cyc.id);
   if (!chs.length) {
@@ -678,7 +680,7 @@ function heroCompound(cyc) {
     var wins = units.map(function(u) { var st = cyc ? unitCycle(u, cyc).state : 'none'; if (st === 'paid') paid++; return { state: st === 'paid' ? 'paid' : (st === 'none' || st === 'closed') ? 'closed' : 'owes' }; });
     if (!wins.length) wins = [{ state: 'closed' }];
     var levels = units.length ? levelsFor(units.map(function(u, k) { return { code: u.code, win: wins[k] }; })) : null;
-    var art = buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, wins: wins, levels: levels, signText: (S.building.name + ' ' + b).slice(0, 14), elevator: !!setting('elevator'), idp: 'cb' + i, extraCls: 'studio bh-bare nopop' });
+    var art = buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, wins: wins, levels: levels, signText: isSharedBook() ? b : (S.building.name + ' ' + b).slice(0, 14), elevator: !!setting('elevator'), idp: 'cb' + i, extraCls: 'studio bh-bare nopop' });
     h += '<button class="hm-blk" onclick="UI.block=' + jsArg(b) + ';render()">' + art + '<small>' + esc(blockLabel(b) + ' · ' + t(paid + '/' + units.length + ' paid', paid + '/' + units.length + ' سدّد')) + '</small></button>';
   });
   return h + '</div>';

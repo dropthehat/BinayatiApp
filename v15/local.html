@@ -3460,6 +3460,9 @@ function visibleCycles() {
     return a.kind === 'month' ? -1 : 1;
   });
 }
+/* A shared book holds what several buildings share (water, EDL). Its bills arrive as published rounds, not months. */
+function isSharedBook() { return !!(S.building && S.building.kind === 'shared'); }
+function testBuild() { return !!(window.BINAYATI_CONFIG || {}).testBuild; }
 function monthCycles() { return visibleCycles().filter(function(c) { return c.kind === 'month'; }); }
 function latestMonth() {
   var cp = currentPeriod(), ms = monthCycles();
@@ -5054,8 +5057,8 @@ function cloudSignUp(username, password, name) {
 function cloudMyBuildings() {
   return cloudSession().then(function(sess) {
     if (!sess) return [];
-    return cloudCall(SB.from('members').select('building_id, role, display_name, buildings(id, name, name_ar)').eq('user_id', sess.user.id))
-      .then(function(rows) { return (rows || []).map(function(r) { return { id: r.building_id, role: r.role, name: r.buildings && r.buildings.name, name_ar: r.buildings && r.buildings.name_ar }; }); });
+    return cloudCall(SB.from('members').select('building_id, role, display_name, buildings(id, name, name_ar, kind)').eq('user_id', sess.user.id))
+      .then(function(rows) { return (rows || []).map(function(r) { return { id: r.building_id, role: r.role, name: r.buildings && r.buildings.name, name_ar: r.buildings && r.buildings.name_ar, kind: r.buildings && r.buildings.kind }; }); });
   });
 }
 function cloudBuildingState(bid, light) {
@@ -5238,7 +5241,8 @@ function currentCycle() {
   return c;
 }
 function renderTopbar(sub) {
-  var h = '<header class="topbar">';
+  var h = testBuild() ? '<div style="background:#b45309;color:#fff;text-align:center;font-size:12px;font-weight:700;padding:3px 8px;border-radius:8px;margin:6px 12px 0">' + esc(t('Test version', 'نسخة تجريبية')) + '</div>' : '';
+  h += '<header class="topbar">';
   if (UI.multi) h += '<button class="iconbtn" onclick="showOverview()" aria-label="' + esc(t('All my buildings', 'كل بناياتي')) + '">' + (LANG === 'ar' ? '›' : '‹') + ' 🏢</button>';
   h += '<button class="bpill" onclick="openSheet(\'menu\')" aria-label="' + esc(t('Building menu', 'قائمة البناية')) + '"><span class="logo">' + esc((bName() || 'B').trim().charAt(0).toUpperCase()) + '</span><span class="grow"><b>' + esc(bName()) + '</b>';
   h += '<small><span id="sync-dot" class="sync"></span>' + esc(sub || (roleLabel(S.role) + (isCloud() ? '' : ' · ' + t('on this phone', 'على هذا الهاتف')))) + '</small></span></button>';
@@ -5376,7 +5380,7 @@ function renderHomeManager() {
   var h = renderTopbar();
   h += blocks().length > 1 ? blockChips(true) + (UI.block && blocks().indexOf(UI.block) >= 0 ? heroHtml(cyc) : heroCompound(cyc)) : heroHtml(cyc);
   h += renderNewsCard();
-  h += renderSetupCard();
+  if (!isSharedBook()) h += renderSetupCard();
   h += renderContactsCard();
 
   cash.pending.forEach(function(ho) {
@@ -5387,7 +5391,8 @@ function renderHomeManager() {
   });
 
   if (!cyc) {
-    h += '<div class="sec"><div class="card pad"><b>' + esc(t('No month open yet', 'لا يوجد شهر مفتوح')) + '</b><p class="muted">' + esc(t('Open a month to start collecting.', 'افتح شهراً لبدء التحصيل.')) + '</p><button class="btn pri" onclick="newMonth()">' + esc(t('Open this month', 'افتح هذا الشهر')) + '</button></div></div>';
+    if (isSharedBook()) h += '<div class="sec"><div class="card empty">' + esc(t('No bills yet. Water and EDL bills appear here when they are published.', 'لا فواتير بعد. تظهر فواتير المياه والكهرباء هنا عند نشرها.')) + '</div></div>';
+    else h += '<div class="sec"><div class="card pad"><b>' + esc(t('No month open yet', 'لا يوجد شهر مفتوح')) + '</b><p class="muted">' + esc(t('Open a month to start collecting.', 'افتح شهراً لبدء التحصيل.')) + '</p><button class="btn pri" onclick="newMonth()">' + esc(t('Open this month', 'افتح هذا الشهر')) + '</button></div></div>';
     return h;
   }
   h += '<div class="sec">' + monthCard(cyc, true);
@@ -5490,7 +5495,7 @@ function cycleChips(cur, onPick) {
   visibleCycles().forEach(function(c) {
     h += '<button class="chip' + (cur && c.id === cur.id ? ' on' : '') + '" onclick="' + onPick + '(' + jsArg(c.id) + ')">' + (c.kind === 'project' ? '◆ ' : '') + esc(cycleTitle(c)) + (c.published === false ? ' · ' + esc(t('draft', 'مسودة')) : '') + '</button>';
   });
-  if (isManager()) h += '<button class="chip" onclick="openSheet(\'add\')">＋ ' + esc(t('Month or project', 'شهر أو مشروع')) + '</button>';
+  if (isManager() && !isSharedBook()) h += '<button class="chip" onclick="openSheet(\'add\')">＋ ' + esc(t('Month or project', 'شهر أو مشروع')) + '</button>';
   return h + '</div>';
 }
 /* Block switcher, shown only when the building has blocks. withAll adds an "All" chip. */
@@ -5509,7 +5514,7 @@ function renderCollect() {
   var cyc = currentCycle();
   var h = renderTopbar(t('Collect', 'التحصيل'));
   h += cycleChips(cyc, 'pickCycle');
-  if (!cyc) return h + '<div class="sec"><div class="card empty">' + esc(t('Open a month first.', 'افتح شهراً أولاً.')) + '</div></div>';
+  if (!cyc) return h + '<div class="sec"><div class="card empty">' + esc(isSharedBook() ? t('No bills yet. Water and EDL bills appear here when they are published.', 'لا فواتير بعد. تظهر فواتير المياه والكهرباء هنا عند نشرها.') : t('Open a month first.', 'افتح شهراً أولاً.')) + '</div></div>';
   h += cycleAdjustBar(cyc);
   var chs = chargesOf(cyc.id);
   if (!chs.length) {
@@ -5825,7 +5830,7 @@ function heroCompound(cyc) {
     var wins = units.map(function(u) { var st = cyc ? unitCycle(u, cyc).state : 'none'; if (st === 'paid') paid++; return { state: st === 'paid' ? 'paid' : (st === 'none' || st === 'closed') ? 'closed' : 'owes' }; });
     if (!wins.length) wins = [{ state: 'closed' }];
     var levels = units.length ? levelsFor(units.map(function(u, k) { return { code: u.code, win: wins[k] }; })) : null;
-    var art = buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, wins: wins, levels: levels, signText: (S.building.name + ' ' + b).slice(0, 14), elevator: !!setting('elevator'), idp: 'cb' + i, extraCls: 'studio bh-bare nopop' });
+    var art = buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, wins: wins, levels: levels, signText: isSharedBook() ? b : (S.building.name + ' ' + b).slice(0, 14), elevator: !!setting('elevator'), idp: 'cb' + i, extraCls: 'studio bh-bare nopop' });
     h += '<button class="hm-blk" onclick="UI.block=' + jsArg(b) + ';render()">' + art + '<small>' + esc(blockLabel(b) + ' · ' + t(paid + '/' + units.length + ' paid', paid + '/' + units.length + ' سدّد')) + '</small></button>';
   });
   return h + '</div>';
@@ -7391,7 +7396,7 @@ SHEETS.add = function() {
     items.push(['handreq', '⇄', t('Hand over cash', 'سلّم النقد'), t('To the manager', 'للمدير')]);
   }
   var need = { pay: 'pay', scanpay: 'pay', expense: 'spend', scanexp: 'spend', charge: 'charges', month: 'charges', project: 'charges', task: 'tasks' };
-  items = items.filter(function(x) { return !need[x[0]] || can(need[x[0]]); });
+  items = items.filter(function(x) { return (!need[x[0]] || can(need[x[0]])) && !(isSharedBook() && (x[0] === 'month' || x[0] === 'charge' || x[0] === 'project')); });
   var h = '<h3>' + esc(t('Add', 'إضافة')) + '</h3><div class="card list menu" style="margin-top:10px">';
   if (!items.length) h += '<p class="muted">' + esc(t('Nothing to add with your permissions.', 'لا شيء لإضافته بصلاحياتك.')) + '</p>';
   items.forEach(function(x) { h += '<button class="li" onclick="addPick(\'' + x[0] + '\')"><div class="ic">' + x[1] + '</div><div class="grow"><b>' + esc(x[2]) + '</b><small>' + esc(x[3]) + '</small></div></button>'; });
@@ -8142,7 +8147,7 @@ function myBuildingList() {
   var db = localLoad(), me = localUser().id;
   return Promise.resolve(db.buildings.map(function(b) {
     var m = null; db.members.forEach(function(x) { if (x.building_id === b.id && x.user_id === me) m = x; });
-    return m ? { id: b.id, role: m.role, name: b.name, name_ar: b.name_ar } : null;
+    return m ? { id: b.id, role: m.role, name: b.name, name_ar: b.name_ar, kind: b.kind } : null;
   }).filter(Boolean));
 }
 function compoundsList() {
@@ -8163,7 +8168,7 @@ function showOverview() {
 }
 function overviewStats(ns) {
   return withState(ns, function() {
-    var cyc = latestMonth(), s = cycleSummary(cyc), cash = cashState();
+    var cyc = latestMonth() || visibleCycles()[0] || null, s = cycleSummary(cyc), cash = cashState();
     var mine = cash.pockets[S.me.id] || pair();
     var mgr = S.role === 'manager' || S.role === 'comanager';
     var tasks = openTasks(mgr ? null : 'collector');
@@ -8226,7 +8231,7 @@ function overviewCard(r) {
   var st = r.st, s = st.s;
   var h = '<button class="card pad" style="width:100%;text-align:start;display:block" onclick="openFromOverview(' + jsArg(b.id) + ')">';
   h += '<div class="row" style="align-items:flex-start"><div style="width:84px;height:84px;flex:none;display:flex;align-items:flex-end;justify-content:center;overflow:hidden">' + st.hero + '</div><div class="grow">';
-  h += '<div class="row between"><b style="font-size:16px">' + esc(LANG === 'ar' ? (b.name_ar || b.name) : b.name) + '</b><span class="status none">' + esc(roleLabel(b.role)) + '</span></div>';
+  h += '<div class="row between"><b style="font-size:16px">' + esc(LANG === 'ar' ? (b.name_ar || b.name) : b.name) + '</b><span class="status none">' + esc(b.kind === 'shared' ? t('Shared book', 'حساب مشترك') : roleLabel(b.role)) + '</span></div>';
   if (st.cyc) {
     h += '<div class="muted" style="font-size:12.5px;font-weight:600;margin-top:2px">' + esc(cycleTitle(st.cyc) + ' · ' + t(s.settled + ' of ' + s.units + ' paid', s.settled + ' من ' + s.units + ' سددوا')) + '</div>';
     h += '<div class="bar" style="margin:8px 0 6px"><i class="paid" style="width:' + s.pct + '%"></i></div>';
@@ -8278,7 +8283,7 @@ function loadCompoundBox() {
     h += '<div class="list" style="margin:8px -14px">' + list.map(function(b) {
       return '<div class="li"><div class="ic">🏢</div><div class="grow"><b>' + esc(b.name) + (b.id === S.building.id ? ' · ' + esc(t('this one', 'هذه')) : '') + '</b><small>' + esc(t(b.units + ' apartments', b.units + ' شقق') + ' · ' + (b.my_role ? roleLabel(b.my_role) : t('not yours', 'ليست لك'))) + '</small></div></div>';
     }).join('') + '</div>';
-    h += '<div class="row" style="flex-wrap:wrap"><button class="btn pri sm grow" onclick="openSheet(\'shared\',{})">' + esc(t('Split a shared bill', 'قسّم فاتورة مشتركة')) + '</button><button class="btn sec sm grow" onclick="openSheet(\'compound\',{})">' + esc(t('Add buildings', 'أضف بنايات')) + '</button></div>';
+    h += '<div class="row" style="flex-wrap:wrap">' + (testBuild() ? '' : '<button class="btn pri sm grow" onclick="openSheet(\'shared\',{})">' + esc(t('Split a shared bill', 'قسّم فاتورة مشتركة')) + '</button>') + '<button class="btn sec sm grow" onclick="openSheet(\'compound\',{})">' + esc(t('Add buildings', 'أضف بنايات')) + '</button></div>';
     h += '<button class="btn ghost sm" style="margin-top:8px" onclick="leaveCompound()">' + esc(t('Take this building out of the compound', 'أخرج هذه البناية من المجمّع')) + '</button>';
     el.innerHTML = h;
   }, function(e) { el.innerHTML = '<div class="err">' + esc(e.message) + '</div>'; });

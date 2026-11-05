@@ -333,8 +333,8 @@ function cloudSignUp(username, password, name) {
 function cloudMyBuildings() {
   return cloudSession().then(function(sess) {
     if (!sess) return [];
-    return cloudCall(SB.from('members').select('building_id, role, display_name, buildings(id, name, name_ar)').eq('user_id', sess.user.id))
-      .then(function(rows) { return (rows || []).map(function(r) { return { id: r.building_id, role: r.role, name: r.buildings && r.buildings.name, name_ar: r.buildings && r.buildings.name_ar }; }); });
+    return cloudCall(SB.from('members').select('building_id, role, display_name, buildings(id, name, name_ar, kind)').eq('user_id', sess.user.id))
+      .then(function(rows) { return (rows || []).map(function(r) { return { id: r.building_id, role: r.role, name: r.buildings && r.buildings.name, name_ar: r.buildings && r.buildings.name_ar, kind: r.buildings && r.buildings.kind }; }); });
   });
 }
 function cloudBuildingState(bid, light) {

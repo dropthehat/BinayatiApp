@@ -91,5 +91,7 @@ if (window.NATOUR_PREVIEW) previewBoot(); else boot();
 `;
 }
 fs.writeFileSync(path.join(D, 'index.html'), page({ url: 'https://ehatjqqmdmgptqbkgrzb.supabase.co', key: 'sb_publishable_rnuIP7E5qOBxf1JG5a0Jzw_iyDJ74Zi', publicUrl: 'https://dropthehat.github.io/BinayatiApp/v15/' }));
+fs.mkdirSync(path.join(D, '..', 'natour-test'), { recursive: true });
+fs.writeFileSync(path.join(D, '..', 'natour-test', 'index.html'), page({ url: 'https://ehatjqqmdmgptqbkgrzb.supabase.co', key: 'sb_publishable_rnuIP7E5qOBxf1JG5a0Jzw_iyDJ74Zi', publicUrl: 'https://dropthehat.github.io/BinayatiApp/natour-test/', testBuild: true }));
 fs.writeFileSync(path.join(D, 'local.html'), page({ url: '', key: '', publicUrl: '' }));
 console.log('built', fs.statSync(path.join(D, 'index.html')).size);

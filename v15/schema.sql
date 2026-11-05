@@ -57,7 +57,7 @@ create table if not exists public.units (
 create table if not exists public.cycles (
   id          uuid primary key default gen_random_uuid(),
   building_id uuid not null references public.buildings(id) on delete cascade,
-  kind        text not null default 'month' check (kind in ('month','project')),
+  kind        text not null default 'month' check (kind in ('month','project','round')),
   title       text not null,
   title_ar    text,
   period      text,               -- 'YYYY-MM' for months

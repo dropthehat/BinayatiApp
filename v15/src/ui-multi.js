@@ -10,7 +10,7 @@ function myBuildingList() {
   var db = localLoad(), me = localUser().id;
   return Promise.resolve(db.buildings.map(function(b) {
     var m = null; db.members.forEach(function(x) { if (x.building_id === b.id && x.user_id === me) m = x; });
-    return m ? { id: b.id, role: m.role, name: b.name, name_ar: b.name_ar } : null;
+    return m ? { id: b.id, role: m.role, name: b.name, name_ar: b.name_ar, kind: b.kind } : null;
   }).filter(Boolean));
 }
 function compoundsList() {
@@ -31,7 +31,7 @@ function showOverview() {
 }
 function overviewStats(ns) {
   return withState(ns, function() {
-    var cyc = latestMonth(), s = cycleSummary(cyc), cash = cashState();
+    var cyc = latestMonth() || visibleCycles()[0] || null, s = cycleSummary(cyc), cash = cashState();
     var mine = cash.pockets[S.me.id] || pair();
     var mgr = S.role === 'manager' || S.role === 'comanager';
     var tasks = openTasks(mgr ? null : 'collector');
@@ -94,7 +94,7 @@ function overviewCard(r) {
   var st = r.st, s = st.s;
   var h = '<button class="card pad" style="width:100%;text-align:start;display:block" onclick="openFromOverview(' + jsArg(b.id) + ')">';
   h += '<div class="row" style="align-items:flex-start"><div style="width:84px;height:84px;flex:none;display:flex;align-items:flex-end;justify-content:center;overflow:hidden">' + st.hero + '</div><div class="grow">';
-  h += '<div class="row between"><b style="font-size:16px">' + esc(LANG === 'ar' ? (b.name_ar || b.name) : b.name) + '</b><span class="status none">' + esc(roleLabel(b.role)) + '</span></div>';
+  h += '<div class="row between"><b style="font-size:16px">' + esc(LANG === 'ar' ? (b.name_ar || b.name) : b.name) + '</b><span class="status none">' + esc(b.kind === 'shared' ? t('Shared book', 'حساب مشترك') : roleLabel(b.role)) + '</span></div>';
   if (st.cyc) {
     h += '<div class="muted" style="font-size:12.5px;font-weight:600;margin-top:2px">' + esc(cycleTitle(st.cyc) + ' · ' + t(s.settled + ' of ' + s.units + ' paid', s.settled + ' من ' + s.units + ' سددوا')) + '</div>';
     h += '<div class="bar" style="margin:8px 0 6px"><i class="paid" style="width:' + s.pct + '%"></i></div>';
@@ -146,7 +146,7 @@ function loadCompoundBox() {
     h += '<div class="list" style="margin:8px -14px">' + list.map(function(b) {
       return '<div class="li"><div class="ic">🏢</div><div class="grow"><b>' + esc(b.name) + (b.id === S.building.id ? ' · ' + esc(t('this one', 'هذه')) : '') + '</b><small>' + esc(t(b.units + ' apartments', b.units + ' شقق') + ' · ' + (b.my_role ? roleLabel(b.my_role) : t('not yours', 'ليست لك'))) + '</small></div></div>';
     }).join('') + '</div>';
-    h += '<div class="row" style="flex-wrap:wrap"><button class="btn pri sm grow" onclick="openSheet(\'shared\',{})">' + esc(t('Split a shared bill', 'قسّم فاتورة مشتركة')) + '</button><button class="btn sec sm grow" onclick="openSheet(\'compound\',{})">' + esc(t('Add buildings', 'أضف بنايات')) + '</button></div>';
+    h += '<div class="row" style="flex-wrap:wrap">' + (testBuild() ? '' : '<button class="btn pri sm grow" onclick="openSheet(\'shared\',{})">' + esc(t('Split a shared bill', 'قسّم فاتورة مشتركة')) + '</button>') + '<button class="btn sec sm grow" onclick="openSheet(\'compound\',{})">' + esc(t('Add buildings', 'أضف بنايات')) + '</button></div>';
     h += '<button class="btn ghost sm" style="margin-top:8px" onclick="leaveCompound()">' + esc(t('Take this building out of the compound', 'أخرج هذه البناية من المجمّع')) + '</button>';
     el.innerHTML = h;
   }, function(e) { el.innerHTML = '<div class="err">' + esc(e.message) + '</div>'; });

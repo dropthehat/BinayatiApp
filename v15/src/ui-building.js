@@ -1145,7 +1145,7 @@ SHEETS.add = function() {
     items.push(['handreq', '⇄', t('Hand over cash', 'سلّم النقد'), t('To the manager', 'للمدير')]);
   }
   var need = { pay: 'pay', scanpay: 'pay', expense: 'spend', scanexp: 'spend', charge: 'charges', month: 'charges', project: 'charges', task: 'tasks' };
-  items = items.filter(function(x) { return !need[x[0]] || can(need[x[0]]); });
+  items = items.filter(function(x) { return (!need[x[0]] || can(need[x[0]])) && !(isSharedBook() && (x[0] === 'month' || x[0] === 'charge' || x[0] === 'project')); });
   var h = '<h3>' + esc(t('Add', 'إضافة')) + '</h3><div class="card list menu" style="margin-top:10px">';
   if (!items.length) h += '<p class="muted">' + esc(t('Nothing to add with your permissions.', 'لا شيء لإضافته بصلاحياتك.')) + '</p>';
   items.forEach(function(x) { h += '<button class="li" onclick="addPick(\'' + x[0] + '\')"><div class="ic">' + x[1] + '</div><div class="grow"><b>' + esc(x[2]) + '</b><small>' + esc(x[3]) + '</small></div></button>'; });

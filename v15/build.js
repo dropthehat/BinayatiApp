@@ -80,6 +80,7 @@ ${src('admin.js')}
 ${src('admin-home.js')}
 ${src('preview.js')}
 ${src('admin-studio.js')}
+${src('admin-design.js')}
 ${src('contacts.js')}
 ${src('news.js')}
 ${src('desk.js')}

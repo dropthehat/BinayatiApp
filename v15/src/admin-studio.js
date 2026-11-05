@@ -11,7 +11,7 @@ var STD = {
   page: null, mode: 'devices', role: 'm', screen: 'home', device: 'ip', lang: 'en', theme: 'light', zoom: 0.6,
   flow: 'collect', step: 0, fdevice: 'ip', busy: false, err: null, queue: [], loading: 0, io: null
 };
-var STD_PAGES = { wall: 1, flows: 1 };
+var STD_PAGES = { wall: 1, flows: 1, design: 1 };
 
 function stdHost() {
   var el = document.getElementById('std-host');
@@ -31,7 +31,7 @@ function stdSync() {
   el.style.top = side && window.innerWidth < 1000 ? side.offsetHeight + 'px' : '0';
   if (STD.page !== ADM.tab) { STD.page = ADM.tab; stdBuild(); }
 }
-function stdBuild() { stdStopLoading(); if (STD.page === 'wall') stdWall(); else if (STD.page === 'flows') stdFlows(); }
+function stdBuild() { stdStopLoading(); if (STD.page === 'wall') stdWall(); else if (STD.page === 'flows') stdFlows(); else if (STD.page === 'design') dsPage(); }
 function stdSrc(params) {
   var q = new URLSearchParams(params);
   return location.pathname + '?' + q.toString();
@@ -94,14 +94,15 @@ function stdCombos() {
   ls.forEach(function(l) { ts.forEach(function(th) { out.push({ lang: l, theme: th }); }); });
   return out;
 }
-function stdFrameHtml(s, d, c) {
-  var z = STD.zoom * (d.wide ? 0.62 : d.big ? 0.75 : 1);
+function stdFrameHtml(s, d, c, opt) {
+  opt = opt || {};
+  var z = (opt.zoom || STD.zoom) * (d.wide ? 0.62 : d.big ? 0.75 : 1);
   var w = Math.round(d.w * z), h2 = Math.round(d.h * z);
   var src = stdSrc({ preview: s.id, lang: c.lang, theme: c.theme });
   var cap = [STD.mode === 'devices' ? d.l + ' · ' + d.w + '×' + d.h : s.l];
   if (STD.lang === 'both') cap.push(c.lang === 'ar' ? 'Arabic' : 'English');
   if (STD.theme === 'both') cap.push(c.theme === 'dark' ? 'Dark' : 'Light');
-  cap = cap.join(' · ');
+  cap = opt.cap || cap.join(' · ');
   return '<figure class="std-frame' + (d.wide ? ' wide' : '') + '" style="width:' + w + 'px"><figcaption><span title="' + esc(cap) + '">' + esc(cap) + '</span><a href="' + esc(src) + '" target="_blank" rel="noopener" title="Open full size in a new tab">Open</a></figcaption>' +
     '<div class="std-clip" style="width:' + w + 'px;height:' + h2 + 'px"><span class="std-state">Loading…</span><iframe title="' + esc(cap) + '" data-src="' + esc(src) + '" sandbox="' + stdFrameSandbox() + '" width="' + d.w + '" height="' + d.h + '" style="transform:scale(' + z + ')"></iframe></div></figure>';
 }
@@ -126,6 +127,9 @@ function stdWall() {
   if (!n) h += '<p class="muted">This screen has no version at that size.</p>';
   h += '</div></div>';
   el.innerHTML = h; el.scrollTop = 0;
+  stdWatchFrames(el);
+}
+function stdWatchFrames(el) {
   stdStopLoading();
   STD.io = new IntersectionObserver(function(entries) {
     entries.forEach(function(en) {

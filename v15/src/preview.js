@@ -72,6 +72,19 @@ var PV_SCREENS = [
   { id: 's-task', role: 'm', l: 'Add a task', sheet: true, run: function() { pvSheet('u-manager', 'building', 'task'); } },
   { id: 's-invite', role: 'm', l: 'Invite a collector', sheet: true, run: function() { pvSheet('u-manager', 'building', 'invite', { role: 'collector' }); } },
   { id: 's-handrecv', role: 'm', l: 'Cash from a collector', sheet: true, run: function() { pvSheet('u-manager', 'home', 'handrecv'); } },
+  { id: 's-handover', role: 'm', l: 'Confirm a handover', sheet: true, run: function() {
+    pvSheet('u-collector', 'home', 'handreq'); requestHandover();
+    return pvWait(120).then(function() { pvTab('u-manager', 'home'); var ho = S.handovers.filter(function(x) { return x.status === 'pending'; })[0]; openSheet('handover', { id: ho && ho.id }); });
+  } },
+  { id: 's-unitedit', role: 'm', l: 'Edit an apartment', sheet: true, run: function() { pvSec('units'); openSheet('unitEdit', { id: pvOwing().id }); } },
+  { id: 's-layout', role: 'm', l: 'Floors and blocks', sheet: true, run: function() { pvSec('units'); openSheet('layout', {}); } },
+  { id: 's-extra', role: 'm', l: 'Charge one apartment', sheet: true, run: function() { pvSec('charges'); openSheet('extra', { cycle: currentCycle().id, who: 'one' }); } },
+  { id: 's-chargeremove', role: 'm', l: 'Remove a charge', sheet: true, run: function() { pvSec('charges'); openSheet('chargeRemove', { id: chargesOf(currentCycle().id)[0].id }); } },
+  { id: 's-member', role: 'm', l: 'Someone\'s access', sheet: true, run: function() { pvSec('team'); openSheet('member', { uid: 'u-collector' }); } },
+  { id: 's-membername', role: 'm', l: 'Your name', sheet: true, run: function() { pvSec('team'); openSheet('memberName', { uid: 'u-manager' }); } },
+  { id: 's-contacts', role: 'm', l: 'Contacts list', sheet: true, run: function() { pvSheet('u-manager', 'home', 'contacts'); } },
+  { id: 's-contactedit', role: 'm', l: 'Add a contact', sheet: true, run: function() { pvSec('contacts'); openSheet('contactEdit', {}); } },
+  { id: 's-compound', role: 'm', l: 'Create a compound', sheet: true, run: function() { pvSec('compound'); openSheet('compound', {}); } },
   { id: 'c-home', role: 'c', l: 'Home', run: function() { pvTab('u-collector', 'home'); } },
   { id: 'c-collect', role: 'c', l: 'Collect', run: function() { pvTab('u-collector', 'collect'); } },
   { id: 'c-books', role: 'c', l: 'Books', run: function() { pvTab('u-collector', 'books'); } },

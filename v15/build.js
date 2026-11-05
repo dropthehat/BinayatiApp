@@ -55,6 +55,7 @@ ${src('ui-multi.js')}
 ${src('ai-docs.js')}
 ${src('ai-remind.js')}
 ${src('admin.js')}
+${src('admin-home.js')}
 ${src('contacts.js')}
 ${src('news.js')}
 ${src('desk.js')}

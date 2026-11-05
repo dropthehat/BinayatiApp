@@ -4,7 +4,7 @@
    Internal tool, English only. The server allows all of this only for
    accounts in app_admins; the app just hides the door for everyone else.
    ============================================================================ */
-var ADM = { tab: 'features', kind: 'expense_cat', buildings: null, q: '' };
+var ADM = { tab: 'overview', kind: 'expense_cat', buildings: null, daily: null, loading: null, err: null, q: '', bq: '', showTest: false, sort: { k: 'last', dir: -1 } };
 var LIST_KINDS = [
   ['expense_cat', 'Expense categories'], ['expense_preset', 'Common expenses'], ['charge_preset', 'Common charges'],
   ['task_preset', 'Common tasks'], ['pay_method', 'Transfer methods']
@@ -13,26 +13,8 @@ var FEATURE_STATUS = { live: 'Live', beta: 'Beta', idea: 'Idea', custom: 'Custom
 
 function openAdmin() {
   if (!IS_ADMIN) return;
-  UI.sheet = null; UI.screen = 'admin'; render(); window.scrollTo(0, 0);
+  UI.sheet = null; UI.screen = 'admin'; admLoadBuildings(); render(); window.scrollTo(0, 0);
   loadConfig(S.building && S.building.id).then(render);
-}
-function admTabs() {
-  var h = '<div class="seg" style="margin:4px 16px 0">';
-  [['features', 'Features'], ['lists', 'Lists'], ['news', 'News'], ['support', 'Buildings']].forEach(function(x) {
-    h += '<button class="' + (ADM.tab === x[0] ? 'on' : '') + '" onclick="ADM.tab=\'' + x[0] + '\';if(ADM.tab===\'support\'||ADM.tab===\'news\')admLoadBuildings();if(ADM.tab===\'news\'){loadNews().then(admLoadNewsStats);}render()">' + x[1] + '</button>';
-  });
-  return h + '</div>';
-}
-function renderAdmin() {
-  if (!IS_ADMIN) return '<div class="shell"><div class="sec"><div class="card pad">Not allowed.</div></div></div>';
-  var h = '<div class="shell"><header class="topbar"><button class="iconbtn" onclick="UI.screen=\'app\';render()" aria-label="Back">' + (LANG === 'ar' ? '›' : '‹') + '</button>';
-  h += '<div class="grow"><b style="font-size:20px;font-weight:800">Natour app admin</b><small class="muted" style="display:block">Changes reach every app within seconds</small></div></header>';
-  h += admTabs();
-  if (ADM.tab === 'features') h += admFeatures();
-  else if (ADM.tab === 'lists') h += admLists();
-  else if (ADM.tab === 'news') h += admNews();
-  else h += admBuildings();
-  return h + '</div>';
 }
 
 /* ---------- Feature map ---------- */
@@ -40,6 +22,7 @@ function admFeatures() {
   var all = Object.keys(CFG.features).map(function(k) { return CFG.features[k]; }).sort(function(a, b) { return a.sort - b.sort; });
   var cats = []; all.forEach(function(f) { if (cats.indexOf(f.category) < 0) cats.push(f.category); });
   var h = '<div class="sec"><input class="input" placeholder="Search features" value="' + esc(ADM.q) + '" oninput="ADM.q=this.value;admFilter()"></div>';
+  h += '<div class="adm-grid">';
   cats.forEach(function(c) {
     h += '<div class="sec adm-cat"><div class="sec-h"><h2>' + esc(c) + '</h2></div><div class="card list">';
     all.filter(function(f) { return f.category === c; }).forEach(function(f) {
@@ -50,7 +33,7 @@ function admFeatures() {
     });
     h += '</div></div>';
   });
-  h += '<div class="sec"><button class="btn sec block" onclick="openSheet(\'admFeature\',{})">＋ Add a feature to the map</button><p class="hint">Switches turn a feature on or off for every building. Per-building switches are under Buildings.</p></div>';
+  h += '</div><div class="sec adm-narrowpage"><button class="btn sec block" onclick="openSheet(\'admFeature\',{})">＋ Add a feature to the map</button><p class="hint">Switches turn a feature on or off for every building. Per-building switches are under Buildings.</p></div>';
   return h;
 }
 function admFilter() {
@@ -177,45 +160,7 @@ function admSaveList(id, kind) {
   p.then(function() { closeSheet(); loadConfig(S.building && S.building.id).then(render); toast('Saved · live in every app'); }, function(e) { sheetErr(e.message); });
 }
 
-/* ---------- Buildings & support ---------- */
-function admLoadBuildings() {
-  rpc('admin_buildings', {}).then(function(rows) { ADM.buildings = rows || []; render(); }, fail);
-}
-function admBuildings() {
-  if (!ADM.buildings) { admLoadBuildings(); return '<div class="sec"><div class="card pad muted">Loading…</div></div>'; }
-  var full = CFG.supportMode === 'full';
-  var h = '<div class="sec"><div class="card pad"><div class="switch-row" style="border:0;padding:0"><div><b>Support mode: ' + (full ? 'Testing · full access' : 'Privacy') + '</b><small>' + (full
-      ? 'You can open and change any building without asking. Every open is still logged in its activity. Switch to Privacy before real clients join.'
-      : 'You can only look (read-only) at buildings whose owner turned support access on, until it expires.') + '</small></div><button class="sw' + (full ? ' on' : '') + '" onclick="admSupportMode(' + (full ? "'consent'" : "'full'") + ')"></button></div>' +
-      (full ? '<div class="banner warn" style="margin-top:10px"><div class="grow"><b>Full access is on</b>Fine for testing. Not OK once real buildings use the app.</div></div>' : '') + '</div></div>';
-  h += '<div class="sec"><div class="card list">';
-  ADM.buildings.forEach(function(b) {
-    var open = full || (b.support_until && b.support_until > nowIso());
-    h += '<button class="li" onclick="openSheet(\'admBuilding\',{id:' + jsArg(b.id) + '})"><div class="ic">' + (open ? '🟢' : '🏢') + '</div><div class="grow"><b>' + esc(b.name) + '</b><small>' + esc([b.owner || '—', b.units + ' apartments', b.members + ' people', !full && open ? 'support open until ' + dateLabel(b.support_until, true) : '', b.custom ? b.custom + ' custom switch' + (b.custom > 1 ? 'es' : '') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
-  });
-  h += '</div><p class="hint">You can look inside a building only while its owner has support access turned on (Building → Settings). Every look is logged and shows in their activity.</p></div>';
-  return h;
-}
-SHEETS.admBuilding = function(d) {
-  var b = (ADM.buildings || []).filter(function(x) { return x.id === d.id; })[0];
-  if (!b) return '';
-  if (!d.bf) { d.bf = {}; cloudCall(SB.from('building_features').select('*').eq('building_id', b.id)).then(function(rows) { (rows || []).forEach(function(r) { d.bf[r.key] = r; }); d.loaded = true; render(); }); }
-  var full = CFG.supportMode === 'full', open = full || (b.support_until && b.support_until > nowIso());
-  var h = '<h3>' + esc(b.name) + '</h3><p class="lead">' + esc((b.owner || '—') + ' · ' + b.units + ' apartments · since ' + dateLabel(b.created_at)) + '</p>';
-  h += open ? '<button class="btn pri block" onclick="adminOpenBuilding(' + jsArg(b.id) + ')">' + (full ? 'Open their building (full access)' : 'Open their building (read-only)') + '</button><p class="hint">' + (full ? 'Testing mode: you can change things. It shows in their activity.' : 'Support access until ' + esc(dateLabel(b.support_until, true)) + '.') + '</p>'
-            : '<div class="banner info"><div class="grow"><b>Support access is off</b>Ask the owner to turn it on: Building → Settings → Support access.</div></div>';
-  h += '<div class="sec-h" style="margin-top:14px"><h2>Switches for this building</h2></div>';
-  var feats = Object.keys(CFG.features).map(function(k) { return CFG.features[k]; }).filter(function(f) { return f.switchable; }).sort(function(a, b) { return a.sort - b.sort; });
-  if (!d.loaded) h += '<p class="muted">Loading…</p>';
-  else feats.forEach(function(f) {
-    var o = d.bf[f.key], eff = o ? o.on : (f.status !== 'off' && f.default_on !== false);
-    h += '<div class="switch-row"><div><b>' + esc(f.en) + (f.status === 'custom' ? ' <span class="pill-st st-custom">Custom</span>' : '') + '</b><small>' + esc(o ? (o.on ? 'On here' : 'Off here') + ' (everyone else: ' + (f.default_on !== false && f.status !== 'off' ? 'on' : 'off') + ')' + (o.note ? ' · ' + o.note : '') : 'Same as everyone') + '</small></div>';
-    h += '<button class="sw' + (eff ? ' on' : '') + '" onclick="admBuildingSwitch(' + jsArg(b.id) + ',' + jsArg(f.key) + ',' + !eff + ')"></button></div>';
-    if (o) h += '<button class="btn ghost sm" style="margin:-6px 0 6px" onclick="admBuildingReset(' + jsArg(b.id) + ',' + jsArg(f.key) + ')">Back to same as everyone</button>';
-  });
-  h += '<div class="foot"><button class="btn sec" onclick="closeSheet()">Close</button></div>';
-  return h;
-};
+/* ---------- Building switches and support (the page itself is in admin-home.js) ---------- */
 function admBuildingSwitch(bid, key, on) {
   var note = prompt('Why? (optional note, e.g. the problem it solves for them)', '') || null;
   cloudCall(SB.from('building_features').upsert({ building_id: bid, key: key, on: on, note: note, set_at: nowIso() })).then(function() {
@@ -253,7 +198,7 @@ function supportBanner() {
     window[n] = function() { return S.support && !S.supportFull ? ro() : orig.apply(this, arguments); };
   });
   var origRpc = window.rpc;
-  window.rpc = function(name) { return S.support && !S.supportFull && ['support_open', 'admin_buildings', 'am_admin'].indexOf(name) < 0 ? ro() : origRpc.apply(this, arguments); };
+  window.rpc = function(name) { return S.support && !S.supportFull && ['support_open', 'admin_buildings', 'admin_buildings_stats', 'admin_activity_daily', 'admin_building_activity', 'am_admin'].indexOf(name) < 0 ? ro() : origRpc.apply(this, arguments); };
 })();
 
 /* ---------- Owner side: support access in Settings ---------- */

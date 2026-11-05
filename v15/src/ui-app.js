@@ -74,7 +74,7 @@ function renderSheet() {
   if (!fn) return '';
   // Re-renders of an open sheet (a tap on a tab inside it) must not replay the opening animation.
   var still = UI._sheetShown === UI.sheet; UI._sheetShown = UI.sheet;
-  return '<div class="scrim' + (still ? ' still' : '') + '" onclick="if(event.target===this)closeSheet()"><div class="sheet' + (still ? ' still' : '') + '" role="dialog" aria-modal="true"><div class="grab"></div>' + fn(UI.sheet.data) + '</div></div>';
+  return '<div class="scrim' + (fn.cls ? ' ' + fn.cls : '') + (still ? ' still' : '') + '" onclick="if(event.target===this)closeSheet()"><div class="sheet' + (still ? ' still' : '') + '" role="dialog" aria-modal="true"><div class="grab"></div>' + fn(UI.sheet.data) + '</div></div>';
 }
 var SHEETS = {};
 function val(id) { var el = document.getElementById(id); return el ? el.value : ''; }

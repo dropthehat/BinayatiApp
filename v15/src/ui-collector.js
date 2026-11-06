@@ -68,6 +68,29 @@ function colBookTotals() {
   });
   return { left: left, n: n, bills: Object.keys(days).length };
 }
+/* One receipt for everything the apartment paid on its latest payment day. */
+function colReceiptText(u, lang) {
+  var cells = colCells(u).filter(function(k) { return k.x.state === 'paid'; }), latest = '';
+  cells.forEach(function(k) { k.x.payments.forEach(function(p) { var d = String(p.received_at || '').slice(0, 10); if (d > latest) latest = d; }); });
+  cells = cells.filter(function(k) { return k.x.payments.some(function(p) { return String(p.received_at || '').slice(0, 10) === latest; }); });
+  var total = pair();
+  cells.forEach(function(k) { addTo(total, k.ch.cur, k.x.due); });
+  function one(lg) {
+    var T = function(en, ar) { return lg === 'ar' ? ar : en; };
+    var name = lg === 'ar' ? (u.name_ar || u.name) : u.name, bname = lg === 'ar' ? (S.building.name_ar || S.building.name) : S.building.name;
+    var lines = cells.map(function(k) {
+      var title = isSharedBook() ? cycleTitle(k.c, lg).split(' · ')[0] + (lg === 'ar' && /^E-/.test(cycleTitle(k.c, lg).split(' · ')[1] || '') ? ' ' + cycleTitle(k.c, lg).split(' · ')[1] : '')
+        : (lg === 'ar' ? (k.ch.title_ar || k.ch.title) : k.ch.title);
+      return '• ' + title + ': ' + fmt(k.x.due, k.ch.cur) + ' ✅';
+    });
+    var s = '🏢 *' + bname + '*\n\n🧾 *' + T('Receipt', 'إيصال') + '*\n' + T('Thank you ', 'شكراً ') + (name ? '*' + name + '* ' : '') + '(' + unitTag(u) + ') 🌸\n' + lines.join('\n');
+    if (cells.length > 1) s += '\n\n✅ *' + T('Total received: ', 'المجموع المستلم: ') + fmtPair(total) + '*';
+    if (u.resident_token) s += '\n\n' + T('Your bill and receipts:', 'فاتورتك وإيصالاتك:') + '\n' + residentLink(u);
+    return s;
+  }
+  lang = lang || u.lang || 'both';
+  return lang === 'both' ? one('ar') + '\n\n━━━━━━━━\n\n' + one('en') : one(lang);
+}
 function colToggleBlock(b) {
   UI.cOpen = UI.cOpen === b ? null : b;
   render();
@@ -83,7 +106,7 @@ function colRow(u) {
   var h = '<div class="crow"><div class="ucode">' + esc(unitTag(u)) + '</div><div class="grow"><div class="uname">' + esc(unitName(u) || unitTag(u)) + '</div></div>';
   var paidCells = cells.filter(function(k) { return k.x.state === 'paid'; });
   if (u.phone && owed.length) h += '<button class="crow-wa" aria-label="WhatsApp" onclick="openSheet(\'remind\',{u:' + jsArg(u.id) + ',cyc:' + jsArg(owed[owed.length - 1].c.id) + '})">📣</button>';
-  else if (u.phone && paidCells.length) h += '<button class="btn wa sm" onclick="openSheet(\'remind\',{u:' + jsArg(u.id) + ',cyc:' + jsArg(paidCells[paidCells.length - 1].c.id) + '})">' + esc(t('Send receipt', 'أرسل إيصالاً')) + '</button>';
+  else if (u.phone && paidCells.length) h += '<button class="btn wa sm" onclick="openSheet(\'remind\',{receipt:true,u:' + jsArg(u.id) + ',cyc:' + jsArg(paidCells[paidCells.length - 1].c.id) + '})">' + esc(t('Send receipt', 'أرسل إيصالاً')) + '</button>';
   h += '</div><div class="crow-ticks">';
   shown.forEach(function(k) {
     var st = k.x.state, on = st === 'paid';

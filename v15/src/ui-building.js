@@ -1024,6 +1024,7 @@ function renderSettingsSec() {
   h += '<button class="btn pri block" style="margin-top:14px" onclick="saveSettings()">' + esc(t('Save', 'حفظ')) + '</button></div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('The building', 'البناية')) + '</h2></div><div class="card pad">';
   h += switchRow('base_cur_usd', setting('base_cur') === 'USD', t('Keep the books in dollars', 'الحسابات بالدولار'), t('Bills entered in LBP are converted at your dollar rate when saved. Totals show in $ only.', 'الفواتير بالليرة تُحوَّل بسعر الدولار عند الحفظ، والمجاميع بالدولار فقط.'));
+  if (testBuild()) h += switchRow('collector_usd', setting('collector_usd') !== false, t('Collector page in dollars first', 'صفحة الجابي بالدولار أولاً'), t('LBP shows underneath. Bills stay in their own currency.', 'الليرة تظهر تحتها. الفواتير تبقى بعملتها.'));
   if (blocks().length > 1) h += switchRow('safe_per_block', st.safe_mode === 'block', t('A safe per block', 'صندوق لكل بلوك'), t('Each block keeps its own cash and expenses. Off: one shared safe for the compound.', 'كل بلوك له نقده ومصاريفه. مطفأ: صندوق واحد للمجمّع.'));
   h += switchRow('elevator', !!st.elevator, t('Has an elevator', 'فيها مصعد'), t('Shown on the building picture, going up and down', 'يظهر في صورة البناية صاعداً ونازلاً'));
   h += '</div></div>';

@@ -48,10 +48,10 @@ SHEETS.remind = function(d) {
   if (!u || !cyc) return '';
   if (!d.tone) d.tone = suggestTone(u, cyc);
   if (!d.len) d.len = 'long';
-  if (d.text == null) d.text = d.receipt ? colReceiptText(u) : d.len === 'long' ? waText(u, cyc) : waTextShort(u, cyc);
+  if (d.text == null) d.text = d.receipt ? colReceiptText(u) : d.bill ? colBillText(u) : d.len === 'long' ? waText(u, cyc) : waTextShort(u, cyc);
   var h = '<h3>' + esc(t('Message to ', 'رسالة إلى ') + unitTag(u) + (unitName(u) ? ' · ' + unitName(u) : '')) + '</h3>';
   var hist = unitHistory(u, cyc);
-  if (!d.receipt) h += '<p class="lead">' + esc(hist.checked ? t((hist.checked === 1 ? 'Last month' : 'Last ' + hist.checked + ' months') + ': paid ' + hist.paid + ', still open ' + hist.behind + '.', (hist.checked === 1 ? 'الشهر الماضي' : 'آخر ' + hist.checked + ' أشهر') + ': سدد ' + hist.paid + '، متأخر ' + hist.behind + '.') : t('No earlier months yet.', 'لا أشهر سابقة بعد.')) + '</p>';
+  if (!d.receipt && !d.bill) h += '<p class="lead">' + esc(hist.checked ? t((hist.checked === 1 ? 'Last month' : 'Last ' + hist.checked + ' months') + ': paid ' + hist.paid + ', still open ' + hist.behind + '.', (hist.checked === 1 ? 'الشهر الماضي' : 'آخر ' + hist.checked + ' أشهر') + ': سدد ' + hist.paid + '، متأخر ' + hist.behind + '.') : t('No earlier months yet.', 'لا أشهر سابقة بعد.')) + '</p>';
   // Collectors send the plain detailed bill. The manager can step in with a written message,
   // offered straight away when the apartment is behind (a running due).
   var behind = hist.behind > 0 || pairUsd(unitBalance(u, cyc).arrears) > 0.005;

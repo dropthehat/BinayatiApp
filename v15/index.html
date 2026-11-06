@@ -695,6 +695,8 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .cblock { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 10px 14px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--card); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
 .cblock.on { border-color: var(--ink); }
 .cblock small { color: var(--mut); font-weight: 600; }
+.camt { display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
+.camt small { color: var(--mut); font-size: 11.5px; font-weight: 600; }
 
 /* ---- living building scene ---- */
 .bh { position: relative; margin: 0 16px 12px; border-radius: 26px; overflow: hidden; aspect-ratio: 366 / 256; box-shadow: var(--shadow-lg); background: var(--sky2); }
@@ -7300,6 +7302,7 @@ function renderSettingsSec() {
   h += '<button class="btn pri block" style="margin-top:14px" onclick="saveSettings()">' + esc(t('Save', 'حفظ')) + '</button></div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('The building', 'البناية')) + '</h2></div><div class="card pad">';
   h += switchRow('base_cur_usd', setting('base_cur') === 'USD', t('Keep the books in dollars', 'الحسابات بالدولار'), t('Bills entered in LBP are converted at your dollar rate when saved. Totals show in $ only.', 'الفواتير بالليرة تُحوَّل بسعر الدولار عند الحفظ، والمجاميع بالدولار فقط.'));
+  if (testBuild()) h += switchRow('collector_usd', setting('collector_usd') !== false, t('Collector page in dollars first', 'صفحة الجابي بالدولار أولاً'), t('LBP shows underneath. Bills stay in their own currency.', 'الليرة تظهر تحتها. الفواتير تبقى بعملتها.'));
   if (blocks().length > 1) h += switchRow('safe_per_block', st.safe_mode === 'block', t('A safe per block', 'صندوق لكل بلوك'), t('Each block keeps its own cash and expenses. Off: one shared safe for the compound.', 'كل بلوك له نقده ومصاريفه. مطفأ: صندوق واحد للمجمّع.'));
   h += switchRow('elevator', !!st.elevator, t('Has an elevator', 'فيها مصعد'), t('Shown on the building picture, going up and down', 'يظهر في صورة البناية صاعداً ونازلاً'));
   h += '</div></div>';
@@ -8473,23 +8476,53 @@ function colBillName(c) {
   var parts = cycleTitle(c).split(' · ');
   return /^E-\d+$/.test(parts[1] || '') && LANG === 'ar' ? parts[0] + ' ' + parts[1] : parts[0];
 }
-function colCells(u) {
-  var out = [], bills = visibleCycles().slice().reverse(), months = bills.length > 1;
+function colCellsIn(u) {
+  var out = [], bills = visibleCycles().slice().reverse(), months = bills.length > 1, shared = isSharedBook(), bid = S.building.id;
   bills.forEach(function(c) {
     chargesOf(c.id).forEach(function(ch) {
       var x = cell(ch, u);
       if (x.due <= 0 && x.paid <= 0) return;
-      var title = isSharedBook() ? colBillName(c) : L(ch) + (months ? ' · ' + cycleTitle(c) : '');
-      out.push({ c: c, ch: ch, x: x, title: title });
+      var title = shared ? colBillName(c) : L(ch) + (months ? ' · ' + cycleTitle(c) : '');
+      out.push({ c: c, ch: ch, x: x, title: title, bid: bid, uid: u.id });
     });
   });
   return out;
 }
-function colBookTotals() {
+/* The shared book this collector also works in, kept in memory. */
+function colSharedBook() {
+  var r = colBooks().filter(function(x) { return x.ns.building && x.ns.building.kind === 'shared'; })[0];
+  return r ? r.ns : null;
+}
+/* An apartment's bills. In a building's book it also pulls its water and shared bills, so one card has everything. */
+function colCells(u, ownOnly) {
+  var out = colCellsIn(u);
+  if (ownOnly || isSharedBook() || !u.linked_unit_id) return out;
+  var ns = colSharedBook(), lu = ns && byId(ns.units, u.linked_unit_id);
+  if (!lu) return out;
+  return out.concat(withState(ns, function() { return colCellsIn(lu); }));
+}
+/* Dollars first, LBP underneath (a setting on each book). */
+function colUsdFirst() { return setting('collector_usd') !== false; }
+function colAmt(amt, cur) {
+  if (!colUsdFirst()) return '<b>' + esc(fmt(amt, cur)) + '</b>';
+  var usd = cur === 'LBP' ? num(amt) / rate() : num(amt), lbp = cur === 'LBP' ? num(amt) : num(amt) * rate();
+  return '<span class="camt"><b>' + esc(fmt(usd, 'USD')) + '</b><small>' + esc(fmt(lbp, 'LBP')) + '</small></span>';
+}
+function colTotal(p) {
+  if (!colUsdFirst()) return '<b>' + esc(fmtPair(p)) + '</b>';
+  return '<span class="camt"><b>' + esc(fmt(pairUsd(p), 'USD')) + '</b><small>' + esc(fmt(pairUsd(p) * rate(), 'LBP')) + '</small></span>';
+}
+function colPlain(amt, cur) {
+  if (!colUsdFirst()) return fmt(amt, cur);
+  var usd = cur === 'LBP' ? num(amt) / rate() : num(amt), lbp = cur === 'LBP' ? num(amt) : num(amt) * rate();
+  return fmt(usd, 'USD') + ' (' + fmt(lbp, 'LBP') + ')';
+}
+function colPlainPair(p) { return colUsdFirst() ? fmt(pairUsd(p), 'USD') + ' (' + fmt(pairUsd(p) * rate(), 'LBP') + ')' : fmtPair(p); }
+function colBookTotals(ownOnly) {
   var left = pair(), n = 0, days = {};
   activeUnits().forEach(function(u) {
     var owes = false;
-    colCells(u).forEach(function(k) { if (k.x.left > 0) { addTo(left, k.ch.cur, k.x.left); owes = true; days[k.c.id] = 1; } });
+    colCells(u, ownOnly).forEach(function(k) { if (k.x.left > 0) { addTo(left, k.ch.cur, k.x.left); owes = true; days[k.c.id] = 1; } });
     if (owes) n++;
   });
   return { left: left, n: n, bills: Object.keys(days).length };
@@ -8507,10 +8540,27 @@ function colReceiptText(u, lang) {
     var lines = cells.map(function(k) {
       var title = isSharedBook() ? cycleTitle(k.c, lg).split(' · ')[0] + (lg === 'ar' && /^E-/.test(cycleTitle(k.c, lg).split(' · ')[1] || '') ? ' ' + cycleTitle(k.c, lg).split(' · ')[1] : '')
         : (lg === 'ar' ? (k.ch.title_ar || k.ch.title) : k.ch.title);
-      return '• ' + title + ': ' + fmt(k.x.due, k.ch.cur) + ' ✅';
+      return '• ' + (k.bid === S.building.id ? title : k.title) + ': ' + colPlain(k.x.due, k.ch.cur) + ' ✅';
     });
     var s = '🏢 *' + bname + '*\n\n🧾 *' + T('Receipt', 'إيصال') + '*\n' + T('Thank you ', 'شكراً ') + (name ? '*' + name + '* ' : '') + '(' + unitTag(u) + ') 🌸\n' + lines.join('\n');
-    if (cells.length > 1) s += '\n\n✅ *' + T('Total received: ', 'المجموع المستلم: ') + fmtPair(total) + '*';
+    if (cells.length > 1) s += '\n\n✅ *' + T('Total received: ', 'المجموع المستلم: ') + colPlainPair(total) + '*';
+    if (u.resident_token) s += '\n\n' + T('Your bill and receipts:', 'فاتورتك وإيصالاتك:') + '\n' + residentLink(u);
+    return s;
+  }
+  lang = lang || u.lang || 'both';
+  return lang === 'both' ? one('ar') + '\n\n━━━━━━━━\n\n' + one('en') : one(lang);
+}
+/* One message with everything the apartment still owes. */
+function colBillText(u, lang) {
+  var cells = colCells(u).filter(function(k) { return k.x.left > 0; }), total = pair();
+  cells.forEach(function(k) { addTo(total, k.ch.cur, k.x.left); });
+  function one(lg) {
+    var T = function(en, ar) { return lg === 'ar' ? ar : en; };
+    var name = lg === 'ar' ? (u.name_ar || u.name) : u.name, bname = lg === 'ar' ? (S.building.name_ar || S.building.name) : S.building.name;
+    var s = '🏢 *' + bname + '*\n\n' + T('Hello ', 'مرحباً ') + (name ? '*' + name + '* ' : '') + '(' + unitTag(u) + ') 👋\n';
+    s += cells.map(function(k) { return '• ' + k.title + ': ' + colPlain(k.x.left, k.ch.cur); }).join('\n');
+    s += '\n\n*' + T('Total to pay: ', 'المجموع المطلوب: ') + colPlainPair(total) + '*';
+    s += '\n' + T('You can hand it to ', 'يمكنك تسليمه إلى ') + (collectors().length ? collectorLabel(lg) : T('the collector', 'الجابي')) + '.';
     if (u.resident_token) s += '\n\n' + T('Your bill and receipts:', 'فاتورتك وإيصالاتك:') + '\n' + residentLink(u);
     return s;
   }
@@ -8522,23 +8572,43 @@ function colToggleBlock(b) {
   render();
   setTimeout(function() { var el = document.getElementById('cb-' + b); if (el && UI.cOpen) el.scrollIntoView({ block: 'start', behavior: 'auto' }); window.scrollBy(0, -8); }, 0);
 }
-function colTick(chId, uId) { UI.cTicked = UI.cTicked || {}; UI.cTicked[uId] = 1; tapCell(chId, uId); }
+function colTick(rowId, bid, chId, uId) {
+  UI.cTicked = UI.cTicked || {}; UI.cTicked[rowId] = 1;
+  if (bid === S.building.id) return tapCell(chId, uId);
+  var ns = colSharedBook();
+  if (!ns || ns.building.id !== bid) return;
+  var st = withState(ns, function() { return cell(byId(S.charges, chId), byId(S.units, uId)).state; });
+  if (st === 'paid' || st === 'part') return colSwitch(bid, function() { UI.tab = 'collect'; openSheet('cell', { ch: chId, u: uId }); });
+  withState(ns, function() {
+    var ch = byId(S.charges, chId), u = byId(S.units, uId), x = cell(ch, u), r = channelRow();
+    dbInsert('payments', { building_id: bid, charge_id: chId, unit_id: uId, amount: x.left, cur: ch.cur, channel: r.channel, method: r.method, received_by: r.received_by, received_at: nowIso() }).then(function() { render(); }, fail);
+  });
+  render();
+}
+function colPayAll(uId) {
+  var u = byId(S.units, uId);
+  colCells(u).filter(function(k) { return k.x.left > 0 && k.x.state !== 'part'; }).forEach(function(k) { colTick(uId, k.bid, k.ch.id, k.uid); });
+}
 function colRow(u) {
   var ticked = UI.cTicked && UI.cTicked[u.id], cells = colCells(u);
   var owed = cells.filter(function(k) { return k.x.left > 0; });
   if (!owed.length && !ticked && !UI.cShowPaid) return '';
   var shown = UI.cShowPaid ? cells : cells.filter(function(k) { return k.x.left > 0 || ticked; });
   if (!shown.length) return '';
-  var h = '<div class="crow"><div class="ucode">' + esc(unitTag(u)) + '</div><div class="grow"><div class="uname">' + esc(unitName(u) || unitTag(u)) + '</div></div>';
+  var left = pair(); owed.forEach(function(k) { addTo(left, k.ch.cur, k.x.left); });
   var paidCells = cells.filter(function(k) { return k.x.state === 'paid'; });
-  if (u.phone && owed.length) h += '<button class="crow-wa" aria-label="WhatsApp" onclick="openSheet(\'remind\',{u:' + jsArg(u.id) + ',cyc:' + jsArg(owed[owed.length - 1].c.id) + '})">📣</button>';
-  else if (u.phone && paidCells.length) h += '<button class="btn wa sm" onclick="openSheet(\'remind\',{receipt:true,u:' + jsArg(u.id) + ',cyc:' + jsArg(paidCells[paidCells.length - 1].c.id) + '})">' + esc(t('Send receipt', 'أرسل إيصالاً')) + '</button>';
+  var h = '<div class="crow"><div class="ucode">' + esc(unitTag(u)) + '</div><div class="grow"><div class="uname">' + esc(unitName(u) || unitTag(u)) + '</div></div>';
+  if (owed.length) h += colTotal(left);
   h += '</div><div class="crow-ticks">';
   shown.forEach(function(k) {
     var st = k.x.state, on = st === 'paid';
-    h += '<button class="ctick' + (on ? ' on' : st === 'part' ? ' part' : '') + '" aria-pressed="' + on + '" onclick="colTick(' + jsArg(k.ch.id) + ',' + jsArg(u.id) + ')"><span class="ctick-box">' + (on ? '✓' : '') + '</span><span class="grow">' + esc(k.title) + '</span><b>' + esc(fmt(st === 'part' ? k.x.left : k.x.due, k.ch.cur)) + '</b></button>';
+    h += '<button class="ctick' + (on ? ' on' : st === 'part' ? ' part' : '') + '" aria-pressed="' + on + '" onclick="colTick(' + jsArg(u.id) + ',' + jsArg(k.bid) + ',' + jsArg(k.ch.id) + ',' + jsArg(k.uid) + ')"><span class="ctick-box">' + (on ? '✓' : '') + '</span><span class="grow">' + esc(k.title) + '</span>' + colAmt(st === 'part' ? k.x.left : k.x.due, k.ch.cur) + '</button>';
   });
-  return h + '</div>';
+  h += '<div class="row" style="gap:8px;margin-top:4px">';
+  if (owed.length > 1) h += '<button class="btn sec sm grow" onclick="colPayAll(' + jsArg(u.id) + ')">' + esc(t('Paid it all', 'سدد الكل')) + '</button>';
+  if (u.phone && owed.length) h += '<button class="btn wa sm grow" onclick="openSheet(\'remind\',{bill:true,u:' + jsArg(u.id) + ',cyc:' + jsArg(owed[owed.length - 1].c.id) + '})">' + esc(t('Send bill', 'أرسل الفاتورة')) + '</button>';
+  else if (u.phone && paidCells.length) h += '<button class="btn wa sm grow" onclick="openSheet(\'remind\',{receipt:true,u:' + jsArg(u.id) + ',cyc:' + jsArg(paidCells[paidCells.length - 1].c.id) + '})">' + esc(t('Send receipt', 'أرسل إيصالاً')) + '</button>';
+  return h + '</div></div>';
 }
 function renderColCollect() {
   var h = colPreviewBar() + renderTopbar(t('Collect', 'التحصيل'));
@@ -8550,7 +8620,7 @@ function renderColCollect() {
     h += '</div></div>';
   }
   var tot = colBookTotals();
-  h += '<div class="sec" style="margin-top:10px"><div class="row between"><span class="muted" style="font-weight:600">' + esc(t('Still to collect', 'باقي للتحصيل')) + '</span><b>' + esc(fmtPair(tot.left)) + '</b></div></div>';
+  h += '<div class="sec" style="margin-top:10px"><div class="row between"><span class="muted" style="font-weight:600">' + esc(t('Still to collect', 'باقي للتحصيل')) + '</span>' + colTotal(tot.left) + '</div></div>';
   var groups = blocks().length > 1 ? blocks() : [null], shown = 0;
   groups.forEach(function(b) {
     var us = activeUnits().filter(function(u) { return !b || blockOf(u) === b; });
@@ -8565,7 +8635,7 @@ function renderColCollect() {
     var left = pair(), n = 0;
     us.forEach(function(u) { var o = false; colCells(u).forEach(function(k) { if (k.x.left > 0) { addTo(left, k.ch.cur, k.x.left); o = true; } }); if (o) n++; });
     var open = UI.cOpen === b;
-    h += '<div class="sec" style="margin-top:10px"><button class="cblock' + (open ? ' on' : '') + '" id="cb-' + esc(b) + '" aria-expanded="' + open + '" onclick="colToggleBlock(' + jsArg(b) + ')"><b>' + esc(blockLabel(b)) + '</b><span class="grow" style="text-align:end">' + (n ? '<small>' + esc(t(n + ' owe', n + ' عليهم')) + '</small> ' + esc(fmtPair(left)) : '✓ ' + esc(t('All paid', 'الكل سدّد'))) + '</span><span class="chev">' + (open ? '▾' : (LANG === 'ar' ? '‹' : '›')) + '</span></button>';
+    h += '<div class="sec" style="margin-top:10px"><button class="cblock' + (open ? ' on' : '') + '" id="cb-' + esc(b) + '" aria-expanded="' + open + '" onclick="colToggleBlock(' + jsArg(b) + ')"><b>' + esc(blockLabel(b)) + '</b><span class="grow" style="text-align:end">' + (n ? '<small>' + esc(t(n + ' owe', n + ' عليهم')) + '</small> ' + colTotal(left) : '✓ ' + esc(t('All paid', 'الكل سدّد'))) + '</span><span class="chev">' + (open ? '▾' : (LANG === 'ar' ? '‹' : '›')) + '</span></button>';
     if (open) h += rows.length ? '<div class="card" style="margin-top:6px">' + rows.join('') + '</div>' : '';
     h += '</div>';
   });
@@ -8579,7 +8649,7 @@ function renderColDash() {
   var rows = colBooks().map(function(r) {
     return withState(r.ns, function() {
       var cash = cashState(), mine = cash.pockets[r.ns.me.id] || pair();
-      return { b: r.b, pocket: UI.pvCol ? cash.withCollector : { USD: mine.USD || 0, LBP: mine.LBP || 0 }, tot: colBookTotals(),
+      return { b: r.b, pocket: UI.pvCol ? cash.withCollector : { USD: mine.USD || 0, LBP: mine.LBP || 0 }, tot: colBookTotals(true),
         tasks: openTasks('collector').filter(function(x) { return x.due_on && x.due_on <= todayIso(); }),
         pending: r.ns.handovers.filter(function(x) { return x.status === 'pending' && (UI.pvCol || x.collector_id === r.ns.me.id); }).length };
     });
@@ -8587,8 +8657,8 @@ function renderColDash() {
   h += '<div class="sec"><div class="stack">';
   rows.forEach(function(r) {
     h += '<div class="card pad"><b style="font-size:16px">' + esc(LANG === 'ar' ? (r.b.name_ar || r.b.name) : r.b.name) + '</b>';
-    h += '<div class="kv"><span>' + esc(t('In your pocket', 'معك الآن')) + '</span><b>' + esc(fmtPair(r.pocket)) + '</b></div>';
-    h += '<div class="kv"><span>' + esc(t('Still to collect', 'باقي للتحصيل')) + '</span><b>' + esc(fmtPair(r.tot.left)) + '</b></div>';
+    h += '<div class="kv"><span>' + esc(t('In your pocket', 'معك الآن')) + '</span>' + colTotal(r.pocket) + '</div>';
+    h += '<div class="kv"><span>' + esc(t('Still to collect', 'باقي للتحصيل')) + '</span>' + colTotal(r.tot.left) + '</div>';
     if (r.pending) h += '<p class="muted" style="margin:10px 0 0;font-weight:600">' + esc(t('Handover waiting for the manager', 'تسليم بانتظار المدير')) + '</p>';
     else if (pairUsd(r.pocket) > 0.005) h += '<button class="btn sec sm block" style="margin-top:10px" onclick="colHand(' + jsArg(r.b.id) + ')">' + esc(t('Hand over', 'سلّم')) + '</button>';
     h += '</div>';
@@ -8842,10 +8912,10 @@ SHEETS.remind = function(d) {
   if (!u || !cyc) return '';
   if (!d.tone) d.tone = suggestTone(u, cyc);
   if (!d.len) d.len = 'long';
-  if (d.text == null) d.text = d.receipt ? colReceiptText(u) : d.len === 'long' ? waText(u, cyc) : waTextShort(u, cyc);
+  if (d.text == null) d.text = d.receipt ? colReceiptText(u) : d.bill ? colBillText(u) : d.len === 'long' ? waText(u, cyc) : waTextShort(u, cyc);
   var h = '<h3>' + esc(t('Message to ', 'رسالة إلى ') + unitTag(u) + (unitName(u) ? ' · ' + unitName(u) : '')) + '</h3>';
   var hist = unitHistory(u, cyc);
-  if (!d.receipt) h += '<p class="lead">' + esc(hist.checked ? t((hist.checked === 1 ? 'Last month' : 'Last ' + hist.checked + ' months') + ': paid ' + hist.paid + ', still open ' + hist.behind + '.', (hist.checked === 1 ? 'الشهر الماضي' : 'آخر ' + hist.checked + ' أشهر') + ': سدد ' + hist.paid + '، متأخر ' + hist.behind + '.') : t('No earlier months yet.', 'لا أشهر سابقة بعد.')) + '</p>';
+  if (!d.receipt && !d.bill) h += '<p class="lead">' + esc(hist.checked ? t((hist.checked === 1 ? 'Last month' : 'Last ' + hist.checked + ' months') + ': paid ' + hist.paid + ', still open ' + hist.behind + '.', (hist.checked === 1 ? 'الشهر الماضي' : 'آخر ' + hist.checked + ' أشهر') + ': سدد ' + hist.paid + '، متأخر ' + hist.behind + '.') : t('No earlier months yet.', 'لا أشهر سابقة بعد.')) + '</p>';
   // Collectors send the plain detailed bill. The manager can step in with a written message,
   // offered straight away when the apartment is behind (a running due).
   var behind = hist.behind > 0 || pairUsd(unitBalance(u, cyc).arrears) > 0.005;

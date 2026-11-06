@@ -8464,13 +8464,18 @@ function colSwitch(bid, after) {
 function colHand(bid) { colSwitch(bid, function() { UI.tab = 'home'; openSheet('handreq'); }); }
 
 /* What an apartment or a whole book still owes, across all open bills, oldest first. */
+/* Short bill name, no dates: "Water W-004", "EDL October 2026". */
+function colBillName(c) {
+  var parts = cycleTitle(c).split(' · ');
+  return /^E-\d+$/.test(parts[1] || '') && LANG === 'ar' ? parts[0] + ' ' + parts[1] : parts[0];
+}
 function colCells(u) {
   var out = [], bills = visibleCycles().slice().reverse(), months = bills.length > 1;
   bills.forEach(function(c) {
     chargesOf(c.id).forEach(function(ch) {
       var x = cell(ch, u);
       if (x.due <= 0 && x.paid <= 0) return;
-      var title = isSharedBook() ? cycleTitle(c) : L(ch) + (months ? ' · ' + cycleTitle(c) : '');
+      var title = isSharedBook() ? colBillName(c) : L(ch) + (months ? ' · ' + cycleTitle(c) : '');
       out.push({ c: c, ch: ch, x: x, title: title });
     });
   });

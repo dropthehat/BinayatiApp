@@ -57,7 +57,7 @@ function setLang(l) {
   try { localStorage.setItem('bny15_lang', LANG); } catch (e) {}
   render();
 }
-function go(tab) { UI.tab = tab; UI.bsec = null; if (testBuild() && tab === 'home') UI.cb = null; render(); window.scrollTo(0, 0); }
+function go(tab) { UI.tab = tab; UI.bsec = null; if (colUI() && tab === 'home') loadColBooks(); render(); window.scrollTo(0, 0); }
 
 /* ---------------------------------------------------------------------------
    Sheets (bottom panels)
@@ -105,7 +105,7 @@ function renderDock() {
     ? [['home', t('Home', 'الرئيسية')], ['collect', t('Collect', 'التحصيل')], ['fab'], ['books', t('Books', 'الحسابات')], ['building', t('Building', 'البناية')]]
     : [['home', t('Home', 'الرئيسية')], ['collect', t('Collect', 'التحصيل')], ['fab'], ['books', t('Books', 'الحسابات')], ['tasks', t('Tasks', 'المهام')]];
   if (!can('books')) tabs = tabs.filter(function(x) { return x[0] !== 'books'; });
-  if (colUI()) tabs = [['home', t('Dashboard', 'اللوحة')], ['fab'], ['collect', t('Collect', 'التحصيل')]];
+  if (colUI()) tabs = [['collect', t('Collect', 'التحصيل')], ['home', t('Dashboard', 'اللوحة')]].concat(setting('collector_add') ? [['fab']] : []);
   var h = '<nav class="dock">';
   tabs.forEach(function(x) {
     if (x[0] === 'fab') { h += '<button class="fab" onclick="openSheet(\'add\')" aria-label="' + esc(t('Add', 'إضافة')) + '">+</button>'; return; }
@@ -116,7 +116,8 @@ function renderDock() {
 function renderApp() {
   if (!S.building) return renderFatal();
   var body = '';
-  if (colUI() && UI.tab !== 'home' && UI.tab !== 'collect') UI.tab = 'home';
+  if (colUI() && !UI.colStarted) { UI.colStarted = true; UI.tab = 'collect'; }
+  if (colUI() && UI.tab !== 'home' && UI.tab !== 'collect') UI.tab = 'collect';
   if (UI.tab === 'home') body = colUI() ? renderColDash() : isManager() ? renderHomeManager() : renderHomeCollector();
   else if (UI.tab === 'collect') body = colUI() ? renderColCollect() : renderCollect();
   else if (UI.tab === 'books') body = renderBooks();

@@ -315,6 +315,11 @@ function afterSignIn() {
   return cloudMyBuildings().then(function(bs) {
     if (!bs.length) { UI.screen = 'welcome'; render(); tickWelcome(); return; }
     UI.multi = bs.length > 1;
+    if (bs.length > 1 && testBuild() && bs.every(function(b) { return b.role !== 'manager' && b.role !== 'comanager'; })) {
+      var l0 = null; try { l0 = localStorage.getItem('bny15_last'); } catch (e) {}
+      var p0 = bs.filter(function(b) { return b.id === l0; })[0] || bs[0];
+      return openBuilding(p0.id).then(function() { UI.screen = 'app'; UI.tab = 'home'; render(); });
+    }
     if (bs.length > 1) { showOverview(); return; }
     var last = null; try { last = localStorage.getItem('bny15_last'); } catch (e) {}
     var pick = bs.filter(function(b) { return b.id === last; })[0] || (bs.length === 1 ? bs[0] : null);

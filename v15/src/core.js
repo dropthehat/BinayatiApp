@@ -435,7 +435,7 @@ function memberName(uid, lang) {
   return t('Someone', 'أحدهم');
 }
 function collectors() { return S.members.filter(function(m) { return m.role === 'collector'; }); }
-function isManager() { return S.role === 'manager' || S.role === 'comanager'; }
+function isManager() { return !UI.pvCol && (S.role === 'manager' || S.role === 'comanager'); }
 /* Permissions the owner can switch per person (members.perms). Same rules as private.can() on the server. */
 var PERMS = [
   ['pay', 'Tick payments', 'تأشير الدفعات', 'Mark apartments as paid', 'تأشير الشقق كمدفوعة'],

@@ -57,7 +57,7 @@ function setLang(l) {
   try { localStorage.setItem('bny15_lang', LANG); } catch (e) {}
   render();
 }
-function go(tab) { UI.tab = tab; UI.bsec = null; render(); window.scrollTo(0, 0); }
+function go(tab) { UI.tab = tab; UI.bsec = null; if (testBuild() && tab === 'home') UI.cb = null; render(); window.scrollTo(0, 0); }
 
 /* ---------------------------------------------------------------------------
    Sheets (bottom panels)
@@ -93,7 +93,7 @@ function currentCycle() {
 function renderTopbar(sub) {
   var h = testBuild() ? '<div style="background:#b45309;color:#fff;text-align:center;font-size:12px;font-weight:700;padding:3px 8px;border-radius:8px;margin:6px 12px 0">' + esc(t('Test version', 'نسخة تجريبية')) + '</div>' : '';
   h += '<header class="topbar">';
-  if (UI.multi) h += '<button class="iconbtn" onclick="showOverview()" aria-label="' + esc(t('All my buildings', 'كل بناياتي')) + '">' + (LANG === 'ar' ? '›' : '‹') + ' 🏢</button>';
+  if (UI.multi && !colUI()) h += '<button class="iconbtn" onclick="showOverview()" aria-label="' + esc(t('All my buildings', 'كل بناياتي')) + '">' + (LANG === 'ar' ? '›' : '‹') + ' 🏢</button>';
   h += '<button class="bpill" onclick="openSheet(\'menu\')" aria-label="' + esc(t('Building menu', 'قائمة البناية')) + '"><span class="logo">' + esc((bName() || 'B').trim().charAt(0).toUpperCase()) + '</span><span class="grow"><b>' + esc(bName()) + '</b>';
   h += '<small><span id="sync-dot" class="sync"></span>' + esc(sub || (roleLabel(S.role) + (isCloud() ? '' : ' · ' + t('on this phone', 'على هذا الهاتف')))) + '</small></span></button>';
   h += '<button class="iconbtn" onclick="setLang()" aria-label="Language">' + (LANG === 'ar' ? 'EN' : 'ع') + '</button>';
@@ -105,6 +105,7 @@ function renderDock() {
     ? [['home', t('Home', 'الرئيسية')], ['collect', t('Collect', 'التحصيل')], ['fab'], ['books', t('Books', 'الحسابات')], ['building', t('Building', 'البناية')]]
     : [['home', t('Home', 'الرئيسية')], ['collect', t('Collect', 'التحصيل')], ['fab'], ['books', t('Books', 'الحسابات')], ['tasks', t('Tasks', 'المهام')]];
   if (!can('books')) tabs = tabs.filter(function(x) { return x[0] !== 'books'; });
+  if (colUI()) tabs = [['home', t('Dashboard', 'اللوحة')], ['fab'], ['collect', t('Collect', 'التحصيل')]];
   var h = '<nav class="dock">';
   tabs.forEach(function(x) {
     if (x[0] === 'fab') { h += '<button class="fab" onclick="openSheet(\'add\')" aria-label="' + esc(t('Add', 'إضافة')) + '">+</button>'; return; }
@@ -115,8 +116,9 @@ function renderDock() {
 function renderApp() {
   if (!S.building) return renderFatal();
   var body = '';
-  if (UI.tab === 'home') body = isManager() ? renderHomeManager() : renderHomeCollector();
-  else if (UI.tab === 'collect') body = renderCollect();
+  if (colUI() && UI.tab !== 'home' && UI.tab !== 'collect') UI.tab = 'home';
+  if (UI.tab === 'home') body = colUI() ? renderColDash() : isManager() ? renderHomeManager() : renderHomeCollector();
+  else if (UI.tab === 'collect') body = colUI() ? renderColCollect() : renderCollect();
   else if (UI.tab === 'books') body = renderBooks();
   else if (UI.tab === 'tasks') body = renderTasksScreen();
   else body = renderBuilding();

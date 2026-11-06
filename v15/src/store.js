@@ -91,6 +91,7 @@ function applyLocal(tbl, op, row) {
 }
 
 function dbInsert(tbl, row) {
+  if (UI.pvCol) return Promise.reject(pvBlocked());
   toBase(tbl, row);
   row.id = row.id || uuid();
   if (tbl !== 'buildings' && !row.building_id) row.building_id = S.building.id;
@@ -109,6 +110,7 @@ function dbInsert(tbl, row) {
   }, function(e) { S[tbl] = S[tbl].filter(function(r) { return r.id !== row.id; }); S._rev++; render(); throw e; });
 }
 function dbInsertMany(tbl, rows) {
+  if (UI.pvCol) return Promise.reject(pvBlocked());
   rows.forEach(function(r) { toBase(tbl, r); });
   rows.forEach(function(r) { r.id = r.id || uuid(); if (!r.building_id) r.building_id = S.building.id; if (!r.created_at && tbl !== 'payments') r.created_at = nowIso(); });
   if (!isCloud()) {
@@ -122,6 +124,7 @@ function dbInsertMany(tbl, rows) {
   return cloudCall(SB.from(tbl).insert(rows)).then(function() { return rows; }, function(e) { reloadBuilding(); throw e; });
 }
 function dbUpdate(tbl, id, patch) {
+  if (UI.pvCol) return Promise.reject(pvBlocked());
   if (patch.cur === 'LBP') toBase(tbl, patch);
   var row = Object.assign({ id: id }, patch);
   if (!isCloud()) {
@@ -141,6 +144,7 @@ function dbUpdate(tbl, id, patch) {
   }, function(e) { if (before) applyLocal(tbl, 'update', before); render(); throw e; });
 }
 function dbDelete(tbl, id) {
+  if (UI.pvCol) return Promise.reject(pvBlocked());
   if (!isCloud()) {
     var db = localLoad();
     var x = byId(db[tbl], id);
@@ -177,6 +181,7 @@ function niceError(e) {
 
 /* RPCs: the server functions in schema.sql, with local equivalents. */
 function rpc(name, args) {
+  if (UI.pvCol) return Promise.reject(pvBlocked());
   if (isCloud()) return cloudCall(SB.rpc(name, args));
   return Promise.resolve().then(function() { return LOCAL_RPC[name](args); });
 }

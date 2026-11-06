@@ -74,6 +74,7 @@ ${src('ui-building.js')}
 ${src('ui-ob.js')}
 ${src('ui-resident.js')}
 ${src('ui-multi.js')}
+${src('ui-collector.js')}
 ${src('ai-docs.js')}
 ${src('ai-remind.js')}
 ${src('admin.js')}

@@ -656,3 +656,7 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .ctick-box { width: 28px; height: 28px; flex: none; display: flex; align-items: center; justify-content: center; border: 2px solid var(--line); border-radius: 8px; font-weight: 800; }
 .ctick.on .ctick-box { background: var(--ok); border-color: var(--ok); color: #fff; }
 .ctick.part .ctick-box { border-color: var(--warn); }
+
+.cblock { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 10px 14px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--card); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
+.cblock.on { border-color: var(--ink); }
+.cblock small { color: var(--mut); font-weight: 600; }

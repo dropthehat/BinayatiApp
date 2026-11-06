@@ -692,6 +692,10 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .ctick.on .ctick-box { background: var(--ok); border-color: var(--ok); color: #fff; }
 .ctick.part .ctick-box { border-color: var(--warn); }
 
+.cblock { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 10px 14px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--card); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
+.cblock.on { border-color: var(--ink); }
+.cblock small { color: var(--mut); font-weight: 600; }
+
 /* ---- living building scene ---- */
 .bh { position: relative; margin: 0 16px 12px; border-radius: 26px; overflow: hidden; aspect-ratio: 366 / 256; box-shadow: var(--shadow-lg); background: var(--sky2); }
 .bh svg.bh-art { display: block; width: 100%; height: 100%; }
@@ -8450,7 +8454,7 @@ function colSwitch(bid, after) {
   if (S.building && S.building.id === bid) { if (after) after(); return; }
   if (!row) { openBuilding(bid).then(function() { if (after) after(); render(); }, fail); return; }
   (UI.cb || []).forEach(function(r) { if (S.building && r.b.id === S.building.id) r.ns = S; });
-  S = row.ns; UI.cycleId = null; UI.cTicked = {}; UI.cShowPaid = false;
+  S = row.ns; UI.cycleId = null; UI.cTicked = {}; UI.cShowPaid = false; UI.cOpen = null;
   try { localStorage.setItem('bny15_last', bid); } catch (e) {}
   if (after) after();
   render(); window.scrollTo(0, 0);
@@ -8490,6 +8494,11 @@ function colBookTotals() {
   });
   return { left: left, n: n, bills: Object.keys(days).length };
 }
+function colToggleBlock(b) {
+  UI.cOpen = UI.cOpen === b ? null : b;
+  render();
+  setTimeout(function() { var el = document.getElementById('cb-' + b); if (el && UI.cOpen) el.scrollIntoView({ block: 'start', behavior: 'auto' }); window.scrollBy(0, -8); }, 0);
+}
 function colTick(chId, uId) { UI.cTicked = UI.cTicked || {}; UI.cTicked[uId] = 1; tapCell(chId, uId); }
 function colRow(u) {
   var ticked = UI.cTicked && UI.cTicked[u.id], cells = colCells(u);
@@ -8498,7 +8507,9 @@ function colRow(u) {
   var shown = UI.cShowPaid ? cells : cells.filter(function(k) { return k.x.left > 0 || ticked; });
   if (!shown.length) return '';
   var h = '<div class="crow"><div class="ucode">' + esc(unitTag(u)) + '</div><div class="grow"><div class="uname">' + esc(unitName(u) || unitTag(u)) + '</div></div>';
+  var paidCells = cells.filter(function(k) { return k.x.state === 'paid'; });
   if (u.phone && owed.length) h += '<button class="crow-wa" aria-label="WhatsApp" onclick="openSheet(\'remind\',{u:' + jsArg(u.id) + ',cyc:' + jsArg(owed[owed.length - 1].c.id) + '})">📣</button>';
+  else if (u.phone && paidCells.length) h += '<button class="btn wa sm" onclick="openSheet(\'remind\',{u:' + jsArg(u.id) + ',cyc:' + jsArg(paidCells[paidCells.length - 1].c.id) + '})">' + esc(t('Send receipt', 'أرسل إيصالاً')) + '</button>';
   h += '</div><div class="crow-ticks">';
   shown.forEach(function(k) {
     var st = k.x.state, on = st === 'paid';
@@ -8519,12 +8530,21 @@ function renderColCollect() {
   h += '<div class="sec" style="margin-top:10px"><div class="row between"><span class="muted" style="font-weight:600">' + esc(t('Still to collect', 'باقي للتحصيل')) + '</span><b>' + esc(fmtPair(tot.left)) + '</b></div></div>';
   var groups = blocks().length > 1 ? blocks() : [null], shown = 0;
   groups.forEach(function(b) {
-    var rows = activeUnits().filter(function(u) { return !b || blockOf(u) === b; }).map(colRow).filter(Boolean);
-    if (!rows.length) return;
-    shown += rows.length;
-    h += '<div class="sec" style="margin-top:12px">';
-    if (b) h += '<div class="sec-h"><h2>' + esc(blockLabel(b)) + '</h2></div>';
-    h += '<div class="card">' + rows.join('') + '</div></div>';
+    var us = activeUnits().filter(function(u) { return !b || blockOf(u) === b; });
+    var rows = us.map(colRow).filter(Boolean);
+    if (!b) {
+      if (!rows.length) return;
+      shown += rows.length;
+      h += '<div class="sec" style="margin-top:12px"><div class="card">' + rows.join('') + '</div></div>';
+      return;
+    }
+    shown += 1;
+    var left = pair(), n = 0;
+    us.forEach(function(u) { var o = false; colCells(u).forEach(function(k) { if (k.x.left > 0) { addTo(left, k.ch.cur, k.x.left); o = true; } }); if (o) n++; });
+    var open = UI.cOpen === b;
+    h += '<div class="sec" style="margin-top:10px"><button class="cblock' + (open ? ' on' : '') + '" id="cb-' + esc(b) + '" aria-expanded="' + open + '" onclick="colToggleBlock(' + jsArg(b) + ')"><b>' + esc(blockLabel(b)) + '</b><span class="grow" style="text-align:end">' + (n ? '<small>' + esc(t(n + ' owe', n + ' عليهم')) + '</small> ' + esc(fmtPair(left)) : '✓ ' + esc(t('All paid', 'الكل سدّد'))) + '</span><span class="chev">' + (open ? '▾' : (LANG === 'ar' ? '‹' : '›')) + '</span></button>';
+    if (open) h += rows.length ? '<div class="card" style="margin-top:6px">' + rows.join('') + '</div>' : '';
+    h += '</div>';
   });
   if (!shown) h += '<div class="sec"><div class="card empty">' + esc(t('Everyone has paid ✓', 'الجميع سدّد ✓')) + '</div></div>';
   h += '<div class="sec" style="margin-top:12px"><button class="btn ghost block" onclick="UI.cShowPaid=!UI.cShowPaid;render()">' + esc(UI.cShowPaid ? t('Hide what is paid', 'إخفاء المدفوع') : t('Show what is paid', 'إظهار المدفوع')) + '</button></div>';

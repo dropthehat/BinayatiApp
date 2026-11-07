@@ -157,7 +157,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* Segmented control + chips */
 .seg { display: flex; background: var(--bg2); border-radius: 13px; padding: 3px; gap: 2px; }
 .seg button { flex: 1; min-height: 36px; border-radius: 10px; font-size: 13px; font-weight: 700; color: var(--mut); padding: 0 8px; white-space: nowrap; }
-.seg button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.seg button.on { background: var(--acc); color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
 .chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 16px 4px; scrollbar-width: none; }
 .chips::-webkit-scrollbar { display: none; }
 .chip { flex: none; min-height: 34px; padding: 0 13px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--card); font-size: 13px; font-weight: 700; color: var(--ink); display: inline-flex; align-items: center; gap: 6px; }
@@ -705,8 +705,11 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .cdash-bills { margin: 10px -4px 0; border-top: 1px solid var(--line); }
 .cdash-bills .li { padding: 10px 4px; }
 .cdash-bills .li small { color: var(--mut); }
-.ftabs { display: flex; gap: 8px; padding: 10px 16px 0; overflow-x: auto; scrollbar-width: none; }
-.ftab { flex: 1 0 auto; min-height: 48px; padding: 0 16px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); font: inherit; font-weight: 800; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+.modesw { display: flex; gap: 8px; }
+.modesw button { flex: 1; min-height: 46px; border-radius: 14px; border: 1.5px solid var(--line); background: transparent; color: var(--mut); font: inherit; font-weight: 800; font-size: 15px; cursor: pointer; touch-action: manipulation; }
+.modesw button.on { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.ftabs { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 16px 0; }
+.ftab { flex: 1 1 0; min-width: 0; white-space: nowrap; touch-action: manipulation; min-height: 48px; padding: 0 16px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); font: inherit; font-weight: 800; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
 .ftab.on { background: var(--acc); border-color: var(--acc); color: #fff; }
 .ftab .cnt { font-size: 11px; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: rgba(255,255,255,.18); }
 .ftab:not(.on) .cnt { background: var(--soft); color: var(--warn); }
@@ -743,6 +746,7 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .bico { width: 40px; height: 40px; flex: none; border-radius: 12px; border: 1px solid var(--line); background: transparent; font-size: 18px; display: grid; place-items: center; cursor: pointer; }
 .bico.none { border-color: transparent; }
 .pcard .crow { padding-bottom: 10px; }
+.pgroup-h { font-size: 13px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--mut); margin: 0 4px 8px; }
 .ptotal .camt b { font-size: 22px; font-weight: 900; }
 .pcard.settled { opacity: .75; }
 .cbill-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
@@ -9347,7 +9351,7 @@ function loadColBooks() {
 }
 function colSwitch(bid, after) {
   var row = (UI.cb || []).filter(function(r) { return r.b.id === bid; })[0];
-  if (S.building && S.building.id === bid) { if (after) after(); return; }
+  if (S.building && S.building.id === bid) { if (after) after(); render(); return; }
   if (!row) { openBuilding(bid).then(function() { if (after) after(); render(); }, fail); return; }
   (UI.cb || []).forEach(function(r) { if (S.building && r.b.id === S.building.id) r.ns = S; });
   S = row.ns; UI.cycleId = null; UI.cTicked = {}; UI.cShowPaid = false; UI.cOpen = null;
@@ -9389,7 +9393,16 @@ function colSharedBook() {
 /* An apartment's bills. In a building's book it also pulls its water and shared bills, so one card has everything. */
 function colCells(u, ownOnly) {
   var out = colCellsIn(u);
-  if (ownOnly || isSharedBook() || !u.linked_unit_id) return out;
+  if (ownOnly || !u.linked_unit_id) return out;
+  if (isSharedBook()) { // from the shared book, add the apartment's own building bills
+    var me = S;
+    colBooks().forEach(function(r) {
+      if (r.ns === me || r.ns.building.kind === 'shared') return;
+      var bu = byId(r.ns.units, u.linked_unit_id);
+      if (bu) out = withState(r.ns, function() { return colCellsIn(bu); }).concat(out);
+    });
+    return out;
+  }
   var ns = colSharedBook(), lu = ns && byId(ns.units, u.linked_unit_id);
   if (!lu) return out;
   return out.concat(withState(ns, function() { return colCellsIn(lu); }));
@@ -9397,20 +9410,21 @@ function colCells(u, ownOnly) {
 /* Dollars first, LBP underneath (a setting on each book). */
 function colUsdFirst() { return setting('collector_usd') !== false; }
 function colAmt(amt, cur) {
-  if (!colUsdFirst()) return '<b>' + esc(fmt(amt, cur)) + '</b>';
+  if (!colUsdFirst() || cur !== 'LBP') return '<b>' + esc(fmt(amt, cur)) + '</b>';
   var usd = cur === 'LBP' ? num(amt) / rate() : num(amt), lbp = cur === 'LBP' ? num(amt) : num(amt) * rate();
   return '<span class="camt"><b>' + esc(fmt(usd, 'USD')) + '</b><small>' + esc(fmt(lbp, 'LBP')) + '</small></span>';
 }
 function colTotal(p) {
   if (!colUsdFirst()) return '<b>' + esc(fmtPair(p)) + '</b>';
+  if (Math.abs(p.LBP || 0) < 1) return '<b>' + esc(fmt(p.USD || 0, 'USD')) + '</b>';
   return '<span class="camt"><b>' + esc(fmt(pairUsd(p), 'USD')) + '</b><small>' + esc(fmt(pairUsd(p) * rate(), 'LBP')) + '</small></span>';
 }
 function colPlain(amt, cur) {
-  if (!colUsdFirst()) return fmt(amt, cur);
+  if (!colUsdFirst() || cur !== 'LBP') return fmt(amt, cur);
   var usd = cur === 'LBP' ? num(amt) / rate() : num(amt), lbp = cur === 'LBP' ? num(amt) : num(amt) * rate();
   return fmt(usd, 'USD') + ' (' + fmt(lbp, 'LBP') + ')';
 }
-function colPlainPair(p) { return colUsdFirst() ? fmt(pairUsd(p), 'USD') + ' (' + fmt(pairUsd(p) * rate(), 'LBP') + ')' : fmtPair(p); }
+function colPlainPair(p) { return !colUsdFirst() ? fmtPair(p) : Math.abs(p.LBP || 0) < 1 ? fmt(p.USD || 0, 'USD') : fmt(pairUsd(p), 'USD') + ' (' + fmt(pairUsd(p) * rate(), 'LBP') + ')'; }
 function colBookTotals(ownOnly) {
   var left = pair(), n = 0, days = {};
   activeUnits().forEach(function(u) {
@@ -9429,7 +9443,7 @@ function colReceiptText(u, lang) {
   cells.forEach(function(k) { addTo(total, k.ch.cur, k.x.due); });
   function one(lg) {
     var T = function(en, ar) { return lg === 'ar' ? ar : en; };
-    var name = lg === 'ar' ? (u.name_ar || u.name) : u.name, bname = lg === 'ar' ? (S.building.name_ar || S.building.name) : S.building.name;
+    var name = lg === 'ar' ? (u.name_ar || u.name) : u.name, bname = colHomeName(u, lg);
     var lines = cells.map(function(k) {
       var title = isSharedBook() ? cycleTitle(k.c, lg).split(' · ')[0] + (lg === 'ar' && /^E-/.test(cycleTitle(k.c, lg).split(' · ')[1] || '') ? ' ' + cycleTitle(k.c, lg).split(' · ')[1] : '')
         : (lg === 'ar' ? (k.ch.title_ar || k.ch.title) : k.ch.title);
@@ -9449,7 +9463,7 @@ function colBillText(u, lang) {
   cells.forEach(function(k) { addTo(total, k.ch.cur, k.x.left); });
   function one(lg) {
     var T = function(en, ar) { return lg === 'ar' ? ar : en; };
-    var name = lg === 'ar' ? (u.name_ar || u.name) : u.name, bname = lg === 'ar' ? (S.building.name_ar || S.building.name) : S.building.name;
+    var name = lg === 'ar' ? (u.name_ar || u.name) : u.name, bname = colHomeName(u, lg);
     var s = '🏢 *' + bname + '*\n\n' + T('Hello ', 'مرحباً ') + (name ? '*' + name + '* ' : '') + '(' + unitTag(u) + ') 👋\n';
     s += cells.map(function(k) { return '• ' + k.title + ': ' + colPlain(k.x.left, k.ch.cur); }).join('\n');
     s += '\n\n*' + T('Total to pay: ', 'المجموع المطلوب: ') + colPlainPair(total) + '*';
@@ -9469,8 +9483,8 @@ function colTick(rowId, bid, chId, uId) {
   UI.cTicked = UI.cTicked || {}; UI.cTicked[rowId] = 1;
   if (bid === S.building.id) return tapCell(chId, uId);
   if (isPend(chId, uId) || doubleTap(chId, uId)) return;
-  var ns = colSharedBook();
-  if (!ns || ns.building.id !== bid) return;
+  var ns = colBookNs(bid);
+  if (!ns) return;
   var st = withState(ns, function() { return cell(byId(S.charges, chId), byId(S.units, uId)).state; });
   if (st === 'paid' || st === 'part') return colSwitch(bid, function() { UI.tab = 'collect'; openSheet('cell', { ch: chId, u: uId }); });
   var row = withState(ns, function() {
@@ -9524,7 +9538,7 @@ function colRow(u) {
 function colFilter(q) {
   UI.cQ = q; q = String(q || '').trim().toLowerCase();
   document.querySelectorAll('.pcard').forEach(function(el) { el.style.display = !q || (el.getAttribute('data-q') || '').indexOf(q) >= 0 ? '' : 'none'; });
-  document.querySelectorAll('.cblock').forEach(function(el) { el.style.display = q ? 'none' : ''; });
+  document.querySelectorAll('.pgroup').forEach(function(g) { var any = [].some.call(g.querySelectorAll('.pcard'), function(el) { return el.style.display !== 'none'; }); g.style.display = any ? '' : 'none'; });
 }
 /* Collector, one bill at a time: who still owes it, tick or remind each one. */
 function colOpenBills() {
@@ -9589,16 +9603,18 @@ function colBillView() {
   h += '<div class="bar" style="margin:10px 0 8px"><i class="paid" style="width:' + pct + '%"></i></div>';
   h += '<div class="row between"><span class="muted">' + esc(t(st.paid + ' of ' + st.rows.length + ' paid', 'دفع ' + st.paid + ' من ' + st.rows.length)) + '</span>' + (done ? '<b style="color:var(--ok)">✓ ' + esc(t('All paid', 'الكل دفع')) + '</b>' : '<span class="bh-left">' + colTotal(st.left) + '<small>' + esc(t('left', 'المتبقي')) + '</small></span>') + '</div>';
   if (isSharedBook()) h += '<div class="bh-note' + (done ? ' ok' : '') + '">' + esc(done ? t('Everyone paid: counted as paid to the supplier, out of your pocket.', 'الجميع دفع: تُحتسب مدفوعة للمورد وخرجت من جيبك.') : t('With you: ', 'معك: ') + colPlainPair(mine) + t(' · stays with you until everyone has paid this bill.', ' · تبقى معك حتى يدفع الجميع هذه الفاتورة.')) + '</div>';
-  h += '<div class="row" style="gap:8px;margin-top:10px"><button class="chip' + (UI.cUnpaid ? ' on' : '') + '" onclick="UI.cUnpaid=!UI.cUnpaid;render()">' + esc(t('Unpaid only', 'غير المدفوعين فقط')) + '</button><span class="muted" style="font-size:12px;margin-inline-start:auto">☐ ' + esc(t('= paid', '= دفع')) + ' · 📣 ' + esc(t('= remind', '= تذكير')) + ' · 🧾 ' + esc(t('= receipt', '= إيصال')) + '</span></div></div></div>';
-  // Apartments, by block
-  var groups = blocks().length > 1 ? blocks() : [null];
+  var showAll = !!UI.cShowAll;
+  h += '<div class="row" style="gap:8px;margin-top:10px">' + (st.paid ? '<button class="chip' + (showAll ? ' on' : '') + '" onclick="UI.cShowAll=!UI.cShowAll;render()">' + esc(showAll ? t('Hide who paid', 'إخفاء من دفع') : t('Show who paid (' + st.paid + ')', 'إظهار من دفع (' + st.paid + ')')) + '</button>' : '') + '<span class="muted" style="font-size:12px;margin-inline-start:auto">☐ ' + esc(t('= paid', '= دفع')) + ' · 📣 ' + esc(t('= remind', '= تذكير')) + ' · 🧾 ' + esc(t('= receipt', '= إيصال')) + '</span></div></div></div>';
+  if (done && !showAll) return h;
+  // Apartments, by block; blocks where everyone paid fold into one line
+  var groups = blocks().length > 1 ? blocks() : [null], allPaid = [];
   groups.forEach(function(b) {
     var rows = st.rows.filter(function(x) { return !b || blockOf(x.u) === b; });
     if (!rows.length) return;
     var left = pair(); rows.forEach(function(x) { addTo(left, 'USD', x.left.USD); addTo(left, 'LBP', x.left.LBP); });
-    var shown = UI.cUnpaid ? rows.filter(function(x) { return pairUsd(x.left) > 0.005; }) : rows;
+    var shown = showAll ? rows : rows.filter(function(x) { return pairUsd(x.left) > 0.005; });
+    if (!shown.length) { allPaid.push(b ? blockLabel(b) : S.building.name); return; }
     h += '<div class="sec bsec"><div class="bsec-h"><b>' + esc(b ? blockLabel(b) : (LANG === 'ar' ? (S.building.name_ar || S.building.name) : S.building.name)) + '</b>' + (pairUsd(left) > 0.005 ? colTotal(left) : '<span>✓</span>') + '</div>';
-    if (!shown.length) h += '<div class="brow"><span class="muted">' + esc(t('Everyone here paid ✓', 'الجميع هنا دفع ✓')) + '</span></div>';
     shown.forEach(function(x) {
       var u = x.u, paid = pairUsd(x.left) <= 0.005, pend = chargesOf(c.id).some(function(ch) { return isPend(ch.id, u.id); });
       var firstCh = chargesOf(c.id).filter(function(ch) { return cell(ch, u).due > 0; })[0];
@@ -9610,6 +9626,7 @@ function colBillView() {
     });
     h += '</div>';
   });
+  if (allPaid.length) h += '<div class="sec"><p class="muted" style="margin:4px 4px 0">✓ ' + esc(t('Everyone paid in ', 'الجميع دفع في ') + allPaid.join(', ')) + '</p></div>';
   return h;
 }
 function colTickBill(uId, cId) {
@@ -9621,38 +9638,52 @@ function renderColCollect() {
   if (!UI.cb) loadColBooks();
   var books = colBooks(), people = UI.cMode === 'apt';
   // Bills: follow each bill and its supplier. People: collect from someone at the door.
-  h += '<div class="sec" style="margin-top:6px"><div class="seg"><button class="' + (!people ? 'on' : '') + '" onclick="UI.cMode=\'bill\';render()">🧾 ' + esc(t('Bills', 'الفواتير')) + '</button><button class="' + (people ? 'on' : '') + '" onclick="UI.cMode=\'apt\';render()">👤 ' + esc(t('People', 'الأشخاص')) + '</button></div></div>';
-  if (people && books.length > 1) {
-    h += '<div class="ftabs">';
-    books.forEach(function(r) { h += '<button class="ftab' + (r.b.id === S.building.id ? ' on' : '') + '" onclick="colSwitch(' + jsArg(r.b.id) + ')">' + esc(LANG === 'ar' ? (r.b.name_ar || r.b.name) : r.b.name) + '</button>'; });
-    h += '</div>';
+  h += '<div class="sec" style="margin-top:6px"><div class="modesw"><button class="' + (!people ? 'on' : '') + '" aria-pressed="' + !people + '" onclick="UI.cMode=\'bill\';render();window.scrollTo(0,0)">🧾 ' + esc(t('Bills', 'الفواتير')) + '</button><button class="' + (people ? 'on' : '') + '" aria-pressed="' + people + '" onclick="UI.cMode=\'apt\';render();window.scrollTo(0,0)">👤 ' + esc(t('People', 'الأشخاص')) + '</button></div></div>';
+  if (people) {
+    // People: everyone in one list by block. Books only show as tabs when they are not linked
+    // to the shared book (a collector working in two unrelated buildings).
+    var base = colPeopleBase(), lone = books.filter(function(r) { return base && r.b.id !== base.b.id && !colLinkedToShared(r); });
+    if (base && S.building.id !== base.b.id && !lone.some(function(r) { return r.b.id === S.building.id; })) { setTimeout(function() { colSwitch(base.b.id); }, 0); return h + skelCards(4, 1); }
+    if (lone.length) h += '<div class="ftabs">' + [base].concat(lone).map(function(r) { return '<button class="ftab' + (r.b.id === S.building.id ? ' on' : '') + '" onclick="colSwitch(' + jsArg(r.b.id) + ')">' + esc(r === base && r.ns.building.kind === 'shared' ? t('Everyone', 'الجميع') : (LANG === 'ar' ? (r.b.name_ar || r.b.name) : r.b.name)) + '</button>'; }).join('') + '</div>';
   }
   if (!people) return h + colBillView();
   var tot = colBookTotals();
   h += '<div class="sec" style="margin-top:10px"><div class="row between"><span class="muted" style="font-weight:600">' + esc(t('Still to collect', 'باقي للتحصيل')) + '</span>' + colTotal(tot.left) + '</div></div>';
-  h += '<div class="sec" style="margin-top:8px"><input class="input" type="search" placeholder="' + esc(t('Find a name or apartment…', 'ابحث عن اسم أو شقة…')) + '" value="' + esc(UI.cQ || '') + '" oninput="colFilter(this.value)" onfocus="if(!UI.cAllOpen){UI.cAllOpen=true;var v=this.value;render();var i=document.querySelector(\'input[type=search]\');if(i){i.focus();i.value=v;}}"></div>';
-  var groups = blocks().length > 1 ? blocks() : [null], shown = 0;
-  groups.forEach(function(b) {
-    var us = activeUnits().filter(function(u) { return !b || blockOf(u) === b; });
-    var rows = us.map(colRow).filter(Boolean);
-    if (!b) {
-      if (!rows.length) return;
-      shown += rows.length;
-      h += '<div class="sec" style="margin-top:12px"><div class="cstack">' + rows.join('') + '</div></div>';
-      return;
-    }
-    shown += 1;
-    var left = pair(), n = 0;
-    us.forEach(function(u) { var o = false; colCells(u).forEach(function(k) { if (k.x.left > 0) { addTo(left, k.ch.cur, k.x.left); o = true; } }); if (o) n++; });
-    var open = UI.cOpen === b || !!UI.cAllOpen;
-    h += '<div class="sec" style="margin-top:10px"><button class="cblock' + (open ? ' on' : '') + '" id="cb-' + esc(b) + '" aria-expanded="' + open + '" onclick="colToggleBlock(' + jsArg(b) + ')"><b>' + esc(blockLabel(b)) + '</b><span class="grow" style="text-align:end">' + (n ? '<small>' + esc(t(n + ' owe', n + ' عليهم')) + '</small> ' + colTotal(left) : '✓ ' + esc(t('All paid', 'الكل سدّد'))) + '</span><span class="chev">' + (open ? '▾' : (LANG === 'ar' ? '‹' : '›')) + '</span></button>';
-    if (open) h += rows.length ? '<div class="cstack" style="margin-top:8px">' + rows.join('') + '</div>' : '';
+  h += '<div class="sec" style="margin-top:8px"><input class="input" type="search" placeholder="' + esc(t('Find a name or apartment…', 'ابحث عن اسم أو شقة…')) + '" value="' + esc(UI.cQ || '') + '" oninput="colFilter(this.value)"></div>';
+  var bl = blocks(), blk = bl.length > 1 && bl.indexOf(UI.cBlk) >= 0 ? UI.cBlk : null;
+  if (bl.length > 1) {
+    h += '<div class="chips" style="margin-top:8px"><button class="chip' + (!blk ? ' on' : '') + '" onclick="UI.cBlk=null;render()">' + esc(t('All', 'الكل')) + '</button>';
+    bl.forEach(function(b) {
+      var n = activeUnits().filter(function(u) { return blockOf(u) === b && colCells(u).some(function(k) { return k.x.left > 0; }); }).length;
+      h += '<button class="chip' + (blk === b ? ' on' : '') + '" onclick="UI.cBlk=' + jsArg(b) + ';render()">' + esc(blockLabel(b)) + (n ? ' <span class="cnt">' + n + '</span>' : ' ✓') + '</button>';
+    });
     h += '</div>';
+  }
+  var groups = bl.length > 1 ? (blk ? [blk] : bl) : [null], shown = 0;
+  groups.forEach(function(b) {
+    var rows = activeUnits().filter(function(u) { return !b || blockOf(u) === b; }).map(colRow).filter(Boolean);
+    if (!rows.length) return;
+    shown += rows.length;
+    h += '<div class="sec pgroup" style="margin-top:12px">' + (b && !blk ? '<div class="pgroup-h">' + esc(blockLabel(b)) + '</div>' : '') + '<div class="cstack">' + rows.join('') + '</div></div>';
   });
   if (!shown) h += '<div class="sec"><div class="card empty">' + esc(t('Everyone has paid ✓', 'الجميع سدّد ✓')) + '</div></div>';
-  h += '<div class="sec" style="margin-top:12px"><button class="btn ghost block" onclick="UI.cShowPaid=!UI.cShowPaid;render()">' + esc(UI.cShowPaid ? t('Hide what is paid', 'إخفاء المدفوع') : t('Show what is paid', 'إظهار المدفوع')) + '</button></div>';
+  h += '<div class="sec" style="margin-top:12px"><button class="btn ghost block" onclick="UI.cShowPaid=!UI.cShowPaid;render()">' + esc(UI.cShowPaid ? t('Hide who paid', 'إخفاء من دفع') : t('Show who paid too', 'إظهار من دفع أيضاً')) + '</button></div>';
+  if (UI.cQ) setTimeout(function() { colFilter(UI.cQ); }, 0);
   return h;
 }
+/* The book People mode lists from: the shared book when there is one (it has every apartment). */
+function colPeopleBase() {
+  var bs = colBooks();
+  return bs.filter(function(r) { return r.ns.building && r.ns.building.kind === 'shared'; })[0] || bs.filter(function(r) { return r.b.id === S.building.id; })[0] || bs[0] || null;
+}
+function colLinkedToShared(r) { return r.ns.units.some(function(u) { return !!u.linked_unit_id; }); }
+/* The apartment's own building name (from the shared book, the building it is linked to). */
+function colHomeName(u, lg) {
+  var nm = null;
+  if (isSharedBook() && u.linked_unit_id) colBooks().forEach(function(r) { if (!nm && r.ns.building.kind !== 'shared' && byId(r.ns.units, u.linked_unit_id)) nm = lg === 'ar' ? (r.b.name_ar || r.b.name) : r.b.name; });
+  return nm || (lg === 'ar' ? (S.building.name_ar || S.building.name) : S.building.name);
+}
+function colBookNs(bid) { var r = colBooks().filter(function(x) { return x.b.id === bid; })[0]; return r ? r.ns : null; }
 function colOpenBill(bid, cid) { colSwitch(bid, function() { UI.tab = 'collect'; UI.cMode = 'bill'; UI.cBill = cid; var c = byId(S.cycles, cid); if (c) UI.cFam = bid + '|' + colFamOf(c); }); }
 function renderColDash() {
   var h = colPreviewBar() + renderTopbar(t('Dashboard', 'لوحة المعلومات'));

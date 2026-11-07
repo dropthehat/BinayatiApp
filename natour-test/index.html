@@ -7782,14 +7782,14 @@ function currentLayout(block) {
 function layoutSummary(l) {
   return t(l.floors + ' floors × ' + l.per + (l.under ? ' · ' + l.under + ' underground' : ''), l.floors + ' طوابق × ' + l.per + (l.under ? ' · ' + l.under + ' سفلية' : ''));
 }
-function layoutPlan(l, block, assign) {
+function layoutPlan(l, block, assign, addEmpty) {
   block = block || '';
   var target = layoutCodes(l.floors, l.per, l.under), want = {};
   target.forEach(function(c) { want[c] = 1; });
   var byCode = {};
   S.units.forEach(function(u) { if (blockOf(u) === block) byCode[String(u.code).toUpperCase()] = u; });
   assign = assign || layoutAssignStart(target, block);
-  var add = [], revive = [], drop = [], place = [], unplace = [], taken = {};
+  var add = [], revive = [], drop = [], place = [], unplace = [], taken = {}, empty = [];
   target.forEach(function(c) { if (assign[c]) taken[assign[c]] = c; });
   target.forEach(function(c) {
     var a = assign[c] && byId(S.units, assign[c]), u = byCode[c];
@@ -7800,7 +7800,7 @@ function layoutPlan(l, block, assign) {
       return;
     }
     if (u && taken[u.id] && taken[u.id] !== c) return; // that apartment was moved to another spot; its code stays with it
-    if (!u) add.push(c); else if (u.active === false) revive.push(u);
+    if (!u) { if (addEmpty) add.push(c); else empty.push(c); } else if (u.active === false) revive.push(u);
   });
   activeUnits().forEach(function(u) {
     if (blockOf(u) !== block || taken[u.id] || drop.indexOf(u) >= 0) return;
@@ -7808,7 +7808,7 @@ function layoutPlan(l, block, assign) {
     if (placedHere(u)) { if (!want[slotCode(u)]) unplace.push(u); return; }
     if (LAYOUT_CODE.test(c) && !want[c]) drop.push(u);
   });
-  return { target: target, add: add, revive: revive, drop: drop, place: place, unplace: unplace, assign: assign };
+  return { target: target, add: add, revive: revive, drop: drop, place: place, unplace: unplace, assign: assign, empty: empty };
 }
 /* Who is in which slot now: apartments placed by hand, or whose code is the slot. */
 function layoutAssignStart(target, block) {
@@ -7846,17 +7846,18 @@ SHEETS.layout = function(d) {
   if (!d.l) d.l = currentLayout(bl.length > 1 ? d.block : null);
   var l = d.l, blk = bl.length > 1 ? d.block : '';
   if (!d.assign) d.assign = layoutAssignStart(layoutCodes(l.floors, l.per, l.under), blk);
-  var plan = layoutPlan(l, blk, d.assign);
+  var plan = layoutPlan(l, blk, d.assign, !!d.addEmpty);
   var h = '<h3>' + esc(t('Floors & apartments', 'الطوابق والشقق')) + '</h3>';
   h += '<div class="chips" style="padding:4px 0 8px;flex-wrap:wrap">';
   bl.forEach(function(b) { h += '<button class="chip' + (d.block === b ? ' on' : '') + '" onclick="UI.sheet.data={block:' + jsArg(b) + '};render()">' + esc(blockLabel(b)) + '</button>'; });
   h += '<button class="chip" onclick="addBlock()">＋ ' + esc(bl.length > 1 ? t('Another block', 'بلوك آخر') : t('This is a compound with blocks', 'هذا مجمّع ببلوكات')) + '</button></div>';
-  h += '<p class="lead">' + esc(t('Set the floors, then put each apartment in its place. Codes and names stay as they are.', 'حدّد الطوابق، ثم ضع كل شقة في مكانها. الرموز والأسماء تبقى كما هي.')) + '</p>';
+  h += '<p class="lead">' + esc(t('This edits ' + S.building.name + '. Set the floors with + and −, then put each apartment in its place. Codes and names stay as they are.', 'هذا يعدّل ' + S.building.name + '. حدّد الطوابق بـ + و −، ثم ضع كل شقة في مكانها. الرموز والأسماء تبقى كما هي.')) + '</p>';
   h += '<div class="ob-stage" style="height:190px;padding:0">' + obScene(plan.target.length, plan.target, d.block ? (S.building.name + ' ' + d.block).slice(0, 12) : S.building.name, false) + '</div>';
   [['floors', t('Floors', 'الطوابق'), 1, 12], ['per', t('Apartments per floor', 'شقق في الطابق'), 1, 6], ['under', t('Underground floors', 'طوابق سفلية'), 0, 3]].forEach(function(x) {
     h += '<div class="ob-step"><div><b>' + esc(x[1]) + '</b></div><div class="stepper"><button onclick="layoutBump(\'' + x[0] + '\',-1,' + x[2] + ',' + x[3] + ')">−</button><span>' + l[x[0]] + '</span><button onclick="layoutBump(\'' + x[0] + '\',1,' + x[2] + ',' + x[3] + ')">+</button></div></div>';
   });
   h += layoutGridHtml(plan, l, blk);
+  if (plan.empty.length || d.addEmpty) h += '<div class="switch-row"><div><b>' + esc(t('Add empty apartments for the empty spots', 'أضف شققاً فارغة للأماكن الفارغة')) + '</b><small>' + esc(t('Off: empty spots stay empty. Nothing is added.', 'مطفأ: الأماكن الفارغة تبقى فارغة. لا يُضاف شيء.')) + '</small></div><button class="sw' + (d.addEmpty ? ' on' : '') + '" onclick="UI.sheet.data.addEmpty=!UI.sheet.data.addEmpty;render()"></button></div>';
   var lines = [];
   if (plan.place.length) lines.push(t('Places ', 'يضع ') + plan.place.map(function(x) { return x.u.code + ' → ' + x.slot; }).join(', '));
   if (plan.unplace.length) lines.push(t('Takes off the floors ', 'يُخرج من الطوابق ') + plan.unplace.map(function(u) { return u.code; }).join(', '));
@@ -7914,7 +7915,7 @@ function layoutBump(k, dlt, min, max) {
 }
 function applyLayout() {
   var blk = blocks().length > 1 ? UI.sheet.data.block : '';
-  var plan = layoutPlan(UI.sheet.data.l, blk, UI.sheet.data.assign), ops = Promise.resolve();
+  var plan = layoutPlan(UI.sheet.data.l, blk, UI.sheet.data.assign, !!UI.sheet.data.addEmpty), ops = Promise.resolve();
   var btn = document.querySelector('.sheet .foot .btn.pri'); if (btn) btn.disabled = true;
   // Clear the spots being moved first, then place, so two apartments never share a spot on the way.
   plan.place.concat(plan.unplace.map(function(u) { return { u: u, slot: null }; })).forEach(function(x) {

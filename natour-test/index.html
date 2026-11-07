@@ -713,6 +713,8 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .cblock { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 10px 14px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--card); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
 .cblock.on { border-color: var(--ink); }
 .cblock small { color: var(--mut); font-weight: 600; }
+.add-h { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--mut); margin: 16px 4px 6px; }
+.add-h:first-of-type { margin-top: 8px; }
 .camt { display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
 .camt small { color: var(--mut); font-size: 11.5px; font-weight: 600; }
 
@@ -5602,6 +5604,7 @@ function renderHomeManager() {
   cash.pending.forEach(function(ho) {
     h += '<div class="sec"><div class="banner warn"><div class="grow"><b>' + esc(t(memberName(ho.collector_id) + ' handed over ' + fmtPair({ USD: num(ho.usd), LBP: num(ho.lbp) }), memberName(ho.collector_id) + ' سلّم ' + fmtPair({ USD: num(ho.usd), LBP: num(ho.lbp) }))) + '</b>' + esc(t('Confirm once the cash is in your hands.', 'أكّد عند استلام المبلغ.')) + '</div><button class="btn sm ok" onclick="openSheet(\'handover\',{id:' + jsArg(ho.id) + '})">' + esc(t('Review', 'مراجعة')) + '</button></div></div>';
   });
+  h += regularDueHtml();
   visibleCycles().filter(function(c) { return c.published === false && (!cyc || c.id !== cyc.id); }).slice(0, 1).forEach(function(d0) {
     h += '<div class="sec"><div class="banner info"><div class="grow"><b>' + esc(cycleTitle(d0) + t(' is a draft', ' مسودة')) + '</b>' + esc(t('Residents can\'t see it until you show it.', 'السكان لا يرونها حتى تُظهرها.')) + '</div><button class="btn sm pri" onclick="openCycleAdjust(' + jsArg(d0.id) + ')">' + esc(t('Review', 'مراجعة')) + '</button></div></div>';
   });
@@ -6129,13 +6132,17 @@ function renderMoney() {
   h += '<div class="chips" style="margin-top:16px"><button class="chip' + (f === 'all' ? ' on' : '') + '" onclick="UI.booksCycle=\'all\';render()">' + esc(t('Everything', 'الكل')) + '</button>';
   visibleCycles().forEach(function(c) { h += '<button class="chip' + (f === c.id ? ' on' : '') + '" onclick="UI.booksCycle=' + jsArg(c.id) + ';render()">' + esc(cycleTitle(c)) + '</button>'; });
   h += '</div>';
-  var entries = ledger(f === 'all' ? null : f);
-  var tin = pair(), tout = pair();
-  entries.forEach(function(e) { if (e.kind === 'in') addTo(tin, e.cur, e.amount); if (e.kind === 'out') addTo(tout, e.cur, e.amount); });
+  var all = ledger(f === 'all' ? null : f);
+  // Building money only: supplier money (collected for internet, dish, the collector's fee…) is shown apart.
+  var tin = pair(), tout = pair(), sin = pair(), sout = pair();
+  all.forEach(function(e) { var a = e.sup ? (e.kind === 'in' ? sin : sout) : (e.kind === 'in' ? tin : e.kind === 'out' ? tout : null); if (a && e.kind !== 'move') addTo(a, e.cur, e.amount); });
+  var showSup = !!UI.showSup, entries = all.filter(function(e) { return showSup ? e.sup : !e.sup; });
   h += '<div class="sec"><div class="card pad"><div class="kv"><span>' + esc(t('Money in', 'المقبوض')) + '</span><b style="color:var(--ok)">' + esc(fmtPair(tin)) + '</b></div><div class="kv"><span>' + esc(t('Money out', 'المصروف')) + '</span><b style="color:var(--bad)">' + esc(fmtPair(tout)) + '</b></div>';
+  if (pairUsd(sin) > 0.005 || pairUsd(sout) > 0.005) h += '<button class="kv" style="width:100%;background:none;border:0;padding:8px 0 0;color:inherit;font:inherit;text-align:start;cursor:pointer" onclick="UI.showSup=!UI.showSup;render()"><span style="color:var(--mut)">' + esc(t('Supplier money, not the building\'s', 'مال الموردين، ليس للبناية')) + '<br><small>' + esc(t('Collected ', 'جُبي ') + fmtPair(sin) + t(' · passed on ', ' · سُلّم ') + fmtPair(sout)) + '</small></span><b style="color:var(--info);font-size:13px">' + esc(showSup ? t('Hide ‹', 'إخفاء ‹') : t('Show ›', 'عرض ›')) + '</b></button>';
   if (f !== 'all') h += '<button class="btn sec block" style="margin-top:10px" onclick="shareReport(' + jsArg(f) + ')">' + esc(t('Share the month\'s report on WhatsApp', 'شارك تقرير الشهر على واتساب')) + '</button>';
   h += '</div>';
   var day = '';
+  if (showSup) h += '<div class="banner info" style="margin-top:12px"><div class="grow">' + esc(t('Showing supplier money only: collected for suppliers and passed on to them.', 'يُعرض مال الموردين فقط: ما جُبي لهم وما سُلّم إليهم.')) + '</div><button class="btn sm sec" onclick="UI.showSup=false;render()">' + esc(t('Back', 'رجوع')) + '</button></div>';
   if (!entries.length) h += '<div class="card empty" style="margin-top:12px">' + esc(t('Nothing recorded yet', 'لا شيء مسجّل بعد')) + '</div>';
   entries.slice(0, 200).forEach(function(e, i) {
     var d = dayKey(String(e.at));
@@ -6154,11 +6161,11 @@ function ledger(cycleId) {
   if (cycleId) chargesOf(cycleId).forEach(function(c) { cycCharges[c.id] = 1; });
   livePayments().forEach(function(p) {
     if (cycleId && !cycCharges[p.charge_id]) return;
-    var u = byId(S.units, p.unit_id), ch = byId(S.charges, p.charge_id);
-    var k = p.unit_id + '|' + dayKey(p.received_at) + '|' + p.channel + '|' + p.received_by + '|' + p.cur;
+    var u = byId(S.units, p.unit_id), ch = byId(S.charges, p.charge_id), sup = !!(ch && ch.pass_through);
+    var k = p.unit_id + '|' + dayKey(p.received_at) + '|' + p.channel + '|' + p.received_by + '|' + p.cur + '|' + sup;
     var g = groups[k];
     if (!g) {
-      g = groups[k] = { kind: 'in', icon: '↓', at: p.received_at, amount: 0, cur: p.cur, titles: [], unit: u, p: p };
+      g = groups[k] = { kind: 'in', icon: '↓', at: p.received_at, amount: 0, cur: p.cur, titles: [], unit: u, p: p, sup: sup };
       out.push(g);
     }
     g.amount += num(p.amount);
@@ -6177,11 +6184,11 @@ function ledger(cycleId) {
     if (cycleId && e.cycle_id !== cycleId && !(e.charge_id && cycCharges[e.charge_id])) return;
     if (e.payment_id) { // passed on automatically, one per payment: one line per charge and collector
       var k = e.charge_id + '|' + (e.paid_by || 'unknown') + '|' + e.cur, x = autoG[k], at = e.spent_on + 'T12:00:00';
-      if (!x) { x = autoG[k] = { kind: 'out', icon: catIcon('supplier'), at: at, amount: 0, cur: e.cur, title: L(e), sub: t('Passed on by ', 'سلّمها ') + pocketName(e.paid_by) + t(' · counted when collected', ' · تُحتسب عند الجباية'), onclick: isManager() ? 'openSheet(\'colbook\',{k:' + jsArg(e.paid_by || 'unknown') + '})' : '' }; out.push(x); }
+      if (!x) { x = autoG[k] = { sup: true, kind: 'out', icon: catIcon('supplier'), at: at, amount: 0, cur: e.cur, title: L(e), sub: t('Passed on by ', 'سلّمها ') + pocketName(e.paid_by) + t(' · counted when collected', ' · تُحتسب عند الجباية'), onclick: isManager() ? 'openSheet(\'colbook\',{k:' + jsArg(e.paid_by || 'unknown') + '})' : '' }; out.push(x); }
       x.amount += num(e.amount); if (at > x.at) x.at = at;
       return;
     }
-    out.push({ kind: 'out', icon: catIcon(e.charge_id ? 'supplier' : e.cat), at: (e.spent_on === dayKey(e.created_at) ? e.created_at : e.spent_on + 'T12:00:00'), amount: num(e.amount), cur: e.cur,
+    out.push({ sup: !!e.charge_id, kind: 'out', icon: catIcon(e.charge_id ? 'supplier' : e.cat), at: (e.spent_on === dayKey(e.created_at) ? e.created_at : e.spent_on + 'T12:00:00'), amount: num(e.amount), cur: e.cur,
                title: L(e), sub: catName(e.charge_id ? 'supplier' : e.cat) + ' · ' + (e.paid_from === 'collector' ? t('paid by ', 'دفعه ') + pocketName(e.paid_by) : t('from the safe', 'من الصندوق')) + (e.ref ? ' · #' + e.ref : '') + (e.note ? ' · ' + e.note : '') + origNote(e),
                onclick: isManager() || e.paid_by === (S.me && S.me.id) ? 'openSheet(\'expense\',{id:' + jsArg(e.id) + '})' : '' });
   });
@@ -6204,6 +6211,7 @@ function shareReport(cycId) {
   lines.push('');
   lines.push(t('Collected: ', 'المحصّل: ') + fmtPair(s.paid) + t(' of ', ' من ') + fmtPair(s.due) + ' (' + s.pct + '%)');
   lines.push(t(s.settled + ' of ' + s.units + ' apartments have paid', s.settled + ' من ' + s.units + ' شقق سددت'));
+  if (pairUsd(s.supPaid) > 0.005) lines.push(t('Also collected for suppliers (internet, dish…) and passed on: ', 'جُبي أيضاً للموردين (إنترنت، دش…) وسُلّم لهم: ') + fmtPair(s.supPaid));
   if (spent.length) {
     lines.push('');
     lines.push('*' + t('Spent', 'المصاريف') + '*');
@@ -6586,6 +6594,8 @@ SHEETS.expense = function(d) {
   if (sup && !e) h += '<p class="lead">' + esc(t('Only for supplier money that reached the safe. Money a collector collected and handed to the supplier himself is ticked from Supplier bills.', 'فقط لمال المورد الذي وصل إلى الصندوق. ما جباه الجابي وسلّمه للمورد بنفسه يُؤشَّر من فواتير الموردين.')) + '</p>';
   if (!e && !sup) h += '<p class="lead">' + esc(t('Anything paid for the building: fuel, repairs, cleaning…', 'أي شيء دُفع للبناية: مازوت، تصليح، تنظيف…')) + '</p>';
   h += scanBlockExpense(st, e);
+  if (!sup && !e && d.reg && !st.regApplied) { applyRegular(d.reg, true); }
+  if (!sup && !e) h += regularChipsHtml(st);
   if (!sup) {
     h += '<div class="chips" style="padding:2px 0 4px;flex-wrap:wrap">';
     Object.keys(CATS).forEach(function(k) { if (k === 'supplier') return; h += '<button class="chip' + (v.cat === k ? ' on' : '') + '" onclick="UI.sheet.data.cat=\'' + k + '\';keepExpense();render()">' + CATS[k][0] + ' ' + esc(catName(k)) + '</button>'; });
@@ -6610,12 +6620,108 @@ SHEETS.expense = function(d) {
   h += '<label class="field"><span>' + esc(t('Month', 'الشهر')) + '</span><select class="input" id="ex-cyc">' + visibleCycles().map(function(c) { return '<option value="' + esc(c.id) + '"' + (c.id === (st.cyc || v.cycle_id) ? ' selected' : '') + '>' + esc(cycleTitle(c)) + '</option>'; }).join('') + '</select></label></div>';
   h += '<label class="field"><span>' + esc(t('Receipt or invoice number (optional)', 'رقم الإيصال (اختياري)')) + '</span><input class="input" id="ex-ref" value="' + esc(st.ref != null ? st.ref : (v.ref || '')) + '"></label>';
   h += '<label class="field"><span>' + esc(t('Notes (optional)', 'ملاحظات (اختياري)')) + '</span><textarea class="input" id="ex-note" rows="2" style="min-height:64px;resize:vertical" placeholder="' + esc(t('e.g. glass cleaner for the entrance door, bought at Spinneys', 'مثلاً منظّف زجاج لباب المدخل')) + '">' + esc(st.note != null ? st.note : (v.note || '')) + '</textarea></label>';
+  if (!sup && !e && isManager() && !st.reg) h += '<button class="btn sec sm" style="margin-top:4px" onclick="keepExpense();regularFromExpense()">☆ ' + esc(t('Make this a regular bill', 'اجعلها فاتورة دورية')) + '</button><small class="hint" style="display:block;margin-top:4px">' + esc(t('Next time it is one tap: only the amount to type.', 'في المرة القادمة بنقرة واحدة: تكتب المبلغ فقط.')) + '</small>';
   h += '<div id="sheet-err" class="err"></div><div class="foot">';
   if (e && (isManager() || (e.paid_by === S.me.id && !e.handover_id))) h += '<button class="btn danger" onclick="voidExpense(' + jsArg(e.id) + ')">' + esc(t('Cancel it', 'إلغاء')) + '</button>';
   h += '<button class="btn sec" onclick="closeSheet()">' + esc(t('Close', 'إغلاق')) + '</button>';
   if (!e || isManager()) h += '<button class="btn pri" onclick="saveExpense(' + jsArg(e ? e.id : '') + ',' + jsArg(sup ? sup.id : '') + ')">' + esc(t('Save', 'حفظ')) + '</button>';
   return h + '</div>';
 };
+/* ---------------------------------------------------------------------------
+   Regular bills: bills the building pays again and again with a changing amount
+   (moteur, elevator). Set up once, then Money spent offers them as one tap and
+   only the amount is typed. Kept in the building's settings.
+   --------------------------------------------------------------------------- */
+function regularBills() { var r = setting('regular_bills'); return Array.isArray(r) ? r : []; }
+function regMatch(e, r) { return !e.charge_id && e.cat === r.cat && String(e.title || '').toLowerCase().indexOf(String(r.name || '').toLowerCase()) === 0; }
+function regLast(r) {
+  var xs = liveExpenses().filter(function(e) { return regMatch(e, r); }).sort(function(a, b) { return String(b.spent_on).localeCompare(String(a.spent_on)); });
+  return xs[0] || null;
+}
+/* Entered this calendar month? */
+function regDone(r) { var m = todayIso().slice(0, 7); return liveExpenses().some(function(e) { return regMatch(e, r) && String(e.spent_on).slice(0, 7) === m; }); }
+function regularChipsHtml(st) {
+  var rs = regularBills();
+  if (!rs.length) return '';
+  return '<div class="field" style="margin-bottom:6px"><span>' + esc(t('Regular bills', 'فواتير دورية')) + '</span><div class="chips" style="padding:2px 0 4px;flex-wrap:wrap">' + rs.map(function(r) {
+    var last = regLast(r);
+    return '<button class="chip' + (st.reg === r.id ? ' on' : '') + '" onclick="keepExpense();applyRegular(' + jsArg(r.id) + ')">' + catIcon(r.cat) + ' ' + esc(LANG === 'ar' && r.name_ar ? r.name_ar : r.name) + (last ? ' <span class="cnt">' + esc(fmt(last.amount, last.cur)) + '</span>' : '') + '</button>';
+  }).join('') + '</div></div>';
+}
+function applyRegular(id, silent) {
+  var r = regularBills().filter(function(x) { return x.id === id; })[0], d = UI.sheet && UI.sheet.data;
+  if (!r || !d) return;
+  d.reg = r.id; d.regApplied = true;
+  d.title = r.name; d.title_ar = r.name_ar || ''; d.cat = r.cat; d.cur = r.cur || 'USD';
+  d.fx = r.cur === 'LBP' && r.fx ? String(r.fx) : d.fx;
+  if (isManager()) d.from = r.from || 'safe';
+  if (!silent) { render(); setTimeout(function() { var a = document.getElementById('ex-amt'); if (a) a.focus(); }, 50); }
+}
+function regularFromExpense() {
+  var d = UI.sheet.data, name = (d.title || '').trim();
+  if (!name) return sheetErr(t('Write what it is for first, e.g. "Bechalani · Moteur"', 'اكتب لماذا أولاً، مثلاً "بشعلاني · موتور"'));
+  var r = { id: 'r' + Date.now().toString(36), name: name, name_ar: (d.title_ar || '').trim() || null, cat: d.cat || 'other', cur: d.cur || 'USD', fx: d.cur === 'LBP' && num(d.fx) ? num(d.fx) : null, from: d.from || 'safe' };
+  saveRegulars(regularBills().concat([r])).then(function() { d.reg = r.id; d.regApplied = true; toast(t('Saved as a regular bill', 'حُفظت كفاتورة دورية')); render(); }, fail);
+}
+function saveRegulars(list) {
+  var st = Object.assign({}, S.building.settings || {}); st.regular_bills = list;
+  S.building.settings = st;
+  return dbUpdate('buildings', S.building.id, { settings: st });
+}
+function regularBillsSettingsHtml() {
+  if (!isManager()) return '';
+  var rs = regularBills();
+  var h = '<div class="sec"><div class="sec-h"><h2>' + esc(t('Regular bills', 'الفواتير الدورية')) + '</h2><button onclick="openSheet(\'regbill\',{})">＋ ' + esc(t('Add', 'إضافة')) + '</button></div>';
+  if (!rs.length) return h + '<div class="card empty">' + esc(t('Bills the building pays every month with a different amount, like the moteur or the elevator. Add one and Money spent offers it in one tap.', 'فواتير تدفعها البناية كل شهر بمبلغ مختلف، مثل الموتور أو المصعد. أضف واحدة وتظهر في المصاريف بنقرة.')) + '</div></div>';
+  h += '<div class="card list">' + rs.map(function(r) {
+    var last = regLast(r);
+    return '<button class="li" onclick="openSheet(\'regbill\',{id:' + jsArg(r.id) + '})"><div class="ic">' + catIcon(r.cat) + '</div><div class="grow"><b>' + esc(LANG === 'ar' && r.name_ar ? r.name_ar : r.name) + '</b><small>' + esc([catName(r.cat), r.from === 'collector' ? t('paid by ', 'يدفعها ') + collectorLabel() : t('from the safe', 'من الصندوق'), r.cur === 'LBP' ? 'LBP' + (r.fx ? ' @ ' + num(r.fx).toLocaleString('en-US') : '') : '$', last ? t('last ', 'آخر ') + fmt(last.amount, last.cur) + ' · ' + dateLabel(last.spent_on) : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
+  }).join('') + '</div></div>';
+  return h;
+}
+SHEETS.regbill = function(d) {
+  var r = d.id ? regularBills().filter(function(x) { return x.id === d.id; })[0] : null;
+  var v = Object.assign({ name: '', name_ar: '', cat: 'gen', cur: 'USD', fx: '', from: 'safe' }, r || {}, d.st || {});
+  var h = '<h3>' + esc(r ? t('Regular bill', 'فاتورة دورية') : t('New regular bill', 'فاتورة دورية جديدة')) + '</h3><p class="lead">' + esc(t('Its name, category and who pays stay the same every time; only the amount changes.', 'الاسم والفئة ومن يدفع تبقى نفسها؛ المبلغ فقط يتغيّر.')) + '</p>';
+  h += '<label class="field"><span>' + esc(t('Name (supplier · what)', 'الاسم (المورد · ماذا)')) + '</span><input class="input" id="rb-name" value="' + esc(v.name) + '" placeholder="Bechalani · Moteur"></label>';
+  h += '<label class="field"><span>' + esc(t('In Arabic (optional)', 'بالعربية (اختياري)')) + '</span><input class="input" id="rb-ar" dir="rtl" value="' + esc(v.name_ar || '') + '"></label>';
+  h += '<div class="chips" style="padding:2px 0 8px;flex-wrap:wrap">' + Object.keys(CATS).filter(function(k) { return k !== 'supplier'; }).map(function(k) { return '<button class="chip' + (v.cat === k ? ' on' : '') + '" onclick="regKeep();UI.sheet.data.st.cat=\'' + k + '\';render()">' + CATS[k][0] + ' ' + esc(catName(k)) + '</button>'; }).join('') + '</div>';
+  h += '<label class="field"><span>' + esc(t('Usually in', 'عادة بعملة')) + '</span><div class="seg"><button class="' + (v.cur === 'USD' ? 'on' : '') + '" onclick="regKeep();UI.sheet.data.st.cur=\'USD\';render()">USD</button><button class="' + (v.cur === 'LBP' ? 'on' : '') + '" onclick="regKeep();UI.sheet.data.st.cur=\'LBP\';render()">LBP</button></div></label>';
+  if (v.cur === 'LBP') h += '<label class="field"><span>' + esc(t('Its own exchange rate (empty = it changes each bill)', 'سعر الصرف الخاص (فارغ = يتغيّر كل فاتورة)')) + '</span><input class="input" id="rb-fx" inputmode="decimal" value="' + esc(v.fx || '') + '" placeholder="' + esc(String(rate())) + '"></label>';
+  h += '<label class="field"><span>' + esc(t('Paid from', 'تُدفع من')) + '</span><div class="seg"><button class="' + (v.from !== 'collector' ? 'on' : '') + '" onclick="regKeep();UI.sheet.data.st.from=\'safe\';render()">' + esc(t('The safe', 'الصندوق')) + '</button><button class="' + (v.from === 'collector' ? 'on' : '') + '" onclick="regKeep();UI.sheet.data.st.from=\'collector\';render()">' + esc(t(collectorLabel() + '\'s pocket', 'جيب ' + collectorLabel())) + '</button></div></label>';
+  h += '<div id="sheet-err" class="err"></div><div class="foot">' + (r ? '<button class="btn danger" onclick="regDelete(' + jsArg(r.id) + ')">' + esc(t('Remove', 'حذف')) + '</button>' : '') + '<button class="btn sec" onclick="closeSheet()">' + esc(t('Close', 'إغلاق')) + '</button><button class="btn pri" onclick="regSave(' + jsArg(r ? r.id : '') + ')">' + esc(t('Save', 'حفظ')) + '</button></div>';
+  return h;
+};
+function regKeep() {
+  var d = UI.sheet.data; d.st = d.st || {};
+  d.st.name = val('rb-name'); d.st.name_ar = val('rb-ar');
+  if (document.getElementById('rb-fx')) d.st.fx = val('rb-fx');
+}
+function regSave(id) {
+  regKeep();
+  var d = UI.sheet.data, r0 = id ? regularBills().filter(function(x) { return x.id === id; })[0] : {};
+  var r = Object.assign({}, r0, d.st);
+  r.name = (r.name || '').trim(); r.name_ar = (r.name_ar || '').trim() || null;
+  if (!r.name) return sheetErr(t('Give it a name', 'أعطها اسماً'));
+  r.cat = r.cat || 'gen'; r.cur = r.cur || 'USD'; r.from = r.from || 'safe'; r.fx = r.cur === 'LBP' && num(r.fx) ? num(r.fx) : null;
+  if (!id) r.id = 'r' + Date.now().toString(36);
+  var list = regularBills().filter(function(x) { return x.id !== r.id; }).concat([r]);
+  saveRegulars(list).then(function() { closeSheet(); toast(t('Saved', 'تم الحفظ')); }, function(e) { sheetErr(e.message); });
+}
+function regDelete(id) {
+  saveRegulars(regularBills().filter(function(x) { return x.id !== id; })).then(function() { closeSheet(); toast(t('Removed. Past expenses stay.', 'حُذفت. المصاريف السابقة تبقى.')); }, fail);
+}
+/* Home: regular bills not entered yet this month. */
+function regularDueHtml() {
+  if (!isManager() || isSharedBook()) return '';
+  var due = regularBills().filter(function(r) { return !regDone(r); });
+  if (!due.length) return '';
+  var mon = new Date().toLocaleDateString(LANG === 'ar' ? 'ar-LB' : 'en-GB', { month: 'long' });
+  return '<div class="sec"><div class="sec-h"><h2>' + esc(t('Bills to enter for ' + mon, 'فواتير لإدخالها عن ' + mon)) + '</h2></div><div class="card list">' + due.map(function(r) {
+    var last = regLast(r);
+    return '<button class="li" onclick="openSheet(\'expense\',{reg:' + jsArg(r.id) + '})"><div class="ic">' + catIcon(r.cat) + '</div><div class="grow"><b>' + esc(LANG === 'ar' && r.name_ar ? r.name_ar : r.name) + '</b><small>' + esc(last ? t('Last: ', 'الأخيرة: ') + fmt(last.amount, last.cur) + ' · ' + dateLabel(last.spent_on) : t('Not entered yet', 'لم تُدخل بعد')) + '</small></div><span class="chev">›</span></button>';
+  }).join('') + '</div></div>';
+}
 function expensePreset(i) {
   if (i === '') return;
   keepExpense();
@@ -7757,6 +7863,7 @@ function renderSettingsSec() {
   h += '<button class="li" onclick="exportData()"><div class="ic">⬇︎</div><div class="grow"><b>' + esc(t('Download a copy', 'تنزيل نسخة')) + '</b><small>' + esc(t('Everything in this building, as a file', 'كل بيانات البناية في ملف')) + '</small></div></button>';
   h += '<button class="li" onclick="openSheet(\'server\')"><div class="ic">☁︎</div><div class="grow"><b>' + esc(t('Server', 'الخادم')) + '</b><small>' + esc(isCloud() ? t('Connected · syncing between phones', 'متصل · مزامنة بين الهواتف') : t('Not connected · this phone only', 'غير متصل · هذا الهاتف فقط')) + '</small></div><span class="chev">›</span></button>';
   h += '</div></div>';
+  h += regularBillsSettingsHtml();
   h += renderSupportCard();
   if (S.role === 'manager' && !UI.pvCol) h += '<div class="sec"><div class="card list"><button class="li" onclick="openSheet(\'delbuilding\',{})"><div class="ic" style="color:var(--bad)">🗑</div><div class="grow"><b style="color:var(--bad)">' + esc(t('Delete this building', 'حذف هذه البناية')) + '</b><small>' + esc(t('Removes it with its apartments, months, payments and expenses', 'تُحذف مع شققها وأشهرها ودفعاتها ومصاريفها')) + '</small></div><span class="chev">›</span></button></div></div>';
   return h;
@@ -7874,29 +7981,37 @@ function viewAs(uid) {
   myBuildingList().then(function(l) { UI.multi = l.length > 1; render(); });
 }
 SHEETS.add = function() {
-  var items = [];
+  // Grouped by the question the person is asking: did money come in, go out, or is it something residents will pay?
+  var groups = [];
   if (isManager()) {
-    items.push(['pay', '↓', t('Record a payment', 'سجّل دفعة'), t('Any amount, oldest charges first', 'أي مبلغ، الأقدم أولاً')]);
-    items.push(['expense', '↑', t('Money spent', 'مصروف'), t('Fuel, repairs, cleaning…', 'مازوت، تصليح، تنظيف…')]);
-    if (aiReady() && feature('transfer_scan')) items.splice(1, 0, ['scanpay', '📷', t('Read a transfer screenshot', 'اقرأ لقطة تحويل'), t('Whish, OMT, bank: fills the payment for you', 'Whish، OMT، بنك: تملأ الدفعة عنك')]);
-    if (aiReady() && feature('expense_scan')) items.push(['scanexp', '🧾', t('Scan a receipt', 'امسح إيصالاً'), t('Photo of an invoice becomes an expense', 'صورة الفاتورة تصبح مصروفاً')]);
-    items.push(['charge', '🧾', t('Add a charge', 'أضف رسماً'), t('A bill to split, a fee, a supplier service', 'فاتورة، رسم، خدمة مورّد')]);
-    items.push(['month', '📅', t('Open the next month', 'افتح الشهر التالي'), t('Copies repeating charges for you to review', 'ينسخ الرسوم المتكررة لتراجعها')]);
-    if (collectorsHolding().length) items.push(['handrecv', '⇄', t('Cash received from a collector', 'استلمت نقداً من الجابي'), t('Even if they didn\'t send a handover', 'حتى لو لم يرسل تسليماً')]);
-    items.push(['project', '◆', t('New project', 'مشروع جديد'), t('Solar, elevator, painting…', 'طاقة شمسية، مصعد، دهان…')]);
-    items.push(['task', '✅', t('Add a task', 'أضف مهمة'), t('Reminders that repeat', 'تذكيرات متكررة')]);
+    groups.push([t('Money came in', 'دخل مال'), [
+      ['pay', '↓', t('An apartment paid', 'شقة دفعت'), t('Cash, Whish or bank. A transfer screenshot fills it for you.', 'نقداً أو Whish أو مصرف. لقطة التحويل تملؤها عنك.')],
+      collectorsHolding().length ? ['handrecv', '⇄', t('Cash from the collector', 'نقد من الجابي'), t('He handed you what he collected', 'سلّمك ما جباه')] : null]]);
+    groups.push([t('Money went out', 'خرج مال'), [
+      ['expense', '↑', t('The building paid for something', 'البناية دفعت لشيء'), t('Moteur bill, elevator, cleaning products… Scan the receipt inside.', 'فاتورة الموتور، المصعد، مواد التنظيف… امسح الإيصال من الداخل.')]]]);
+    groups.push([t('What residents pay', 'ما يدفعه السكان'), [
+      ['month', '📅', t('Open the next month', 'افتح الشهر التالي'), t('Copies the monthly fees for you to check', 'ينسخ الرسوم الشهرية لتراجعها')],
+      ['charge', '🧾', t('New bill to split, or a fee', 'فاتورة للتقسيم أو رسم جديد'), t('Added to this month: a repair split by apartment, internet, dish…', 'تُضاف لهذا الشهر: تصليح يُقسم، إنترنت، دش…')],
+      ['project', '◆', t('New project', 'مشروع جديد'), t('Collected separately: solar, painting, elevator…', 'يُجبى وحده: طاقة شمسية، دهان، مصعد…')]]]);
+    groups.push([t('Reminder', 'تذكير'), [['task', '✅', t('Add a task', 'أضف مهمة'), t('Water tank cleaning, elevator check… can repeat', 'تنظيف الخزان، فحص المصعد… يمكن أن يتكرر')]]]);
   } else {
-    items.push(['pay', '↓', t('Record a payment', 'سجّل دفعة'), t('Someone paid part of their bill', 'دفع أحدهم جزءاً من فاتورته')]);
-    items.push(['expense', '↑', t('I spent building cash', 'صرفت من مال البناية'), t('Comes off what you hand over', 'يُخصم مما تسلّمه')]);
-    if (aiReady() && feature('expense_scan')) items.push(['scanexp', '🧾', t('Scan a receipt', 'امسح إيصالاً'), t('Take a photo, the form fills itself', 'صوّر والإستمارة تمتلئ')]);
-    items.push(['handreq', '⇄', t('Hand over cash', 'سلّم النقد'), t('To the manager', 'للمدير')]);
+    groups.push(['', [
+      ['pay', '↓', t('An apartment paid', 'شقة دفعت'), t('Someone paid part of their bill', 'دفع أحدهم جزءاً من فاتورته')],
+      ['expense', '↑', t('I spent building cash', 'صرفت من مال البناية'), t('Comes off what you hand over. Scan the receipt inside.', 'يُخصم مما تسلّمه. امسح الإيصال من الداخل.')],
+      ['handreq', '⇄', t('Hand over cash', 'سلّم النقد'), t('To the manager', 'للمدير')]]]);
   }
-  var need = { pay: 'pay', scanpay: 'pay', expense: 'spend', scanexp: 'spend', charge: 'charges', month: 'charges', project: 'charges', task: 'tasks' };
-  items = items.filter(function(x) { return (!need[x[0]] || can(need[x[0]])) && !(isSharedBook() && (x[0] === 'month' || x[0] === 'charge' || x[0] === 'project')); });
-  var h = '<h3>' + esc(t('Add', 'إضافة')) + '</h3><div class="card list menu" style="margin-top:10px">';
-  if (!items.length) h += '<p class="muted">' + esc(t('Nothing to add with your permissions.', 'لا شيء لإضافته بصلاحياتك.')) + '</p>';
-  items.forEach(function(x) { h += '<button class="li" onclick="addPick(\'' + x[0] + '\')"><div class="ic">' + x[1] + '</div><div class="grow"><b>' + esc(x[2]) + '</b><small>' + esc(x[3]) + '</small></div></button>'; });
-  return h + '</div>';
+  var need = { pay: 'pay', expense: 'spend', charge: 'charges', month: 'charges', project: 'charges', task: 'tasks' };
+  var ok = function(x) { return x && (!need[x[0]] || can(need[x[0]])) && !(isSharedBook() && (x[0] === 'month' || x[0] === 'charge')); };
+  var h = '<h3>' + esc(t('Add', 'إضافة')) + '</h3>', any = false;
+  groups.forEach(function(g) {
+    var items = g[1].filter(ok);
+    if (!items.length) return;
+    any = true;
+    if (g[0]) h += '<div class="add-h">' + esc(g[0]) + '</div>';
+    h += '<div class="card list menu">' + items.map(function(x) { return '<button class="li" onclick="addPick(\'' + x[0] + '\')"><div class="ic">' + x[1] + '</div><div class="grow"><b>' + esc(x[2]) + '</b><small>' + esc(x[3]) + '</small></div></button>'; }).join('') + '</div>';
+  });
+  if (!any) h += '<p class="muted">' + esc(t('Nothing to add with your permissions.', 'لا شيء لإضافته بصلاحياتك.')) + '</p>';
+  return h;
 };
 function addPick(k) {
   if (k === 'scanpay') { UI.sheet = { name: 'pay', data: {} }; render(); scanTransfer(); return; }

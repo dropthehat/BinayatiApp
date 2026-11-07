@@ -3723,6 +3723,8 @@ function catName(k) { var A = (typeof CATS_ALL !== 'undefined' && CATS_ALL) || C
    SS1A / SS2 / -1 → underground, G / GF / 0 → ground, 2B / 12 / 201 → that floor.
    --------------------------------------------------------------------------- */
 function unitLevel(code) {
+  // An apartment placed by hand (floor set in its sheet) wins over its code.
+  if (code && typeof code === 'object') { if (code.floor != null && code.floor !== '') return Number(code.floor); code = code.code; }
   var c = String(code || '').trim().toUpperCase().replace(/\s+/g, '');
   var m;
   if ((m = c.match(/^SS(\d*)/))) return -(Number(m[1]) || 1);
@@ -3733,16 +3735,17 @@ function unitLevel(code) {
 }
 /* Group scene windows into floors. items: [{code, win}]. Returns null when codes don't say. */
 function levelsFor(items) {
-  var known = items.filter(function(x) { return unitLevel(x.code) != null; });
+  var known = items.filter(function(x) { return unitLevel(x.u || x.code) != null; });
   if (!items.length || known.length < items.length / 2) return null;
   var by = {};
   items.forEach(function(x) {
-    var lv = unitLevel(x.code);
+    var lv = unitLevel(x.u || x.code);
     if (lv == null) lv = 1;
     (by[lv] = by[lv] || []).push(x);
   });
+  function pos(x) { return x.u && x.u.spot ? x.u.spot : String(x.code); }
   return Object.keys(by).map(function(k) {
-    var row = by[k].sort(function(a, b) { return String(a.code).localeCompare(String(b.code), 'en', { numeric: true }); });
+    var row = by[k].sort(function(a, b) { return pos(a).localeCompare(pos(b), 'en', { numeric: true }); });
     // more than 6 on one floor: split into extra rows above so nothing is hidden
     return { lv: Number(k), wins: row.map(function(x) { return x.win; }) };
   }).reduce(function(out, r) {
@@ -3830,6 +3833,9 @@ var EXPENSE_PRESETS = [
   { cat: 'water', en: 'Water tank cleaning', ar: 'تنظيف خزانات المياه' },
   { cat: 'water', en: 'Water pump repair', ar: 'تصليح مضخة المياه' },
   { cat: 'clean', en: 'Cleaning supplies', ar: 'مواد تنظيف' },
+  { cat: 'clean', en: 'Glass & window cleaner', ar: 'منظّف زجاج' },
+  { cat: 'clean', en: 'Floor cleaner & detergent', ar: 'منظّف أرضيات ومسحوق' },
+  { cat: 'clean', en: 'Mops, brooms & cloths', ar: 'ممسحات ومكانس وفوط' },
   { cat: 'clean', en: 'Trash bags', ar: 'أكياس نفايات' },
   { cat: 'clean', en: 'Trash collection fee', ar: 'رسم جمع النفايات' },
   { cat: 'clean', en: 'Trash bins', ar: 'مستوعبات نفايات' },
@@ -5030,6 +5036,15 @@ var LOCAL_RPC = {
     localLoad().invites.push(row); applyLocal('invites', 'insert', row); localSave();
     return code;
   },
+  delete_building: function(a) {
+    var db = localLoad();
+    ['members', 'units', 'cycles', 'charges', 'payments', 'handovers', 'expenses', 'tasks', 'events', 'invites'].forEach(function(k) { if (db[k]) db[k] = db[k].filter(function(r) { return r.building_id !== a.p_building; }); });
+    db.buildings = db.buildings.filter(function(b) { return b.id !== a.p_building; });
+    if (db.current === a.p_building) db.current = null;
+    localSave();
+    return null;
+  },
+  sup_resync: function() { return 0; },
   request_handover: function(a) {
     var me = S.me.id, u = 0, l = 0;
     var pays = S.payments.filter(function(p) { return p.channel === 'collector' && p.received_by === me && !p.handover_id && !p.voided_at; });
@@ -5410,7 +5425,7 @@ function heroHtml(cyc, opts) {
     return { state: state, label: lbl, onclick: opts.noTap ? null : 'openSheet(\'unit\',{id:' + jsArg(u.id) + '})' };
   });
   if (!wins.length) wins = [{ state: 'closed' }];
-  var levels = units.length ? levelsFor(units.map(function(u, i) { return { code: u.code, win: wins[i] }; })) : null;
+  var levels = units.length ? levelsFor(units.map(function(u, i) { return { code: u.code, u: u, win: wins[i] }; })) : null;
   var cash = opts.noSafe ? null : cashState();
   var reveal = HERO_REVEAL; HERO_REVEAL = false;
   var safe = cash ? { split: true, usdH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.USD) / 40)), lbpH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.LBP) / 4e6)), usd: cash.safe.USD, lbp: cash.safe.LBP, style: setting('safe_style') || 'lobby', tap: opts.noTap ? null : 'go(\'books\')', sub: t('in the safe', 'في الصندوق') } : null;
@@ -5519,11 +5534,11 @@ function renderHomeManager() {
   h += tile(t('In the safe', 'في الصندوق'), fmtPairBig(cash.safe), t('Cash the building holds', 'نقد البناية'), 'go(\'books\')', 'var(--ok)');
   var wc = pairUsd(cash.withCollector);
   h += tile(t('With ' + (collectors().length ? collectorLabel() : 'collector'), 'مع ' + (collectors().length ? collectorLabel() : 'الجابي')), fmtPairBig(cash.withCollector),
-            wc > 0.005 ? t('Collected, not handed over', 'محصّل ولم يُسلَّم') : t('Nothing outstanding', 'لا شيء معلّق'), 'go(\'books\')', 'var(--warn)', wc > 0.005 && cash.pending.length ? 'alert' : '');
+            wc > 0.005 ? t('Collected, not handed over', 'محصّل ولم يُسلَّم') : t('Nothing outstanding · tap for details', 'لا شيء معلّق · اضغط للتفاصيل'), 'openSheet(\'colbook\',{})', 'var(--warn)', wc > 0.005 && cash.pending.length ? 'alert' : '');
   var arr = totalArrears(cyc);
   if (arr.units) h += tile(t('Earlier months unpaid', 'متأخرات أشهر سابقة'), fmtPairBig(arr.total), t(arr.units + ' apartment' + (arr.units > 1 ? 's' : ''), arr.units + ' شقق'), 'UI.filter=\'arrears\';go(\'collect\')', 'var(--bad)');
   var sup = cash.supplier;
-  if (pairUsd(sup) > 0.005) h += tile(t('Held for suppliers', 'مستحق للموردين'), fmtPairBig(sup), t('Moteur, internet… still to pay out', 'موتور، إنترنت… للدفع'), 'go(\'books\')', 'var(--info)');
+  if (pairUsd(sup) > 0.005) h += tile(t('Held for suppliers', 'مستحق للموردين'), fmtPairBig(sup), t('Moteur, internet… still to pay out', 'موتور، إنترنت… للدفع'), 'openSheet(\'suppliers\',{})', 'var(--info)');
   h += '</div></div>';
 
   var tasks = openTasks().slice(0, 3);
@@ -5738,7 +5753,7 @@ SHEETS.cell = function(d) {
   var h = '<h3>' + esc(unitTag(u) + ' · ' + L(ch)) + '</h3><p class="lead">' + esc(t('Due', 'المستحق')) + ' ' + esc(fmt(c.due, ch.cur)) + ' · ' + esc(t('Paid', 'المدفوع')) + ' ' + esc(fmt(c.paid, ch.cur)) + '</p>';
   h += '<div class="card list">';
   c.payments.forEach(function(p) {
-    var where = p.channel === 'collector' ? (handoverConfirmed(p.handover_id) ? t('handed over to the safe', 'سُلّم للصندوق') : t('with ', 'مع ') + memberName(p.received_by)) : p.channel === 'transfer' ? (p.method || t('transfer', 'تحويل')) : t('received by ', 'استلمه ') + memberName(p.received_by);
+    var where = p.channel === 'collector' ? (handoverConfirmed(p.handover_id) ? t('handed over to the safe', 'سُلّم للصندوق') : t('with ', 'مع ') + pocketName(p.received_by)) : p.channel === 'transfer' ? (p.method || t('transfer', 'تحويل')) : t('received by ', 'استلمه ') + memberName(p.received_by);
     h += '<div class="li"><div class="ic in">✓</div><div class="grow"><b>' + esc(fmt(p.amount, p.cur)) + '</b><small>' + esc(dateLabel(p.received_at, true) + ' · ' + where) + '</small></div></div>';
   });
   h += '</div>';
@@ -5944,7 +5959,7 @@ function heroCompound(cyc) {
     var paid = 0;
     var wins = units.map(function(u) { var st = cyc ? unitCycle(u, cyc).state : 'none'; if (st === 'paid') paid++; return { state: st === 'paid' ? 'paid' : (st === 'none' || st === 'closed') ? 'closed' : 'owes' }; });
     if (!wins.length) wins = [{ state: 'closed' }];
-    var levels = units.length ? levelsFor(units.map(function(u, k) { return { code: u.code, win: wins[k] }; })) : null;
+    var levels = units.length ? levelsFor(units.map(function(u, k) { return { code: u.code, u: u, win: wins[k] }; })) : null;
     var art = buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, wins: wins, levels: levels, signText: isSharedBook() ? b : (S.building.name + ' ' + b).slice(0, 14), elevator: !!setting('elevator'), idp: 'cb' + i, extraCls: 'studio bh-bare nopop' });
     h += '<button class="hm-blk" onclick="UI.block=' + jsArg(b) + ';render()">' + art + '<small>' + esc(blockLabel(b) + ' · ' + t(paid + '/' + units.length + ' paid', paid + '/' + units.length + ' سدّد')) + '</small></button>';
   });
@@ -5967,27 +5982,15 @@ function renderMoney() {
   });
   h += '<div class="sec"><div class="tiles">';
   h += tile(t('In the safe', 'في الصندوق'), fmtPairBig(cash.safe), t('Opening balance + received − spent', 'الرصيد الافتتاحي + المقبوض − المصروف'), '', 'var(--ok)');
-  h += tile(t('With collectors', 'مع الجباة'), fmtPairBig(cash.withCollector), Object.keys(cash.pockets).filter(function(k) { return pairUsd(cash.pockets[k]) > 0.005; }).map(function(k) { return memberName(k) + ' ' + fmtPair(cash.pockets[k]); }).join(' · ') || t('Nothing outstanding', 'لا شيء معلّق'), '', 'var(--warn)');
-  if (pairUsd(cash.supplier) > 0.005) h += tile(t('Of which for suppliers', 'منها للموردين'), fmtPairBig(cash.supplier), t('Moteur, internet… not building money', 'موتور، إنترنت… ليست أموال البناية'), '', 'var(--info)');
+  h += tile(t('With collectors', 'مع الجباة'), fmtPairBig(cash.withCollector), Object.keys(cash.pockets).filter(function(k) { return pairUsd(cash.pockets[k]) > 0.005; }).map(function(k) { return pocketName(k) + ' ' + fmtPair(cash.pockets[k]); }).join(' · ') || t('Nothing outstanding · tap for details', 'لا شيء معلّق · اضغط للتفاصيل'), 'openSheet(\'colbook\',{})', 'var(--warn)');
+  if (pairUsd(cash.supplier) > 0.005) h += tile(t('Of which for suppliers', 'منها للموردين'), fmtPairBig(cash.supplier), t('Moteur, internet… not building money', 'موتور، إنترنت… ليست أموال البناية'), 'openSheet(\'suppliers\',{})', 'var(--info)');
   h += tile(t('Building money', 'أموال البناية'), fmtPairBig(cash.building), t('Safe + collectors − suppliers', 'الصندوق + الجباة − الموردين'), '', 'var(--acc)', 'wide');
   h += '</div>';
   if (isManager() && collectorsHolding().length) h += '<button class="btn sec block" style="margin-top:10px" onclick="openSheet(\'handrecv\',{})">⇄ ' + esc(t('Received cash from a collector', 'استلمت نقداً من الجابي')) + '</button>';
   h += '</div>';
 
-  // Supplier pass-through to settle
-  var cyc = currentCycle();
-  var sups = S.charges.filter(function(c) { return c.pass_through; }).map(function(c) {
-    var got = livePayments().filter(function(p) { return p.charge_id === c.id; }).reduce(function(s, p) { return s + num(p.amount); }, 0);
-    var out = liveExpenses().filter(function(e) { return e.charge_id === c.id; }).reduce(function(s, e) { return s + num(e.amount); }, 0);
-    return { c: c, got: got, out: out, left: round(got - out, c.cur) };
-  }).filter(function(x) { return x.left > 0; });
-  if (sups.length) {
-    h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('To pass on to suppliers', 'للدفع للموردين')) + '</h2></div><div class="card list">';
-    sups.forEach(function(x) {
-      h += '<div class="li"><div class="ic">↗</div><div class="grow"><b>' + esc(L(x.c)) + '</b><small>' + esc(cycleTitle(byId(S.cycles, x.c.cycle_id)) + ' · ' + t('collected ', 'محصّل ') + fmt(x.got, x.c.cur)) + '</small></div>' + (isManager() ? '<button class="btn sm sec" onclick="openSheet(\'expense\',{charge:' + jsArg(x.c.id) + '})">' + esc(t('Pay ', 'ادفع ') + fmt(x.left, x.c.cur)) + '</button>' : '<span class="amt">' + esc(fmt(x.left, x.c.cur)) + '</span>') + '</div>';
-    });
-    h += '</div></div>';
-  }
+  // Supplier bills: who collected each one and whether it reached the supplier
+  h += supplierBillsHtml(false);
 
   // Cycle filter + ledger
   var f = UI.booksCycle || 'all';
@@ -6033,14 +6036,21 @@ function ledger(cycleId) {
   out.forEach(function(g) {
     var p = g.p;
     g.title = (g.unit ? unitTag(g.unit) + (unitName(g.unit) ? ' · ' + unitName(g.unit) : '') : t('Apartment', 'شقة'));
-    var who = p.channel === 'collector' ? (handoverConfirmed(p.handover_id) ? memberName(p.received_by) + ' → ' + t('safe', 'الصندوق') : t('with ', 'مع ') + memberName(p.received_by)) : p.channel === 'transfer' ? (p.method || t('Transfer', 'تحويل')) : memberName(p.received_by);
+    var who = p.channel === 'collector' ? (handoverConfirmed(p.handover_id) ? pocketName(p.received_by) + ' → ' + t('safe', 'الصندوق') : t('with ', 'مع ') + pocketName(p.received_by)) : p.channel === 'transfer' ? (p.method || t('Transfer', 'تحويل')) : pocketName(p.received_by);
     g.sub = g.titles.join(', ') + ' · ' + who;
     if (g.unit) g.onclick = 'openSheet(\'unit\',{id:' + jsArg(g.unit.id) + '})';
   });
+  var autoG = {};
   liveExpenses().forEach(function(e) {
     if (cycleId && e.cycle_id !== cycleId && !(e.charge_id && cycCharges[e.charge_id])) return;
+    if (e.payment_id) { // passed on automatically, one per payment: one line per charge and collector
+      var k = e.charge_id + '|' + (e.paid_by || 'unknown') + '|' + e.cur, x = autoG[k], at = e.spent_on + 'T12:00:00';
+      if (!x) { x = autoG[k] = { kind: 'out', icon: catIcon('supplier'), at: at, amount: 0, cur: e.cur, title: L(e), sub: t('Passed on by ', 'سلّمها ') + pocketName(e.paid_by) + t(' · counted when collected', ' · تُحتسب عند الجباية'), onclick: isManager() ? 'openSheet(\'colbook\',{k:' + jsArg(e.paid_by || 'unknown') + '})' : '' }; out.push(x); }
+      x.amount += num(e.amount); if (at > x.at) x.at = at;
+      return;
+    }
     out.push({ kind: 'out', icon: catIcon(e.charge_id ? 'supplier' : e.cat), at: (e.spent_on === dayKey(e.created_at) ? e.created_at : e.spent_on + 'T12:00:00'), amount: num(e.amount), cur: e.cur,
-               title: L(e), sub: catName(e.charge_id ? 'supplier' : e.cat) + ' · ' + (e.paid_from === 'collector' ? t('paid by ', 'دفعه ') + memberName(e.paid_by) : t('from the safe', 'من الصندوق')) + (e.ref ? ' · #' + e.ref : '') + origNote(e),
+               title: L(e), sub: catName(e.charge_id ? 'supplier' : e.cat) + ' · ' + (e.paid_from === 'collector' ? t('paid by ', 'دفعه ') + pocketName(e.paid_by) : t('from the safe', 'من الصندوق')) + (e.ref ? ' · #' + e.ref : '') + (e.note ? ' · ' + e.note : '') + origNote(e),
                onclick: isManager() || e.paid_by === (S.me && S.me.id) ? 'openSheet(\'expense\',{id:' + jsArg(e.id) + '})' : '' });
   });
   if (!cycleId) S.handovers.forEach(function(ho) {
@@ -6105,6 +6115,7 @@ function eventText(e) {
       if (d.voided_at && !old.voided_at) return t(who + ' undid ' + fmt(d.amount, d.cur) + ' from ' + code, who + ' ألغى ' + fmt(d.amount, d.cur) + ' من ' + code);
       return null;
     case 'expenses':
+      if (d.payment_id) return null; // supplier money passed on automatically: the payment already shows
       if (e.action === 'insert') return t(who + ' spent ' + fmt(d.amount, d.cur) + ' · ' + d.title, who + ' صرف ' + fmt(d.amount, d.cur) + ' · ' + d.title);
       if (e.action === 'delete') return t(who + ' removed the expense ' + d.title, who + ' حذف المصروف ' + d.title);
       if (d.voided_at && !old.voided_at) return t(who + ' cancelled the expense ' + d.title, who + ' ألغى المصروف ' + d.title);
@@ -6176,6 +6187,133 @@ function collectorsHolding() {
   var cash = cashState();
   return Object.keys(cash.pockets).filter(function(k) { return pairUsd(cash.pockets[k]) > 0.005 || cash.pockets[k].pendingId; }).map(function(k) { return { id: k, p: cash.pockets[k] }; });
 }
+/* ---------------------------------------------------------------------------
+   One collector's own statement, and supplier bills reconciled against what
+   each collector collected. Supplier money a collector collects counts as paid
+   to the supplier when collected (an automatic expense from the server), unless
+   the charge is paid from the safe or the building asks collectors to confirm.
+   --------------------------------------------------------------------------- */
+function pocketName(k) { return !k || k === 'unknown' ? collectorLabel() : memberName(k); }
+function payHolder(p) { return p.channel === 'collector' && !handoverConfirmed(p.handover_id) ? (p.received_by || 'unknown') : 'safe'; }
+function expHolder(e) { return e.paid_from === 'collector' && !handoverConfirmed(e.handover_id) ? (e.paid_by || 'unknown') : 'safe'; }
+function supAuto(ch) { return setting('sup_confirm') !== true && (ch.payer || 'collector') === 'collector'; }
+/* Every person who has collected cash as a collector here ('unknown' = ticks copied from a sheet). */
+function collectorKeys() {
+  var ks = collectors().map(function(m) { return m.user_id; });
+  S.payments.forEach(function(p) { if (p.channel === 'collector') { var k = p.received_by || 'unknown'; if (ks.indexOf(k) < 0) ks.push(k); } });
+  return ks;
+}
+/* Per supplier charge: collected, passed on, and what is left with each holder (a collector or the safe). */
+function supplierState(ch) {
+  var r = { c: ch, got: 0, out: 0, by: {} };
+  function hb(k) { return r.by[k] = r.by[k] || { got: 0, out: 0 }; }
+  livePayments().forEach(function(p) { if (p.charge_id === ch.id) { r.got += num(p.amount); hb(payHolder(p)).got += num(p.amount); } });
+  liveExpenses().forEach(function(e) { if (e.charge_id === ch.id) { r.out += num(e.amount); hb(expHolder(e)).out += num(e.amount); } });
+  r.left = round(r.got - r.out, ch.cur);
+  Object.keys(r.by).forEach(function(k) { r.by[k].left = round(r.by[k].got - r.by[k].out, ch.cur); });
+  return r;
+}
+function supplierRows(onlyKey) {
+  var cyc = currentCycle();
+  return S.charges.filter(function(c) { return c.pass_through; }).map(supplierState).filter(function(x) {
+    if (onlyKey) return x.by[onlyKey] && (x.by[onlyKey].got > 0 || x.by[onlyKey].out > 0);
+    return x.left > 0.005 || (cyc && x.c.cycle_id === cyc.id && x.got > 0);
+  }).sort(function(a, b) { return String(cycleOrderKey(byId(S.cycles, b.c.cycle_id) || {})).localeCompare(String(cycleOrderKey(byId(S.cycles, a.c.cycle_id) || {}))) || (a.c.sort || 0) - (b.c.sort || 0); });
+}
+/* The list on Books and in the suppliers sheet. onlyKey: just one collector's share. */
+function supplierBillsHtml(onlyKey) {
+  var rows = supplierRows(onlyKey);
+  if (!rows.length) return '';
+  var h = '<div class="sec"><div class="sec-h"><h2>' + esc(onlyKey ? t('Supplier bills he collected', 'فواتير الموردين التي جباها') : t('Supplier bills', 'فواتير الموردين')) + '</h2></div><div class="card list">';
+  rows.forEach(function(x) {
+    var c = x.c, keys = onlyKey ? [onlyKey] : Object.keys(x.by);
+    var parts = [], btns = '';
+    keys.forEach(function(k) {
+      var b = x.by[k]; if (!b) return;
+      var who = k === 'safe' ? t('the safe', 'الصندوق') : pocketName(k);
+      if (b.got > 0) parts.push(k === 'safe' ? t('in the safe ', 'في الصندوق ') + fmt(b.got, c.cur) : who + t(' collected ', ' جبى ') + fmt(b.got, c.cur));
+      if (b.left > 0.005 && (isManager() || k === (S.me && S.me.id))) {
+        if (k === 'safe') { if (isManager()) btns += '<button class="btn sm sec" onclick="openSheet(\'expense\',{charge:' + jsArg(c.id) + ',amt:' + b.left + '})">' + esc(t('Pay ', 'ادفع ') + fmt(b.left, c.cur) + t(' from safe', ' من الصندوق')) + '</button>'; }
+        else btns += '<button class="btn sm ok" onclick="supPaidBy(' + jsArg(c.id) + ',' + jsArg(k) + ')">✓ ' + esc(k === (S.me && S.me.id) && !isManager() ? t('I paid it', 'دفعتها') : t(who + ' paid it', 'دفعها ' + who)) + '</button>';
+      }
+    });
+    var lft = onlyKey && x.by[onlyKey] ? x.by[onlyKey].left : x.left, done = lft <= 0.005;
+    var status = lft <= 0.005 ? '✓ ' + (onlyKey || keys.every(function(k) { return k !== 'safe'; }) ? t('Passed on', 'سُلّمت للمورد') : t('Paid', 'مدفوعة')) + (supAuto(c) && keys.some(function(k) { return k !== 'safe'; }) ? t(' · counted when collected', ' · تُحتسب عند الجباية') : '') : t('Left ', 'باقي ') + fmt(lft, c.cur);
+    h += '<div class="li" style="flex-wrap:wrap"><div class="ic' + (done ? ' in' : '') + '">' + (done ? '✓' : '↗') + '</div><div class="grow"><b>' + esc(L(c)) + '</b><small>' + esc(cycleTitle(byId(S.cycles, c.cycle_id)) + (parts.length ? ' · ' + parts.join(' · ') : '')) + '</small><small style="display:block;color:' + (lft <= 0.005 ? 'var(--ok)' : 'var(--warn)') + '">' + esc(status) + '</small></div>' + (btns ? '<div class="row" style="gap:6px;flex-wrap:wrap;justify-content:flex-end">' + btns + '</div>' : '') + '</div>';
+  });
+  return h + '</div></div>';
+}
+/* The collector handed this supplier bill over himself: one expense from his pocket for what is left with him. */
+function supPaidBy(chId, k) {
+  var ch = byId(S.charges, chId), x = supplierState(ch), left = x.by[k] ? x.by[k].left : 0;
+  if (!(left > 0)) return;
+  var row = { title: t('Paid to supplier · ', 'دفع للمورد · ') + ch.title, title_ar: 'دفع للمورد · ' + (ch.title_ar || ch.title), amount: left, cur: ch.cur, cat: 'supplier',
+              spent_on: todayIso(), cycle_id: ch.cycle_id, charge_id: ch.id, paid_from: 'collector', paid_by: k === 'unknown' ? null : k, note: t('Confirmed by ', 'أكّده ') + memberName(S.me && S.me.id) };
+  dbInsert('expenses', row).then(function() { toast(t('Marked as paid by ' + pocketName(k), 'سُجّلت مدفوعة من ' + pocketName(k))); render(); }, fail);
+}
+SHEETS.suppliers = function() {
+  var h = '<h3>' + esc(t('Supplier bills', 'فواتير الموردين')) + '</h3><p class="lead">' + esc(t('Moteur, internet and the like: collected for a supplier, not building money. Whoever collects it hands it to the supplier.', 'موتور وإنترنت وغيرها: تُجبى للمورد وليست أموال البناية. من يجبيها يسلّمها للمورد.')) + '</p>';
+  var b = supplierBillsHtml(false);
+  return h + (b || '<div class="card empty">' + esc(t('Nothing collected for suppliers yet', 'لا شيء مجبى للموردين بعد')) + '</div>') + '<div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Close', 'إغلاق')) + '</button></div>';
+};
+SHEETS.colbook = function(d) {
+  var ks = collectorKeys();
+  if (!isManager() && S.me) ks = [S.me.id];
+  if (!ks.length) return '<h3>' + esc(t('Collectors', 'الجباة')) + '</h3><div class="card empty">' + esc(t('No collector has collected anything yet. Invite one from Building › Team.', 'لم يجبِ أي جابٍ شيئاً بعد. ادعُ واحداً من البناية › الفريق.')) + '</div><div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Close', 'إغلاق')) + '</button></div>';
+  var k = d.k && ks.indexOf(d.k) >= 0 ? d.k : ks[0];
+  var cash = cashState(), pk = cash.pockets[k] || { USD: 0, LBP: 0, pending: pair() };
+  var mine = function(p) { return p.channel === 'collector' && (p.received_by || 'unknown') === k; };
+  var pays = livePayments().filter(mine), exps = liveExpenses().filter(function(e) { return e.paid_from === 'collector' && (e.paid_by || 'unknown') === k; });
+  var fees = pair(), forSup = pair(), supOut = pair(), spent = pair(), handed = pair();
+  var pass = {}; S.charges.forEach(function(c) { if (c.pass_through) pass[c.id] = 1; });
+  pays.forEach(function(p) { addTo(pass[p.charge_id] ? forSup : fees, p.cur, num(p.amount)); if (handoverConfirmed(p.handover_id)) addTo(handed, p.cur, num(p.amount)); });
+  exps.forEach(function(e) { addTo(e.charge_id ? supOut : spent, e.cur, num(e.amount)); if (handoverConfirmed(e.handover_id)) addTo(handed, e.cur, -num(e.amount)); });
+  var all = pair(); addTo(all, 'USD', fees.USD + forSup.USD); addTo(all, 'LBP', fees.LBP + forSup.LBP);
+  var h = '<h3>' + esc(pocketName(k)) + '</h3><p class="lead">' + esc(t('What ' + pocketName(k) + ' collected, passed on and still holds.', 'ما جباه ' + pocketName(k) + ' وما سلّمه وما زال معه.')) + '</p>';
+  if (ks.length > 1) h += '<div class="chips" style="padding:0 0 8px">' + ks.map(function(x) { return '<button class="chip' + (x === k ? ' on' : '') + '" onclick="UI.sheet.data.k=' + jsArg(x) + ';render()">' + esc(pocketName(x)) + '</button>'; }).join('') + '</div>';
+  function kv(lbl, p, sign, color) { return pairUsd(p) > 0.005 || pairUsd(p) < -0.005 ? '<div class="kv"><span>' + esc(lbl) + '</span><b' + (color ? ' style="color:' + color + '"' : '') + '>' + sign + esc(fmtPair(p)) + '</b></div>' : ''; }
+  h += '<div class="card pad">';
+  h += kv(t('Collected', 'جبى'), all, '', 'var(--ok)');
+  h += kv(t('  · building fees', '  · رسوم البناية'), fees, '');
+  h += kv(t('  · for suppliers', '  · للموردين'), forSup, '');
+  h += kv(t('Paid to suppliers', 'دفع للموردين'), supOut, '−', 'var(--bad)');
+  h += kv(t('Spent for the building', 'صرف للبناية'), spent, '−', 'var(--bad)');
+  h += kv(t('Handed to the safe', 'سلّم للصندوق'), handed, '−');
+  h += '<div class="bill-total"><span>' + esc(t('Still with ' + pocketName(k), 'ما زال مع ' + pocketName(k))) + '</span><span>' + esc(fmtPair(pk)) + '</span></div>';
+  if (pairUsd(pk.pending || pair()) > 0.005) h += '<div class="hint" style="color:var(--warn)">' + esc(t('Of which handed over, waiting for you to confirm: ', 'منها سُلّم وينتظر تأكيدك: ') + fmtPair(pk.pending)) + '</div>';
+  if (!pays.length && !exps.length) h += '<div class="muted">' + esc(t('Nothing collected yet', 'لم يجبِ شيئاً بعد')) + '</div>';
+  h += '</div>';
+  if (isManager() && k !== 'unknown' && pairUsd(pk) > 0.005) h += '<button class="btn sec block" style="margin-top:10px" onclick="openSheet(\'handrecv\',{uid:' + jsArg(k) + '})">⇄ ' + esc(t('I received cash from ' + pocketName(k), 'استلمت نقداً من ' + pocketName(k))) + '</button>';
+  h += supplierBillsHtml(k);
+  // His movements, newest first: ticks grouped by day and charge, then expenses and handovers.
+  var ev = [], g = {};
+  pays.forEach(function(p) {
+    var ch = byId(S.charges, p.charge_id), key = dayKey(p.received_at) + '|' + p.charge_id + '|' + p.cur, x = g[key];
+    if (!x) { x = g[key] = { at: p.received_at, kind: 'in', icon: '↓', amount: 0, cur: p.cur, n: 0, title: ch ? L(ch) : t('Payment', 'دفعة'), units: [] }; ev.push(x); }
+    x.amount += num(p.amount); x.n++; var u = byId(S.units, p.unit_id); if (u) x.units.push(unitTag(u));
+    if (p.received_at > x.at) x.at = p.received_at;
+  });
+  ev.forEach(function(x) { x.sub = x.units.slice(0, 6).join(', ') + (x.units.length > 6 ? ' +' + (x.units.length - 6) : ''); });
+  var sg = {};
+  exps.forEach(function(e) {
+    if (e.payment_id) { var key = 'a|' + e.charge_id, y = sg[key]; if (!y) { y = sg[key] = { at: e.spent_on + 'T12:00:00', kind: 'out', icon: '↗', amount: 0, cur: e.cur, title: L(e), sub: t('Counted as paid when collected', 'تُحتسب مدفوعة عند الجباية') }; ev.push(y); } y.amount += num(e.amount); if (e.spent_on + 'T12:00:00' > y.at) y.at = e.spent_on + 'T12:00:00'; return; }
+    ev.push({ at: e.spent_on + 'T12:00:00', kind: 'out', icon: catIcon(e.charge_id ? 'supplier' : e.cat), amount: num(e.amount), cur: e.cur, title: L(e), sub: catName(e.charge_id ? 'supplier' : e.cat) + (e.note ? ' · ' + e.note : '') });
+  });
+  S.handovers.forEach(function(ho) { if ((ho.collector_id || 'unknown') !== k || ho.status === 'rejected') return; ev.push({ at: ho.resolved_at || ho.created_at, kind: 'move', icon: '⇄', amount: 0, cur: 'USD', amtText: fmtPair({ USD: num(ho.usd), LBP: num(ho.lbp) }), title: t('Handed to the safe', 'سلّم للصندوق'), sub: ho.status === 'confirmed' ? t('Confirmed', 'مؤكَّد') : t('Waiting for confirmation', 'بانتظار التأكيد') }); });
+  ev.sort(function(a, b) { return String(b.at).localeCompare(String(a.at)); });
+  if (ev.length) {
+    h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('His history', 'سجلّه')) + '</h2></div>';
+    var day = '';
+    ev.slice(0, 80).forEach(function(e) {
+      var dk = dayKey(String(e.at));
+      if (dk !== day) { if (day) h += '</div>'; h += '<div class="daylbl">' + esc(dateLabel(dk)) + '</div><div class="card list">'; day = dk; }
+      h += '<div class="li"><div class="ic ' + e.kind + '">' + e.icon + '</div><div class="grow"><b>' + esc(e.title + (e.n > 1 ? ' × ' + e.n : '')) + '</b><small>' + esc(e.sub || '') + '</small></div><span class="amt ' + e.kind + '">' + (e.kind === 'in' ? '+' : e.kind === 'out' ? '−' : '') + esc(e.amtText || fmt(e.amount, e.cur)) + '</span></div>';
+    });
+    if (day) h += '</div>';
+    h += '</div>';
+  }
+  return h + '<div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Close', 'إغلاق')) + '</button></div>';
+};
 SHEETS.handrecv = function(d) {
   var list = collectorsHolding();
   var h = '<h3>' + esc(t('Cash received from a collector', 'استلمت نقداً من الجابي')) + '</h3><p class="lead">' + esc(t('Everything they hold goes into the safe. They see it in their history.', 'كل ما معه ينتقل إلى الصندوق، ويراه في سجله.')) + '</p>';
@@ -6287,16 +6425,24 @@ SHEETS.expense = function(d) {
   var e = d.id ? byId(S.expenses, d.id) : null;
   var sup = d.charge ? byId(S.charges, d.charge) : (e && e.charge_id ? byId(S.charges, e.charge_id) : null);
   var cyc = currentCycle();
+  if (e && e.payment_id) { // written by the server when the collector collected a supplier bill
+    return '<h3>' + esc(L(e)) + '</h3><p class="lead">' + esc(t('Counted as passed on to the supplier by ' + pocketName(e.paid_by) + ' when it was collected. To change this, set who pays it on the charge, or ask collectors to confirm in Settings.', 'تُحتسب مسلّمة للمورد من ' + pocketName(e.paid_by) + ' عند جبايتها. لتغيير ذلك، حدّد من يدفعها في الرسم، أو اطلب تأكيد الجباة من الإعدادات.')) + '</p>' +
+      '<div class="card pad"><div class="kv"><span>' + esc(t('Amount', 'المبلغ')) + '</span><b>' + esc(fmt(e.amount, e.cur)) + '</b></div><div class="kv"><span>' + esc(t('Date', 'التاريخ')) + '</span><b>' + esc(dateLabel(e.spent_on)) + '</b></div></div>' +
+      '<div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Close', 'إغلاق')) + '</button></div>';
+  }
   var v = e || { title: sup ? L(sup) : '', cat: sup ? 'supplier' : 'other', amount: '', cur: sup ? sup.cur : 'USD', paid_from: isManager() ? 'safe' : 'collector', spent_on: todayIso(), cycle_id: sup ? sup.cycle_id : (cyc && cyc.id), ref: '', note: '' };
   if (sup && !e) {
     var got = livePayments().filter(function(p) { return p.charge_id === sup.id; }).reduce(function(s, p) { return s + num(p.amount); }, 0);
     var out = liveExpenses().filter(function(x) { return x.charge_id === sup.id; }).reduce(function(s, x) { return s + num(x.amount); }, 0);
-    v.amount = round(got - out, sup.cur);
-    v.title = t('Paid supplier · ', 'دفع للمورد · ') + L(sup);
+    var inSafe = (supplierState(sup).by.safe || {}).left;
+    v.amount = d.amt != null ? d.amt : inSafe > 0 ? inSafe : round(got - out, sup.cur);
+    v.paid_from = 'safe';
+    v.title = t('Paid to supplier · ', 'دفع للمورد · ') + L(sup);
   }
   var st = UI.sheet.data;
   if (st.cur) v.cur = st.cur; if (st.cat) v.cat = st.cat; if (st.from) v.paid_from = st.from;
-  var h = '<h3>' + esc(e ? t('Expense', 'مصروف') : sup ? t('Pay the supplier', 'ادفع للمورد') : t('Money spent', 'مصروف جديد')) + '</h3>';
+  var h = '<h3>' + esc(e ? t('Expense', 'مصروف') : sup ? t('Pay the supplier from the safe', 'ادفع للمورد من الصندوق') : t('Money spent', 'مصروف جديد')) + '</h3>';
+  if (sup && !e) h += '<p class="lead">' + esc(t('Only for supplier money that reached the safe. Money a collector collected and handed to the supplier himself is ticked from Supplier bills.', 'فقط لمال المورد الذي وصل إلى الصندوق. ما جباه الجابي وسلّمه للمورد بنفسه يُؤشَّر من فواتير الموردين.')) + '</p>';
   if (!e && !sup) h += '<p class="lead">' + esc(t('Anything paid for the building: fuel, repairs, cleaning…', 'أي شيء دُفع للبناية: مازوت، تصليح، تنظيف…')) + '</p>';
   h += scanBlockExpense(st, e);
   if (!sup) {
@@ -6316,12 +6462,13 @@ SHEETS.expense = function(d) {
   h += fxField('ex-fx', v.cur, st.fx || v.fx || (v.orig_cur === 'LBP' ? v.fx : null), 'ex-amt');
   if (isManager()) {
     h += '<label class="field"><span>' + esc(t('Paid from', 'دُفع من')) + '</span><div class="seg"><button class="' + (v.paid_from === 'safe' ? 'on' : '') + '" onclick="keepExpense();UI.sheet.data.from=\'safe\';render()">' + esc(t('The safe', 'الصندوق')) + '</button>';
-    if (collectors().length) h += '<button class="' + (v.paid_from === 'collector' ? 'on' : '') + '" onclick="keepExpense();UI.sheet.data.from=\'collector\';render()">' + esc(t(collectorLabel() + '\'s pocket', 'جيب ' + collectorLabel())) + '</button>';
+    if (collectorKeys().length) h += '<button class="' + (v.paid_from === 'collector' ? 'on' : '') + '" onclick="keepExpense();UI.sheet.data.from=\'collector\';render()">' + esc(t(pocketName(collectorKeys()[0]) + '\'s pocket', 'جيب ' + pocketName(collectorKeys()[0]))) + '</button>';
     h += '</div></label>';
   }
   h += '<div class="two"><label class="field"><span>' + esc(t('Date', 'التاريخ')) + '</span><input class="input" type="date" id="ex-date" value="' + esc(st.date || v.spent_on) + '"></label>';
   h += '<label class="field"><span>' + esc(t('Month', 'الشهر')) + '</span><select class="input" id="ex-cyc">' + visibleCycles().map(function(c) { return '<option value="' + esc(c.id) + '"' + (c.id === (st.cyc || v.cycle_id) ? ' selected' : '') + '>' + esc(cycleTitle(c)) + '</option>'; }).join('') + '</select></label></div>';
   h += '<label class="field"><span>' + esc(t('Receipt or invoice number (optional)', 'رقم الإيصال (اختياري)')) + '</span><input class="input" id="ex-ref" value="' + esc(st.ref != null ? st.ref : (v.ref || '')) + '"></label>';
+  h += '<label class="field"><span>' + esc(t('Notes (optional)', 'ملاحظات (اختياري)')) + '</span><textarea class="input" id="ex-note" rows="2" style="min-height:64px;resize:vertical" placeholder="' + esc(t('e.g. glass cleaner for the entrance door, bought at Spinneys', 'مثلاً منظّف زجاج لباب المدخل')) + '">' + esc(st.note != null ? st.note : (v.note || '')) + '</textarea></label>';
   h += '<div id="sheet-err" class="err"></div><div class="foot">';
   if (e && (isManager() || (e.paid_by === S.me.id && !e.handover_id))) h += '<button class="btn danger" onclick="voidExpense(' + jsArg(e.id) + ')">' + esc(t('Cancel it', 'إلغاء')) + '</button>';
   h += '<button class="btn sec" onclick="closeSheet()">' + esc(t('Close', 'إغلاق')) + '</button>';
@@ -6340,20 +6487,21 @@ function keepExpense() {
   var d = UI.sheet.data;
   if (document.getElementById('ex-fx')) d.fx = val('ex-fx');
   d.title = val('ex-title'); if (document.getElementById('ex-title-ar')) d.title_ar = val('ex-title-ar'); d.amount = val('ex-amt'); d.date = val('ex-date'); d.cyc = val('ex-cyc'); d.ref = val('ex-ref');
+  if (document.getElementById('ex-note')) d.note = val('ex-note');
 }
 function saveExpense(id, supId) {
   keepExpense();
   var d = UI.sheet.data, e = id ? byId(S.expenses, id) : null;
   var cat = d.cat || (e && e.cat) || (supId ? 'supplier' : 'other');
   var row = { title: (d.title || '').trim() || (d.title_ar || '').trim(), title_ar: (d.title_ar || '').trim() || null, amount: num(d.amount), cur: d.cur || (e && e.cur) || (supId ? byId(S.charges, supId).cur : 'USD'), cat: cat,
-              spent_on: d.date || todayIso(), cycle_id: d.cyc || null, ref: d.ref || null,
+              spent_on: d.date || todayIso(), cycle_id: d.cyc || null, ref: d.ref || null, note: (d.note || '').trim() || null,
               paid_from: isManager() ? (d.from || (e && e.paid_from) || 'safe') : 'collector' };
   if (row.cur === 'LBP') row.fx = num(d.fx) || rate();
   if (!row.title) return sheetErr(t('Say what it was for', 'اذكر السبب'));
   if (!(row.amount > 0)) return sheetErr(t('Enter an amount', 'أدخل المبلغ'));
   if (supId) row.charge_id = supId;
   if (blocks().length > 1 && setting('safe_mode') === 'block') row.block = d.block || null;
-  if (!e) row.paid_by = row.paid_from === 'collector' && isManager() ? (collectors()[0] || {}).user_id : S.me.id;
+  if (!e) row.paid_by = row.paid_from === 'collector' && isManager() ? (function(k) { return k && k !== 'unknown' ? k : null; })(collectorKeys()[0]) : S.me.id;
   var btn = document.querySelector('.sheet .foot .btn.pri'); if (btn) btn.disabled = true;
   uploadPhoto(d.photoBlob).then(function(photo) {
     if (photo) row.photo_path = photo;
@@ -6417,7 +6565,7 @@ function renderUnitsSec() {
     if (bl.length > 1) h += '<div class="daylbl">' + esc(g.b ? blockLabel(g.b) : t('No block', 'بلا بلوك')) + '</div>';
     h += '<div class="card list">';
     g.us.slice().sort(function(a, b) { return (a.sort || 0) - (b.sort || 0) || String(a.code).localeCompare(String(b.code), 'en', { numeric: true }); }).forEach(function(u) {
-      h += '<button class="li" onclick="openSheet(\'unitEdit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(bl.length > 1 ? u.code : unitTag(u)) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc([u.phone ? '\u2066' + u.phone + '\u2069' : t('no phone', 'بلا هاتف'), num(u.weight) !== 1 ? t('share ×', 'حصة ×') + num(u.weight) : '', u.active === false ? t('inactive', 'غير فعّالة') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
+      h += '<button class="li" onclick="openSheet(\'unitEdit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(bl.length > 1 ? u.code : unitTag(u)) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc([placedHere(u) ? floorName(u.floor) + (u.spot ? ' · ' + u.spot : '') : '', u.phone ? '\u2066' + u.phone + '\u2069' : t('no phone', 'بلا هاتف'), num(u.weight) !== 1 ? t('share ×', 'حصة ×') + num(u.weight) : '', u.active === false ? t('inactive', 'غير فعّالة') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
     });
     h += '</div>';
   });
@@ -6432,6 +6580,15 @@ SHEETS.unitEdit = function(d) {
   h += '<div class="two"><label class="field"><span>' + esc(t('Code', 'الرمز')) + '</span><input class="input" id="u-code" value="' + esc(v.code) + '" placeholder="' + esc(t('2B or Shop 1', '2B أو محل 1')) + '"' + (u ? '' : ' data-autofocus') + '></label>';
   h += '<label class="field"><span>' + esc(t('Share', 'الحصة')) + '</span><input class="input" id="u-w" inputmode="decimal" value="' + esc(v.weight == null ? 1 : v.weight) + '"></label></div>';
   var blist = blocks();
+  // Where it sits: floor and position. Empty = read from the code (2B → floor 2).
+  var lay = currentLayout(blist.length > 1 ? (v.block || d.block || blist[0]) : null), fl = [], fv = v.floor != null && v.floor !== '' ? String(v.floor) : '';
+  for (var fi = -Math.max(3, lay.under); fi <= Math.max(lay.floors, 12); fi++) fl.push(fi);
+  var guess = unitLevel(v.code);
+  h += '<div class="two"><label class="field"><span>' + esc(t('Floor', 'الطابق')) + '</span><select class="input" id="u-floor" onchange="unitSpotHint()"><option value="">' + esc(guess != null ? t('Auto · ' + floorName(guess), 'تلقائي · ' + floorName(guess)) : t('Not set', 'غير محدد')) + '</option>' +
+       fl.map(function(f) { return '<option value="' + f + '"' + (fv === String(f) ? ' selected' : '') + '>' + esc(floorName(f)) + '</option>'; }).join('') + '</select></label>';
+  h += '<label class="field"><span>' + esc(t('Position', 'الموقع')) + '</span><select class="input" id="u-spot" onchange="unitSpotHint()"><option value="">—</option>' +
+       'ABCDEFGH'.split('').map(function(s) { return '<option value="' + s + '"' + (String(v.spot || '').toUpperCase() === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></label></div>';
+  h += '<small class="hint" id="u-spot-hint" style="display:block;margin:2px 0 8px">' + esc(t('Where it is in the building, for the picture and the order of the list. Its code stays the same.', 'مكانها في البناية، للصورة وترتيب القائمة. رمزها لا يتغيّر.')) + '</small>';
   h += '<label class="field"><span>' + esc(t('Block (only for compounds with several blocks)', 'البلوك (للمجمّعات فقط)')) + '</span><input class="input" id="u-block" list="u-blocks" value="' + esc(v.block || (d.block || '')) + '" placeholder="' + esc(t('e.g. A', 'مثلاً A')) + '"><datalist id="u-blocks">' + blist.map(function(b) { return '<option value="' + esc(b) + '">'; }).join('') + '</datalist></label>';
   h += '<label class="field"><span>' + esc(t('Resident name', 'اسم الساكن')) + '</span><input class="input" id="u-name" data-tr="u-name-ar" data-tr-kind="name" value="' + esc(v.name) + '"><div class="tr-box" id="trs-u-name"></div></label>';
   h += '<label class="field"><span>' + esc(t('Name in Arabic (optional)', 'الاسم بالعربية (اختياري)')) + '</span><input class="input" id="u-name-ar" data-tr="u-name" data-tr-kind="name" dir="rtl" value="' + esc(v.name_ar || '') + '"><div class="tr-box" id="trs-u-name-ar"></div></label>';
@@ -6450,7 +6607,48 @@ function saveUnit(id) {
   if (!row.code) return sheetErr(t('Give it a code like 2B', 'أعطها رمزاً مثل 2B'));
   if (S.units.some(function(x) { return x.code === row.code && blockOf(x) === (row.block || '') && x.id !== id; })) return sheetErr(t('That code is already used', 'هذا الرمز مستعمل'));
   if (!id) { row.resident_token = token(); row.sort = S.units.length; }
-  (id ? dbUpdate('units', id, row) : dbInsert('units', row)).then(function() { closeSheet(); toast(t('Saved', 'تم الحفظ')); if (UI.fillNames && id) setTimeout(function() { nextUnnamed(id); }, 250); }, function(e) { sheetErr(e.message); });
+  // Floor and position
+  var u0 = id ? byId(S.units, id) : null, fv = val('u-floor');
+  row.floor = fv === '' ? null : Number(fv);
+  row.spot = row.floor == null ? null : (val('u-spot') || null);
+  var moved = !u0 || String(u0.floor == null ? '' : u0.floor) !== String(row.floor == null ? '' : row.floor) || String(u0.spot || '') !== String(row.spot || '');
+  var spare = null;
+  if (row.floor != null && moved) {
+    var slot = slotCode(row), blk = row.block || '';
+    var there = activeUnits().filter(function(x) { return x.id !== id && blockOf(x) === blk && (placedHere(x) ? slotCode(x) === slot : String(x.code).toUpperCase() === slot); })[0];
+    if (there) {
+      if (!emptyUnit(there) || placedHere(there)) return sheetErr(t(floorName(row.floor) + (row.spot ? ' ' + row.spot : '') + ' already has ' + (unitName(there) || there.code) + '. Move them first.', floorName(row.floor) + (row.spot ? ' ' + row.spot : '') + ' فيها ' + (unitName(there) || there.code) + '. انقلها أولاً.'));
+      spare = there; // empty placeholder from setup: it is replaced
+    }
+  }
+  var btn = document.querySelector('.sheet .foot .btn.pri'); if (btn) btn.disabled = true;
+  (id ? dbUpdate('units', id, row) : dbInsert('units', row)).then(function() {
+    return spare ? dbDelete('units', spare.id) : null;
+  }).then(function() { return moved ? resortUnits() : null; }).then(function() {
+    closeSheet(); toast(spare ? t('Saved · empty ' + spare.code + ' removed', 'تم الحفظ · أزيلت ' + spare.code + ' الفارغة') : t('Saved', 'تم الحفظ'));
+    if (UI.fillNames && id) setTimeout(function() { nextUnnamed(id); }, 250);
+  }, function(e) { if (btn) btn.disabled = false; sheetErr(e.message); });
+}
+function unitSpotHint() {
+  var el = document.getElementById('u-spot-hint'), f = val('u-floor'), s = val('u-spot');
+  if (!el || f === '') return;
+  var slot = slotCode({ floor: Number(f), spot: s }), id = UI.sheet && UI.sheet.data.id, blk = val('u-block').trim().toUpperCase();
+  var there = activeUnits().filter(function(x) { return x.id !== id && blockOf(x) === blk && (placedHere(x) ? slotCode(x) === slot : String(x.code).toUpperCase() === slot); })[0];
+  el.textContent = !there ? t('Free spot.', 'المكان فارغ.') : emptyUnit(there) && !placedHere(there) ? t('Takes the place of the empty ' + there.code + ', which will be removed.', 'تأخذ مكان ' + there.code + ' الفارغة، وستُزال.') : t('Taken by ' + (unitName(there) || there.code) + '.', 'مشغول من ' + (unitName(there) || there.code) + '.');
+  el.style.color = there && !(emptyUnit(there) && !placedHere(there)) ? 'var(--bad)' : '';
+}
+/* Keep the apartment list in building order: underground first, floor by floor, then position. */
+function resortUnits() {
+  var all = S.units.slice().sort(function(a, b) {
+    if (blockOf(a) !== blockOf(b)) return blockOf(a).localeCompare(blockOf(b));
+    var la = unitLevel(a), lb = unitLevel(b);
+    if (la == null) la = 99; if (lb == null) lb = 99;
+    var pa = placedHere(a) ? (a.spot || '') : String(a.code), pb = placedHere(b) ? (b.spot || '') : String(b.code);
+    return la - lb || pa.localeCompare(pb, 'en', { numeric: true });
+  });
+  var p2 = Promise.resolve();
+  all.forEach(function(u, i) { if (u.sort !== i) p2 = p2.then(function() { return dbUpdate('units', u.id, { sort: i }); }); });
+  return p2;
 }
 function deleteUnit(id) {
   var has = S.payments.some(function(p) { return p.unit_id === id && !p.voided_at; });
@@ -6788,6 +6986,10 @@ SHEETS.charge = function(d) {
     h += '<label class="field"><span>' + esc(t('Currency', 'العملة')) + '</span><div class="seg"><button class="' + (cur === 'USD' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.cur=\'USD\';render()">USD</button><button class="' + (cur === 'LBP' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.cur=\'LBP\';render()">LBP</button></div></label>';
   }
   h += fxField('c-fx', cur, st.fx || v.fx, mt ? 'm-rate' : 'c-amt');
+  if (kind === 'service') {
+    var payer = st.payer || v.payer || 'collector';
+    h += '<label class="field"><span>' + esc(t('Who hands it to the supplier', 'من يسلّمها للمورد')) + '</span><div class="seg"><button class="' + (payer === 'collector' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.payer=\'collector\';render()">' + esc(t('Whoever collects it', 'من يجبيها')) + '</button><button class="' + (payer === 'safe' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.payer=\'safe\';render()">' + esc(t('The manager, from the safe', 'المدير من الصندوق')) + '</button></div><small class="hint" style="display:block;margin-top:6px">' + esc(payer === 'safe' ? t('The collector hands this money over with the rest, and you pay the supplier from the safe.', 'الجابي يسلّم هذا المال مع الباقي، وأنت تدفع للمورد من الصندوق.') : setting('sup_confirm') === true ? t('The collector pays the supplier and confirms it on his page (Settings ask collectors to confirm).', 'الجابي يدفع للمورد ويؤكّد ذلك في صفحته (الإعدادات تطلب تأكيد الجباة).') : t('Counted as paid to the supplier as soon as it is collected. It never sits in the safe.', 'تُحتسب مدفوعة للمورد فور جبايتها. لا تدخل الصندوق.')) + '</small></label>';
+  }
   if (mt) h += '<div class="field"><span>' + esc(t(mu[0] + ' used this month (leave empty if not subscribed)', 'الاستهلاك هذا الشهر بال' + mu[1] + ' (فارغ لغير المشترك)')) + '</span><div class="card" id="c-prev" style="padding:4px 12px"></div></div>';
   else h += '<div class="field"><span>' + esc(kind === 'service' ? t('What each subscriber pays (leave empty if not subscribed)', 'ما يدفعه كل مشترك (اتركه فارغاً لغير المشترك)') : t('Per apartment — type to change one. A payment already recorded is not deleted.', 'لكل شقة — اكتب لتغيير واحدة. الدفعة المسجّلة لا تُحذف.')) + '</span><div class="card" id="c-prev" style="padding:4px 12px"></div></div>';
   if (kind !== 'due') h += '<div class="switch-row"><div><b>' + esc(t('Repeat next month', 'كرّر الشهر القادم')) + '</b><small>' + esc(t('Copied when you open the next month', 'يُنسخ عند فتح الشهر التالي')) + '</small></div><button class="sw' + ((st.recurring != null ? st.recurring : v.recurring) ? ' on' : '') + '" id="c-rec" onclick="this.classList.toggle(\'on\');keepCharge()"></button></div>';
@@ -6910,6 +7112,7 @@ function saveCharge() {
   var d = UI.sheet.data, ch = d.id ? byId(S.charges, d.id) : null;
   var row = { title: (d.title || '').trim(), title_ar: (d.title_ar || '').trim() || null, kind: d.kind, cur: d.cur, amount: d.kind === 'service' ? 0 : num(d.amount),
               split: d.split, overrides: d.ov || {}, pass_through: d.kind === 'service', block: (d.block != null ? d.block : (ch && ch.block)) || null, recurring: d.kind === 'due' ? false : (d.recurring != null ? d.recurring : true) };
+  if (d.kind === 'service') row.payer = d.payer || (ch && ch.payer) || 'collector';
   if (d.meter) {
     if (!(num(d.meter.rate) > 0)) return sheetErr(t('Enter the price per ' + meterUnit(d.meter), 'أدخل السعر لكل ' + meterUnit(d.meter)));
     row.meter = { rate: num(d.meter.rate), fixed: num(d.meter.fixed), kwh: d.meter.kwh || {}, unit: d.meter.unit === 'm3' ? 'm3' : 'kwh' };
@@ -6931,7 +7134,15 @@ function saveCharge() {
   if (!d.meter && d.kind === 'service' && !Object.keys(row.overrides).length) return sheetErr(t('Enter at least one subscriber', 'أدخل مشتركاً واحداً على الأقل'));
   if (!ch) { row.cycle_id = d.cycle || UI.cycleId; row.sort = chargesOf(row.cycle_id).length; }
   else if (!confirmChargeEdit(ch, row)) return;
-  (ch ? dbUpdate('charges', ch.id, row) : dbInsert('charges', row)).then(function() { closeSheet(); toast(t('Saved', 'تم الحفظ')); }, function(e) { sheetErr(e.message); });
+  var payerChanged = ch && d.kind === 'service' && (ch.payer || 'collector') !== row.payer;
+  (ch ? dbUpdate('charges', ch.id, row) : dbInsert('charges', row)).then(function() {
+    return payerChanged ? supResync() : null;
+  }).then(function() { closeSheet(); toast(t('Saved', 'تم الحفظ')); }, function(e) { sheetErr(e.message); });
+}
+/* Re-count supplier money already collected after "who pays" or the confirm setting changed. */
+function supResync() {
+  if (!isCloud()) return Promise.resolve();
+  return rpc('sup_resync', { p_building: S.building.id }).then(function() { return reloadBuilding(); });
 }
 function chargePayRows(id) {
   return livePayments().filter(function(p) { return p.charge_id === id; });
@@ -7185,7 +7396,7 @@ function copiedCharge(ch, cycleId, sort) {
   var row = {
     cycle_id: cycleId, kind: ch.kind, title: ch.title, title_ar: ch.title_ar, cur: ch.cur, amount: ch.amount, split: ch.split,
     overrides: ch.meter ? {} : JSON.parse(JSON.stringify(ch.overrides || {})),
-    pass_through: !!ch.pass_through, recurring: true, sort: sort, block: ch.block || null,
+    pass_through: !!ch.pass_through, payer: ch.payer || null, recurring: true, sort: sort, block: ch.block || null,
     meter: ch.meter ? { rate: ch.meter.rate, fixed: ch.meter.fixed || 0, kwh: {}, unit: ch.meter.unit === 'm3' ? 'm3' : 'kwh' } : null
   };
   if (ch.fx) row.fx = ch.fx;
@@ -7393,6 +7604,7 @@ function renderSettingsSec() {
   if (testBuild()) h += switchRow('collector_usd', setting('collector_usd') !== false, t('Collector page in dollars first', 'صفحة الجابي بالدولار أولاً'), t('LBP shows underneath. Bills stay in their own currency.', 'الليرة تظهر تحتها. الفواتير تبقى بعملتها.'));
   if (blocks().length > 1) h += switchRow('safe_per_block', st.safe_mode === 'block', t('A safe per block', 'صندوق لكل بلوك'), t('Each block keeps its own cash and expenses. Off: one shared safe for the compound.', 'كل بلوك له نقده ومصاريفه. مطفأ: صندوق واحد للمجمّع.'));
   h += switchRow('elevator', !!st.elevator, t('Has an elevator', 'فيها مصعد'), t('Shown on the building picture, going up and down', 'يظهر في صورة البناية صاعداً ونازلاً'));
+  h += switchRow('sup_confirm', st.sup_confirm === true, t('Collectors confirm supplier payments', 'الجباة يؤكّدون الدفع للموردين'), st.sup_confirm === true ? t('Moteur, internet… stay with the collector until he (or you) ticks that the supplier was paid.', 'موتور، إنترنت… تبقى مع الجابي حتى يؤشّر هو (أو أنت) أن المورد قبض.') : t('Off: supplier money a collector collects counts as paid to the supplier straight away.', 'مطفأ: مال المورد الذي يجبيه الجابي يُحتسب مدفوعاً للمورد فوراً.'));
   h += '</div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('What residents see', 'ما يراه السكان')) + '</h2></div><div class="card pad">';
   h += switchRow('books_public', st.books_public !== false, t('The building\'s books', 'حسابات البناية'), t('Money in, money out and the safe, on every resident\'s page', 'المقبوض والمصروف والصندوق في صفحة كل ساكن'));
@@ -7405,14 +7617,39 @@ function renderSettingsSec() {
   h += '<button class="li" onclick="openSheet(\'server\')"><div class="ic">☁︎</div><div class="grow"><b>' + esc(t('Server', 'الخادم')) + '</b><small>' + esc(isCloud() ? t('Connected · syncing between phones', 'متصل · مزامنة بين الهواتف') : t('Not connected · this phone only', 'غير متصل · هذا الهاتف فقط')) + '</small></div><span class="chev">›</span></button>';
   h += '</div></div>';
   h += renderSupportCard();
+  if (S.role === 'manager' && !UI.pvCol) h += '<div class="sec"><div class="card list"><button class="li" onclick="openSheet(\'delbuilding\',{})"><div class="ic" style="color:var(--bad)">🗑</div><div class="grow"><b style="color:var(--bad)">' + esc(t('Delete this building', 'حذف هذه البناية')) + '</b><small>' + esc(t('Removes it with its apartments, months, payments and expenses', 'تُحذف مع شققها وأشهرها ودفعاتها ومصاريفها')) + '</small></div><span class="chev">›</span></button></div></div>';
   return h;
+}
+/* Delete the whole building: the manager types its name to confirm. */
+SHEETS.delbuilding = function() {
+  var n = S.building.name;
+  var counts = [S.units.length + t(' apartments', ' شقق'), S.cycles.length + t(' months and rounds', ' أشهر ودورات'), livePayments().length + t(' payments', ' دفعات'), liveExpenses().length + t(' expenses', ' مصاريف')];
+  var h = '<h3>' + esc(t('Delete ' + n + '?', 'حذف ' + n + '؟')) + '</h3>';
+  h += '<p class="lead">' + esc(t('Everything in it goes and cannot be brought back: ', 'كل ما فيها يُحذف ولا يمكن استرجاعه: ') + counts.join(', ') + '.') + '</p>';
+  if (S.building.compound_id) h += '<div class="banner warn" style="margin-bottom:10px"><div class="grow">' + esc(t('It belongs to a compound. If the sheet link writes into it, that stops for this building.', 'هي ضمن مجمّع. إذا كان ربط الجدول يكتب فيها، يتوقف ذلك لهذه البناية.')) + '</div></div>';
+  h += '<button class="btn sec block" onclick="exportData()">⬇︎ ' + esc(t('Download a copy first', 'نزّل نسخة أولاً')) + '</button>';
+  h += '<label class="field"><span>' + esc(t('Type the building name to confirm: ', 'اكتب اسم البناية للتأكيد: ') + n) + '</span><input class="input" id="del-name" autocomplete="off" oninput="var b=document.getElementById(\'del-go\');if(b)b.disabled=this.value.trim()!==' + jsArg(n.trim()) + '"></label>';
+  h += '<div id="sheet-err" class="err"></div><div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Keep it', 'أبقها')) + '</button><button class="btn danger" id="del-go" disabled onclick="deleteBuilding()">' + esc(t('Delete for good', 'احذف نهائياً')) + '</button></div>';
+  return h;
+};
+function deleteBuilding() {
+  var typed = val('del-name').trim(), btn = document.getElementById('del-go');
+  if (typed !== S.building.name.trim()) return sheetErr(t('The name does not match', 'الاسم غير مطابق'));
+  if (btn) btn.disabled = true;
+  rpc('delete_building', { p_building: S.building.id, p_confirm: typed }).then(function() {
+    try { localStorage.removeItem('bny15_last'); } catch (e) {}
+    UI.sheet = null; UI.bsec = null; UI.tab = 'home';
+    toast(t('Building deleted', 'حُذفت البناية'));
+    if (isCloud()) return afterSignIn();
+    UI.screen = 'welcome'; render();
+  }).catch(function(e) { if (btn) btn.disabled = false; sheetErr(e.message); });
 }
 function switchRow(key, on, title, sub) {
   return '<div class="switch-row"><div><b>' + esc(title) + '</b><small>' + esc(sub) + '</small></div><button class="sw' + (on ? ' on' : '') + '" onclick="toggleSetting(\'' + key + '\',' + !on + ')"></button></div>';
 }
 function toggleSetting(k, v) {
   var st = Object.assign({}, S.building.settings || {}); if (k === 'base_cur_usd') { k = 'base_cur'; v = v ? 'USD' : null; } if (k === 'offers_on') { k = 'offers_off'; v = !v; } if (k === 'safe_per_block') { if (!confirm(t('This changes how the cash is counted: ' + (v ? 'each block gets its own safe; past money is counted by the apartment\'s block.' : 'all blocks share one safe again.') + ' Nothing is deleted. Continue?', 'هذا يغيّر طريقة احتساب النقد: ' + (v ? 'لكل بلوك صندوقه؛ المال السابق يُحتسب حسب بلوك الشقة.' : 'كل البلوكات تعود لصندوق واحد.') + ' لا شيء يُحذف. متابعة؟'))) return; k = 'safe_mode'; v = v ? 'block' : null; } st[k] = v;
-  dbUpdate('buildings', S.building.id, { settings: st }).then(render, fail);
+  dbUpdate('buildings', S.building.id, { settings: st }).then(function() { return k === 'sup_confirm' ? supResync() : null; }).then(render, fail);
   S.building.settings = st; render();
 }
 function saveSettings() {
@@ -7534,7 +7771,7 @@ var LAYOUT_CODE = /^(SS\d+|\d+)[A-H]?$/;
 function currentLayout(block) {
   var floors = 0, under = 0, per = 1, by = {};
   activeUnits().filter(function(u) { return block == null || blockOf(u) === block; }).forEach(function(u) {
-    var lv = unitLevel(u.code);
+    var lv = unitLevel(u);
     if (lv == null || lv === 0) return;
     if (lv > 0) floors = Math.max(floors, lv); else under = Math.max(under, -lv);
     by[lv] = (by[lv] || 0) + 1;
@@ -7551,10 +7788,31 @@ function layoutPlan(l, block) {
   target.forEach(function(c) { want[c] = 1; });
   var byCode = {};
   S.units.forEach(function(u) { if (blockOf(u) === block) byCode[String(u.code).toUpperCase()] = u; });
+  // Apartments placed by hand on a floor take that slot; an empty placeholder there goes.
+  var placed = {};
+  activeUnits().forEach(function(u) { if (blockOf(u) === block && placedHere(u)) placed[slotCode(u)] = u; });
   var add = [], revive = [], drop = [];
-  target.forEach(function(c) { var u = byCode[c]; if (!u) add.push(c); else if (u.active === false) revive.push(u); });
-  activeUnits().forEach(function(u) { var c = String(u.code).toUpperCase(); if (blockOf(u) === block && LAYOUT_CODE.test(c) && !want[c]) drop.push(u); });
+  target.forEach(function(c) {
+    var u = byCode[c], p = placed[c];
+    if (p && p !== u) { if (u && u.active !== false && emptyUnit(u)) drop.push(u); return; }
+    if (!u) add.push(c); else if (u.active === false) revive.push(u);
+  });
+  activeUnits().forEach(function(u) { var c = String(u.code).toUpperCase(); if (blockOf(u) === block && LAYOUT_CODE.test(c) && !want[c] && !placedHere(u) && drop.indexOf(u) < 0) drop.push(u); });
   return { target: target, add: add, revive: revive, drop: drop };
+}
+/* Floor and position set by hand on the apartment. */
+function placedHere(u) { return u.floor != null && u.floor !== ''; }
+function slotCode(u) {
+  var f = Number(u.floor), s = String(u.spot || '').toUpperCase();
+  return (f < 0 ? 'SS' + (-f) : f === 0 ? 'G' : String(f)) + s;
+}
+function floorName(f) {
+  f = Number(f);
+  return f < 0 ? t('Underground ' + (-f) + ' (SS' + (-f) + ')', 'سفلي ' + (-f) + ' (SS' + (-f) + ')') : f === 0 ? t('Ground floor', 'الطابق الأرضي') : t('Floor ' + f, 'الطابق ' + f);
+}
+/* A placeholder made by setup: no name, phone or payments. */
+function emptyUnit(u) {
+  return !unitName(u) && !u.phone && !u.ext_ref && !S.payments.some(function(p) { return p.unit_id === u.id && !p.voided_at; });
 }
 SHEETS.layout = function(d) {
   var bl = blocks();
@@ -7599,17 +7857,7 @@ function applyLayout() {
     ops = ops.then(function() { return used ? dbUpdate('units', u.id, { active: false }) : dbDelete('units', u.id); });
   });
   // keep the list in building order: underground first, then floor by floor
-  ops.then(function() {
-    var all = S.units.slice().sort(function(a, b) {
-      if (blockOf(a) !== blockOf(b)) return blockOf(a).localeCompare(blockOf(b));
-      var la = unitLevel(a.code), lb = unitLevel(b.code);
-      if (la == null) la = 99; if (lb == null) lb = 99;
-      return la - lb || String(a.code).localeCompare(String(b.code), 'en', { numeric: true });
-    });
-    var p2 = Promise.resolve();
-    all.forEach(function(u, i) { if (u.sort !== i) p2 = p2.then(function() { return dbUpdate('units', u.id, { sort: i }); }); });
-    return p2;
-  }).then(function() { closeSheet(); toast(t('Building updated', 'تم تحديث البناية')); }, function(e) { sheetErr(e.message); });
+  ops.then(resortUnits).then(function() { closeSheet(); toast(t('Building updated', 'تم تحديث البناية')); }, function(e) { sheetErr(e.message); });
 }
 
 /* Turn the building into a compound with blocks, or add one more block. */
@@ -8349,7 +8597,7 @@ function heroThumb(cyc) {
   var units = activeUnits().slice(0, 30);
   var wins = units.map(function(u) { var st = unitCycle(u, cyc).state; return { state: st === 'paid' ? 'paid' : st === 'none' ? 'closed' : 'owes' }; });
   if (!wins.length) wins = [{ state: 'closed' }];
-  var levels = levelsFor(units.map(function(u, i) { return { code: u.code, win: wins[i] }; }));
+  var levels = levelsFor(units.map(function(u, i) { return { code: u.code, u: u, win: wins[i] }; }));
   return buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, wins: wins, levels: levels, signText: S.building.name, elevator: !!setting('elevator'), idp: 'ov' + Math.random().toString(36).slice(2, 6), extraCls: 'studio bh-bare nopop' });
 }
 function renderOverview() {

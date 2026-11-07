@@ -689,8 +689,28 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .pvbar { display: flex; align-items: center; gap: 10px; margin: 6px 12px 0; padding: 8px 12px; border-radius: 10px; background: var(--wbg); color: var(--warn); font-size: 13px; font-weight: 700; }
 .pvbar span { flex: 1; }
 .pvbar button { min-height: 32px; padding: 0 12px; border-radius: 8px; border: 1.5px solid currentColor; background: none; color: inherit; font: inherit; }
-.crow { display: flex; align-items: center; gap: 10px; padding: 10px 12px 4px; }
-.crow .uname { font-weight: 700; }
+.crow { display: flex; align-items: center; gap: 10px; padding: 14px 14px 6px; }
+.crow .uname { font-weight: 800; font-size: 17px; }
+.crow .ucode { font-size: 15px; }
+.crow > .camt b, .crow > b { font-size: 19px; font-weight: 800; }
+.cstack { display: flex; flex-direction: column; gap: 10px; }
+.ccard { background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+.ccard .crow-ticks { border-bottom: 0; background: rgba(127,127,127,.08); margin: 4px 10px 10px; border-radius: 12px; padding: 2px 10px 8px; }
+.ccard .ctick { min-height: 44px; font-size: 14.5px; color: var(--ink2, var(--ink)); }
+.ccard .ctick + .ctick { border-top: 1px dashed var(--line); }
+.ccard .ctick .camt b { font-size: 14px; font-weight: 700; }
+.ccard .ctick .camt small { font-size: 10.5px; }
+.ccard .ctick.on .grow { color: var(--mut); text-decoration: line-through; }
+.ccard .ctick-box { width: 26px; height: 26px; }
+.cdash-bills { margin: 10px -4px 0; border-top: 1px solid var(--line); }
+.cdash-bills .li { padding: 10px 4px; }
+.cdash-bills .li small { color: var(--mut); }
+.cbill-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+.cbill-row + .cbill-row { border-top: 1px solid var(--line); }
+.cbill-row .grow b { display: block; font-weight: 700; }
+.cbill-row .grow small { color: var(--mut); font-size: 12.5px; }
+.cbill-act { display: flex; gap: 6px; }
+.cbill-act .btn { min-height: 40px; padding: 0 12px; }
 .crow-wa { width: 40px; height: 40px; flex: none; border: 0; border-radius: 10px; background: var(--okbg); font-size: 18px; cursor: pointer; }
 .crow-ticks { padding: 2px 12px 10px; border-bottom: 1px solid var(--line); }
 .ctick { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 6px 2px; border: 0; background: none; color: inherit; font: inherit; text-align: start; cursor: pointer; }
@@ -3601,6 +3621,15 @@ function totalArrears(cyc) {
 /* A safe per block (settings.safe_mode = 'block'): money is counted by the apartment's block,
    expenses by the block chosen when logging them. Without a block it is the whole compound. */
 function safePerBlock() { return setting('safe_mode') === 'block' && blocks().length > 1; }
+/* Shared book: water and EDL bills (not projects) that the collector collects go straight to the
+   suppliers, so they are never in his pocket nor in the shared safe. */
+function sharedDirectIds() {
+  var o = {};
+  if (!S.building || S.building.kind !== 'shared') return o;
+  var proj = {}; S.cycles.forEach(function(c) { if (c.kind === 'project') proj[c.id] = 1; });
+  S.charges.forEach(function(c) { if (!proj[c.cycle_id]) o[c.id] = 1; });
+  return o;
+}
 function cashState(blk) {
   var per = !!blk && safePerBlock();
   var first = blocks()[0];
@@ -3616,12 +3645,13 @@ function cashState(blk) {
   var pockets = {}; // user_id -> {USD, LBP, pending: pair, pendingId}
   var supplier = pair();
   function pk(uid) { return pockets[uid] = pockets[uid] || { USD: 0, LBP: 0, pending: pair(), pendingId: null }; }
-  var passIds = {};
+  var passIds = {}, direct = sharedDirectIds();
   S.charges.forEach(function(c) { if (c.pass_through) passIds[c.id] = true; });
 
   livePayments().forEach(function(p) {
     if (per && unitBlock[p.unit_id] !== blk) return;
     var v = num(p.amount);
+    if (direct[p.charge_id] && p.channel === 'collector' && !handoverConfirmed(p.handover_id)) return; // water/EDL: from the collector straight to the supplier
     if (passIds[p.charge_id]) addTo(supplier, p.cur, v);
     if (p.channel !== 'collector' || handoverConfirmed(p.handover_id)) { addTo(safe, p.cur, v); return; }
     var pocket = pk(p.received_by || 'unknown');
@@ -5504,7 +5534,7 @@ function heroHtml(cyc, opts) {
   var reveal = HERO_REVEAL; HERO_REVEAL = false;
   var safe = cash ? { split: true, usdH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.USD) / 40)), lbpH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.LBP) / 4e6)), usd: cash.safe.USD, lbp: cash.safe.LBP, style: setting('safe_style') || 'lobby', tap: opts.noTap ? null : 'go(\'books\')', sub: isSharedBook() ? t('shared safe', 'الصندوق المشترك') : t('in the safe', 'في الصندوق') } : null;
   var html = buildBuildingScene({
-    phase: ph, wins: wins, levels: levels, interactive: !opts.noTap, idp: opts.idp || 'hm', signText: blk ? (S.building.name + ' ' + blk).slice(0, 12) : S.building.name, chip: opts.only || opts.hideWho ? null : heroChipText(cyc, units),
+    phase: ph, wins: wins, levels: levels, interactive: !opts.noTap || !!opts.alive, idp: opts.idp || 'hm', signText: opts.sign || (blk ? (S.building.name + ' ' + blk).slice(0, 12) : S.building.name), chip: opts.only || opts.hideWho ? null : heroChipText(cyc, units),
     safe: safe, elevator: !!setting('elevator'), coreGlow: openTasks().some(function(x) { return x.due_on && x.due_on <= todayIso(); }),
     extraCls: reveal ? 'reveal' : ''
   });
@@ -6228,12 +6258,12 @@ function renderMoney() {
 
 /* Every movement, newest first. Payments for the same apartment, day and hand are grouped. */
 function ledger(cycleId) {
-  var out = [], groups = {};
+  var out = [], groups = {}, direct = sharedDirectIds();
   var cycCharges = {};
   if (cycleId) chargesOf(cycleId).forEach(function(c) { cycCharges[c.id] = 1; });
   livePayments().forEach(function(p) {
     if (cycleId && !cycCharges[p.charge_id]) return;
-    var u = byId(S.units, p.unit_id), ch = byId(S.charges, p.charge_id), sup = !!(ch && ch.pass_through);
+    var u = byId(S.units, p.unit_id), ch = byId(S.charges, p.charge_id), sup = !!(ch && (ch.pass_through || (direct[ch.id] && p.channel === 'collector')));
     var k = p.unit_id + '|' + dayKey(p.received_at) + '|' + p.channel + '|' + p.received_by + '|' + p.cur + '|' + sup;
     var g = groups[k];
     if (!g) {
@@ -8900,7 +8930,7 @@ function renderResident() {
   var h = '<div class="shell" style="padding-bottom:24px">';
   h += '<div class="res-head row between"><div><small>' + esc(bName()) + '</small><h1>' + esc(t('Apartment ', 'الشقة ') + unitTag(u)) + '</h1>' + (unitName(u) ? '<div class="muted" style="font-weight:600">' + esc(unitName(u)) + '</div>' : '') + '</div><button class="iconbtn" onclick="setLang()">' + (LANG === 'ar' ? 'EN' : 'ع') + '</button></div>';
   h += renderResidentNews();
-  h += heroHtml(cyc, { block: blockOf(u) || null, idp: 'rs', noTap: true, noSafe: !S.resident.booksPublic, only: S.resident.who ? null : u.id });
+  h += heroHtml(cyc, { block: blockOf(u) || null, idp: 'rs', noTap: true, alive: true, sign: S.building.home_name || (blockOf(u) && S.building.kind === 'shared' ? blockLabel(blockOf(u)) : null), noSafe: !S.resident.booksPublic, only: S.resident.who ? null : u.id });
 
   // The bill
   h += '<div class="sec"><div class="card pad"><div class="row between"><b style="font-size:16px">' + esc(cycleTitle(cyc)) + '</b>' + (r.state === 'paid' ? '<span class="receipt-stamp">✓ ' + esc(t('Paid', 'مسدد')) + '</span>' : '') + '</div>';
@@ -8918,16 +8948,30 @@ function renderResident() {
   }
   h += '</div></div>';
 
+  // Other bills still open for this apartment, and projects
+  var others = visibleCycles().filter(function(c) { return c.id !== cyc.id; }).map(function(c) { var rr = unitCycle(u, c), lf = pair(); rr.cells.forEach(function(x) { addTo(lf, x.ch.cur, x.c.left); }); return { c: c, left: lf, any: rr.cells.length > 0 }; })
+    .filter(function(x) { return x.any && (pairUsd(x.left) > 0.005 || x.c.kind === 'project'); });
+  if (others.length) {
+    h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Also open', 'مفتوحة أيضاً')) + '</h2></div><div class="card list">';
+    others.forEach(function(x) {
+      var done = pairUsd(x.left) <= 0.005;
+      h += '<div class="li"><div class="ic' + (done ? ' in' : '') + '">' + (x.c.kind === 'project' ? '◆' : done ? '✓' : '•') + '</div><div class="grow"><b>' + esc(S.building.kind === 'shared' ? colBillName(x.c) : cycleTitle(x.c)) + '</b><small>' + esc(x.c.kind === 'project' ? t('Project', 'مشروع') : cycleTitle(x.c).split(' · ').slice(1).join(' · ')) + '</small></div><span class="amt' + (done ? ' in' : '') + '">' + esc(done ? '✓' : fmtPair(x.left)) + '</span></div>';
+    });
+    h += '</div></div>';
+  }
+
   // Receipts
   var mine = livePayments().filter(function(p) { return p.unit_id === u.id; }).sort(function(a, c) { return String(c.received_at).localeCompare(String(a.received_at)); });
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Your receipts', 'إيصالاتك')) + '</h2></div>';
   if (!mine.length) h += '<div class="card empty">' + esc(t('No payments yet', 'لا دفعات بعد')) + '</div>';
   else {
-    h += '<div class="card list">';
-    mine.slice(0, 30).forEach(function(p) {
+    var monKey = '';
+    mine.slice(0, 40).forEach(function(p) {
+      var mk = String(p.received_at || '').slice(0, 7);
+      if (mk !== monKey) { if (monKey) h += '</div>'; monKey = mk; h += '<div class="daylbl">' + esc(new Date(mk + '-01T12:00:00').toLocaleDateString(LANG === 'ar' ? 'ar-LB' : 'en-GB', { month: 'long', year: 'numeric' })) + '</div><div class="card list">'; }
       var ch = byId(S.charges, p.charge_id), c = ch && byId(S.cycles, ch.cycle_id);
-      var by = p.received_by_name || memberName(p.received_by);
-      h += '<div class="li"><div class="ic in">✓</div><div class="grow"><b>' + esc((ch ? L(ch) : '') + (c ? ' · ' + cycleTitle(c) : '')) + '</b><small>' + esc(dateLabel(p.received_at, true) + ' · ' + (p.channel === 'transfer' ? (p.method || t('Transfer', 'تحويل')) : t('received by ', 'استلمه ') + by)) + '</small></div><span class="amt in">' + esc(fmt(p.amount, p.cur)) + '</span></div>';
+      var by = p.received_by_name || (p.channel === 'collector' ? collectorLabel() : memberName(p.received_by));
+      h += '<div class="li"><div class="ic in">✓</div><div class="grow"><b>' + esc(S.building.kind === 'shared' && c ? colBillName(c) : (ch ? L(ch) : '') + (c ? ' · ' + cycleTitle(c) : '')) + '</b><small>' + esc(dateLabel(p.received_at, true) + ' · ' + (p.channel === 'transfer' ? (p.method || t('Transfer', 'تحويل')) : t('received by ', 'استلمه ') + by)) + '</small></div><span class="amt in">' + esc(fmt(p.amount, p.cur)) + '</span></div>';
     });
     h += '</div>';
   }
@@ -9397,18 +9441,63 @@ function colRow(u) {
   if (!shown.length) return '';
   var left = pair(); owed.forEach(function(k) { addTo(left, k.ch.cur, k.x.left); });
   var paidCells = cells.filter(function(k) { return k.x.state === 'paid'; });
-  var h = '<div class="crow"><div class="ucode">' + esc(unitTag(u)) + '</div><div class="grow"><div class="uname">' + esc(unitName(u) || unitTag(u)) + '</div></div>';
+  var h = '<div class="ccard"><div class="crow"><div class="ucode">' + esc(unitTag(u)) + '</div><div class="grow"><div class="uname">' + esc(unitName(u) || unitTag(u)) + '</div></div>';
   if (owed.length) h += colTotal(left);
   h += '</div><div class="crow-ticks">';
   shown.forEach(function(k) {
     var st = k.x.state, on = st === 'paid';
     h += '<button class="ctick' + (on ? ' on' : st === 'part' ? ' part' : '') + (isPend(k.ch.id, k.uid) ? ' pend' : '') + '" aria-pressed="' + on + '" onclick="colTick(' + jsArg(u.id) + ',' + jsArg(k.bid) + ',' + jsArg(k.ch.id) + ',' + jsArg(k.uid) + ')"><span class="ctick-box">' + (on ? '✓' : '') + '</span><span class="grow">' + esc(k.title) + '</span>' + colAmt(st === 'part' ? k.x.left : k.x.due, k.ch.cur) + '</button>';
   });
-  h += '<div class="row" style="gap:8px;margin-top:4px">';
+  h += '</div><div class="row" style="gap:8px;padding:0 12px 12px">';
   if (owed.length > 1) h += '<button class="btn sec sm grow" onclick="colPayAll(' + jsArg(u.id) + ')">' + esc(t('Paid it all', 'سدد الكل')) + '</button>';
   if (u.phone && owed.length) h += '<button class="btn wa sm grow" onclick="openSheet(\'remind\',{bill:true,u:' + jsArg(u.id) + ',cyc:' + jsArg(owed[owed.length - 1].c.id) + '})">' + esc(t('Send bill', 'أرسل الفاتورة')) + '</button>';
   else if (u.phone && paidCells.length) h += '<button class="btn wa sm grow" onclick="openSheet(\'remind\',{receipt:true,u:' + jsArg(u.id) + ',cyc:' + jsArg(paidCells[paidCells.length - 1].c.id) + '})">' + esc(t('Send receipt', 'أرسل إيصالاً')) + '</button>';
   return h + '</div></div>';
+}
+/* Collector, one bill at a time: who still owes it, tick or remind each one. */
+function colOpenBills() {
+  return visibleCycles().slice().sort(function(a, b) { return String(b.created_at || '').localeCompare(String(a.created_at || '')); })
+    .filter(function(c) { return chargesOf(c.id).length; });
+}
+function colBillState(c) {
+  var rows = activeUnits().map(function(u) {
+    var left = pair(), due = pair(), any = false;
+    chargesOf(c.id).forEach(function(ch) { var x = cell(ch, u); if (x.due > 0) { any = true; addTo(due, ch.cur, x.due); addTo(left, ch.cur, x.left); } });
+    return { u: u, left: left, due: due, any: any };
+  }).filter(function(x) { return x.any; });
+  var owe = rows.filter(function(x) { return pairUsd(x.left) > 0.005; }), left = pair();
+  owe.forEach(function(x) { addTo(left, 'USD', x.left.USD); addTo(left, 'LBP', x.left.LBP); });
+  return { rows: rows, owe: owe, paid: rows.length - owe.length, left: left };
+}
+function colBillView() {
+  var bills = colOpenBills();
+  if (!bills.length) return '<div class="sec"><div class="card empty">' + esc(t('No bills yet', 'لا فواتير بعد')) + '</div></div>';
+  var c = byId(S.cycles, UI.cBill) || bills.filter(function(x) { return colBillState(x).owe.length; })[0] || bills[0];
+  var st = colBillState(c), h = '';
+  h += '<div class="sec" style="margin-top:10px"><select class="input" onchange="UI.cBill=this.value;render()">' + bills.map(function(x) { var s2 = colBillState(x); return '<option value="' + esc(x.id) + '"' + (x.id === c.id ? ' selected' : '') + '>' + esc(colBillName(x) + ' · ' + (s2.owe.length ? t(s2.owe.length + ' owe', s2.owe.length + ' عليهم') : t('all paid', 'مدفوعة'))) + '</option>'; }).join('') + '</select></div>';
+  var pct = st.rows.length ? Math.round(st.paid / st.rows.length * 100) : 0;
+  h += '<div class="sec"><div class="card pad"><div class="row between"><div><b style="font-size:17px">' + esc(colBillName(c)) + '</b><div class="muted" style="font-size:12.5px">' + esc(cycleTitle(c).split(' · ').slice(1).join(' · ')) + '</div></div><div style="text-align:end">' + (st.owe.length ? colTotal(st.left) + '<div class="muted" style="font-size:12px">' + esc(t('left', 'باقٍ')) + '</div>' : '<b style="color:var(--ok)">✓ ' + esc(t('All paid', 'مدفوعة')) + '</b>') + '</div></div>';
+  h += '<div class="bar" style="margin:10px 0 6px"><i class="paid" style="width:' + pct + '%"></i></div><div class="muted" style="font-size:13px">' + esc(t(st.paid + ' of ' + st.rows.length + ' paid', st.paid + ' من ' + st.rows.length + ' سددوا')) + '</div></div></div>';
+  if (st.owe.length) {
+    h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Still owe', 'لم يسددوا')) + ' · ' + st.owe.length + '</h2></div><div class="card">';
+    st.owe.forEach(function(x) {
+      var u = x.u;
+      h += '<div class="cbill-row"><div class="ucode">' + esc(unitTag(u)) + '</div><div class="grow"><b>' + esc(unitName(u) || unitTag(u)) + '</b><small>' + (blocks().length > 1 ? esc(blockLabel(blockOf(u))) : '') + '</small></div>' + colTotal(x.left) + '</div>';
+      h += '<div class="cbill-act" style="padding:0 12px 10px"><button class="btn ok sm grow" onclick="colTickBill(' + jsArg(u.id) + ',' + jsArg(c.id) + ')">✓ ' + esc(t('Paid', 'دفع')) + '</button>' + (u.phone ? '<button class="btn wa sm grow" onclick="openSheet(\'remind\',{u:' + jsArg(u.id) + ',cyc:' + jsArg(c.id) + '})">' + esc(t('Remind', 'ذكّر')) + '</button>' : '<button class="btn sec sm grow" disabled>' + esc(t('No phone', 'لا هاتف')) + '</button>') + '</div>';
+    });
+    h += '</div></div>';
+  }
+  var paid = st.rows.filter(function(x) { return pairUsd(x.left) <= 0.005; });
+  if (paid.length) {
+    h += '<div class="sec"><button class="btn ghost block" onclick="UI.cBillPaid=!UI.cBillPaid;render()">' + esc((UI.cBillPaid ? t('Hide', 'إخفاء') : t('Show', 'إظهار')) + ' ' + t('who paid', 'من دفع') + ' (' + paid.length + ')') + '</button>';
+    if (UI.cBillPaid) h += '<div class="card list" style="margin-top:8px">' + paid.map(function(x) { return '<div class="li"><div class="ic in">✓</div><div class="grow"><b>' + esc(unitTag(x.u) + (unitName(x.u) ? ' · ' + unitName(x.u) : '')) + '</b></div>' + colTotal(x.due) + '</div>'; }).join('') + '</div>';
+    h += '</div>';
+  }
+  return h;
+}
+function colTickBill(uId, cId) {
+  var u = byId(S.units, uId);
+  chargesOf(cId).forEach(function(ch) { var x = cell(ch, u); if (x.left > 0 && x.state !== 'part') colTick(uId, S.building.id, ch.id, uId); });
 }
 function renderColCollect() {
   var h = colPreviewBar() + renderTopbar(t('Collect', 'التحصيل')) + staleBar();
@@ -9419,6 +9508,8 @@ function renderColCollect() {
     books.forEach(function(r) { h += '<button class="' + (r.b.id === S.building.id ? 'on' : '') + '" onclick="colSwitch(' + jsArg(r.b.id) + ')">' + esc(LANG === 'ar' ? (r.b.name_ar || r.b.name) : r.b.name) + '</button>'; });
     h += '</div></div>';
   }
+  h += '<div class="sec" style="margin-top:8px"><div class="seg"><button class="' + (UI.cMode !== 'bill' ? 'on' : '') + '" onclick="UI.cMode=\'apt\';render()">' + esc(t('By apartment', 'حسب الشقة')) + '</button><button class="' + (UI.cMode === 'bill' ? 'on' : '') + '" onclick="UI.cMode=\'bill\';render()">' + esc(t('By bill', 'حسب الفاتورة')) + '</button></div></div>';
+  if (UI.cMode === 'bill') return h + colBillView();
   var tot = colBookTotals();
   h += '<div class="sec" style="margin-top:10px"><div class="row between"><span class="muted" style="font-weight:600">' + esc(t('Still to collect', 'باقي للتحصيل')) + '</span>' + colTotal(tot.left) + '</div></div>';
   var groups = blocks().length > 1 ? blocks() : [null], shown = 0;
@@ -9428,7 +9519,7 @@ function renderColCollect() {
     if (!b) {
       if (!rows.length) return;
       shown += rows.length;
-      h += '<div class="sec" style="margin-top:12px"><div class="card">' + rows.join('') + '</div></div>';
+      h += '<div class="sec" style="margin-top:12px"><div class="cstack">' + rows.join('') + '</div></div>';
       return;
     }
     shown += 1;
@@ -9436,20 +9527,22 @@ function renderColCollect() {
     us.forEach(function(u) { var o = false; colCells(u).forEach(function(k) { if (k.x.left > 0) { addTo(left, k.ch.cur, k.x.left); o = true; } }); if (o) n++; });
     var open = UI.cOpen === b;
     h += '<div class="sec" style="margin-top:10px"><button class="cblock' + (open ? ' on' : '') + '" id="cb-' + esc(b) + '" aria-expanded="' + open + '" onclick="colToggleBlock(' + jsArg(b) + ')"><b>' + esc(blockLabel(b)) + '</b><span class="grow" style="text-align:end">' + (n ? '<small>' + esc(t(n + ' owe', n + ' عليهم')) + '</small> ' + colTotal(left) : '✓ ' + esc(t('All paid', 'الكل سدّد'))) + '</span><span class="chev">' + (open ? '▾' : (LANG === 'ar' ? '‹' : '›')) + '</span></button>';
-    if (open) h += rows.length ? '<div class="card" style="margin-top:6px">' + rows.join('') + '</div>' : '';
+    if (open) h += rows.length ? '<div class="cstack" style="margin-top:8px">' + rows.join('') + '</div>' : '';
     h += '</div>';
   });
   if (!shown) h += '<div class="sec"><div class="card empty">' + esc(t('Everyone has paid ✓', 'الجميع سدّد ✓')) + '</div></div>';
   h += '<div class="sec" style="margin-top:12px"><button class="btn ghost block" onclick="UI.cShowPaid=!UI.cShowPaid;render()">' + esc(UI.cShowPaid ? t('Hide what is paid', 'إخفاء المدفوع') : t('Show what is paid', 'إظهار المدفوع')) + '</button></div>';
   return h;
 }
+function colOpenBill(bid, cid) { colSwitch(bid, function() { UI.tab = 'collect'; UI.cMode = 'bill'; UI.cBill = cid; }); }
 function renderColDash() {
   var h = colPreviewBar() + renderTopbar(t('Dashboard', 'لوحة المعلومات'));
   if (!UI.cb) { loadColBooks(); return h + skelCards(3, 3); }
   var rows = colBooks().map(function(r) {
     return withState(r.ns, function() {
       var cash = cashState(), mine = cash.pockets[r.ns.me.id] || pair();
-      return { b: r.b, pocket: UI.pvCol ? cash.withCollector : { USD: mine.USD || 0, LBP: mine.LBP || 0 }, tot: colBookTotals(true),
+      var bills = colOpenBills().map(function(c) { var s2 = colBillState(c); return { id: c.id, name: colBillName(c), n: s2.rows.length, paid: s2.paid, owe: s2.owe.length, left: colUsdFirst() ? fmt(pairUsd(s2.left), 'USD') : fmtPair(s2.left) }; }).filter(function(x) { return x.owe; });
+      return { b: r.b, bills: bills, pocket: UI.pvCol ? cash.withCollector : { USD: mine.USD || 0, LBP: mine.LBP || 0 }, tot: colBookTotals(true),
         tasks: openTasks('collector').filter(function(x) { return x.due_on && x.due_on <= todayIso(); }),
         pending: r.ns.handovers.filter(function(x) { return x.status === 'pending' && (UI.pvCol || x.collector_id === r.ns.me.id); }).length };
     });
@@ -9459,6 +9552,9 @@ function renderColDash() {
     h += '<div class="card pad"><b style="font-size:16px">' + esc(LANG === 'ar' ? (r.b.name_ar || r.b.name) : r.b.name) + '</b>';
     h += '<div class="kv"><span>' + esc(t('In your pocket', 'معك الآن')) + '</span>' + colTotal(r.pocket) + '</div>';
     h += '<div class="kv"><span>' + esc(t('Still to collect', 'باقي للتحصيل')) + '</span>' + colTotal(r.tot.left) + '</div>';
+    if (r.bills && r.bills.length) {
+      h += '<div class="cdash-bills">' + r.bills.map(function(x) { return '<button class="li" onclick="colOpenBill(' + jsArg(r.b.id) + ',' + jsArg(x.id) + ')"><div class="grow"><b>' + esc(x.name) + '</b><small>' + esc(t(x.paid + '/' + x.n + ' paid', x.paid + '/' + x.n + ' سددوا')) + '</small></div><span class="amt">' + esc(x.left) + '</span><span class="chev">›</span></button>'; }).join('') + '</div>';
+    }
     if (r.pending) h += '<p class="muted" style="margin:10px 0 0;font-weight:600">' + esc(t('Handover waiting for the manager', 'تسليم بانتظار المدير')) + '</p>';
     else if (pairUsd(r.pocket) > 0.005) h += '<button class="btn sec sm block" style="margin-top:10px" onclick="colHand(' + jsArg(r.b.id) + ')">' + esc(t('Hand over', 'سلّم')) + '</button>';
     h += '</div>';

@@ -3506,12 +3506,12 @@ function latestMonth() {
 function cycleOrderKey(c) { return c.kind === 'month' ? (c.period || '') : String(c.created_at || '').slice(0, 7); }
 
 /* Month summary: building money only (supplier pass-through is reported apart). */
-function cycleSummary(cyc) {
+function cycleSummary(cyc, onlyUnits) {
   var s = { due: pair(), paid: pair(), pocket: pair(), dueEq: 0, paidEq: 0, pocketEq: 0, units: 0, settled: 0, owing: [],
             supDue: pair(), supPaid: pair(), pct: 0 };
   if (!cyc) return s;
   var chs = chargesOf(cyc.id);
-  activeUnits().forEach(function(u) {
+  (onlyUnits || activeUnits()).forEach(function(u) {
     var any = false, owes = false, owed = pair();
     chs.forEach(function(ch) {
       var c = cell(ch, u);
@@ -5428,7 +5428,7 @@ function heroHtml(cyc, opts) {
   var levels = units.length ? levelsFor(units.map(function(u, i) { return { code: u.code, u: u, win: wins[i] }; })) : null;
   var cash = opts.noSafe ? null : cashState();
   var reveal = HERO_REVEAL; HERO_REVEAL = false;
-  var safe = cash ? { split: true, usdH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.USD) / 40)), lbpH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.LBP) / 4e6)), usd: cash.safe.USD, lbp: cash.safe.LBP, style: setting('safe_style') || 'lobby', tap: opts.noTap ? null : 'go(\'books\')', sub: t('in the safe', 'في الصندوق') } : null;
+  var safe = cash ? { split: true, usdH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.USD) / 40)), lbpH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.LBP) / 4e6)), usd: cash.safe.USD, lbp: cash.safe.LBP, style: setting('safe_style') || 'lobby', tap: opts.noTap ? null : 'go(\'books\')', sub: isSharedBook() ? t('shared safe', 'الصندوق المشترك') : t('in the safe', 'في الصندوق') } : null;
   var html = buildBuildingScene({
     phase: ph, wins: wins, levels: levels, interactive: !opts.noTap, idp: opts.idp || 'hm', signText: blk ? (S.building.name + ' ' + blk).slice(0, 12) : S.building.name, chip: opts.only || opts.hideWho ? null : heroChipText(cyc, units),
     safe: safe, elevator: !!setting('elevator'), coreGlow: openTasks().some(function(x) { return x.due_on && x.due_on <= todayIso(); }),
@@ -5502,10 +5502,65 @@ function monthCard(cyc, clickable) {
 }
 
 /* ---------------------------------------------------------------------------
+   Home — shared book (water, EDL, shared projects). Never shows a building's
+   own safe or books: only the shared safe, bills being collected, projects.
+   --------------------------------------------------------------------------- */
+function renderHomeShared() {
+  var cyc = homeCycle(), cash = cashState();
+  var bl = blocks(), blk = bl.length > 1 && bl.indexOf(UI.block) >= 0 ? UI.block : null;
+  var units = activeUnits().filter(function(u) { return !blk || blockOf(u) === blk; });
+  var h = renderTopbar();
+  h += bl.length > 1 ? blockChips(true) + (blk ? heroHtml(cyc) : heroCompound(cyc)) : heroHtml(cyc);
+  h += renderNewsCard();
+  h += renderContactsCard();
+
+  // Bills still being collected: every published round with money left, newest first.
+  var bills = visibleCycles().filter(function(c) { return c.kind !== 'project'; }).map(function(c) { return { c: c, s: cycleSummary(c, units) }; })
+    .filter(function(x) { return x.s.units > 0; });
+  var open = bills.filter(function(x) { return x.s.settled < x.s.units || x.c.published === false; }), done = bills.filter(function(x) { return open.indexOf(x) < 0; });
+  h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Bills being collected', 'فواتير قيد الجباية') + (blk ? ' · ' + blockLabel(blk) : '')) + '</h2></div>';
+  if (!open.length) h += '<div class="card empty">' + esc(bills.length ? t('Everything is collected ✓', 'كل شيء مجبى ✓') : t('No bills yet. Water and EDL bills appear here when they are published.', 'لا فواتير بعد. تظهر فواتير المياه والكهرباء هنا عند نشرها.')) + '</div>';
+  open.forEach(function(x) { h += sharedBillCard(x.c, x.s); });
+  if (done.length) h += '<p class="hint" style="margin-top:8px">' + esc(t('Fully collected: ', 'مجباة بالكامل: ') + done.slice(0, 6).map(function(x) { return cycleTitle(x.c).split(' · ')[0]; }).join(', ') + (done.length > 6 ? '…' : '')) + '</p>';
+  h += '<p class="hint">' + esc(t(collectorLabel() + ' collects water and EDL and pays the suppliers directly. That money never goes into a safe.', collectorLabel() + ' يجبي المياه والكهرباء ويدفع للموردين مباشرة. هذا المال لا يدخل أي صندوق.')) + '</p></div>';
+
+  // Shared projects: running ones and the ones coming up.
+  var projs = S.cycles.filter(function(c) { return c.kind === 'project' && (c.published !== false || isManager()); });
+  var upcoming = projs.filter(function(c) { return c.published === false; });
+  var running = projs.filter(function(c) { return c.published !== false; }).map(function(c) { return { c: c, s: cycleSummary(c, units) }; }).filter(function(x) { return x.s.settled < x.s.units; });
+  h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Shared projects', 'المشاريع المشتركة')) + '</h2>' + (isManager() ? '<button onclick="openSheet(\'project\',{})">＋ ' + esc(t('New', 'جديد')) + '</button>' : '') + '</div>';
+  if (!running.length && !upcoming.length) h += '<div class="card empty">' + esc(t('No shared project yet. A roof repair or solar panels for the whole compound would go here.', 'لا مشروع مشترك بعد. إصلاح السطح أو الطاقة الشمسية لكل المجمّع يظهر هنا.')) + '</div>';
+  running.forEach(function(x) { h += sharedBillCard(x.c, x.s, '◆ '); });
+  if (upcoming.length) h += '<div class="card list" style="margin-top:8px">' + upcoming.map(function(c) { return '<button class="li" onclick="openCycleAdjust(' + jsArg(c.id) + ')"><div class="ic">◆</div><div class="grow"><b>' + esc(cycleTitle(c)) + '</b><small>' + esc(t('Coming up · not shown to residents yet', 'قريباً · غير ظاهر للسكان بعد')) + '</small></div><span class="chev">›</span></button>'; }).join('') + '</div>';
+  h += '</div>';
+
+  // The shared safe only.
+  h += '<div class="sec"><div class="tiles">';
+  h += tile(t('Shared safe', 'الصندوق المشترك'), fmtPairBig(cash.safe), t('Money held for the compound: projects, shared repairs. Each building\'s own safe stays private.', 'مال المجمّع: مشاريع وتصليحات مشتركة. صندوق كل بناية يبقى خاصاً بها.'), 'go(\'books\')', 'var(--ok)', 'wide');
+  h += '</div></div>';
+
+  var tasks = openTasks().slice(0, 3);
+  h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Coming up', 'قريباً')) + '</h2><button onclick="go(\'building\');UI.bsec=\'tasks\';render()">' + esc(t('All tasks', 'كل المهام')) + '</button></div>';
+  h += tasks.length ? '<div class="card">' + tasks.map(taskRow).join('') + '</div>' : '<div class="card empty">' + esc(t('Nothing due. Add reminders like water tank cleaning.', 'لا مهام. أضف تذكيرات مثل تنظيف خزان المياه.')) + '</div>';
+  h += '</div>';
+  var ev = S.events.slice(-6).reverse();
+  if (ev.length) h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Latest activity', 'آخر النشاطات')) + '</h2><button onclick="UI.booksView=\'activity\';go(\'books\')">' + esc(t('See all', 'الكل')) + '</button></div><div class="card">' + ev.map(eventRow).join('') + '</div></div>';
+  return h;
+}
+/* One bill or project: how much is in, how much is left, how many apartments paid. */
+function sharedBillCard(c, s, icon) {
+  var left = { USD: s.due.USD - s.paid.USD, LBP: s.due.LBP - s.paid.LBP }, pct = s.dueEq > 0 ? Math.min(100, s.paidEq / s.dueEq * 100) : 0;
+  return '<div class="card month" role="button" tabindex="0" style="margin-top:8px" onclick="UI.cycleId=' + jsArg(c.id) + ';go(\'collect\')"><div class="month-top"><b>' + esc((icon || '') + cycleTitle(c) + (c.published === false ? ' · ' + t('draft', 'مسودة') : '')) + '</b><span>' + esc(t(s.settled + ' of ' + s.units + ' paid', s.settled + ' من ' + s.units + ' سددوا')) + '</span></div>' +
+    '<div class="bar"><i class="paid" style="width:' + pct.toFixed(1) + '%"></i></div>' +
+    '<div class="legend"><span><i style="background:var(--ok)"></i>' + esc(t('Collected ', 'محصّل ') + fmtPair(s.paid)) + '</span><span><i style="background:var(--bg2);border:1px solid var(--line)"></i>' + esc(t('Still to collect ', 'المتبقي ') + fmtPair(left)) + '</span></div></div>';
+}
+
+/* ---------------------------------------------------------------------------
    Home — manager
    --------------------------------------------------------------------------- */
 function homeCycle() { return latestMonth() || currentCycle(); }
 function renderHomeManager() {
+  if (isSharedBook()) return renderHomeShared();
   var cyc = homeCycle();
   var cash = cashState();
   var h = renderTopbar();

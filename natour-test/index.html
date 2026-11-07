@@ -9160,7 +9160,8 @@ function renderOverview() {
   order.sort(function(a, b) { return (a ? 0 : 1) - (b ? 0 : 1); });
   order.forEach(function(c) {
     var comp = c ? (ov.comps || []).filter(function(x) { return x.id === c; })[0] : null;
-    h += '<div class="sec"><div class="sec-h"><h2>' + esc(c ? (comp ? comp.name : t('Compound', 'مجمّع')) : (order.length > 1 ? t('Other buildings', 'بنايات أخرى') : t('Buildings', 'البنايات'))) + '</h2></div><div class="stack">';
+    var canEd = comp && isCloud() && SESSION_UID() === comp.created_by;
+    h += '<div class="sec"><div class="sec-h"><h2>' + esc(c ? (comp ? (LANG === 'ar' && comp.name_ar ? comp.name_ar : comp.name) : t('Compound', 'مجمّع')) : (order.length > 1 ? t('Other buildings', 'بنايات أخرى') : t('Buildings', 'البنايات'))) + '</h2>' + (canEd ? '<button onclick="UI.sheet={name:\'compname\',data:{id:' + jsArg(comp.id) + '}};render()">✎ ' + esc(t('Rename', 'إعادة تسمية')) + '</button>' : '') + '</div><div class="stack">';
     groups[c].forEach(function(r) { h += overviewCard(r); });
     h += '</div></div>';
   });
@@ -9168,6 +9169,26 @@ function renderOverview() {
   if (isCloud()) h += '<button class="btn ghost block" style="margin-top:6px" onclick="signOut()">' + esc(t('Sign out', 'خروج')) + '</button>';
   h += '</div></div>';
   return h;
+}
+function SESSION_UID() { try { var r = UI.ov && (UI.ov.rows || []).filter(function(x) { return x.ns && x.ns.me; })[0]; return r ? r.ns.me.id : (S && S.me ? S.me.id : null); } catch (e) { return null; } }
+/* Rename a compound (its creator only). Buildings inside keep their own names. */
+SHEETS.compname = function(d) {
+  var comp = ((UI.ov && UI.ov.comps) || []).filter(function(x) { return x.id === d.id; })[0];
+  if (!comp) return '';
+  return '<h3>' + esc(t('Compound name', 'اسم المجمّع')) + '</h3><p class="lead">' + esc(t('The group your buildings belong to. Each building keeps its own name.', 'المجموعة التي تنتمي إليها بناياتك. لكل بناية اسمها.')) + '</p>' +
+    '<label class="field"><span>' + esc(t('Name', 'الاسم')) + '</span><input class="input" id="cp-name" value="' + esc(comp.name || '') + '"></label>' +
+    '<label class="field"><span>' + esc(t('In Arabic (optional)', 'بالعربية (اختياري)')) + '</span><input class="input" id="cp-ar" dir="rtl" value="' + esc(comp.name_ar || '') + '"></label>' +
+    '<div id="sheet-err" class="err"></div><div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Close', 'إغلاق')) + '</button><button class="btn pri" onclick="saveCompName(' + jsArg(comp.id) + ')">' + esc(t('Save', 'حفظ')) + '</button></div>';
+};
+function saveCompName(id) {
+  var nm = val('cp-name').trim(), ar = val('cp-ar').trim();
+  if (!nm) return sheetErr(t('Give it a name', 'أعطه اسماً'));
+  var row = { name: nm };
+  if (UI.ov && UI.ov.comps && UI.ov.comps[0] && 'name_ar' in UI.ov.comps[0]) row.name_ar = ar || null;
+  cloudCall(SB.from('compounds').update(row).eq('id', id)).then(function() {
+    (UI.ov.comps || []).forEach(function(x) { if (x.id === id) { x.name = nm; if ('name_ar' in row) x.name_ar = row.name_ar; } });
+    closeSheet(); toast(t('Saved', 'تم الحفظ')); render();
+  }, function(e) { sheetErr(e.message); });
 }
 function overviewCard(r) {
   var b = r.b;

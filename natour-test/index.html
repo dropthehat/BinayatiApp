@@ -5380,7 +5380,7 @@ function renderTopbar(sub) {
 }
 function renderDock() {
   var tabs = isManager()
-    ? [['home', t('Home', 'الرئيسية')], ['collect', t('Collect', 'التحصيل')], ['fab'], ['books', t('Books', 'الحسابات')], ['building', t('Building', 'البناية')]]
+    ? [['home', t('Home', 'الرئيسية')], ['collect', isSharedBook() ? t('Bills', 'الفواتير') : t('Collect', 'التحصيل')], ['fab'], ['books', t('Books', 'الحسابات')], ['building', t('Building', 'البناية')]]
     : [['home', t('Home', 'الرئيسية')], ['collect', t('Collect', 'التحصيل')], ['fab'], ['books', t('Books', 'الحسابات')], ['tasks', t('Tasks', 'المهام')]];
   if (!can('books')) tabs = tabs.filter(function(x) { return x[0] !== 'books'; });
   if (colUI()) tabs = [['collect', t('Collect', 'التحصيل')], ['home', t('Dashboard', 'اللوحة')]].concat(setting('collector_add') ? [['fab']] : []);
@@ -5397,7 +5397,7 @@ function renderApp() {
   if (colUI() && !UI.colStarted) { UI.colStarted = true; UI.tab = 'collect'; }
   if (colUI() && UI.tab !== 'home' && UI.tab !== 'collect') UI.tab = 'collect';
   if (UI.tab === 'home') body = colUI() ? renderColDash() : isManager() ? renderHomeManager() : renderHomeCollector();
-  else if (UI.tab === 'collect') body = colUI() ? renderColCollect() : renderCollect();
+  else if (UI.tab === 'collect') body = colUI() ? renderColCollect() : isSharedBook() && isManager() ? renderSharedBills() : renderCollect();
   else if (UI.tab === 'books') body = renderBooks();
   else if (UI.tab === 'tasks') body = renderTasksScreen();
   else body = renderBuilding();
@@ -5549,9 +5549,9 @@ function renderHomeShared() {
   return h;
 }
 /* One bill or project: how much is in, how much is left, how many apartments paid. */
-function sharedBillCard(c, s, icon) {
+function sharedBillCard(c, s, icon, still) {
   var left = { USD: s.due.USD - s.paid.USD, LBP: s.due.LBP - s.paid.LBP }, pct = s.dueEq > 0 ? Math.min(100, s.paidEq / s.dueEq * 100) : 0;
-  return '<div class="card month" role="button" tabindex="0" style="margin-top:8px" onclick="UI.cycleId=' + jsArg(c.id) + ';go(\'collect\')"><div class="month-top"><b>' + esc((icon || '') + cycleTitle(c) + (c.published === false ? ' · ' + t('draft', 'مسودة') : '')) + '</b><span>' + esc(t(s.settled + ' of ' + s.units + ' paid', s.settled + ' من ' + s.units + ' سددوا')) + '</span></div>' +
+  return '<div class="card month" style="margin-top:8px"' + (still ? '' : ' role="button" tabindex="0" onclick="UI.cycleId=' + jsArg(c.id) + ';go(\'collect\')"') + '><div class="month-top"><b>' + esc((icon || '') + cycleTitle(c) + (c.published === false ? ' · ' + t('draft', 'مسودة') : '')) + '</b><span>' + esc(t(s.settled + ' of ' + s.units + ' paid', s.settled + ' من ' + s.units + ' سددوا')) + '</span></div>' +
     '<div class="bar"><i class="paid" style="width:' + pct.toFixed(1) + '%"></i></div>' +
     '<div class="legend"><span><i style="background:var(--ok)"></i>' + esc(t('Collected ', 'محصّل ') + fmtPair(s.paid)) + '</span><span><i style="background:var(--bg2);border:1px solid var(--line)"></i>' + esc(t('Still to collect ', 'المتبقي ') + fmtPair(left)) + '</span></div></div>';
 }
@@ -5748,6 +5748,44 @@ function renderCollect() {
   if (!shown.length) h += '<div class="card empty">' + esc(f === 'owing' ? t('Everyone has paid 🎉', 'الجميع سدد 🎉') : t('Nobody here', 'لا أحد هنا')) + '</div>';
   shown.forEach(function(x) { h += unitCard(x.u, cyc, x.r, x.b); });
   h += '</div>';
+  return h;
+}
+/* Shared book, committee view of one bill: totals per block and who still owes. Read-only:
+   ticking is the collector's job (his own page, or the sheet). */
+function renderSharedBills() {
+  var cyc = currentCycle();
+  var h = renderTopbar(t('Bills', 'الفواتير'));
+  h += cycleChips(cyc, 'pickCycle');
+  if (!cyc) return h + '<div class="sec"><div class="card empty">' + esc(t('No bills yet. Water and EDL bills appear here when they are published.', 'لا فواتير بعد. تظهر فواتير المياه والكهرباء هنا عند نشرها.')) + '</div></div>';
+  var bl = blocks(), blk = bl.length > 1 && bl.indexOf(UI.block) >= 0 ? UI.block : null;
+  var units = activeUnits().filter(function(u) { return !blk || blockOf(u) === blk; });
+  // Totals: the whole bill, then each block.
+  h += '<div class="sec">' + sharedBillCard(cyc, cycleSummary(cyc, units), '', true);
+  if (!blk && bl.length > 1) {
+    h += '<div class="card list" style="margin-top:8px">';
+    bl.forEach(function(b) {
+      var s = cycleSummary(cyc, activeUnits().filter(function(u) { return blockOf(u) === b; }));
+      if (!s.units) return;
+      var left = { USD: s.due.USD - s.paid.USD, LBP: s.due.LBP - s.paid.LBP };
+      h += '<button class="li" onclick="UI.block=' + jsArg(b) + ';render()"><div class="ic">' + esc(b) + '</div><div class="grow"><b>' + esc(blockLabel(b)) + '</b><small>' + esc(t(s.settled + ' of ' + s.units + ' paid', s.settled + ' من ' + s.units + ' سددوا') + (pairUsd(left) > 0.005 ? ' · ' + t('left ', 'باقي ') + fmtPair(left) : '')) + '</small></div><span class="amt' + (pairUsd(left) > 0.005 ? '' : ' in') + '">' + (pairUsd(left) > 0.005 ? s.pct + '%' : '✓') + '</span></button>';
+    });
+    h += '</div>';
+  }
+  h += '</div>';
+  if (bl.length > 1) h += blockChips(true);
+  // Who still owes, then who paid.
+  var rows = units.map(function(u) { var r = unitCycle(u, cyc), left = pair(), paid = pair(); r.cells.forEach(function(x) { addTo(left, x.ch.cur, x.c.left); addTo(paid, x.ch.cur, Math.min(x.c.paid, x.c.due)); }); return { u: u, left: left, paid: paid, any: r.cells.length > 0 }; }).filter(function(x) { return x.any; });
+  var owe = rows.filter(function(x) { return pairUsd(x.left) > 0.005; }), done = rows.filter(function(x) { return pairUsd(x.left) <= 0.005; });
+  var f = UI.billFilter || 'owing';
+  h += '<div class="chips" style="margin-top:4px"><button class="chip' + (f === 'owing' ? ' on' : '') + '" onclick="UI.billFilter=\'owing\';render()">' + esc(t('Still owe', 'لم يسددوا')) + ' <span class="cnt">' + owe.length + '</span></button><button class="chip' + (f === 'paid' ? ' on' : '') + '" onclick="UI.billFilter=\'paid\';render()">' + esc(t('Paid', 'سددوا')) + ' <span class="cnt">' + done.length + '</span></button></div>';
+  var list = f === 'paid' ? done : owe;
+  h += '<div class="sec" style="margin-top:8px">';
+  if (!list.length) h += '<div class="card empty">' + esc(f === 'owing' ? t('Everyone has paid 🎉', 'الجميع سدد 🎉') : t('Nobody yet', 'لا أحد بعد')) + '</div>';
+  else h += '<div class="card list">' + list.map(function(x) {
+    var u = x.u;
+    return '<button class="li" onclick="openSheet(\'unit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(unitTag(u)) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc(blk ? '' : blockLabel(blockOf(u))) + '</small></div><span class="amt' + (f === 'paid' ? ' in' : '') + '">' + esc(f === 'paid' ? '✓ ' + fmtPair(x.paid) : fmtPair(x.left)) + '</span></button>';
+  }).join('') + '</div>';
+  h += '<p class="hint">' + esc(t(collectorLabel() + ' ticks payments on his own page or in the sheet. This page only shows where each bill stands.', collectorLabel() + ' يؤشّر الدفعات في صفحته أو في الجدول. هذه الصفحة تعرض وضع كل فاتورة فقط.')) + '</p></div>';
   return h;
 }
 function unitCard(u, cyc, r, b) {

@@ -746,6 +746,7 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .bico { width: 40px; height: 40px; flex: none; border-radius: 12px; border: 1px solid var(--line); background: transparent; font-size: 18px; display: grid; place-items: center; cursor: pointer; }
 .bico.none { border-color: transparent; }
 .pcard .crow { padding-bottom: 10px; }
+.chips.wrapc { flex-wrap: wrap; overflow: visible; }
 .pgroup-h { font-size: 13px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--mut); margin: 0 4px 8px; }
 .ptotal .camt b { font-size: 22px; font-weight: 900; }
 .pcard.settled { opacity: .75; }
@@ -9435,19 +9436,29 @@ function colBookTotals(ownOnly) {
   return { left: left, n: n, bills: Object.keys(days).length };
 }
 /* One receipt for everything the apartment paid on its latest payment day. */
-function colReceiptText(u, lang) {
-  var cells = colCells(u).filter(function(k) { return k.x.state === 'paid'; }), latest = '';
-  cells.forEach(function(k) { k.x.payments.forEach(function(p) { var d = String(p.received_at || '').slice(0, 10); if (d > latest) latest = d; }); });
-  cells = cells.filter(function(k) { return k.x.payments.some(function(p) { return String(p.received_at || '').slice(0, 10) === latest; }); });
-  var total = pair();
-  cells.forEach(function(k) { addTo(total, k.ch.cur, k.x.due); });
+function colReceiptText(u, lang, cycId) {
+  var cells = colCells(u).filter(function(k) { return k.x.state === 'paid' && k.x.due > 0; }), latest = '';
+  if (cycId) cells = cells.filter(function(k) { return k.c.id === cycId; }); // one bill, all of it
+  else { // the newest bill of each kind (water, EDL, the building's fees), plus anything paid on the latest day
+    cells.forEach(function(k) { k.x.payments.forEach(function(p) { var d = String(p.received_at || '').slice(0, 10); if (d > latest) latest = d; }); });
+    var newest = {};
+    cells.forEach(function(k) {
+      var fam = k.bid + '|' + (/^(Water|EDL)\b/.exec(String(cycleTitle(k.c, 'en'))) || ['fees'])[0], key = String(k.c.kind === 'month' ? (k.c.period || '') : '') + String(k.c.created_at || '');
+      if (!newest[fam] || key > newest[fam].key) newest[fam] = { key: key, id: k.c.id };
+    });
+    var keep = {}; Object.keys(newest).forEach(function(f) { keep[newest[f].id] = 1; });
+    cells = cells.filter(function(k) { return keep[k.c.id] || k.x.payments.some(function(p) { return String(p.received_at || '').slice(0, 10) === latest; }); });
+  }
+  var total = pair(), seenC = {};
+  cells.forEach(function(k) { addTo(total, k.ch.cur, k.x.due); seenC[k.c.id] = 1; });
+  var manyBills = Object.keys(seenC).length > 1;
   function one(lg) {
     var T = function(en, ar) { return lg === 'ar' ? ar : en; };
     var name = lg === 'ar' ? (u.name_ar || u.name) : u.name, bname = colHomeName(u, lg);
     var lines = cells.map(function(k) {
       var title = isSharedBook() ? cycleTitle(k.c, lg).split(' · ')[0] + (lg === 'ar' && /^E-/.test(cycleTitle(k.c, lg).split(' · ')[1] || '') ? ' ' + cycleTitle(k.c, lg).split(' · ')[1] : '')
         : (lg === 'ar' ? (k.ch.title_ar || k.ch.title) : k.ch.title);
-      return '• ' + (k.bid === S.building.id ? title : k.title) + ': ' + colPlain(k.x.due, k.ch.cur) + ' ✅';
+      return '• ' + (k.bid === S.building.id && !manyBills ? title : k.title) + ': ' + colPlain(k.x.due, k.ch.cur) + ' ✅';
     });
     var s = '🏢 *' + bname + '*\n\n🧾 *' + T('Receipt', 'إيصال') + '*\n' + T('Thank you ', 'شكراً ') + (name ? '*' + name + '* ' : '') + '(' + unitTag(u) + ') 🌸\n' + lines.join('\n');
     if (cells.length > 1) s += '\n\n✅ *' + T('Total received: ', 'المجموع المستلم: ') + colPlainPair(total) + '*';
@@ -9620,7 +9631,7 @@ function colBillView() {
       var firstCh = chargesOf(c.id).filter(function(ch) { return cell(ch, u).due > 0; })[0];
       h += '<div class="brow' + (paid ? ' paid' : '') + '"><button class="bchk' + (paid ? ' on' : '') + (pend ? ' pend' : '') + '" aria-pressed="' + paid + '" aria-label="' + esc(t('Paid', 'دفع')) + '" onclick="' + (paid ? 'openSheet(\'cell\',{ch:' + jsArg(firstCh.id) + ',u:' + jsArg(u.id) + '})' : 'colTickBill(' + jsArg(u.id) + ',' + jsArg(c.id) + ')') + '">' + (paid ? '✓' : '') + '</button>';
       h += '<div class="grow"><b>' + esc(unitName(u) || unitTag(u)) + '</b><small>' + esc(unitTag(u)) + '</small></div><span class="bamt">' + colTotal(paid ? x.due : x.left) + '</span>';
-      if (u.phone) h += paid ? '<button class="bico" aria-label="' + esc(t('Send receipt', 'أرسل إيصالاً')) + '" onclick="openSheet(\'remind\',{receipt:true,u:' + jsArg(u.id) + ',cyc:' + jsArg(c.id) + '})">🧾</button>' : '<button class="bico" aria-label="' + esc(t('Remind', 'ذكّر')) + '" onclick="openSheet(\'remind\',{u:' + jsArg(u.id) + ',cyc:' + jsArg(c.id) + '})">📣</button>';
+      if (u.phone) h += paid ? '<button class="bico" aria-label="' + esc(t('Send receipt', 'أرسل إيصالاً')) + '" onclick="openSheet(\'remind\',{receipt:true,one:true,u:' + jsArg(u.id) + ',cyc:' + jsArg(c.id) + '})">🧾</button>' : '<button class="bico" aria-label="' + esc(t('Remind', 'ذكّر')) + '" onclick="openSheet(\'remind\',{u:' + jsArg(u.id) + ',cyc:' + jsArg(c.id) + '})">📣</button>';
       else h += '<span class="bico none"></span>';
       h += '</div>';
     });
@@ -9652,7 +9663,7 @@ function renderColCollect() {
   h += '<div class="sec" style="margin-top:8px"><input class="input" type="search" placeholder="' + esc(t('Find a name or apartment…', 'ابحث عن اسم أو شقة…')) + '" value="' + esc(UI.cQ || '') + '" oninput="colFilter(this.value)"></div>';
   var bl = blocks(), blk = bl.length > 1 && bl.indexOf(UI.cBlk) >= 0 ? UI.cBlk : null;
   if (bl.length > 1) {
-    h += '<div class="chips" style="margin-top:8px"><button class="chip' + (!blk ? ' on' : '') + '" onclick="UI.cBlk=null;render()">' + esc(t('All', 'الكل')) + '</button>';
+    h += '<div class="chips wrapc" style="margin-top:8px"><button class="chip' + (!blk ? ' on' : '') + '" onclick="UI.cBlk=null;render()">' + esc(t('All', 'الكل')) + '</button>';
     bl.forEach(function(b) {
       var n = activeUnits().filter(function(u) { return blockOf(u) === b && colCells(u).some(function(k) { return k.x.left > 0; }); }).length;
       h += '<button class="chip' + (blk === b ? ' on' : '') + '" onclick="UI.cBlk=' + jsArg(b) + ';render()">' + esc(blockLabel(b)) + (n ? ' <span class="cnt">' + n + '</span>' : ' ✓') + '</button>';
@@ -9684,6 +9695,40 @@ function colHomeName(u, lg) {
   return nm || (lg === 'ar' ? (S.building.name_ar || S.building.name) : S.building.name);
 }
 function colBookNs(bid) { var r = colBooks().filter(function(x) { return x.b.id === bid; })[0]; return r ? r.ns : null; }
+/* Swipe left/right on the collector page: next or previous bill tab, or block. */
+function colSwipe(dir) {
+  if (UI.cMode === 'apt') {
+    var list = [null].concat(blocks().length > 1 ? blocks() : []);
+    if (list.length < 2) return;
+    var i = list.indexOf(blocks().indexOf(UI.cBlk) >= 0 ? UI.cBlk : null), j = i + dir;
+    if (j < 0 || j >= list.length) return;
+    UI.cBlk = list[j]; render(); window.scrollTo(0, 0); return;
+  }
+  var tabs = colFamTabs(), cur = UI.cFam || '', k = -1;
+  tabs.forEach(function(x, n) { if (x.bid + '|' + x.fam === cur) k = n; });
+  if (k < 0) tabs.forEach(function(x, n) { if (k < 0 && x.bid === S.building.id) k = n; });
+  var m = k + dir;
+  if (m < 0 || m >= tabs.length) return;
+  colPickFam(tabs[m].bid, tabs[m].fam); window.scrollTo(0, 0);
+}
+(function() {
+  var x0 = null, y0 = 0, t0 = 0;
+  document.addEventListener('touchstart', function(e) {
+    x0 = null;
+    if (UI.screen !== 'app' || UI.sheet || UI.tab !== 'collect' || typeof colUI !== 'function' || !colUI()) return;
+    if (e.target.closest && e.target.closest('.rchips, input, textarea, select')) return;
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = Date.now();
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    if (x0 == null) return;
+    var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+    x0 = null;
+    if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.6 || Date.now() - t0 > 700) return;
+    var dir = dx < 0 ? 1 : -1;
+    if (LANG === 'ar') dir = -dir;
+    colSwipe(dir);
+  }, { passive: true });
+})();
 function colOpenBill(bid, cid) { colSwitch(bid, function() { UI.tab = 'collect'; UI.cMode = 'bill'; UI.cBill = cid; var c = byId(S.cycles, cid); if (c) UI.cFam = bid + '|' + colFamOf(c); }); }
 function renderColDash() {
   var h = colPreviewBar() + renderTopbar(t('Dashboard', 'لوحة المعلومات'));
@@ -9963,7 +10008,7 @@ SHEETS.remind = function(d) {
   if (!u || !cyc) return '';
   if (!d.tone) d.tone = suggestTone(u, cyc);
   if (!d.len) d.len = 'long';
-  if (d.text == null) d.text = d.receipt ? colReceiptText(u) : d.bill ? colBillText(u) : d.len === 'long' ? waText(u, cyc) : waTextShort(u, cyc);
+  if (d.text == null) d.text = d.receipt ? colReceiptText(u, null, d.one ? d.cyc : null) : d.bill ? colBillText(u) : d.len === 'long' ? waText(u, cyc) : waTextShort(u, cyc);
   var h = '<h3>' + esc(t('Message to ', 'رسالة إلى ') + unitTag(u) + (unitName(u) ? ' · ' + unitName(u) : '')) + '</h3>';
   var hist = unitHistory(u, cyc);
   if (!d.receipt && !d.bill) h += '<p class="lead">' + esc(hist.checked ? t((hist.checked === 1 ? 'Last month' : 'Last ' + hist.checked + ' months') + ': paid ' + hist.paid + ', still open ' + hist.behind + '.', (hist.checked === 1 ? 'الشهر الماضي' : 'آخر ' + hist.checked + ' أشهر') + ': سدد ' + hist.paid + '، متأخر ' + hist.behind + '.') : t('No earlier months yet.', 'لا أشهر سابقة بعد.')) + '</p>';

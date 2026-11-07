@@ -5515,7 +5515,8 @@ function renderHomeShared() {
   h += renderContactsCard();
 
   // Bills still being collected: every published round with money left, newest first.
-  var bills = visibleCycles().filter(function(c) { return c.kind !== 'project'; }).map(function(c) { return { c: c, s: cycleSummary(c, units) }; })
+  var bills = visibleCycles().filter(function(c) { return c.kind !== 'project'; })
+    .sort(function(a, b) { return String(b.created_at || '').localeCompare(String(a.created_at || '')); }).map(function(c) { return { c: c, s: cycleSummary(c, units) }; })
     .filter(function(x) { return x.s.units > 0; });
   var open = bills.filter(function(x) { return x.s.settled < x.s.units || x.c.published === false; }), done = bills.filter(function(x) { return open.indexOf(x) < 0; });
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Bills being collected', 'فواتير قيد الجباية') + (blk ? ' · ' + blockLabel(blk) : '')) + '</h2></div>';
@@ -5543,7 +5544,7 @@ function renderHomeShared() {
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Coming up', 'قريباً')) + '</h2><button onclick="go(\'building\');UI.bsec=\'tasks\';render()">' + esc(t('All tasks', 'كل المهام')) + '</button></div>';
   h += tasks.length ? '<div class="card">' + tasks.map(taskRow).join('') + '</div>' : '<div class="card empty">' + esc(t('Nothing due. Add reminders like water tank cleaning.', 'لا مهام. أضف تذكيرات مثل تنظيف خزان المياه.')) + '</div>';
   h += '</div>';
-  var ev = S.events.slice(-6).reverse();
+  var ev = moneyEvents(6);
   if (ev.length) h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Latest activity', 'آخر النشاطات')) + '</h2><button onclick="UI.booksView=\'activity\';go(\'books\')">' + esc(t('See all', 'الكل')) + '</button></div><div class="card">' + ev.map(eventRow).join('') + '</div></div>';
   return h;
 }
@@ -5601,7 +5602,7 @@ function renderHomeManager() {
   h += tasks.length ? '<div class="card">' + tasks.map(taskRow).join('') + '</div>' : '<div class="card empty">' + esc(t('Nothing due. Add reminders like water tank cleaning.', 'لا مهام. أضف تذكيرات مثل تنظيف خزان المياه.')) + '</div>';
   h += '</div>';
 
-  var ev = S.events.slice(-6).reverse();
+  var ev = moneyEvents(6);
   if (ev.length) {
     h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Latest activity', 'آخر النشاطات')) + '</h2><button onclick="UI.booksView=\'activity\';go(\'books\')">' + esc(t('See all', 'الكل')) + '</button></div><div class="card">' + ev.map(eventRow).join('') + '</div></div>';
   }
@@ -6156,7 +6157,7 @@ function renderActivity() {
 function eventText(e) {
   var d = (e.data && e.data.new) ? e.data.new : (e.data || {});
   var old = (e.data && e.data.old) || {};
-  var who = e.actor_name || memberName(e.actor);
+  var who = e.actor_name || (e.actor ? memberName(e.actor) : (e.tbl === 'payments' || e.tbl === 'expenses' ? t('The sheet', 'الجدول') : memberName(e.actor)));
   var u = d.unit_id && byId(S.units, d.unit_id), ch = d.charge_id && byId(S.charges, d.charge_id);
   var code = u ? unitTag(u) : '';
   switch (e.tbl) {
@@ -6202,10 +6203,19 @@ function eventText(e) {
   }
   return null;
 }
+/* Home shows money only: payments, expenses, handovers. Everything else stays under Who did what. */
+function moneyEvents(n) {
+  var out = [];
+  for (var i = S.events.length - 1; i >= 0 && out.length < n; i--) {
+    var e = S.events[i];
+    if ((e.tbl === 'payments' || e.tbl === 'expenses' || e.tbl === 'handovers') && eventText(e)) out.push(e);
+  }
+  return out;
+}
 function eventRow(e) {
   var txt = eventText(e);
   if (!txt) return '';
-  var who = e.actor_name || memberName(e.actor);
+  var who = e.actor_name || (e.actor ? memberName(e.actor) : (e.tbl === 'payments' || e.tbl === 'expenses' ? t('The sheet', 'الجدول') : memberName(e.actor)));
   return '<div class="ev"><div class="who">' + esc((who || '?').charAt(0).toUpperCase()) + '</div><div class="grow">' + esc(txt) + '<small>' + esc(dateLabel(e.at, true)) + '</small></div></div>';
 }
 

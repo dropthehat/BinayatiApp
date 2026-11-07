@@ -390,6 +390,8 @@ b.dual { text-align: end; }
 .apt-bill .rowbtn .grow b, .apt-bill .rowbtn .grow small { display: block; }
 .apt-bill .rowbtn .grow small { font-size: 12.5px; line-height: 1.35; }
 /* iOS draws date inputs with their own size: make them match the other fields */
+select.input { -webkit-appearance: none; appearance: none; padding-inline-end: 42px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%238C9894' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; background-size: 16px; text-overflow: ellipsis; }
+[dir="rtl"] select.input { background-position: left 14px center; }
 input.input[type="date"], input.input[type="time"] { -webkit-appearance: none; appearance: none; display: block; width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box; text-align: start; line-height: normal; }
 input.input[type="date"]::-webkit-date-and-time-value { text-align: start; margin: 0; }
 .two > * { min-width: 0; }
@@ -5549,11 +5551,15 @@ function renderHomeShared() {
   return h;
 }
 /* One bill or project: how much is in, how much is left, how many apartments paid. */
+/* Shared book money: dollars first (at this book's rate), lira in brackets, unless the
+   "Collector page in dollars first" setting is off. */
+function sharedMoney(p) { return colUsdFirst() ? fmt(pairUsd(p), 'USD') + ' (' + fmt(pairUsd(p) * rate(), 'LBP') + ')' : fmtPair(p); }
+function sharedMoneyHtml(p) { return colUsdFirst() ? '<span class="camt"><b>' + esc(fmt(pairUsd(p), 'USD')) + '</b><small>' + esc(fmt(pairUsd(p) * rate(), 'LBP')) + '</small></span>' : esc(fmtPair(p)); }
 function sharedBillCard(c, s, icon, still) {
   var left = { USD: s.due.USD - s.paid.USD, LBP: s.due.LBP - s.paid.LBP }, pct = s.dueEq > 0 ? Math.min(100, s.paidEq / s.dueEq * 100) : 0;
   return '<div class="card month" style="margin-top:8px"' + (still ? '' : ' role="button" tabindex="0" onclick="UI.cycleId=' + jsArg(c.id) + ';go(\'collect\')"') + '><div class="month-top"><b>' + esc((icon || '') + cycleTitle(c) + (c.published === false ? ' · ' + t('draft', 'مسودة') : '')) + '</b><span>' + esc(t(s.settled + ' of ' + s.units + ' paid', s.settled + ' من ' + s.units + ' سددوا')) + '</span></div>' +
     '<div class="bar"><i class="paid" style="width:' + pct.toFixed(1) + '%"></i></div>' +
-    '<div class="legend"><span><i style="background:var(--ok)"></i>' + esc(t('Collected ', 'محصّل ') + fmtPair(s.paid)) + '</span><span><i style="background:var(--bg2);border:1px solid var(--line)"></i>' + esc(t('Still to collect ', 'المتبقي ') + fmtPair(left)) + '</span></div></div>';
+    '<div class="legend"><span><i style="background:var(--ok)"></i>' + esc(t('Collected ', 'محصّل ') + sharedMoney(s.paid)) + '</span><span><i style="background:var(--bg2);border:1px solid var(--line)"></i>' + esc(t('Still to collect ', 'المتبقي ') + sharedMoney(left)) + '</span></div></div>';
 }
 
 /* ---------------------------------------------------------------------------
@@ -5767,12 +5773,12 @@ function renderSharedBills() {
       var s = cycleSummary(cyc, activeUnits().filter(function(u) { return blockOf(u) === b; }));
       if (!s.units) return;
       var left = { USD: s.due.USD - s.paid.USD, LBP: s.due.LBP - s.paid.LBP };
-      h += '<button class="li" onclick="UI.block=' + jsArg(b) + ';render()"><div class="ic">' + esc(b) + '</div><div class="grow"><b>' + esc(blockLabel(b)) + '</b><small>' + esc(t(s.settled + ' of ' + s.units + ' paid', s.settled + ' من ' + s.units + ' سددوا') + (pairUsd(left) > 0.005 ? ' · ' + t('left ', 'باقي ') + fmtPair(left) : '')) + '</small></div><span class="amt' + (pairUsd(left) > 0.005 ? '' : ' in') + '">' + (pairUsd(left) > 0.005 ? s.pct + '%' : '✓') + '</span></button>';
+      h += '<button class="li" onclick="UI.block=' + jsArg(b) + ';render()"><div class="ic">' + esc(b) + '</div><div class="grow"><b>' + esc(blockLabel(b)) + '</b><small>' + esc(t(s.settled + ' of ' + s.units + ' paid', s.settled + ' من ' + s.units + ' سددوا') + (pairUsd(left) > 0.005 ? ' · ' + t('left ', 'باقي ') + sharedMoney(left) : '')) + '</small></div><span class="amt' + (pairUsd(left) > 0.005 ? '' : ' in') + '">' + (pairUsd(left) > 0.005 ? s.pct + '%' : '✓') + '</span></button>';
     });
     h += '</div>';
   }
   h += '</div>';
-  if (bl.length > 1) h += blockChips(true);
+  if (bl.length > 1) h += '<div style="margin-top:14px">' + blockChips(true) + '</div>';
   // Who still owes, then who paid.
   var rows = units.map(function(u) { var r = unitCycle(u, cyc), left = pair(), paid = pair(); r.cells.forEach(function(x) { addTo(left, x.ch.cur, x.c.left); addTo(paid, x.ch.cur, Math.min(x.c.paid, x.c.due)); }); return { u: u, left: left, paid: paid, any: r.cells.length > 0 }; }).filter(function(x) { return x.any; });
   var owe = rows.filter(function(x) { return pairUsd(x.left) > 0.005; }), done = rows.filter(function(x) { return pairUsd(x.left) <= 0.005; });
@@ -5783,7 +5789,7 @@ function renderSharedBills() {
   if (!list.length) h += '<div class="card empty">' + esc(f === 'owing' ? t('Everyone has paid 🎉', 'الجميع سدد 🎉') : t('Nobody yet', 'لا أحد بعد')) + '</div>';
   else h += '<div class="card list">' + list.map(function(x) {
     var u = x.u;
-    return '<button class="li" onclick="openSheet(\'unit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(unitTag(u)) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc(blk ? '' : blockLabel(blockOf(u))) + '</small></div><span class="amt' + (f === 'paid' ? ' in' : '') + '">' + esc(f === 'paid' ? '✓ ' + fmtPair(x.paid) : fmtPair(x.left)) + '</span></button>';
+    return '<button class="li" onclick="openSheet(\'unit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(unitTag(u)) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc(blk ? '' : blockLabel(blockOf(u))) + '</small></div><span class="amt' + (f === 'paid' ? ' in' : '') + '">' + (f === 'paid' ? '✓ ' + sharedMoneyHtml(x.paid) : sharedMoneyHtml(x.left)) + '</span></button>';
   }).join('') + '</div>';
   h += '<p class="hint">' + esc(t(collectorLabel() + ' ticks payments on his own page or in the sheet. This page only shows where each bill stands.', collectorLabel() + ' يؤشّر الدفعات في صفحته أو في الجدول. هذه الصفحة تعرض وضع كل فاتورة فقط.')) + '</p></div>';
   return h;

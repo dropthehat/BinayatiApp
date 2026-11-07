@@ -5678,6 +5678,13 @@ function defaultChannel() {
   return setting('default_channel') || 'manager';
 }
 function cycleChips(cur, onPick) {
+  // Shared book: many long bill names, so one tidy picker, newest first.
+  if (isSharedBook()) {
+    var list = visibleCycles().slice().sort(function(a, b) { return String(b.created_at || '').localeCompare(String(a.created_at || '')); });
+    if (!list.length) return '';
+    return '<div class="sec" style="margin-top:4px"><label class="field" style="margin:0"><span>' + esc(t('Bill', 'الفاتورة')) + '</span><select class="input" onchange="' + onPick + '(this.value)">' +
+      list.map(function(c) { return '<option value="' + esc(c.id) + '"' + (cur && c.id === cur.id ? ' selected' : '') + '>' + esc((c.kind === 'project' ? '◆ ' : '') + cycleTitle(c) + (c.published === false ? ' · ' + t('draft', 'مسودة') : '')) + '</option>'; }).join('') + '</select></label></div>';
+  }
   var h = '<div class="chips">';
   visibleCycles().forEach(function(c) {
     h += '<button class="chip' + (cur && c.id === cur.id ? ' on' : '') + '" onclick="' + onPick + '(' + jsArg(c.id) + ')">' + (c.kind === 'project' ? '◆ ' : '') + esc(cycleTitle(c)) + (c.published === false ? ' · ' + esc(t('draft', 'مسودة')) : '') + '</button>';
@@ -5702,12 +5709,12 @@ function renderCollect() {
   var h = renderTopbar(t('Collect', 'التحصيل'));
   h += cycleChips(cyc, 'pickCycle');
   if (!cyc) return h + '<div class="sec"><div class="card empty">' + esc(isSharedBook() ? t('No bills yet. Water and EDL bills appear here when they are published.', 'لا فواتير بعد. تظهر فواتير المياه والكهرباء هنا عند نشرها.') : t('Open a month first.', 'افتح شهراً أولاً.')) + '</div></div>';
-  h += cycleAdjustBar(cyc);
+  if (!isSharedBook()) h += cycleAdjustBar(cyc);
   var chs = chargesOf(cyc.id);
   if (!chs.length) {
     return h + '<div class="sec"><div class="card pad"><b>' + esc(t('No charges in ' + cycleTitle(cyc), 'لا رسوم في ' + cycleTitle(cyc))) + '</b><p class="muted">' + esc(t('Add the monthly fee, a bill to split, or a supplier service.', 'أضف الرسم الشهري أو فاتورة للتقسيم أو خدمة مورّد.')) + '</p>' + (isManager() ? '<button class="btn pri" onclick="openSheet(\'charge\',{cycle:' + jsArg(cyc.id) + '})">' + esc(t('Add a charge', 'أضف رسماً')) + '</button>' : '') + '</div></div>';
   }
-  if (isManager()) {
+  if (isManager() && !isSharedBook()) {
     var ch = defaultChannel();
     h += '<div class="sec" style="margin-top:8px"><div class="sec-h"><h2 style="font-size:13px;color:var(--mut)">' + esc(t('When you tick a payment, the money is', 'عند تأشير دفعة، المبلغ')) + '</h2></div><div class="seg">';
     h += '<button class="' + (ch === 'manager' ? 'on' : '') + '" onclick="UI.channel=\'manager\';render()">' + esc(t('Cash to me', 'نقداً معي')) + '</button>';
@@ -5769,6 +5776,8 @@ function unitCard(u, cyc, r, b) {
 
 /* Tap a charge: unpaid → paid in full by the chosen channel; paid → offer to undo. */
 function channelRow() {
+  // Shared book: water and EDL are always collected by the collector, who pays the suppliers.
+  if (isSharedBook() && isManager()) return { channel: 'collector', received_by: (collectors()[0] || {}).user_id || null, method: 'Cash' };
   var ch = defaultChannel();
   if (ch.indexOf('collector:') === 0) return { channel: 'collector', received_by: ch.slice(10), method: 'Cash' };
   if (ch === 'transfer') return { channel: 'transfer', received_by: S.me.id, method: setting('transfer_method') || 'Whish' };

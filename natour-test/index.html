@@ -697,6 +697,13 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .toast-act { background: none; border: 0; color: var(--ok); font: inherit; font-weight: 800; padding: 8px 4px; margin: -8px -4px -8px auto; min-height: 40px; cursor: pointer; }
 .crow-ticks .btn.sm, .unit-actions .btn { min-height: 44px; }
 .tick { min-height: 44px; }
+.skel { position: relative; overflow: hidden; background: var(--line); opacity: .7; border-radius: 10px; }
+.skel::after { content: ''; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); animation: skel 1.3s ease-in-out infinite; }
+[data-theme="dark"] .skel::after { background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent); }
+@keyframes skel { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .skel::after { animation: none; } }
+.skel-card { padding: 14px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px; }
+.skel-row { display: flex; align-items: center; gap: 10px; }
 .stale-bar { margin: 6px 16px 0; padding: 7px 12px; border-radius: 10px; background: var(--wbg); color: var(--warn); font-size: 12.5px; font-weight: 700; }
 
 .cblock { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 10px 14px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--card); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
@@ -5273,7 +5280,7 @@ function render() {
   document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
   var h = '';
   switch (UI.screen) {
-    case 'splash': h = '<div class="splash"><div class="logo">ن</div></div>'; break;
+    case 'splash': h = UI.skel ? skelScreen() : '<div class="splash"><div class="logo">ن</div></div>'; break;
     case 'welcome': h = renderWelcome(); break;
     case 'ob': h = renderOnboarding(); break;
     case 'auth': h = renderAuth(); break;
@@ -8132,6 +8139,20 @@ function showSnap(sess) {
     render(); return true;
   } catch (e) { return false; }
 }
+/* Grey placeholder cards shaped like the real ones, shown while a book loads. */
+function skelCards(n, rows) {
+  var h = '<div class="sec" aria-busy="true" aria-label="' + esc(t('Loading', 'جارٍ التحميل')) + '">';
+  for (var i = 0; i < (n || 4); i++) {
+    h += '<div class="card skel-card"><div class="skel-row"><div class="skel" style="width:38px;height:38px;border-radius:12px"></div><div class="skel" style="flex:1;height:14px;max-width:' + (45 + (i * 17) % 35) + '%"></div><div class="skel" style="width:58px;height:14px"></div></div>';
+    for (var j = 0; j < (rows || 2); j++) h += '<div class="skel-row"><div class="skel" style="width:26px;height:26px;border-radius:8px"></div><div class="skel" style="flex:1;height:12px;max-width:' + (40 + (i + j * 23) % 40) + '%"></div><div class="skel" style="width:46px;height:12px"></div></div>';
+    h += '</div>';
+  }
+  return h + '</div>';
+}
+function skelScreen() {
+  return '<div class="shell"><div class="topbar"><div class="skel" style="width:36px;height:36px;border-radius:12px"></div><div class="skel" style="width:120px;height:16px"></div></div>' +
+    '<div class="sec" style="margin-top:10px"><div class="skel" style="height:44px;border-radius:14px"></div></div>' + skelCards(5, 2) + '</div>';
+}
 function staleBar() {
   if (!UI.stale) return '';
   var m = Math.round((Date.now() - UI.stale) / 60000), ago = m < 60 ? m + ' min' : Math.round(m / 60) + ' h';
@@ -8158,6 +8179,7 @@ function boot() {
         return cloudSession().then(function(sess) {
           if (!sess) { UI.screen = 'welcome'; render(); tickWelcome(); return; }
           var snap = !join && showSnap(sess);
+          if (!snap && !join && (!UI.screen || UI.screen === 'splash')) { UI.skel = true; render(); }
           return afterSignIn().catch(function(e) {
             if (!snap) throw e;
             setSync('off'); render();
@@ -8333,7 +8355,7 @@ function heroThumb(cyc) {
 function renderOverview() {
   var h = '<div class="shell"><header class="topbar"><div class="grow"><b style="font-size:20px;font-weight:800">' + esc(t('Your buildings', 'بناياتك')) + '</b></div><button class="iconbtn" onclick="setLang()">' + (LANG === 'ar' ? 'EN' : 'ع') + '</button></header>';
   var ov = UI.ov;
-  if (!ov) return h + '<div class="sec"><div class="card empty">' + esc(t('Loading your buildings…', 'جارٍ تحميل بناياتك…')) + '</div></div></div>';
+  if (!ov) return h + skelCards(3, 1) + '</div>';
   if (ov.error) h += '<div class="sec"><div class="banner warn">' + esc(ov.error) + '</div></div>';
   var rows = ov.rows.map(function(r) { if (r.ns) r.st = overviewStats(r.ns); return r; });
   // Totals across everything
@@ -8764,7 +8786,7 @@ function renderColCollect() {
 }
 function renderColDash() {
   var h = colPreviewBar() + renderTopbar(t('Dashboard', 'لوحة المعلومات'));
-  if (!UI.cb) { loadColBooks(); return h + '<div class="sec"><div class="card empty">' + esc(t('Loading…', 'جارٍ التحميل…')) + '</div></div>'; }
+  if (!UI.cb) { loadColBooks(); return h + skelCards(3, 3); }
   var rows = colBooks().map(function(r) {
     return withState(r.ns, function() {
       var cash = cashState(), mine = cash.pockets[r.ns.me.id] || pair();

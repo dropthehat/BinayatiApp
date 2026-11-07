@@ -691,6 +691,13 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .ctick-box { width: 28px; height: 28px; flex: none; display: flex; align-items: center; justify-content: center; border: 2px solid var(--line); border-radius: 8px; font-weight: 800; }
 .ctick.on .ctick-box { background: var(--ok); border-color: var(--ok); color: #fff; }
 .ctick.part .ctick-box { border-color: var(--warn); }
+.ctick.pend .ctick-box, .tick.pend { animation: pendp 1s ease-in-out infinite; }
+@keyframes pendp { 50% { opacity: .45; } }
+.toast.act { pointer-events: auto; display: flex; align-items: center; gap: 14px; text-align: start; }
+.toast-act { background: none; border: 0; color: var(--ok); font: inherit; font-weight: 800; padding: 8px 4px; margin: -8px -4px -8px auto; min-height: 40px; cursor: pointer; }
+.crow-ticks .btn.sm, .unit-actions .btn { min-height: 44px; }
+.tick { min-height: 44px; }
+.stale-bar { margin: 6px 16px 0; padding: 7px 12px; border-radius: 10px; background: var(--wbg); color: var(--warn); font-size: 12.5px; font-weight: 700; }
 
 .cblock { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 10px 14px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--card); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
 .cblock.on { border-color: var(--ink); }
@@ -4834,6 +4841,72 @@ function applyLocal(tbl, op, row) {
   S._rev = (S._rev || 0) + 1;
 }
 
+/* Collector safety: ticks carry an idempotency key (tick:<charge>:<unit>), unique among
+   non-voided payments in the database. A retry, a double tap or a second phone ticking the
+   same cell can only record it once. Network failures retry with the same rows; a
+   duplicate on retry means the first attempt landed, so it counts as saved. */
+var PEND = {};
+function tickKey(chId, uId) { return 'tick:' + chId + ':' + uId; }
+var LAST_TAP = {};
+function isPend(chId, uId) { return !!PEND[tickKey(chId, uId)]; }
+/* Ignores a second tap on the same cell within 700 ms (a double tap), so it neither
+   records twice nor jumps straight into the undo sheet. */
+function doubleTap(chId, uId) { var k = tickKey(chId, uId), n = Date.now(), d = n - (LAST_TAP[k] || 0); LAST_TAP[k] = n; return d < 700; }
+function isDup(e) { return e && (e.code === '23505' || /duplicate key|already exists/i.test(e.message || '')); }
+function payWrite(rows) {
+  var tries = 0;
+  function go() {
+    return cloudCall(SB.from('payments').insert(rows)).then(function() { return rows; }, function(e) {
+      if (isDup(e)) return 'dup';
+      if (e.net && tries < 3) { tries++; return new Promise(function(ok) { setTimeout(ok, [1500, 4000, 8000][tries - 1]); }).then(go); }
+      throw e;
+    });
+  }
+  return go();
+}
+function safePay(rows, bid) {
+  if (UI.pvCol) return Promise.reject(pvBlocked());
+  rows.forEach(function(r) {
+    toBase('payments', r); r.id = r.id || uuid(); r.building_id = r.building_id || bid || S.building.id;
+    r.client_key = r.client_key || tickKey(r.charge_id, r.unit_id);
+  });
+  rows = rows.filter(function(r) { return !PEND[r.client_key]; });
+  if (!rows.length) return Promise.resolve(null);
+  if (!isCloud()) return dbInsertMany('payments', rows);
+  var mine = S.building && rows[0].building_id === S.building.id;
+  rows.forEach(function(r) { PEND[r.client_key] = 1; if (mine) applyLocal('payments', 'insert', r); });
+  render();
+  return payWrite(rows).then(function(res) {
+    rows.forEach(function(r) { delete PEND[r.client_key]; });
+    if (res === 'dup' || !mine) reloadBuilding();
+    render();
+    return rows;
+  }, function(e) {
+    rows.forEach(function(r) { delete PEND[r.client_key]; });
+    if (mine) { var ids = rows.map(function(r) { return r.id; }); S.payments = S.payments.filter(function(p) { return ids.indexOf(p.id) < 0; }); S._rev++; }
+    render();
+    var u = byId(S.units, rows[0].unit_id);
+    var er = new Error(e.net ? t('Not saved: ' + (u ? unitTag(u) : '') + '. No connection. Tick it again when you have signal.', 'لم يُحفظ: ' + (u ? unitTag(u) : '') + '. لا اتصال. أعد التأشير عند توفر الشبكة.') : e.message);
+    throw er;
+  });
+}
+function toastUndo(msg, ids) {
+  var el = document.getElementById('toast');
+  el.innerHTML = '';
+  var sp = document.createElement('span'); sp.textContent = msg; el.appendChild(sp);
+  var b = document.createElement('button'); b.className = 'toast-act'; b.textContent = t('Undo', 'تراجع');
+  b.onclick = function() { el.classList.remove('pop', 'act'); undoPayments(ids); };
+  el.appendChild(b);
+  el.classList.add('pop', 'act');
+  clearTimeout(el._t);
+  el._t = setTimeout(function() { el.classList.remove('pop', 'act'); }, 6000);
+}
+function tickToast(rows) {
+  if (!rows || !rows.length) return;
+  var u = byId(S.units, rows[0].unit_id), ch = rows.length === 1 && byId(S.charges, rows[0].charge_id);
+  var what = (u ? unitTag(u) : '') + (ch ? ' · ' + L(ch) : rows.length > 1 ? ' · ' + t('all', 'الكل') : '');
+  toastUndo(t('Saved ', 'حُفظ ') + what, rows.map(function(r) { return r.id; }));
+}
 function dbInsert(tbl, row) {
   if (UI.pvCol) return Promise.reject(pvBlocked());
   toBase(tbl, row);
@@ -4905,10 +4978,15 @@ function dbDelete(tbl, id) {
 function cloudCall(q) {
   setSync('busy');
   return q.then(function(res) {
-    if (res.error) { setSync('live'); throw new Error(niceError(res.error)); }
+    if (res.error) {
+      setSync('live');
+      var er = new Error(niceError(res.error)); er.code = res.error.code;
+      if (/Failed to fetch|NetworkError|Load failed|fetch failed/i.test(res.error.message || '')) { er.net = true; setSync('off'); }
+      throw er;
+    }
     setSync('live');
     return res.data;
-  }, function(e) { setSync('off'); throw new Error(t('No connection. Check your internet.', 'لا يوجد اتصال. تحقق من الإنترنت.')); });
+  }, function(e) { setSync('off'); var er = new Error(t('No connection. Check your internet.', 'لا يوجد اتصال. تحقق من الإنترنت.')); er.net = true; throw er; });
 }
 function niceError(e) {
   var m = (e && (e.message || e.error_description)) || String(e);
@@ -5116,6 +5194,8 @@ function cloudLoadBuilding(bid) {
   setSync('busy');
   return cloudBuildingState(bid).then(function(ns) {
     S = scopeToMyBlocks(ns);
+    UI.stale = false;
+    saveSnap();
     setSync('live');
     subscribe(bid);
     return loadConfig(bid);
@@ -5221,6 +5301,7 @@ function afterRender() {
 function toast(msg) {
   var el = document.getElementById('toast');
   el.textContent = msg;
+  el.classList.remove('act');
   el.classList.add('pop');
   clearTimeout(el._t);
   el._t = setTimeout(function() { el.classList.remove('pop'); }, 2800);
@@ -5598,7 +5679,7 @@ function unitCard(u, cyc, r, b) {
   r.cells.forEach(function(x) {
     var c = x.c, cls = c.state === 'paid' ? (c.pocket ? 'pocket' : 'paid') : c.state === 'part' ? 'part' : '';
     var amt = c.state === 'part' ? fmt(c.left, x.ch.cur) + ' ' + t('left', 'متبقي') : fmt(c.due, x.ch.cur);
-    h += '<button class="tick ' + cls + (x.ch.pass_through ? ' sup' : '') + '" onclick="tapCell(' + jsArg(x.ch.id) + ',' + jsArg(u.id) + ')" aria-pressed="' + (c.state === 'paid') + '"><b>' + (c.state === 'paid' ? '✓ ' : '') + esc(L(x.ch)) + '</b><span>' + esc(amt) + '</span></button>';
+    h += '<button class="tick ' + cls + (x.ch.pass_through ? ' sup' : '') + (isPend(x.ch.id, u.id) ? ' pend' : '') + '" onclick="tapCell(' + jsArg(x.ch.id) + ',' + jsArg(u.id) + ')" aria-pressed="' + (c.state === 'paid') + '"><b>' + (c.state === 'paid' ? '✓ ' : '') + esc(L(x.ch)) + '</b><span>' + esc(amt) + '</span></button>';
   });
   h += '</div>';
   h += '<div class="unit-actions">';
@@ -5620,11 +5701,11 @@ function tapCell(chId, uId) {
   var ch = byId(S.charges, chId), u = byId(S.units, uId);
   if (!ch || !u) return;
   var c = cell(ch, u);
+  if (isPend(chId, uId) || doubleTap(chId, uId)) return;
   if (c.state === 'paid' || c.state === 'part') { openSheet('cell', { ch: chId, u: uId }); return; }
   var r = channelRow();
-  dbInsert('payments', { charge_id: ch.id, unit_id: u.id, amount: c.left, cur: ch.cur, channel: r.channel, method: r.method, received_by: r.received_by, received_at: nowIso() })
-    .then(function() { render(); }, fail);
-  render();
+  safePay([{ charge_id: ch.id, unit_id: u.id, amount: c.left, cur: ch.cur, channel: r.channel, method: r.method, received_by: r.received_by, received_at: nowIso() }])
+    .then(tickToast, fail);
 }
 function payAll(uId, cycId) {
   var u = byId(S.units, uId), r = channelRow(), rows = [];
@@ -5633,16 +5714,15 @@ function payAll(uId, cycId) {
     if (c.left > 0) rows.push({ charge_id: ch.id, unit_id: u.id, amount: c.left, cur: ch.cur, channel: r.channel, method: r.method, received_by: r.received_by, received_at: nowIso() });
   });
   if (!rows.length) return;
-  dbInsertMany('payments', rows).then(function() {
-    render();
-    toast(t(unitTag(u) + ' is settled for ' + cycleTitle(byId(S.cycles, cycId)), unitTag(u) + ' سدد ' + cycleTitle(byId(S.cycles, cycId))));
+  safePay(rows).then(function(done) {
+    if (done && done.length) toastUndo(t(unitTag(u) + ' is settled for ' + cycleTitle(byId(S.cycles, cycId)), unitTag(u) + ' سدد ' + cycleTitle(byId(S.cycles, cycId))), done.map(function(r) { return r.id; }));
   }, fail);
-  render();
 }
 function undoPayments(ids) {
+  if (!isCloud()) ids = ids.filter(function(id) { return byId(S.payments, id); });
   var p = Promise.resolve();
   ids.forEach(function(id) { p = p.then(function() { return rpc('void_payment', { p_payment: id }); }); });
-  return p.then(function() { if (isCloud()) reloadBuilding(); closeSheet(); toast(t('Payment undone', 'تم التراجع عن الدفعة')); }, function(e) { fail(e); });
+  return p.then(function() { UI.cb = null; if (isCloud()) reloadBuilding(); closeSheet(); toast(t('Payment undone', 'تم التراجع عن الدفعة')); }, function(e) { fail(e); });
 }
 SHEETS.cell = function(d) {
   var ch = byId(S.charges, d.ch), u = byId(S.units, d.u);
@@ -8033,6 +8113,30 @@ function afterSignIn() {
     return openBuilding(pick.id).then(function() { UI.screen = 'app'; render(); });
   });
 }
+/* Last loaded building, kept on this phone so the collector sees cards straight away
+   while the fresh copy loads on weak data. Ticks stay safe on old data: the database
+   refuses a second tick of the same cell. */
+function saveSnap() {
+  try {
+    if (!S.building || !S.me) return;
+    var o = {}; Object.keys(S).forEach(function(k) { if (k !== 'events') o[k] = S[k]; });
+    o.events = [];
+    localStorage.setItem('nt_snap', JSON.stringify({ uid: S.me.id, at: Date.now(), s: o }));
+  } catch (e) {}
+}
+function showSnap(sess) {
+  try {
+    var x = JSON.parse(localStorage.getItem('nt_snap') || 'null');
+    if (!x || !sess || x.uid !== sess.user.id || Date.now() - x.at > 14 * 864e5) return false;
+    S = x.s; S._rev = Math.random(); UI.stale = x.at; UI.screen = 'app'; UI.tab = UI.tab || 'home';
+    render(); return true;
+  } catch (e) { return false; }
+}
+function staleBar() {
+  if (!UI.stale) return '';
+  var m = Math.round((Date.now() - UI.stale) / 60000), ago = m < 60 ? m + ' min' : Math.round(m / 60) + ' h';
+  return '<div class="stale-bar">' + esc(SYNC === 'off' ? t('Offline · showing data from ' + ago + ' ago', 'دون اتصال · بيانات منذ ' + ago) : t('Refreshing… showing data from ' + ago + ' ago', 'جارٍ التحديث… بيانات منذ ' + ago)) + '</div>';
+}
 function boot() {
   var q = new URLSearchParams(location.search);
   var r = q.get('r'), join = q.get('join');
@@ -8053,7 +8157,12 @@ function boot() {
         }
         return cloudSession().then(function(sess) {
           if (!sess) { UI.screen = 'welcome'; render(); tickWelcome(); return; }
-          return afterSignIn();
+          var snap = !join && showSnap(sess);
+          return afterSignIn().catch(function(e) {
+            if (!snap) throw e;
+            setSync('off'); render();
+            toast(t('No connection. Showing your last saved copy.', 'لا اتصال. تُعرض آخر نسخة محفوظة.'));
+          });
         });
       }
       var db = localLoad();
@@ -8576,15 +8685,24 @@ function colToggleBlock(b) {
 function colTick(rowId, bid, chId, uId) {
   UI.cTicked = UI.cTicked || {}; UI.cTicked[rowId] = 1;
   if (bid === S.building.id) return tapCell(chId, uId);
+  if (isPend(chId, uId) || doubleTap(chId, uId)) return;
   var ns = colSharedBook();
   if (!ns || ns.building.id !== bid) return;
   var st = withState(ns, function() { return cell(byId(S.charges, chId), byId(S.units, uId)).state; });
   if (st === 'paid' || st === 'part') return colSwitch(bid, function() { UI.tab = 'collect'; openSheet('cell', { ch: chId, u: uId }); });
-  withState(ns, function() {
+  var row = withState(ns, function() {
     var ch = byId(S.charges, chId), u = byId(S.units, uId), x = cell(ch, u), r = channelRow();
-    dbInsert('payments', { building_id: bid, charge_id: chId, unit_id: uId, amount: x.left, cur: ch.cur, channel: r.channel, method: r.method, received_by: r.received_by, received_at: nowIso() }).then(function() { render(); }, fail);
+    return { building_id: bid, charge_id: chId, unit_id: uId, amount: x.left, cur: ch.cur, channel: r.channel, method: r.method, received_by: r.received_by, received_at: nowIso() };
   });
-  render();
+  row.id = uuid(); row.client_key = tickKey(chId, uId);
+  withState(ns, function() { applyLocal('payments', 'insert', row); });
+  safePay([row], bid).then(function() {
+    toastUndo(t('Saved', 'حُفظ'), [row.id]);
+    UI.cb = null; render();
+  }, function(e) {
+    withState(ns, function() { S.payments = S.payments.filter(function(p) { return p.id !== row.id; }); });
+    fail(e);
+  });
 }
 function colPayAll(uId) {
   var u = byId(S.units, uId);
@@ -8603,7 +8721,7 @@ function colRow(u) {
   h += '</div><div class="crow-ticks">';
   shown.forEach(function(k) {
     var st = k.x.state, on = st === 'paid';
-    h += '<button class="ctick' + (on ? ' on' : st === 'part' ? ' part' : '') + '" aria-pressed="' + on + '" onclick="colTick(' + jsArg(u.id) + ',' + jsArg(k.bid) + ',' + jsArg(k.ch.id) + ',' + jsArg(k.uid) + ')"><span class="ctick-box">' + (on ? '✓' : '') + '</span><span class="grow">' + esc(k.title) + '</span>' + colAmt(st === 'part' ? k.x.left : k.x.due, k.ch.cur) + '</button>';
+    h += '<button class="ctick' + (on ? ' on' : st === 'part' ? ' part' : '') + (isPend(k.ch.id, k.uid) ? ' pend' : '') + '" aria-pressed="' + on + '" onclick="colTick(' + jsArg(u.id) + ',' + jsArg(k.bid) + ',' + jsArg(k.ch.id) + ',' + jsArg(k.uid) + ')"><span class="ctick-box">' + (on ? '✓' : '') + '</span><span class="grow">' + esc(k.title) + '</span>' + colAmt(st === 'part' ? k.x.left : k.x.due, k.ch.cur) + '</button>';
   });
   h += '<div class="row" style="gap:8px;margin-top:4px">';
   if (owed.length > 1) h += '<button class="btn sec sm grow" onclick="colPayAll(' + jsArg(u.id) + ')">' + esc(t('Paid it all', 'سدد الكل')) + '</button>';
@@ -8612,7 +8730,7 @@ function colRow(u) {
   return h + '</div></div>';
 }
 function renderColCollect() {
-  var h = colPreviewBar() + renderTopbar(t('Collect', 'التحصيل'));
+  var h = colPreviewBar() + renderTopbar(t('Collect', 'التحصيل')) + staleBar();
   if (!UI.cb) loadColBooks();
   var books = colBooks();
   if (books.length > 1) {

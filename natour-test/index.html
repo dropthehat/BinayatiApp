@@ -745,6 +745,7 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .bchk.pend { animation: pendp 1s ease-in-out infinite; }
 .bico { width: 40px; height: 40px; flex: none; border-radius: 12px; border: 1px solid var(--line); background: transparent; font-size: 18px; display: grid; place-items: center; cursor: pointer; }
 .bico.none { border-color: transparent; }
+.bico.wa { color: #25D366; border-color: color-mix(in srgb, #25D366 45%, var(--line)); }
 .pcard .crow { padding-bottom: 10px; }
 .chips.wrapc { flex-wrap: wrap; overflow: visible; }
 .pgroup-h { font-size: 13px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--mut); margin: 0 4px 8px; }
@@ -3794,6 +3795,10 @@ function collectorLabel(lang) {
   if ((lang || LANG) === 'ar' && setting('collector_name_ar')) return setting('collector_name_ar');
   return setting('collector_name') || ((lang || LANG) === 'ar' ? 'الجابي' : 'the collector');
 }
+/* Who residents hand cash to: the collector (a member, or the name set on the building), else the manager. */
+var WA_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3z"/></svg>';
+function hasCollector() { return collectors().length > 0 || !!setting('collector_name'); }
+function payToName(lg) { return hasCollector() ? collectorLabel(lg) : ((lg || LANG) === 'ar' ? 'مدير البناية' : 'the building manager'); }
 function roleLabel(r) {
   return { manager: t('Manager', 'المدير'), comanager: t('Co-manager', 'مدير مساعد'), collector: t('Collector', 'الجابي') }[r] || r;
 }
@@ -6125,7 +6130,7 @@ function waText(u, cyc, lang) {
       s += T('Hello ', 'مرحباً ') + (name ? '*' + name + '* ' : '') + '(' + unitTag(u) + ') 👋\n' + lines.join('\n') + '\n\n';
       s += '*' + T('Left to pay: ', 'المتبقي: ') + fmtPair(r.allLeft) + '*';
       if (pairUsd(b.arrears) > 0.005) s += '\n' + T('Plus earlier months: ', 'إضافة لأشهر سابقة: ') + fmtPair(b.arrears);
-      s += '\n' + T('You can hand it to ', 'يمكنك تسليمه إلى ') + (collectors().length ? collectorLabel(lg) : T('the building manager', 'مدير البناية')) + '.';
+      s += '\n' + T('You can hand it to ', 'يمكنك تسليمه إلى ') + payToName(lg) + '.';
     } else {
       s += '🧾 *' + T('Receipt', 'إيصال') + '*\n' + T('Thank you ', 'شكراً ') + (name ? '*' + name + '* ' : '') + '(' + unitTag(u) + ') 🌸\n' + lines.join('\n') + '\n\n';
       s += '✅ *' + T('Fully paid for ', 'مسدد بالكامل عن ') + cycleTitle(cyc, lg) + '*';
@@ -9006,8 +9011,7 @@ function renderResident() {
   h += '<div class="bill-total"><span>' + esc(t('Left to pay', 'المتبقي')) + '</span><span style="color:' + (pairUsd(owed) > 0.005 ? 'var(--warn)' : 'var(--ok)') + '">' + esc(pairUsd(owed) > 0.005 ? fmtPair(owed) : t('Nothing 🎉', 'لا شيء 🎉')) + '</span></div>';
   if (pairUsd(b.arrears) > 0.005) h += '<div class="hint" style="color:var(--bad)">' + esc(t('Includes earlier months: ', 'يشمل أشهراً سابقة: ') + fmtPair(b.arrears)) + '</div>';
   if (pairUsd(owed) > 0.005) {
-    var col = S.members.filter(function(m) { return m.role === 'collector'; })[0];
-    h += '<p class="hint">' + esc(col ? t('You can hand it to ' + mName(col, 'en') + ', or pay the manager directly.', 'يمكنك تسليمه إلى ' + mName(col, 'ar') + ' أو للمدير مباشرة.') : t('Pay the building manager.', 'ادفع لمدير البناية.')) + '</p>';
+    h += '<p class="hint">' + esc(hasCollector() ? t('You can hand it to ' + collectorLabel('en') + '.', 'يمكنك تسليمه إلى ' + collectorLabel('ar') + '.') : t('Pay the building manager.', 'ادفع لمدير البناية.')) + '</p>';
   }
   h += '</div></div>';
 
@@ -9468,6 +9472,35 @@ function colReceiptText(u, lang, cycId) {
   lang = lang || u.lang || 'both';
   return lang === 'both' ? one('ar') + '\n\n━━━━━━━━\n\n' + one('en') : one(lang);
 }
+/* One WhatsApp message with the apartment's whole status: what it paid lately, what is still
+   to pay, the total left, who to hand it to, and the link. */
+function colStatusText(u, lang) {
+  var all = colCells(u).filter(function(k) { return k.x.due > 0; });
+  var owed = all.filter(function(k) { return k.x.left > 0; });
+  var paid = all.filter(function(k) { return k.x.state === 'paid'; }), latest = '', newest = {};
+  paid.forEach(function(k) { k.x.payments.forEach(function(p) { var d = String(p.received_at || '').slice(0, 10); if (d > latest) latest = d; }); });
+  paid.forEach(function(k) {
+    var fam = k.bid + '|' + (/^(Water|EDL)\b/.exec(String(cycleTitle(k.c, 'en'))) || ['fees'])[0], key = String(k.c.kind === 'month' ? (k.c.period || '') : '') + String(k.c.created_at || '');
+    if (!newest[fam] || key > newest[fam].key) newest[fam] = { key: key, id: k.c.id };
+  });
+  var keep = {}; Object.keys(newest).forEach(function(f) { keep[newest[f].id] = 1; });
+  paid = paid.filter(function(k) { return keep[k.c.id] || k.x.payments.some(function(p) { return String(p.received_at || '').slice(0, 10) === latest; }); });
+  var left = pair(); owed.forEach(function(k) { addTo(left, k.ch.cur, k.x.left); });
+  function one(lg) {
+    var T = function(en, ar) { return lg === 'ar' ? ar : en; };
+    var name = lg === 'ar' ? (u.name_ar || u.name) : u.name;
+    var s = '🏢 *' + colHomeName(u, lg) + '*\n\n' + T('Hello ', 'مرحباً ') + (name ? '*' + name + '* ' : '') + '(' + unitTag(u) + ') 👋';
+    if (paid.length) s += '\n\n✅ *' + T('Paid', 'مدفوع') + '*\n' + paid.map(function(k) { return '• ' + k.title + ': ' + colPlain(k.x.due, k.ch.cur); }).join('\n');
+    if (owed.length) {
+      s += '\n\n⏳ *' + T('Still to pay', 'المتبقي') + '*\n' + owed.map(function(k) { return '• ' + k.title + ': ' + colPlain(k.x.left, k.ch.cur); }).join('\n');
+      s += '\n\n*' + T('Total left: ', 'المجموع المتبقي: ') + colPlainPair(left) + '*\n' + T('You can hand it to ', 'يمكنك تسليمه إلى ') + payToName(lg) + '.';
+    } else s += '\n\n🎉 *' + T('Nothing left to pay. Thank you!', 'لا شيء متبقٍ. شكراً!') + '*';
+    if (u.resident_token) s += '\n\n' + T('Your bill and receipts:', 'فاتورتك وإيصالاتك:') + '\n' + residentLink(u);
+    return s;
+  }
+  lang = lang || u.lang || 'both';
+  return lang === 'both' ? one('ar') + '\n\n━━━━━━━━\n\n' + one('en') : one(lang);
+}
 /* One message with everything the apartment still owes. */
 function colBillText(u, lang) {
   var cells = colCells(u).filter(function(k) { return k.x.left > 0; }), total = pair();
@@ -9478,7 +9511,7 @@ function colBillText(u, lang) {
     var s = '🏢 *' + bname + '*\n\n' + T('Hello ', 'مرحباً ') + (name ? '*' + name + '* ' : '') + '(' + unitTag(u) + ') 👋\n';
     s += cells.map(function(k) { return '• ' + k.title + ': ' + colPlain(k.x.left, k.ch.cur); }).join('\n');
     s += '\n\n*' + T('Total to pay: ', 'المجموع المطلوب: ') + colPlainPair(total) + '*';
-    s += '\n' + T('You can hand it to ', 'يمكنك تسليمه إلى ') + (collectors().length ? collectorLabel(lg) : T('the collector', 'الجابي')) + '.';
+    s += '\n' + T('You can hand it to ', 'يمكنك تسليمه إلى ') + payToName(lg) + '.';
     if (u.resident_token) s += '\n\n' + T('Your bill and receipts:', 'فاتورتك وإيصالاتك:') + '\n' + residentLink(u);
     return s;
   }
@@ -9531,8 +9564,8 @@ function colRow(u) {
   h += '<div class="row" style="gap:8px;padding:0 12px 12px;align-items:center">';
   if (!settled) h += '<button class="btn ok grow" style="min-height:48px;font-size:16px" onclick="colPayAll(' + jsArg(u.id) + ')">✓ ' + esc(t('Paid ', 'دفع ') + (colUsdFirst() ? fmt(pairUsd(left), 'USD') : fmtPair(left))) + '</button>';
   else h += '<span class="grow" style="color:var(--ok);font-weight:700">✓ ' + esc(t('Nothing left to pay', 'لا شيء متبقٍ')) + '</span>';
-  if (u.phone && !settled) h += '<button class="bico" aria-label="' + esc(t('Send bill', 'أرسل الفاتورة')) + '" onclick="openSheet(\'remind\',{bill:true,u:' + jsArg(u.id) + ',cyc:' + jsArg(owed[owed.length - 1].c.id) + '})">📣</button>';
-  if (u.phone && paidCells.length) h += '<button class="bico" aria-label="' + esc(t('Send receipt', 'أرسل إيصالاً')) + '" onclick="openSheet(\'remind\',{receipt:true,u:' + jsArg(u.id) + ',cyc:' + jsArg(paidCells[paidCells.length - 1].c.id) + '})">🧾</button>';
+  if (u.phone) h += '<button class="bico wa" aria-label="' + esc(t('WhatsApp status', 'الوضع على واتساب')) + '" onclick="openSheet(\'remind\',{status:true,u:' + jsArg(u.id) + '})">' + WA_ICON + '</button>';
+
   h += '<button class="bico" aria-expanded="' + !!open + '" aria-label="' + esc(t('Details', 'التفاصيل')) + '" onclick="UI.cOpenU=UI.cOpenU||{};UI.cOpenU[' + jsArg(u.id) + ']=!UI.cOpenU[' + jsArg(u.id) + '];render()">' + (open ? '▴' : '▾') + '</button></div>';
   if (open) {
     var shown = cells.filter(function(k) { return k.x.due > 0 && (UI.cShowPaid || k.x.left > 0 || ticked || k.x.state === 'paid'); });
@@ -9615,7 +9648,7 @@ function colBillView() {
   h += '<div class="row between"><span class="muted">' + esc(t(st.paid + ' of ' + st.rows.length + ' paid', 'دفع ' + st.paid + ' من ' + st.rows.length)) + '</span>' + (done ? '<b style="color:var(--ok)">✓ ' + esc(t('All paid', 'الكل دفع')) + '</b>' : '<span class="bh-left">' + colTotal(st.left) + '<small>' + esc(t('left', 'المتبقي')) + '</small></span>') + '</div>';
   if (isSharedBook()) h += '<div class="bh-note' + (done ? ' ok' : '') + '">' + esc(done ? t('Everyone paid: counted as paid to the supplier, out of your pocket.', 'الجميع دفع: تُحتسب مدفوعة للمورد وخرجت من جيبك.') : t('With you: ', 'معك: ') + colPlainPair(mine) + t(' · stays with you until everyone has paid this bill.', ' · تبقى معك حتى يدفع الجميع هذه الفاتورة.')) + '</div>';
   var showAll = !!UI.cShowAll;
-  h += '<div class="row" style="gap:8px;margin-top:10px">' + (st.paid ? '<button class="chip' + (showAll ? ' on' : '') + '" onclick="UI.cShowAll=!UI.cShowAll;render()">' + esc(showAll ? t('Hide who paid', 'إخفاء من دفع') : t('Show who paid (' + st.paid + ')', 'إظهار من دفع (' + st.paid + ')')) + '</button>' : '') + '<span class="muted" style="font-size:12px;margin-inline-start:auto">☐ ' + esc(t('= paid', '= دفع')) + ' · 📣 ' + esc(t('= remind', '= تذكير')) + ' · 🧾 ' + esc(t('= receipt', '= إيصال')) + '</span></div></div></div>';
+  h += '<div class="row" style="gap:8px;margin-top:10px">' + (st.paid ? '<button class="chip' + (showAll ? ' on' : '') + '" onclick="UI.cShowAll=!UI.cShowAll;render()">' + esc(showAll ? t('Hide who paid', 'إخفاء من دفع') : t('Show who paid (' + st.paid + ')', 'إظهار من دفع (' + st.paid + ')')) + '</button>' : '') + '<span class="muted" style="font-size:12px;margin-inline-start:auto;display:inline-flex;align-items:center;gap:4px">☐ ' + esc(t('= paid', '= دفع')) + ' · <span style="color:#25D366;display:inline-flex">' + WA_ICON + '</span> ' + esc(t('= status', '= الوضع')) + '</span></div></div></div>';
   if (done && !showAll) return h;
   // Apartments, by block; blocks where everyone paid fold into one line
   var groups = blocks().length > 1 ? blocks() : [null], allPaid = [];
@@ -9631,7 +9664,7 @@ function colBillView() {
       var firstCh = chargesOf(c.id).filter(function(ch) { return cell(ch, u).due > 0; })[0];
       h += '<div class="brow' + (paid ? ' paid' : '') + '"><button class="bchk' + (paid ? ' on' : '') + (pend ? ' pend' : '') + '" aria-pressed="' + paid + '" aria-label="' + esc(t('Paid', 'دفع')) + '" onclick="' + (paid ? 'openSheet(\'cell\',{ch:' + jsArg(firstCh.id) + ',u:' + jsArg(u.id) + '})' : 'colTickBill(' + jsArg(u.id) + ',' + jsArg(c.id) + ')') + '">' + (paid ? '✓' : '') + '</button>';
       h += '<div class="grow"><b>' + esc(unitName(u) || unitTag(u)) + '</b><small>' + esc(unitTag(u)) + '</small></div><span class="bamt">' + colTotal(paid ? x.due : x.left) + '</span>';
-      if (u.phone) h += paid ? '<button class="bico" aria-label="' + esc(t('Send receipt', 'أرسل إيصالاً')) + '" onclick="openSheet(\'remind\',{receipt:true,one:true,u:' + jsArg(u.id) + ',cyc:' + jsArg(c.id) + '})">🧾</button>' : '<button class="bico" aria-label="' + esc(t('Remind', 'ذكّر')) + '" onclick="openSheet(\'remind\',{u:' + jsArg(u.id) + ',cyc:' + jsArg(c.id) + '})">📣</button>';
+      if (u.phone) h += '<button class="bico wa" aria-label="' + esc(t('WhatsApp status', 'الوضع على واتساب')) + '" onclick="openSheet(\'remind\',{status:true,u:' + jsArg(u.id) + '})">' + WA_ICON + '</button>';
       else h += '<span class="bico none"></span>';
       h += '</div>';
     });
@@ -9992,7 +10025,7 @@ function waTextShort(u, cyc, lang) {
     var name = (lg === 'ar' ? (u.name_ar || u.name) : u.name || '').split(/\s+/)[0];
     var hi = T('Hi', 'مرحباً') + (name ? ' ' + name : '') + ' (' + unitTag(u) + ')';
     var s = owes
-      ? hi + ' 👋 ' + cycleTitle(cyc, lg) + ': *' + fmtPair(r.allLeft) + '* ' + T('still open', 'متبقي') + (pairUsd(b.arrears) > 0.005 ? T(' (+ ' + fmtPair(b.arrears) + ' earlier)', ' (+ ' + fmtPair(b.arrears) + ' سابقاً)') : '') + '.' + (collectors().length ? T(' You can hand it to ' + collectorLabel('en') + '.', ' يمكنك تسليمه إلى ' + collectorLabel('ar') + '.') : '')
+      ? hi + ' 👋 ' + cycleTitle(cyc, lg) + ': *' + fmtPair(r.allLeft) + '* ' + T('still open', 'متبقي') + (pairUsd(b.arrears) > 0.005 ? T(' (+ ' + fmtPair(b.arrears) + ' earlier)', ' (+ ' + fmtPair(b.arrears) + ' سابقاً)') : '') + '.' + (hasCollector() ? T(' You can hand it to ' + collectorLabel('en') + '.', ' يمكنك تسليمه إلى ' + collectorLabel('ar') + '.') : '')
       : hi + ' ✅ ' + T('Received in full for ', 'تم استلام كامل ') + cycleTitle(cyc, lg) + T('. Thank you!', '. شكراً!');
     return s;
   }
@@ -10008,7 +10041,7 @@ SHEETS.remind = function(d) {
   if (!u || !cyc) return '';
   if (!d.tone) d.tone = suggestTone(u, cyc);
   if (!d.len) d.len = 'long';
-  if (d.text == null) d.text = d.receipt ? colReceiptText(u, null, d.one ? d.cyc : null) : d.bill ? colBillText(u) : d.len === 'long' ? waText(u, cyc) : waTextShort(u, cyc);
+  if (d.text == null) d.text = d.status ? colStatusText(u) : d.receipt ? colReceiptText(u, null, d.one ? d.cyc : null) : d.bill ? colBillText(u) : d.len === 'long' ? waText(u, cyc) : waTextShort(u, cyc);
   var h = '<h3>' + esc(t('Message to ', 'رسالة إلى ') + unitTag(u) + (unitName(u) ? ' · ' + unitName(u) : '')) + '</h3>';
   var hist = unitHistory(u, cyc);
   if (!d.receipt && !d.bill) h += '<p class="lead">' + esc(hist.checked ? t((hist.checked === 1 ? 'Last month' : 'Last ' + hist.checked + ' months') + ': paid ' + hist.paid + ', still open ' + hist.behind + '.', (hist.checked === 1 ? 'الشهر الماضي' : 'آخر ' + hist.checked + ' أشهر') + ': سدد ' + hist.paid + '، متأخر ' + hist.behind + '.') : t('No earlier months yet.', 'لا أشهر سابقة بعد.')) + '</p>';

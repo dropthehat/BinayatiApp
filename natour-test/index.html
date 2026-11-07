@@ -705,6 +705,46 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .cdash-bills { margin: 10px -4px 0; border-top: 1px solid var(--line); }
 .cdash-bills .li { padding: 10px 4px; }
 .cdash-bills .li small { color: var(--mut); }
+.ftabs { display: flex; gap: 8px; padding: 10px 16px 0; overflow-x: auto; scrollbar-width: none; }
+.ftab { flex: 1 0 auto; min-height: 48px; padding: 0 16px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); font: inherit; font-weight: 800; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+.ftab.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+.ftab .cnt { font-size: 11px; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: rgba(255,255,255,.18); }
+.ftab:not(.on) .cnt { background: var(--soft); color: var(--warn); }
+.rchips { display: flex; gap: 8px; padding: 10px 16px 2px; overflow-x: auto; scrollbar-width: none; }
+.rchip { flex: none; min-width: 92px; padding: 8px 12px; border-radius: 14px; border: 1.5px solid var(--line); background: transparent; color: var(--ink); font: inherit; text-align: center; cursor: pointer; }
+.rchip b { display: block; font-size: 16px; font-weight: 800; }
+.rchip small { color: var(--mut); font-size: 11.5px; font-weight: 600; }
+.rchip.on { border-color: var(--acc); background: color-mix(in srgb, var(--acc) 18%, transparent); }
+.bhead .bh-t { display: block; font-size: 20px; font-weight: 800; }
+.bhead small { color: var(--mut); }
+.bh-big { display: flex; align-items: baseline; gap: 8px; margin-top: 10px; }
+.bh-big .camt b, .bh-big > b { font-size: 30px; font-weight: 900; letter-spacing: -.02em; }
+.bh-big > span { color: var(--mut); font-weight: 600; }
+.bh-big .camt { align-items: flex-start; }
+.bh-left { display: inline-flex; align-items: baseline; gap: 6px; }
+.bh-left .camt b, .bh-left > b { color: var(--bad); font-size: 19px; font-weight: 800; }
+.bh-left > small { color: var(--mut); }
+.bh-note { margin-top: 10px; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--warn) 12%, transparent); color: var(--ink); font-size: 13px; font-weight: 600; }
+.bh-note.ok { background: color-mix(in srgb, var(--ok) 14%, transparent); }
+.bsec { margin-top: 12px; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); background: var(--card); padding: 0 !important; margin-inline: 16px; }
+.bsec-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; background: color-mix(in srgb, var(--acc) 85%, #000); color: #fff; }
+.bsec-h b { font-size: 17px; font-weight: 800; }
+.bsec-h .camt b { color: #fff; } .bsec-h .camt small { color: rgba(255,255,255,.75); }
+.brow { display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; border-top: 1px solid var(--line); }
+.brow .grow b { display: block; font-weight: 700; font-size: 16px; }
+.brow .grow small { color: var(--mut); font-size: 12px; }
+.brow.paid { background: color-mix(in srgb, var(--ok) 13%, transparent); }
+.brow.paid .grow b { text-decoration: line-through; color: var(--mut); }
+.brow.paid .bamt .camt b { color: var(--ok); }
+.bamt .camt b { font-size: 16px; font-weight: 800; }
+.bchk { width: 40px; height: 40px; flex: none; border-radius: 11px; border: 2.5px solid var(--mut); background: transparent; color: #fff; font-size: 22px; font-weight: 900; display: grid; place-items: center; cursor: pointer; }
+.bchk.on { background: var(--ok); border-color: var(--ok); }
+.bchk.pend { animation: pendp 1s ease-in-out infinite; }
+.bico { width: 40px; height: 40px; flex: none; border-radius: 12px; border: 1px solid var(--line); background: transparent; font-size: 18px; display: grid; place-items: center; cursor: pointer; }
+.bico.none { border-color: transparent; }
+.pcard .crow { padding-bottom: 10px; }
+.ptotal .camt b { font-size: 22px; font-weight: 900; }
+.pcard.settled { opacity: .75; }
 .cbill-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
 .cbill-row + .cbill-row { border-top: 1px solid var(--line); }
 .cbill-row .grow b { display: block; font-weight: 700; }
@@ -3621,14 +3661,32 @@ function totalArrears(cyc) {
 /* A safe per block (settings.safe_mode = 'block'): money is counted by the apartment's block,
    expenses by the block chosen when logging them. Without a block it is the whole compound. */
 function safePerBlock() { return setting('safe_mode') === 'block' && blocks().length > 1; }
-/* Shared book: water and EDL bills (not projects) that the collector collects go straight to the
-   suppliers, so they are never in his pocket nor in the shared safe. */
+/* Shared book: a water or EDL bill (not a project) stays in the collector's pocket until every
+   apartment has paid it. Once it is fully collected it counts as paid to the supplier and leaves
+   his pocket. He never covers a bill with money from other bills. */
 function sharedDirectIds() {
   var o = {};
   if (!S.building || S.building.kind !== 'shared') return o;
-  var proj = {}; S.cycles.forEach(function(c) { if (c.kind === 'project') proj[c.id] = 1; });
-  S.charges.forEach(function(c) { if (!proj[c.cycle_id]) o[c.id] = 1; });
+  if (S._dirKey === S.payments.length + '|' + S.charges.length + '|' + (S._rev || '')) return S._dir;
+  S.cycles.forEach(function(c) {
+    if (c.kind === 'project') return;
+    if (!sharedBillDone(c)) return;
+    S.charges.forEach(function(ch) { if (ch.cycle_id === c.id) o[ch.id] = 1; });
+  });
+  S._dir = o; S._dirKey = S.payments.length + '|' + S.charges.length + '|' + (S._rev || '');
   return o;
+}
+/* Every apartment billed in this cycle has paid all of it. */
+function sharedBillDone(c) {
+  var chs = S.charges.filter(function(ch) { return ch.cycle_id === c.id; });
+  if (!chs.length) return false;
+  var any = false;
+  for (var i = 0; i < S.units.length; i++) {
+    var u = S.units[i];
+    if (u.active === false) continue;
+    for (var j = 0; j < chs.length; j++) { var x = cell(chs[j], u); if (x.due > 0) { any = true; if (x.left > 0.005) return false; } }
+  }
+  return any;
 }
 function cashState(blk) {
   var per = !!blk && safePerBlock();
@@ -9434,30 +9492,44 @@ function colPayAll(uId) {
   colCells(u).filter(function(k) { return k.x.left > 0 && k.x.state !== 'part'; }).forEach(function(k) { colTick(uId, k.bid, k.ch.id, k.uid); });
 }
 function colRow(u) {
+  // People mode: one total for everything this person owes, one button to settle it, details on demand.
   var ticked = UI.cTicked && UI.cTicked[u.id], cells = colCells(u);
   var owed = cells.filter(function(k) { return k.x.left > 0; });
   if (!owed.length && !ticked && !UI.cShowPaid) return '';
-  var shown = UI.cShowPaid ? cells : cells.filter(function(k) { return k.x.left > 0 || ticked; });
-  if (!shown.length) return '';
   var left = pair(); owed.forEach(function(k) { addTo(left, k.ch.cur, k.x.left); });
   var paidCells = cells.filter(function(k) { return k.x.state === 'paid'; });
-  var h = '<div class="ccard"><div class="crow"><div class="ucode">' + esc(unitTag(u)) + '</div><div class="grow"><div class="uname">' + esc(unitName(u) || unitTag(u)) + '</div></div>';
-  if (owed.length) h += colTotal(left);
-  h += '</div><div class="crow-ticks">';
-  shown.forEach(function(k) {
-    var st = k.x.state, on = st === 'paid';
-    h += '<button class="ctick' + (on ? ' on' : st === 'part' ? ' part' : '') + (isPend(k.ch.id, k.uid) ? ' pend' : '') + '" aria-pressed="' + on + '" onclick="colTick(' + jsArg(u.id) + ',' + jsArg(k.bid) + ',' + jsArg(k.ch.id) + ',' + jsArg(k.uid) + ')"><span class="ctick-box">' + (on ? '✓' : '') + '</span><span class="grow">' + esc(k.title) + '</span>' + colAmt(st === 'part' ? k.x.left : k.x.due, k.ch.cur) + '</button>';
-  });
-  h += '</div><div class="row" style="gap:8px;padding:0 12px 12px">';
-  if (owed.length > 1) h += '<button class="btn sec sm grow" onclick="colPayAll(' + jsArg(u.id) + ')">' + esc(t('Paid it all', 'سدد الكل')) + '</button>';
-  if (u.phone && owed.length) h += '<button class="btn wa sm grow" onclick="openSheet(\'remind\',{bill:true,u:' + jsArg(u.id) + ',cyc:' + jsArg(owed[owed.length - 1].c.id) + '})">' + esc(t('Send bill', 'أرسل الفاتورة')) + '</button>';
-  else if (u.phone && paidCells.length) h += '<button class="btn wa sm grow" onclick="openSheet(\'remind\',{receipt:true,u:' + jsArg(u.id) + ',cyc:' + jsArg(paidCells[paidCells.length - 1].c.id) + '})">' + esc(t('Send receipt', 'أرسل إيصالاً')) + '</button>';
-  return h + '</div></div>';
+  var open = UI.cOpenU && UI.cOpenU[u.id], settled = !owed.length;
+  var q = (unitTag(u) + ' ' + (unitName(u) || '') + ' ' + (u.name_ar || '')).toLowerCase();
+  var h = '<div class="ccard pcard' + (settled ? ' settled' : '') + '" data-q="' + esc(q) + '"><div class="crow"><div class="ucode">' + esc(unitTag(u)) + '</div><div class="grow"><div class="uname">' + esc(unitName(u) || unitTag(u)) + '</div><small class="muted">' + esc(settled ? t('All paid ✓', 'سدّد الكل ✓') : t(owed.length + (owed.length === 1 ? ' bill' : ' bills') + ' to pay', owed.length + ' فواتير')) + '</small></div>';
+  if (!settled) h += '<div class="ptotal">' + colTotal(left) + '</div>';
+  h += '</div>';
+  h += '<div class="row" style="gap:8px;padding:0 12px 12px;align-items:center">';
+  if (!settled) h += '<button class="btn ok grow" style="min-height:48px;font-size:16px" onclick="colPayAll(' + jsArg(u.id) + ')">✓ ' + esc(t('Paid ', 'دفع ') + (colUsdFirst() ? fmt(pairUsd(left), 'USD') : fmtPair(left))) + '</button>';
+  else h += '<span class="grow" style="color:var(--ok);font-weight:700">✓ ' + esc(t('Nothing left to pay', 'لا شيء متبقٍ')) + '</span>';
+  if (u.phone && !settled) h += '<button class="bico" aria-label="' + esc(t('Send bill', 'أرسل الفاتورة')) + '" onclick="openSheet(\'remind\',{bill:true,u:' + jsArg(u.id) + ',cyc:' + jsArg(owed[owed.length - 1].c.id) + '})">📣</button>';
+  if (u.phone && paidCells.length) h += '<button class="bico" aria-label="' + esc(t('Send receipt', 'أرسل إيصالاً')) + '" onclick="openSheet(\'remind\',{receipt:true,u:' + jsArg(u.id) + ',cyc:' + jsArg(paidCells[paidCells.length - 1].c.id) + '})">🧾</button>';
+  h += '<button class="bico" aria-expanded="' + !!open + '" aria-label="' + esc(t('Details', 'التفاصيل')) + '" onclick="UI.cOpenU=UI.cOpenU||{};UI.cOpenU[' + jsArg(u.id) + ']=!UI.cOpenU[' + jsArg(u.id) + '];render()">' + (open ? '▴' : '▾') + '</button></div>';
+  if (open) {
+    var shown = cells.filter(function(k) { return k.x.due > 0 && (UI.cShowPaid || k.x.left > 0 || ticked || k.x.state === 'paid'); });
+    h += '<div class="crow-ticks">';
+    shown.forEach(function(k) {
+      var st = k.x.state, on = st === 'paid';
+      h += '<button class="ctick' + (on ? ' on' : st === 'part' ? ' part' : '') + (isPend(k.ch.id, k.uid) ? ' pend' : '') + '" aria-pressed="' + on + '" onclick="colTick(' + jsArg(u.id) + ',' + jsArg(k.bid) + ',' + jsArg(k.ch.id) + ',' + jsArg(k.uid) + ')"><span class="ctick-box">' + (on ? '✓' : '') + '</span><span class="grow">' + esc(k.title) + '</span>' + colAmt(st === 'part' ? k.x.left : k.x.due, k.ch.cur) + '</button>';
+    });
+    h += '</div>';
+  }
+  return h + '</div>';
+}
+/* Search in People mode: hides cards that don't match, without redrawing (keeps the keyboard open). */
+function colFilter(q) {
+  UI.cQ = q; q = String(q || '').trim().toLowerCase();
+  document.querySelectorAll('.pcard').forEach(function(el) { el.style.display = !q || (el.getAttribute('data-q') || '').indexOf(q) >= 0 ? '' : 'none'; });
+  document.querySelectorAll('.cblock').forEach(function(el) { el.style.display = q ? 'none' : ''; });
 }
 /* Collector, one bill at a time: who still owes it, tick or remind each one. */
 function colOpenBills() {
-  return visibleCycles().slice().sort(function(a, b) { return String(b.created_at || '').localeCompare(String(a.created_at || '')); })
-    .filter(function(c) { return chargesOf(c.id).length; });
+  return visibleCycles().slice().sort(function(a, b) { return String(cycleOrderKey(b) || '').localeCompare(String(cycleOrderKey(a) || '')) || String(b.created_at || '').localeCompare(String(a.created_at || '')); })
+    .filter(function(c) { return chargesOf(c.id).length && colBillState(c).rows.length; });
 }
 function colBillState(c) {
   var rows = activeUnits().map(function(u) {
@@ -9469,30 +9541,75 @@ function colBillState(c) {
   owe.forEach(function(x) { addTo(left, 'USD', x.left.USD); addTo(left, 'LBP', x.left.LBP); });
   return { rows: rows, owe: owe, paid: rows.length - owe.length, left: left };
 }
-function colBillView() {
-  var bills = colOpenBills();
-  if (!bills.length) return '<div class="sec"><div class="card empty">' + esc(t('No bills yet', 'لا فواتير بعد')) + '</div></div>';
-  var c = byId(S.cycles, UI.cBill) || bills.filter(function(x) { return colBillState(x).owe.length; })[0] || bills[0];
-  var st = colBillState(c), h = '';
-  h += '<div class="sec" style="margin-top:10px"><select class="input" onchange="UI.cBill=this.value;render()">' + bills.map(function(x) { var s2 = colBillState(x); return '<option value="' + esc(x.id) + '"' + (x.id === c.id ? ' selected' : '') + '>' + esc(colBillName(x) + ' · ' + (s2.owe.length ? t(s2.owe.length + ' owe', s2.owe.length + ' عليهم') : t('all paid', 'مدفوعة'))) + '</option>'; }).join('') + '</select></div>';
-  var pct = st.rows.length ? Math.round(st.paid / st.rows.length * 100) : 0;
-  h += '<div class="sec"><div class="card pad"><div class="row between"><div><b style="font-size:17px">' + esc(colBillName(c)) + '</b><div class="muted" style="font-size:12.5px">' + esc(cycleTitle(c).split(' · ').slice(1).join(' · ')) + '</div></div><div style="text-align:end">' + (st.owe.length ? colTotal(st.left) + '<div class="muted" style="font-size:12px">' + esc(t('left', 'باقٍ')) + '</div>' : '<b style="color:var(--ok)">✓ ' + esc(t('All paid', 'مدفوعة')) + '</b>') + '</div></div>';
-  h += '<div class="bar" style="margin:10px 0 6px"><i class="paid" style="width:' + pct + '%"></i></div><div class="muted" style="font-size:13px">' + esc(t(st.paid + ' of ' + st.rows.length + ' paid', st.paid + ' من ' + st.rows.length + ' سددوا')) + '</div></div></div>';
-  if (st.owe.length) {
-    h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Still owe', 'لم يسددوا')) + ' · ' + st.owe.length + '</h2></div><div class="card">';
-    st.owe.forEach(function(x) {
-      var u = x.u;
-      h += '<div class="cbill-row"><div class="ucode">' + esc(unitTag(u)) + '</div><div class="grow"><b>' + esc(unitName(u) || unitTag(u)) + '</b><small>' + (blocks().length > 1 ? esc(blockLabel(blockOf(u))) : '') + '</small></div>' + colTotal(x.left) + '</div>';
-      h += '<div class="cbill-act" style="padding:0 12px 10px"><button class="btn ok sm grow" onclick="colTickBill(' + jsArg(u.id) + ',' + jsArg(c.id) + ')">✓ ' + esc(t('Paid', 'دفع')) + '</button>' + (u.phone ? '<button class="btn wa sm grow" onclick="openSheet(\'remind\',{u:' + jsArg(u.id) + ',cyc:' + jsArg(c.id) + '})">' + esc(t('Remind', 'ذكّر')) + '</button>' : '<button class="btn sec sm grow" disabled>' + esc(t('No phone', 'لا هاتف')) + '</button>') + '</div>';
+/* Bill families for the tabs: in a shared book, one per kind of bill (Water, EDL…); in a
+   building's book, one tab with the building's name for its monthly fees. */
+function colFamOf(c) { return isSharedBook() ? String(cycleTitle(c, 'en')).split(' ')[0] : 'fees'; }
+function colFamLabel(fam) {
+  if (fam === 'fees') return LANG === 'ar' ? (S.building.name_ar || S.building.name) : S.building.name;
+  var m = { Water: ['💧 Water', '💧 المياه'], EDL: ['⚡ EDL', '⚡ الكهرباء'] }[fam];
+  return m ? t(m[0], m[1]) : fam;
+}
+function colFamTabs() {
+  var tabs = [];
+  colBooks().forEach(function(r) {
+    withState(r.ns, function() {
+      var seen = {};
+      colOpenBills().forEach(function(c) {
+        var f = colFamOf(c); if (seen[f]) return; seen[f] = 1;
+        var owe = 0; colOpenBills().filter(function(x) { return colFamOf(x) === f; }).forEach(function(x) { owe += colBillState(x).owe.length; });
+        tabs.push({ bid: r.b.id, fam: f, label: colFamLabel(f), owe: owe });
+      });
     });
-    h += '</div></div>';
-  }
-  var paid = st.rows.filter(function(x) { return pairUsd(x.left) <= 0.005; });
-  if (paid.length) {
-    h += '<div class="sec"><button class="btn ghost block" onclick="UI.cBillPaid=!UI.cBillPaid;render()">' + esc((UI.cBillPaid ? t('Hide', 'إخفاء') : t('Show', 'إظهار')) + ' ' + t('who paid', 'من دفع') + ' (' + paid.length + ')') + '</button>';
-    if (UI.cBillPaid) h += '<div class="card list" style="margin-top:8px">' + paid.map(function(x) { return '<div class="li"><div class="ic in">✓</div><div class="grow"><b>' + esc(unitTag(x.u) + (unitName(x.u) ? ' · ' + unitName(x.u) : '')) + '</b></div>' + colTotal(x.due) + '</div>'; }).join('') + '</div>';
+  });
+  return tabs;
+}
+function colPickFam(bid, fam) { colSwitch(bid, function() { UI.cFam = bid + '|' + fam; UI.cBill = null; }); }
+/* The short round code on a chip: "W-004", "E-001", or the month. */
+function colChipName(c) { var n = colBillName(c), parts = n.split(' '); return isSharedBook() && parts.length > 1 ? parts.slice(1).join(' ') : n; }
+function colBillView() {
+  var tabs = colFamTabs(), h = '';
+  if (!tabs.length) return '<div class="sec"><div class="card empty">' + esc(t('No bills yet', 'لا فواتير بعد')) + '</div></div>';
+  var curKey = UI.cFam && UI.cFam.split('|')[0] === S.building.id ? UI.cFam : null;
+  var here = tabs.filter(function(x) { return x.bid === S.building.id; });
+  var tab = (curKey && tabs.filter(function(x) { return x.bid + '|' + x.fam === curKey; })[0]) || here[0] || tabs[0];
+  if (tab.bid !== S.building.id) { setTimeout(function() { colPickFam(tab.bid, tab.fam); }, 0); return skelCards(3, 1); }
+  // Bill families
+  h += '<div class="ftabs">' + tabs.map(function(x) { var on = x === tab; return '<button class="ftab' + (on ? ' on' : '') + '" onclick="colPickFam(' + jsArg(x.bid) + ',' + jsArg(x.fam) + ')">' + esc(x.label) + (x.owe ? '<span class="cnt">' + x.owe + '</span>' : '') + '</button>'; }).join('') + '</div>';
+  // Rounds of this family
+  var bills = colOpenBills().filter(function(c) { return colFamOf(c) === tab.fam; });
+  var c = byId(S.cycles, UI.cBill); if (!c || colFamOf(c) !== tab.fam) c = bills[0];
+  h += '<div class="rchips">' + bills.map(function(x, i) { var s2 = colBillState(x); return '<button class="rchip' + (x.id === c.id ? ' on' : '') + '" onclick="UI.cBill=' + jsArg(x.id) + ';render()"><b>' + esc(colChipName(x)) + '</b><small>' + esc((i === 0 ? t('current · ', 'الحالية · ') : '') + (s2.owe.length ? t(s2.owe.length + ' owe', s2.owe.length + ' متبقٍ') : '✓')) + '</small></button>'; }).join('') + '</div>';
+  // The bill: collected, left, where the money is
+  var st = colBillState(c), got = pair(), mine = pair(), dueAll = pair();
+  st.rows.forEach(function(x) { addTo(dueAll, 'USD', x.due.USD); addTo(dueAll, 'LBP', x.due.LBP); });
+  livePayments().forEach(function(p) { var ch = byId(S.charges, p.charge_id); if (!ch || ch.cycle_id !== c.id) return; addTo(got, p.cur, num(p.amount)); if (p.channel === 'collector' && !handoverConfirmed(p.handover_id)) addTo(mine, p.cur, num(p.amount)); });
+  var pct = pairUsd(dueAll) > 0 ? Math.min(100, Math.round(pairUsd(got) / pairUsd(dueAll) * 100)) : 0, done = !st.owe.length;
+  h += '<div class="sec"><div class="card pad bhead"><div class="row between" style="align-items:flex-start"><div><b class="bh-t">' + esc(colBillName(c)) + '</b><small>' + esc(cycleTitle(c).split(' · ').slice(1).join(' · ')) + '</small></div></div>';
+  h += '<div class="bh-big">' + colTotal(got) + '<span>' + esc(t('collected', 'تم تحصيلها')) + '</span></div>';
+  h += '<div class="bar" style="margin:10px 0 8px"><i class="paid" style="width:' + pct + '%"></i></div>';
+  h += '<div class="row between"><span class="muted">' + esc(t(st.paid + ' of ' + st.rows.length + ' paid', 'دفع ' + st.paid + ' من ' + st.rows.length)) + '</span>' + (done ? '<b style="color:var(--ok)">✓ ' + esc(t('All paid', 'الكل دفع')) + '</b>' : '<span class="bh-left">' + colTotal(st.left) + '<small>' + esc(t('left', 'المتبقي')) + '</small></span>') + '</div>';
+  if (isSharedBook()) h += '<div class="bh-note' + (done ? ' ok' : '') + '">' + esc(done ? t('Everyone paid: counted as paid to the supplier, out of your pocket.', 'الجميع دفع: تُحتسب مدفوعة للمورد وخرجت من جيبك.') : t('With you: ', 'معك: ') + colPlainPair(mine) + t(' · stays with you until everyone has paid this bill.', ' · تبقى معك حتى يدفع الجميع هذه الفاتورة.')) + '</div>';
+  h += '<div class="row" style="gap:8px;margin-top:10px"><button class="chip' + (UI.cUnpaid ? ' on' : '') + '" onclick="UI.cUnpaid=!UI.cUnpaid;render()">' + esc(t('Unpaid only', 'غير المدفوعين فقط')) + '</button><span class="muted" style="font-size:12px;margin-inline-start:auto">☐ ' + esc(t('= paid', '= دفع')) + ' · 📣 ' + esc(t('= remind', '= تذكير')) + ' · 🧾 ' + esc(t('= receipt', '= إيصال')) + '</span></div></div></div>';
+  // Apartments, by block
+  var groups = blocks().length > 1 ? blocks() : [null];
+  groups.forEach(function(b) {
+    var rows = st.rows.filter(function(x) { return !b || blockOf(x.u) === b; });
+    if (!rows.length) return;
+    var left = pair(); rows.forEach(function(x) { addTo(left, 'USD', x.left.USD); addTo(left, 'LBP', x.left.LBP); });
+    var shown = UI.cUnpaid ? rows.filter(function(x) { return pairUsd(x.left) > 0.005; }) : rows;
+    h += '<div class="sec bsec"><div class="bsec-h"><b>' + esc(b ? blockLabel(b) : (LANG === 'ar' ? (S.building.name_ar || S.building.name) : S.building.name)) + '</b>' + (pairUsd(left) > 0.005 ? colTotal(left) : '<span>✓</span>') + '</div>';
+    if (!shown.length) h += '<div class="brow"><span class="muted">' + esc(t('Everyone here paid ✓', 'الجميع هنا دفع ✓')) + '</span></div>';
+    shown.forEach(function(x) {
+      var u = x.u, paid = pairUsd(x.left) <= 0.005, pend = chargesOf(c.id).some(function(ch) { return isPend(ch.id, u.id); });
+      var firstCh = chargesOf(c.id).filter(function(ch) { return cell(ch, u).due > 0; })[0];
+      h += '<div class="brow' + (paid ? ' paid' : '') + '"><button class="bchk' + (paid ? ' on' : '') + (pend ? ' pend' : '') + '" aria-pressed="' + paid + '" aria-label="' + esc(t('Paid', 'دفع')) + '" onclick="' + (paid ? 'openSheet(\'cell\',{ch:' + jsArg(firstCh.id) + ',u:' + jsArg(u.id) + '})' : 'colTickBill(' + jsArg(u.id) + ',' + jsArg(c.id) + ')') + '">' + (paid ? '✓' : '') + '</button>';
+      h += '<div class="grow"><b>' + esc(unitName(u) || unitTag(u)) + '</b><small>' + esc(unitTag(u)) + '</small></div><span class="bamt">' + colTotal(paid ? x.due : x.left) + '</span>';
+      if (u.phone) h += paid ? '<button class="bico" aria-label="' + esc(t('Send receipt', 'أرسل إيصالاً')) + '" onclick="openSheet(\'remind\',{receipt:true,u:' + jsArg(u.id) + ',cyc:' + jsArg(c.id) + '})">🧾</button>' : '<button class="bico" aria-label="' + esc(t('Remind', 'ذكّر')) + '" onclick="openSheet(\'remind\',{u:' + jsArg(u.id) + ',cyc:' + jsArg(c.id) + '})">📣</button>';
+      else h += '<span class="bico none"></span>';
+      h += '</div>';
+    });
     h += '</div>';
-  }
+  });
   return h;
 }
 function colTickBill(uId, cId) {
@@ -9502,16 +9619,18 @@ function colTickBill(uId, cId) {
 function renderColCollect() {
   var h = colPreviewBar() + renderTopbar(t('Collect', 'التحصيل')) + staleBar();
   if (!UI.cb) loadColBooks();
-  var books = colBooks();
-  if (books.length > 1) {
-    h += '<div class="sec" style="margin-top:6px"><div class="seg">';
-    books.forEach(function(r) { h += '<button class="' + (r.b.id === S.building.id ? 'on' : '') + '" onclick="colSwitch(' + jsArg(r.b.id) + ')">' + esc(LANG === 'ar' ? (r.b.name_ar || r.b.name) : r.b.name) + '</button>'; });
-    h += '</div></div>';
+  var books = colBooks(), people = UI.cMode === 'apt';
+  // Bills: follow each bill and its supplier. People: collect from someone at the door.
+  h += '<div class="sec" style="margin-top:6px"><div class="seg"><button class="' + (!people ? 'on' : '') + '" onclick="UI.cMode=\'bill\';render()">🧾 ' + esc(t('Bills', 'الفواتير')) + '</button><button class="' + (people ? 'on' : '') + '" onclick="UI.cMode=\'apt\';render()">👤 ' + esc(t('People', 'الأشخاص')) + '</button></div></div>';
+  if (people && books.length > 1) {
+    h += '<div class="ftabs">';
+    books.forEach(function(r) { h += '<button class="ftab' + (r.b.id === S.building.id ? ' on' : '') + '" onclick="colSwitch(' + jsArg(r.b.id) + ')">' + esc(LANG === 'ar' ? (r.b.name_ar || r.b.name) : r.b.name) + '</button>'; });
+    h += '</div>';
   }
-  h += '<div class="sec" style="margin-top:8px"><div class="seg"><button class="' + (UI.cMode !== 'bill' ? 'on' : '') + '" onclick="UI.cMode=\'apt\';render()">' + esc(t('By apartment', 'حسب الشقة')) + '</button><button class="' + (UI.cMode === 'bill' ? 'on' : '') + '" onclick="UI.cMode=\'bill\';render()">' + esc(t('By bill', 'حسب الفاتورة')) + '</button></div></div>';
-  if (UI.cMode === 'bill') return h + colBillView();
+  if (!people) return h + colBillView();
   var tot = colBookTotals();
   h += '<div class="sec" style="margin-top:10px"><div class="row between"><span class="muted" style="font-weight:600">' + esc(t('Still to collect', 'باقي للتحصيل')) + '</span>' + colTotal(tot.left) + '</div></div>';
+  h += '<div class="sec" style="margin-top:8px"><input class="input" type="search" placeholder="' + esc(t('Find a name or apartment…', 'ابحث عن اسم أو شقة…')) + '" value="' + esc(UI.cQ || '') + '" oninput="colFilter(this.value)" onfocus="if(!UI.cAllOpen){UI.cAllOpen=true;var v=this.value;render();var i=document.querySelector(\'input[type=search]\');if(i){i.focus();i.value=v;}}"></div>';
   var groups = blocks().length > 1 ? blocks() : [null], shown = 0;
   groups.forEach(function(b) {
     var us = activeUnits().filter(function(u) { return !b || blockOf(u) === b; });
@@ -9525,7 +9644,7 @@ function renderColCollect() {
     shown += 1;
     var left = pair(), n = 0;
     us.forEach(function(u) { var o = false; colCells(u).forEach(function(k) { if (k.x.left > 0) { addTo(left, k.ch.cur, k.x.left); o = true; } }); if (o) n++; });
-    var open = UI.cOpen === b;
+    var open = UI.cOpen === b || !!UI.cAllOpen;
     h += '<div class="sec" style="margin-top:10px"><button class="cblock' + (open ? ' on' : '') + '" id="cb-' + esc(b) + '" aria-expanded="' + open + '" onclick="colToggleBlock(' + jsArg(b) + ')"><b>' + esc(blockLabel(b)) + '</b><span class="grow" style="text-align:end">' + (n ? '<small>' + esc(t(n + ' owe', n + ' عليهم')) + '</small> ' + colTotal(left) : '✓ ' + esc(t('All paid', 'الكل سدّد'))) + '</span><span class="chev">' + (open ? '▾' : (LANG === 'ar' ? '‹' : '›')) + '</span></button>';
     if (open) h += rows.length ? '<div class="cstack" style="margin-top:8px">' + rows.join('') + '</div>' : '';
     h += '</div>';
@@ -9534,14 +9653,19 @@ function renderColCollect() {
   h += '<div class="sec" style="margin-top:12px"><button class="btn ghost block" onclick="UI.cShowPaid=!UI.cShowPaid;render()">' + esc(UI.cShowPaid ? t('Hide what is paid', 'إخفاء المدفوع') : t('Show what is paid', 'إظهار المدفوع')) + '</button></div>';
   return h;
 }
-function colOpenBill(bid, cid) { colSwitch(bid, function() { UI.tab = 'collect'; UI.cMode = 'bill'; UI.cBill = cid; }); }
+function colOpenBill(bid, cid) { colSwitch(bid, function() { UI.tab = 'collect'; UI.cMode = 'bill'; UI.cBill = cid; var c = byId(S.cycles, cid); if (c) UI.cFam = bid + '|' + colFamOf(c); }); }
 function renderColDash() {
   var h = colPreviewBar() + renderTopbar(t('Dashboard', 'لوحة المعلومات'));
   if (!UI.cb) { loadColBooks(); return h + skelCards(3, 3); }
   var rows = colBooks().map(function(r) {
     return withState(r.ns, function() {
       var cash = cashState(), mine = cash.pockets[r.ns.me.id] || pair();
-      var bills = colOpenBills().map(function(c) { var s2 = colBillState(c); return { id: c.id, name: colBillName(c), n: s2.rows.length, paid: s2.paid, owe: s2.owe.length, left: colUsdFirst() ? fmt(pairUsd(s2.left), 'USD') : fmtPair(s2.left) }; }).filter(function(x) { return x.owe; });
+      var bills = colOpenBills().map(function(c) {
+        var s2 = colBillState(c), got = pair(), mine = pair();
+        livePayments().forEach(function(p) { var ch = byId(S.charges, p.charge_id); if (!ch || ch.cycle_id !== c.id) return; addTo(got, p.cur, num(p.amount)); if (p.channel === 'collector' && !handoverConfirmed(p.handover_id) && (UI.pvCol || p.received_by === S.me.id || !p.received_by)) addTo(mine, p.cur, num(p.amount)); });
+        var f = function(p) { return colUsdFirst() ? fmt(pairUsd(p), 'USD') : fmtPair(p); };
+        return { id: c.id, name: colBillName(c), n: s2.rows.length, paid: s2.paid, owe: s2.owe.length, left: f(s2.left), got: f(got), mine: f(mine) };
+      }).filter(function(x) { return x.owe; });
       return { b: r.b, bills: bills, pocket: UI.pvCol ? cash.withCollector : { USD: mine.USD || 0, LBP: mine.LBP || 0 }, tot: colBookTotals(true),
         tasks: openTasks('collector').filter(function(x) { return x.due_on && x.due_on <= todayIso(); }),
         pending: r.ns.handovers.filter(function(x) { return x.status === 'pending' && (UI.pvCol || x.collector_id === r.ns.me.id); }).length };
@@ -9553,7 +9677,7 @@ function renderColDash() {
     h += '<div class="kv"><span>' + esc(t('In your pocket', 'معك الآن')) + '</span>' + colTotal(r.pocket) + '</div>';
     h += '<div class="kv"><span>' + esc(t('Still to collect', 'باقي للتحصيل')) + '</span>' + colTotal(r.tot.left) + '</div>';
     if (r.bills && r.bills.length) {
-      h += '<div class="cdash-bills">' + r.bills.map(function(x) { return '<button class="li" onclick="colOpenBill(' + jsArg(r.b.id) + ',' + jsArg(x.id) + ')"><div class="grow"><b>' + esc(x.name) + '</b><small>' + esc(t(x.paid + '/' + x.n + ' paid', x.paid + '/' + x.n + ' سددوا')) + '</small></div><span class="amt">' + esc(x.left) + '</span><span class="chev">›</span></button>'; }).join('') + '</div>';
+      h += '<div class="cdash-bills">' + r.bills.map(function(x) { return '<button class="li" onclick="colOpenBill(' + jsArg(r.b.id) + ',' + jsArg(x.id) + ')"><div class="grow"><b>' + esc(x.name) + ' <span class="muted" style="font-weight:600;font-size:12px">' + esc(x.paid + '/' + x.n) + '</span></b><small>' + esc(t('Collected ', 'جُبي ') + x.got + t(' · with you ', ' · معك ') + x.mine) + '</small></div><span class="amt" style="color:var(--bad);text-align:end">' + esc(x.left) + '<small style="display:block;color:var(--mut);font-weight:600;font-size:11px">' + esc(t('missing', 'ناقص')) + '</small></span><span class="chev">›</span></button>'; }).join('') + '</div>';
     }
     if (r.pending) h += '<p class="muted" style="margin:10px 0 0;font-weight:600">' + esc(t('Handover waiting for the manager', 'تسليم بانتظار المدير')) + '</p>';
     else if (pairUsd(r.pocket) > 0.005) h += '<button class="btn sec sm block" style="margin-top:10px" onclick="colHand(' + jsArg(r.b.id) + ')">' + esc(t('Hand over', 'سلّم')) + '</button>';

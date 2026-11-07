@@ -63,6 +63,8 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; background: var(--bg); color: var(--ink); }
+/* No double-tap zoom (pinch zoom still works) */
+html, body, button, a, input, select, textarea, label { touch-action: manipulation; }
 body { font: 15px/1.45 "Plus Jakarta Sans", "IBM Plex Sans Arabic", system-ui, sans-serif; font-variant-numeric: tabular-nums; overflow-x: hidden; }
 [dir="rtl"] body, body[dir="rtl"] { font-family: "IBM Plex Sans Arabic", "Plus Jakarta Sans", system-ui, sans-serif; }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -5292,7 +5294,28 @@ var ICONS = {
   tasks: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>'
 };
 
+/* Where the person is (screen, building, tab, section, bill), kept for this browser tab so
+   a refresh lands on the same page. sessionStorage: a fresh link still opens normally. */
+var PLACE_KEYS = ['tab', 'bsec', 'cycleId', 'block', 'booksView', 'booksCycle', 'billFilter', 'filter'];
+function savePlace(withScroll) {
+  try {
+    if (UI.pvCol || window.NATOUR_PREVIEW) return;
+    if (UI.screen !== 'app' && UI.screen !== 'overview') return;
+    var o = { screen: UI.screen, bid: S.building && S.building.id, ui: {} };
+    if (o.screen === 'app' && !o.bid) return;
+    PLACE_KEYS.forEach(function(k) { o.ui[k] = UI[k] == null ? null : UI[k]; });
+    var old = JSON.parse(sessionStorage.getItem('nt_place') || 'null');
+    o.y = withScroll ? window.scrollY : (old && old.screen === o.screen && old.bid === o.bid && old.ui && old.ui.tab === o.ui.tab ? old.y : 0);
+    sessionStorage.setItem('nt_place', JSON.stringify(o));
+  } catch (e) {}
+}
+function readPlace() { try { return JSON.parse(sessionStorage.getItem('nt_place') || 'null'); } catch (e) { return null; } }
+function applyPlace(pl) { PLACE_KEYS.forEach(function(k) { if (pl.ui && k in pl.ui) UI[k] = pl.ui[k]; }); }
+function restoreScroll(pl) { if (pl && pl.y > 0) setTimeout(function() { window.scrollTo(0, pl.y); }, 60); }
+window.addEventListener('pagehide', function() { savePlace(true); });
+document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'hidden') savePlace(true); });
 function render() {
+  setTimeout(savePlace, 0);
   document.documentElement.lang = LANG;
   document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
   var h = '';
@@ -8547,6 +8570,12 @@ function afterSignIn() {
   return cloudMyBuildings().then(function(bs) {
     if (!bs.length) { UI.screen = 'welcome'; render(); tickWelcome(); return; }
     UI.multi = bs.length > 1;
+    // A refresh comes back to the same page (this tab only).
+    var pl = readPlace();
+    if (pl && pl.screen === 'app' && bs.some(function(b) { return b.id === pl.bid; })) {
+      return openBuilding(pl.bid).then(function() { applyPlace(pl); UI.screen = 'app'; render(); restoreScroll(pl); });
+    }
+    if (pl && pl.screen === 'overview' && bs.length > 1) { showOverview(); restoreScroll(pl); return; }
     if (bs.length > 1 && testBuild() && bs.every(function(b) { return b.role !== 'manager' && b.role !== 'comanager'; })) {
       var l0 = null; try { l0 = localStorage.getItem('bny15_last'); } catch (e) {}
       var p0 = bs.filter(function(b) { return b.id === l0; })[0] || bs[0];
@@ -8574,8 +8603,12 @@ function showSnap(sess) {
   try {
     var x = JSON.parse(localStorage.getItem('nt_snap') || 'null');
     if (!x || !sess || x.uid !== sess.user.id || Date.now() - x.at > 14 * 864e5) return false;
+    var pl = readPlace();
+    if (pl && pl.screen !== 'app') return false;
+    if (pl && x.s.building && pl.bid !== x.s.building.id) return false;
     S = x.s; S._rev = Math.random(); UI.stale = x.at; UI.screen = 'app'; UI.tab = UI.tab || 'home';
-    render(); return true;
+    if (pl) applyPlace(pl);
+    render(); if (pl) restoreScroll(pl); return true;
   } catch (e) { return false; }
 }
 /* Grey placeholder cards shaped like the real ones, shown while a book loads. */

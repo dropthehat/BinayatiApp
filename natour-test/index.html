@@ -804,7 +804,8 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 @media (prefers-reduced-motion: reduce) { .skel::after { animation: none; } }
 .skel-card { padding: 14px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px; }
 .skel-row { display: flex; align-items: center; gap: 10px; }
-.stale-bar { margin: 6px 16px 0; padding: 7px 12px; border-radius: 10px; background: var(--wbg); color: var(--warn); font-size: 12.5px; font-weight: 700; }
+.stale-bar { position: fixed; left: 50%; bottom: calc(150px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 60; max-width: calc(100% - 32px); padding: 7px 14px; border-radius: 999px; background: var(--wbg); color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent); font-size: 12.5px; font-weight: 700; text-align: center; pointer-events: none; transition: opacity .25s ease; }
+.stale-bar.gone { opacity: 0; }
 
 .cblock { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 10px 14px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--card); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
 .cblock.on { border-color: var(--ink); }
@@ -5489,6 +5490,8 @@ function cloudLoadBuilding(bid) {
   return cloudBuildingState(bid).then(function(ns) {
     S = scopeToMyBlocks(ns);
     UI.stale = false;
+    var sb = document.querySelector('.stale-bar');
+    if (sb) { sb.classList.add('gone'); setTimeout(function() { if (sb.parentNode) sb.remove(); }, 300); }
     saveSnap();
     setSync('live');
     subscribe(bid);

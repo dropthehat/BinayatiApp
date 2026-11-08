@@ -111,7 +111,7 @@
 .bh-safeBolt{fill:#6B7079} .bh-safe .bh-safeIn{fill:#2E3138} .bh-safe .bh-safeShelf{fill:#4A4F58}
 .bh-safe .bh-safeDoor{fill:#A2A7B0;stroke:#6B7079;stroke-width:.5}
 
-.bh-safeTap:focus{outline:none} .bh-safeTap:focus-visible .bh-safeBody{stroke:#5B4CF5;stroke-width:1}
+.bh-safeTap:focus{outline:none} .bh-safeTap:focus-visible .bh-safeBody{stroke:#1E3FAE;stroke-width:1}
 
 .bh-flip{opacity:0;transition:opacity .25s;pointer-events:none} .bh-win.flip .bh-flip{opacity:1}
 .bh-liftTap{cursor:pointer}

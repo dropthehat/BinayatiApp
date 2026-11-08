@@ -12,7 +12,7 @@ function page(config) {
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Natour">
 <title>Natour · ناطور</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%235B4CF5'/%3E%3Crect x='20' y='14' width='24' height='38' rx='3' fill='%23fff'/%3E%3Crect x='25' y='20' width='5' height='5' fill='%23FFC35E'/%3E%3Crect x='34' y='20' width='5' height='5' fill='%23FFC35E'/%3E%3Crect x='25' y='30' width='5' height='5' fill='%23FFC35E'/%3E%3Crect x='34' y='30' width='5' height='5' fill='%235B4CF5' opacity='.3'/%3E%3Crect x='29' y='42' width='6' height='10' fill='%235B4CF5'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231E3FAE'/%3E%3Crect x='20' y='14' width='24' height='38' rx='3' fill='%23fff'/%3E%3Crect x='25' y='20' width='5' height='5' fill='%23FFC35E'/%3E%3Crect x='34' y='20' width='5' height='5' fill='%23FFC35E'/%3E%3Crect x='25' y='30' width='5' height='5' fill='%23FFC35E'/%3E%3Crect x='34' y='30' width='5' height='5' fill='%231E3FAE' opacity='.3'/%3E%3Crect x='29' y='42' width='6' height='10' fill='%231E3FAE'/%3E%3C/svg%3E">
 <script>
 /* Sealed preview. With ?preview, or whenever this page sits inside a frame, the app gets
    no server, no network and memory-only storage, and runs on sample data. See preview.js. */

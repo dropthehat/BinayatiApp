@@ -146,7 +146,7 @@ function buildBuildingScene(o) {
 
  s += '</g>';
  } else {
- s += '<ellipse cx="183" cy="229" rx="' + (bw / 2 + 74) + '" ry="7" fill="rgba(91,76,245,.13)"/>';
+ s += '<ellipse cx="183" cy="229" rx="' + (bw / 2 + 74) + '" ry="7" fill="rgba(30,63,174,.10)"/>';
  s += '<rect class="bh-side" x="' + (bx - 64) + '" y="226" width="' + (bw + 128) + '" height="5" rx="2.5"/>';
  }
  // Main building body

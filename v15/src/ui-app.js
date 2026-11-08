@@ -256,13 +256,15 @@ function monthCard(cyc, clickable) {
   var inHand = s.paidEq - s.pocketEq;
   var wPaid = s.dueEq > 0 ? Math.max(0, inHand / s.dueEq * 100) : 0, wPocket = s.dueEq > 0 ? s.pocketEq / s.dueEq * 100 : 0;
   var h = '<div class="card month"' + (clickable ? ' role="button" tabindex="0" onclick="go(\'collect\')"' : '') + '>';
-  h += '<div class="month-top"><b>' + esc(cycleTitle(cyc) + (cyc.published === false ? ' · ' + t('draft', 'مسودة') : '')) + '</b><span>' + esc(t(s.settled + ' of ' + s.units + ' paid', s.settled + ' من ' + s.units + ' سددوا')) + ' · ' + s.pct + '%</span></div>';
+  h += '<div class="month-top"><b>' + esc(cycleTitle(cyc) + (cyc.published === false ? ' · ' + t('draft', 'مسودة') : '')) + '</b><span>' + esc(t(s.settled + ' of ' + s.units + ' paid', s.settled + ' من ' + s.units + ' سددوا')) + '</span></div>';
   h += '<div class="bar"><i class="paid" style="width:' + wPaid.toFixed(1) + '%"></i><i class="pocket" style="width:' + wPocket.toFixed(1) + '%"></i></div>';
   h += '<div class="legend"><span><i style="background:var(--ok)"></i>' + esc(t('Collected', 'محصّل')) + ' ' + esc(fmtPair(s.paid)) + '</span>';
   var left = { USD: s.due.USD - s.paid.USD, LBP: s.due.LBP - s.paid.LBP };
   h += '<span><i style="background:var(--bg2);border:1px solid var(--line)"></i>' + esc(t('Still to collect', 'المتبقي')) + ' ' + esc(fmtPair(left)) + '</span>';
   if (s.pocketEq > 0) h += '<span><i style="background:var(--warn)"></i>' + esc(t('Not handed over yet', 'لم يُسلَّم بعد')) + '</span>';
-  h += '</div></div>';
+  var supLeft = pair(); activeUnits().forEach(function(u) { chargesOf(cyc.id).forEach(function(ch) { if (ch.pass_through) { var x = cell(ch, u); if (x.left > 0) addTo(supLeft, ch.cur, x.left); } }); });
+  if (pairUsd(supLeft) > 0.005) h += '<span class="lg-sup">' + esc(t('Plus ' + fmtPair(supLeft) + ' owed for suppliers', 'إضافة إلى ' + fmtPair(supLeft) + ' للموردين')) + '</span>';
+  h += '</div>' + (clickable === true && isManager() ? '<div class="month-act"><button class="linkbtn" onclick="event.stopPropagation();openCycleAdjust(' + jsArg(cyc.id) + ')">' + esc(t('Adjust charges', 'تعديل الرسوم')) + '</button></div>' : '') + '</div>';
   return h;
 }
 
@@ -364,11 +366,10 @@ function renderHomeManager() {
     return h;
   }
   h += '<div class="sec">' + monthCard(cyc, true);
-  if (isManager()) h += '<div class="row" style="margin-top:8px"><button class="btn sec sm grow" onclick="openCycleAdjust(' + jsArg(cyc.id) + ')">' + esc(t('Adjust charges', 'تعديل الرسوم')) + '</button></div>';
   h += '</div>';
 
   h += '<div class="sec"><div class="tiles">';
-  h += tile(t('In the safe', 'في الصندوق'), fmtPairBig(cash.safe), t('Cash the building holds', 'نقد البناية'), 'go(\'books\')', 'var(--ok)');
+  h += tile(t('In the safe', 'في الصندوق'), fmtPairBig(cash.safe), '', 'go(\'books\')', 'var(--ok)');
   var wc = pairUsd(cash.withCollector);
   h += tile(t('With ' + (collectors().length ? collectorLabel() : 'collector'), 'مع ' + (collectors().length ? collectorLabel() : 'الجابي')), fmtPairBig(cash.withCollector),
             wc > 0.005 ? t('Collected, not handed over', 'محصّل ولم يُسلَّم') : t('Nothing outstanding · tap for details', 'لا شيء معلّق · اضغط للتفاصيل'), 'openSheet(\'colbook\',{})', 'var(--warn)', wc > 0.005 && cash.pending.length ? 'alert' : '');
@@ -394,10 +395,10 @@ function fmtPairBig(p) {
   if (baseUsd()) return esc(fmt(u + l / rate(), 'USD'));
   if (tiny(l, 'LBP')) return esc(fmt(u, 'USD'));
   if (tiny(u, 'USD')) return esc(fmt(l, 'LBP'));
-  return esc(fmt(u, 'USD')) + '<small><bdi dir="ltr">+ ' + esc(fmtRaw(l, 'LBP')) + '</bdi></small>';
+  return esc(fmt(u, 'USD')) + '<small><bdi dir="ltr">+ ' + esc(fmt(l, 'LBP')) + '</bdi></small>';
 }
 function tile(lbl, valHtml, sub, onclick, dot, cls) {
-  return '<button class="card tile ' + (cls || '') + '" onclick="' + onclick + '"><div class="lbl"><span class="dot" style="background:' + dot + '"></span>' + esc(lbl) + '</div><div class="val">' + valHtml + '</div><div class="sub">' + esc(sub) + '</div></button>';
+  return '<button class="card tile ' + (cls || '') + '" onclick="' + onclick + '"><div class="lbl"><span class="dot" style="background:' + dot + '"></span>' + esc(lbl) + '</div><div class="val">' + valHtml + '</div>' + (sub ? '<div class="sub">' + esc(sub) + '</div>' : '') + '</button>';
 }
 
 /* ---------------------------------------------------------------------------

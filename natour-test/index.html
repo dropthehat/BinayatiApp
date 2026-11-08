@@ -6178,7 +6178,7 @@ function undoPayments(ids) {
   if (!isCloud()) ids = ids.filter(function(id) { return byId(S.payments, id); });
   var p = Promise.resolve();
   ids.forEach(function(id) { p = p.then(function() { return rpc('void_payment', { p_payment: id }); }); });
-  return p.then(function() { UI.cb = null; if (isCloud()) reloadBuilding(); closeSheet(); toast(t('Payment undone', 'تم التراجع عن الدفعة')); }, function(e) { fail(e); });
+  return p.then(function() { if (isCloud()) { reloadBuilding(); if (UI.cb) loadColBooks(); } closeSheet(); toast(t('Payment undone', 'تم التراجع عن الدفعة')); }, function(e) { fail(e); });
 }
 SHEETS.cell = function(d) {
   var ch = byId(S.charges, d.ch), u = byId(S.units, d.u);
@@ -9786,7 +9786,7 @@ function colTick(rowId, bid, chId, uId) {
   withState(ns, function() { applyLocal('payments', 'insert', row); });
   safePay([row], bid).then(function() {
     toastUndo(t('Saved', 'حُفظ'), [row.id]);
-    UI.cb = null; render();
+    render(); loadColBooks();
   }, function(e) {
     withState(ns, function() { S.payments = S.payments.filter(function(p) { return p.id !== row.id; }); });
     fail(e);

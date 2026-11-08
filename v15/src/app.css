@@ -769,3 +769,51 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .add-h:first-of-type { margin-top: 8px; }
 .camt { display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
 .camt small { color: var(--mut); font-size: 11.5px; font-weight: 600; }
+
+/* Collector page, unslop pass (2026-11-08): receipt pad. Graphite surfaces, one ballpoint-blue
+   ink for the tick and the selection, money in tabular figures, weights 500-600. */
+.colpg { --pen: #1E3FAE; --pen-soft: color-mix(in srgb, #1E3FAE 9%, transparent); font-variant-numeric: tabular-nums; }
+:root[data-theme="dark"] .colpg { --pen: #8EA6FF; --pen-soft: color-mix(in srgb, #8EA6FF 14%, transparent); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .colpg { --pen: #8EA6FF; --pen-soft: color-mix(in srgb, #8EA6FF 14%, transparent); } }
+.colpg .modesw { gap: 0; padding: 4px; border-radius: 12px; background: var(--bg2); }
+.colpg .modesw button { min-height: 40px; border: 0; border-radius: 9px; font-weight: 500; font-size: 15px; color: var(--mut); }
+.colpg .modesw button.on { background: var(--card); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.colpg .ftab { min-height: 44px; border-radius: 10px; font-weight: 500; }
+.colpg .ftab.on { background: var(--card); border-color: var(--pen); color: var(--ink); font-weight: 600; }
+.colpg .ftab .cnt, .colpg .ftab:not(.on) .cnt { background: none; padding: 0; color: var(--mut); font-weight: 500; font-size: 13px; }
+.colpg .rchip { border-radius: 10px; }
+.colpg .rchip b { font-weight: 600; font-size: 15px; }
+.colpg .rchip.on { border-color: var(--pen); background: var(--card); }
+.colpg .csticky { box-shadow: none; border-bottom: 1px solid var(--line); }
+.colpg .bhead { border-radius: 14px; box-shadow: none; border: 1px solid var(--line); }
+.colpg .bhead .bh-t { font-size: 15px; font-weight: 600; color: var(--mut); }
+.colpg .bh-big { margin-top: 6px; }
+.colpg .bh-big .camt b, .colpg .bh-big > b { font-size: 34px; font-weight: 600; letter-spacing: -.02em; color: var(--bad); }
+.colpg .bh-big.ok > b { color: var(--ok); }
+.colpg .bh-big .camt small { font-size: 13px; }
+.colpg .bh-big > span { font-size: 14px; font-weight: 500; }
+.colpg .bar { height: 6px; }
+.colpg .bh-sub { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; color: var(--mut); font-size: 14px; }
+.colpg .bh-sub > span:first-child { margin-inline-end: auto; }
+.colpg .bh-sub .camt { display: inline-flex; gap: 6px; align-items: baseline; }
+.colpg .bh-sub .camt b, .colpg .bh-sub > b { font-weight: 500; color: var(--ink); font-size: 14px; }
+.colpg .bh-sub .camt small { display: none; }
+.colpg .bh-more { margin-top: 12px; min-height: 40px; padding: 0; background: none; border: 0; color: var(--pen); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+.colpg .bsec { border-radius: 14px; }
+.colpg .bsec-h { padding: 10px 14px; background: var(--card2); color: var(--ink); border-bottom: 1px solid var(--line); }
+.colpg .bsec-h b { font-size: 15px; font-weight: 600; }
+.colpg .bsec-h .camt b { color: var(--ink); font-weight: 500; font-size: 14px; } .colpg .bsec-h .camt small { color: var(--mut); }
+.colpg .bsec > .brow:first-child { border-top: 0; }
+.colpg .brow { min-height: 64px; }
+.colpg .brow .grow b { font-weight: 500; }
+.colpg .bamt .camt b { font-weight: 600; }
+.colpg .bchk { width: 44px; height: 44px; border-radius: 8px; border: 2px solid color-mix(in srgb, var(--ink) 35%, transparent); color: var(--pen); }
+.colpg .bchk.on { background: var(--pen-soft); border-color: var(--pen); }
+.colpg .brow.paid { background: none; }
+.colpg .brow.paid .grow b { color: var(--mut); }
+.colpg .brow.paid .bamt .camt b, .colpg .brow.paid .bamt > b { color: var(--mut); font-weight: 500; }
+.colpg .bico { width: 44px; height: 44px; border-radius: 10px; }
+.colpg .modesw button.on { box-shadow: 0 1px 2px rgba(0,0,0,.08), inset 0 0 0 1px var(--line); }
+:root[data-theme="dark"] .colpg .modesw button.on { background: color-mix(in srgb, var(--ink) 14%, var(--card)); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .colpg .modesw button.on { background: color-mix(in srgb, var(--ink) 14%, var(--card)); } }
+.colpg .bh-more { margin: 8px 0 -6px; min-height: 36px; }

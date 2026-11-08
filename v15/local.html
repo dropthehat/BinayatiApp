@@ -805,6 +805,54 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .camt { display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
 .camt small { color: var(--mut); font-size: 11.5px; font-weight: 600; }
 
+/* Collector page, unslop pass (2026-11-08): receipt pad. Graphite surfaces, one ballpoint-blue
+   ink for the tick and the selection, money in tabular figures, weights 500-600. */
+.colpg { --pen: #1E3FAE; --pen-soft: color-mix(in srgb, #1E3FAE 9%, transparent); font-variant-numeric: tabular-nums; }
+:root[data-theme="dark"] .colpg { --pen: #8EA6FF; --pen-soft: color-mix(in srgb, #8EA6FF 14%, transparent); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .colpg { --pen: #8EA6FF; --pen-soft: color-mix(in srgb, #8EA6FF 14%, transparent); } }
+.colpg .modesw { gap: 0; padding: 4px; border-radius: 12px; background: var(--bg2); }
+.colpg .modesw button { min-height: 40px; border: 0; border-radius: 9px; font-weight: 500; font-size: 15px; color: var(--mut); }
+.colpg .modesw button.on { background: var(--card); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.colpg .ftab { min-height: 44px; border-radius: 10px; font-weight: 500; }
+.colpg .ftab.on { background: var(--card); border-color: var(--pen); color: var(--ink); font-weight: 600; }
+.colpg .ftab .cnt, .colpg .ftab:not(.on) .cnt { background: none; padding: 0; color: var(--mut); font-weight: 500; font-size: 13px; }
+.colpg .rchip { border-radius: 10px; }
+.colpg .rchip b { font-weight: 600; font-size: 15px; }
+.colpg .rchip.on { border-color: var(--pen); background: var(--card); }
+.colpg .csticky { box-shadow: none; border-bottom: 1px solid var(--line); }
+.colpg .bhead { border-radius: 14px; box-shadow: none; border: 1px solid var(--line); }
+.colpg .bhead .bh-t { font-size: 15px; font-weight: 600; color: var(--mut); }
+.colpg .bh-big { margin-top: 6px; }
+.colpg .bh-big .camt b, .colpg .bh-big > b { font-size: 34px; font-weight: 600; letter-spacing: -.02em; color: var(--bad); }
+.colpg .bh-big.ok > b { color: var(--ok); }
+.colpg .bh-big .camt small { font-size: 13px; }
+.colpg .bh-big > span { font-size: 14px; font-weight: 500; }
+.colpg .bar { height: 6px; }
+.colpg .bh-sub { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; color: var(--mut); font-size: 14px; }
+.colpg .bh-sub > span:first-child { margin-inline-end: auto; }
+.colpg .bh-sub .camt { display: inline-flex; gap: 6px; align-items: baseline; }
+.colpg .bh-sub .camt b, .colpg .bh-sub > b { font-weight: 500; color: var(--ink); font-size: 14px; }
+.colpg .bh-sub .camt small { display: none; }
+.colpg .bh-more { margin-top: 12px; min-height: 40px; padding: 0; background: none; border: 0; color: var(--pen); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+.colpg .bsec { border-radius: 14px; }
+.colpg .bsec-h { padding: 10px 14px; background: var(--card2); color: var(--ink); border-bottom: 1px solid var(--line); }
+.colpg .bsec-h b { font-size: 15px; font-weight: 600; }
+.colpg .bsec-h .camt b { color: var(--ink); font-weight: 500; font-size: 14px; } .colpg .bsec-h .camt small { color: var(--mut); }
+.colpg .bsec > .brow:first-child { border-top: 0; }
+.colpg .brow { min-height: 64px; }
+.colpg .brow .grow b { font-weight: 500; }
+.colpg .bamt .camt b { font-weight: 600; }
+.colpg .bchk { width: 44px; height: 44px; border-radius: 8px; border: 2px solid color-mix(in srgb, var(--ink) 35%, transparent); color: var(--pen); }
+.colpg .bchk.on { background: var(--pen-soft); border-color: var(--pen); }
+.colpg .brow.paid { background: none; }
+.colpg .brow.paid .grow b { color: var(--mut); }
+.colpg .brow.paid .bamt .camt b, .colpg .brow.paid .bamt > b { color: var(--mut); font-weight: 500; }
+.colpg .bico { width: 44px; height: 44px; border-radius: 10px; }
+.colpg .modesw button.on { box-shadow: 0 1px 2px rgba(0,0,0,.08), inset 0 0 0 1px var(--line); }
+:root[data-theme="dark"] .colpg .modesw button.on { background: color-mix(in srgb, var(--ink) 14%, var(--card)); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .colpg .modesw button.on { background: color-mix(in srgb, var(--ink) 14%, var(--card)); } }
+.colpg .bh-more { margin: 8px 0 -6px; min-height: 36px; }
+
 /* ---- living building scene ---- */
 .bh { position: relative; margin: 0 16px 12px; border-radius: 26px; overflow: hidden; aspect-ratio: 366 / 256; box-shadow: var(--shadow-lg); background: var(--sky2); }
 .bh svg.bh-art { display: block; width: 100%; height: 100%; }
@@ -9705,11 +9753,11 @@ function colBillView() {
   var tab = (curKey && tabs.filter(function(x) { return x.bid + '|' + x.fam === curKey; })[0]) || here[0] || tabs[0];
   if (tab.bid !== S.building.id) { setTimeout(function() { colPickFam(tab.bid, tab.fam); }, 0); return skelCards(3, 1); }
   // Bill families
-  h += '<div id="cstick-a"></div><div class="csticky" id="cstick"><div class="ftabs" style="padding-top:0">' + tabs.map(function(x) { var on = x === tab; return '<button class="ftab' + (on ? ' on' : '') + '" onclick="colPickFam(' + jsArg(x.bid) + ',' + jsArg(x.fam) + ')">' + esc(x.label) + (x.owe ? '<span class="cnt">' + x.owe + '</span>' : '') + '</button>'; }).join('') + '</div>';
+  h += '<div id="cstick-a"></div><div class="csticky" id="cstick">' + (tabs.length < 2 ? '' : '<div class="ftabs" style="padding-top:0">' + tabs.map(function(x) { var on = x === tab; return '<button class="ftab' + (on ? ' on' : '') + '" onclick="colPickFam(' + jsArg(x.bid) + ',' + jsArg(x.fam) + ')">' + esc(x.label) + (x.owe ? '<span class="cnt">' + x.owe + '</span>' : '') + '</button>'; }).join('') + '</div>');
   // Rounds of this family
   var bills = colOpenBills().filter(function(c) { return colFamOf(c) === tab.fam; });
   var c = byId(S.cycles, UI.cBill); if (!c || colFamOf(c) !== tab.fam) c = bills[0];
-  h += '<div class="rchips">' + bills.map(function(x, i) { var s2 = colBillState(x); return '<button class="rchip' + (x.id === c.id ? ' on' : '') + '" onclick="UI.cBill=' + jsArg(x.id) + ';render()"><b>' + esc(colChipName(x)) + '</b><small>' + esc((i === 0 ? t('current · ', 'الحالية · ') : '') + (s2.owe.length ? t(s2.owe.length + ' owe', s2.owe.length + ' متبقٍ') : '✓')) + '</small></button>'; }).join('') + '</div>';
+  if (bills.length > 1) h += '<div class="rchips">' + bills.map(function(x, i) { var s2 = colBillState(x); return '<button class="rchip' + (x.id === c.id ? ' on' : '') + '" onclick="UI.cBill=' + jsArg(x.id) + ';render()"><b>' + esc(colChipName(x)) + '</b><small>' + esc(s2.owe.length ? t(s2.owe.length + ' owe', s2.owe.length + ' متبقٍ') : '✓') + '</small></button>'; }).join('') + '</div>';
   h += '</div><div class="clist' + (UI.cSlide ? ' slide-' + UI.cSlide : '') + '">';
   UI.cSlide = null;
   // The bill: collected, left, where the money is
@@ -9718,12 +9766,12 @@ function colBillView() {
   livePayments().forEach(function(p) { var ch = byId(S.charges, p.charge_id); if (!ch || ch.cycle_id !== c.id) return; addTo(got, p.cur, num(p.amount)); if (p.channel === 'collector' && !handoverConfirmed(p.handover_id)) addTo(mine, p.cur, num(p.amount)); });
   var pct = pairUsd(dueAll) > 0 ? Math.min(100, Math.round(pairUsd(got) / pairUsd(dueAll) * 100)) : 0, done = !st.owe.length;
   h += '<div class="sec"><div class="card pad bhead"><div class="row between" style="align-items:flex-start"><div><b class="bh-t">' + esc(colBillName(c)) + '</b><small>' + esc(cycleTitle(c).split(' · ').slice(1).join(' · ')) + '</small></div></div>';
-  h += '<div class="bh-big">' + colTotal(got) + '<span>' + esc(t('collected', 'تم تحصيلها')) + '</span></div>';
-  h += '<div class="bar" style="margin:10px 0 8px"><i class="paid" style="width:' + pct + '%"></i></div>';
-  h += '<div class="row between"><span class="muted">' + esc(t(st.paid + ' of ' + st.rows.length + ' paid', 'دفع ' + st.paid + ' من ' + st.rows.length)) + '</span>' + (done ? '<b style="color:var(--ok)">✓ ' + esc(t('All paid', 'الكل دفع')) + '</b>' : '<span class="bh-left">' + colTotal(st.left) + '<small>' + esc(t('left', 'المتبقي')) + '</small></span>') + '</div>';
+  h += done ? '<div class="bh-big ok"><b>' + esc(t('All paid', 'الكل دفع')) + '</b></div>' : '<div class="bh-big">' + colTotal(st.left) + '<span>' + esc(t('left to collect', 'باقي للتحصيل')) + '</span></div>';
+  h += '<div class="bar" style="margin:12px 0 8px"><i class="paid" style="width:' + pct + '%"></i></div>';
+  h += '<div class="bh-sub"><span>' + esc(t(st.paid + ' of ' + st.rows.length + ' paid', 'دفع ' + st.paid + ' من ' + st.rows.length)) + '</span>' + colTotal(got) + '<span>' + esc(t('collected', 'تم تحصيلها')) + '</span></div>';
   if (isSharedBook()) h += '<div class="bh-note' + (done ? ' ok' : '') + '">' + esc(done ? t('Everyone paid: counted as paid to the supplier, out of your pocket.', 'الجميع دفع: تُحتسب مدفوعة للمورد وخرجت من جيبك.') : t('With you: ', 'معك: ') + colPlainPair(mine) + t(' · stays with you until everyone has paid this bill.', ' · تبقى معك حتى يدفع الجميع هذه الفاتورة.')) + '</div>';
   var showAll = !!UI.cShowAll;
-  h += '<div class="row" style="gap:8px;margin-top:10px">' + (st.paid ? '<button class="chip' + (showAll ? ' on' : '') + '" onclick="UI.cShowAll=!UI.cShowAll;render()">' + esc(showAll ? t('Hide who paid', 'إخفاء من دفع') : t('Show who paid (' + st.paid + ')', 'إظهار من دفع (' + st.paid + ')')) + '</button>' : '') + '<span class="muted" style="font-size:12px;margin-inline-start:auto;display:inline-flex;align-items:center;gap:4px">☐ ' + esc(t('= paid', '= دفع')) + ' · <span style="color:#25D366;display:inline-flex">' + WA_ICON + '</span> ' + esc(t('= status', '= الوضع')) + '</span></div></div></div>';
+  h += (st.paid ? '<button class="bh-more" onclick="UI.cShowAll=!UI.cShowAll;render()">' + esc(showAll ? t('Hide who paid', 'إخفاء من دفع') : t('Show who paid', 'إظهار من دفع')) + '</button>' : '') + '</div></div>';
   if (done && !showAll) return h + '</div>';
   // Apartments, by block; blocks where everyone paid fold into one line
   var groups = blocks().length > 1 ? blocks() : [null], allPaid = [];
@@ -9733,11 +9781,11 @@ function colBillView() {
     var left = pair(); rows.forEach(function(x) { addTo(left, 'USD', x.left.USD); addTo(left, 'LBP', x.left.LBP); });
     var shown = showAll ? rows : rows.filter(function(x) { return pairUsd(x.left) > 0.005; });
     if (!shown.length) { allPaid.push(b ? blockLabel(b) : S.building.name); return; }
-    h += '<div class="sec bsec"><div class="bsec-h"><b>' + esc(b ? blockLabel(b) : (LANG === 'ar' ? (S.building.name_ar || S.building.name) : S.building.name)) + '</b>' + (pairUsd(left) > 0.005 ? colTotal(left) : '<span>✓</span>') + '</div>';
+    h += '<div class="sec bsec">' + (groups.length < 2 ? '' : '<div class="bsec-h"><b>' + esc(b ? blockLabel(b) : (LANG === 'ar' ? (S.building.name_ar || S.building.name) : S.building.name)) + '</b>' + (pairUsd(left) > 0.005 ? colTotal(left) : '<span>✓</span>') + '</div>');
     shown.forEach(function(x) {
       var u = x.u, paid = pairUsd(x.left) <= 0.005, pend = chargesOf(c.id).some(function(ch) { return isPend(ch.id, u.id); });
       var firstCh = chargesOf(c.id).filter(function(ch) { return cell(ch, u).due > 0; })[0];
-      h += '<div class="brow' + (paid ? ' paid' : '') + '"><button class="bchk' + (paid ? ' on' : '') + (pend ? ' pend' : '') + '" aria-pressed="' + paid + '" aria-label="' + esc(t('Paid', 'دفع')) + '" onclick="' + (paid ? 'openSheet(\'cell\',{ch:' + jsArg(firstCh.id) + ',u:' + jsArg(u.id) + '})' : 'colTickBill(' + jsArg(u.id) + ',' + jsArg(c.id) + ')') + '">' + (paid ? '✓' : '') + '</button>';
+      h += '<div class="brow' + (paid ? ' paid' : '') + '"><button class="bchk' + (paid ? ' on' : '') + (pend ? ' pend' : '') + '" aria-pressed="' + paid + '" aria-label="' + esc(t('Paid', 'دفع')) + '" onclick="' + (paid ? 'openSheet(\'cell\',{ch:' + jsArg(firstCh.id) + ',u:' + jsArg(u.id) + '})' : 'colTickBill(' + jsArg(u.id) + ',' + jsArg(c.id) + ')') + '">' + (paid ? PEN_TICK : '') + '</button>';
       h += '<div class="grow"><b>' + esc(unitName(u) || unitTag(u)) + '</b><small>' + esc(unitTag(u)) + '</small></div><span class="bamt">' + colTotal(paid ? x.due : x.left) + '</span>';
       if (u.phone) h += '<button class="bico wa" aria-label="' + esc(t('WhatsApp status', 'الوضع على واتساب')) + '" onclick="openSheet(\'remind\',{status:true,u:' + jsArg(u.id) + '})">' + WA_ICON + '</button>';
       else h += '<span class="bico none"></span>';
@@ -9748,16 +9796,18 @@ function colBillView() {
   if (allPaid.length) h += '<div class="sec"><p class="muted" style="margin:4px 4px 0">✓ ' + esc(t('Everyone paid in ', 'الجميع دفع في ') + allPaid.join(', ')) + '</p></div>';
   return h + '</div>';
 }
+var PEN_TICK = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M4.5 12.8c1.6 1.1 3 2.6 4.3 4.6C11.6 11.6 15 7.4 19.6 4.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 function colTickBill(uId, cId) {
   var u = byId(S.units, uId);
   chargesOf(cId).forEach(function(ch) { var x = cell(ch, u); if (x.left > 0 && x.state !== 'part') colTick(uId, S.building.id, ch.id, uId); });
 }
-function renderColCollect() {
+function renderColCollect() { return '<div class="colpg">' + renderColCollectIn() + '</div>'; }
+function renderColCollectIn() {
   var h = colPreviewBar() + renderTopbar(t('Collect', 'التحصيل')) + staleBar();
   if (!UI.cb) loadColBooks();
   var books = colBooks(), people = UI.cMode === 'apt';
   // Bills: follow each bill and its supplier. People: collect from someone at the door.
-  h += '<div class="sec" style="margin-top:6px"><div class="modesw"><button class="' + (!people ? 'on' : '') + '" aria-pressed="' + !people + '" onclick="UI.cMode=\'bill\';render();window.scrollTo(0,0)">🧾 ' + esc(t('Bills', 'الفواتير')) + '</button><button class="' + (people ? 'on' : '') + '" aria-pressed="' + people + '" onclick="UI.cMode=\'apt\';render();window.scrollTo(0,0)">👤 ' + esc(t('People', 'الأشخاص')) + '</button></div></div>';
+  h += '<div class="sec" style="margin-top:6px"><div class="modesw"><button class="' + (!people ? 'on' : '') + '" aria-pressed="' + !people + '" onclick="UI.cMode=\'bill\';render();window.scrollTo(0,0)">' + esc(t('Bills', 'الفواتير')) + '</button><button class="' + (people ? 'on' : '') + '" aria-pressed="' + people + '" onclick="UI.cMode=\'apt\';render();window.scrollTo(0,0)">' + esc(t('People', 'الأشخاص')) + '</button></div></div>';
   if (people) {
     // People: everyone in one list by block. Books only show as tabs when they are not linked
     // to the shared book (a collector working in two unrelated buildings).

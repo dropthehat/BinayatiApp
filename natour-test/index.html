@@ -7564,6 +7564,12 @@ function saveCharge() {
   }).then(function() { closeSheet(); toast(t('Saved', 'تم الحفظ')); }, function(e) { sheetErr(e.message); });
 }
 /* Re-count supplier money already collected after "who pays" or the confirm setting changed. */
+function toggleCompoundCollectors(on) {
+  rpc('set_compound_collectors', { p_building: S.building.id, p_on: on }).then(function() {
+    S.building.settings = Object.assign({}, S.building.settings || {}, { compound_collectors: on });
+    return reloadBuilding();
+  }).then(function() { toast(on ? t('The compound\'s collectors can collect here', 'جباة المجمّع يمكنهم الجباية هنا') : t('Compound collectors removed from this building', 'أُزيل جباة المجمّع من هذه البناية')); render(); }, fail);
+}
 function supResync() {
   if (!isCloud()) return Promise.resolve();
   return rpc('sup_resync', { p_building: S.building.id }).then(function() { return reloadBuilding(); });
@@ -8028,6 +8034,7 @@ function renderSettingsSec() {
   if (testBuild()) h += switchRow('collector_usd', setting('collector_usd') !== false, t('Collector page in dollars first', 'صفحة الجابي بالدولار أولاً'), t('LBP shows underneath. Bills stay in their own currency.', 'الليرة تظهر تحتها. الفواتير تبقى بعملتها.'));
   if (blocks().length > 1) h += switchRow('safe_per_block', st.safe_mode === 'block', t('A safe per block', 'صندوق لكل بلوك'), t('Each block keeps its own cash and expenses. Off: one shared safe for the compound.', 'كل بلوك له نقده ومصاريفه. مطفأ: صندوق واحد للمجمّع.'));
   h += switchRow('elevator', !!st.elevator, t('Has an elevator', 'فيها مصعد'), t('Shown on the building picture, going up and down', 'يظهر في صورة البناية صاعداً ونازلاً'));
+  if (S.building.compound_id && S.building.kind !== 'shared' && isCloud() && S.role === 'manager') h += '<div class="switch-row"><div><b>' + esc(t('The compound\'s collectors work here', 'جباة المجمّع يعملون هنا')) + '</b><small>' + esc(st.compound_collectors ? t('On: collectors invited for the whole compound can collect in this building. They never see its expenses or safe.', 'مفعّل: جباة المجمّع يمكنهم الجباية هنا، ولا يرون مصاريفها أو صندوقها.') : t('Off: only people you invite yourself can collect here.', 'مطفأ: فقط من تدعوه بنفسك يمكنه الجباية هنا.')) + '</small></div><button class="sw' + (st.compound_collectors ? ' on' : '') + '" onclick="toggleCompoundCollectors(' + !st.compound_collectors + ')"></button></div>';
   h += switchRow('sup_confirm', st.sup_confirm === true, t('Collectors confirm supplier payments', 'الجباة يؤكّدون الدفع للموردين'), st.sup_confirm === true ? t('Moteur, internet… stay with the collector until he (or you) ticks that the supplier was paid.', 'موتور، إنترنت… تبقى مع الجابي حتى يؤشّر هو (أو أنت) أن المورد قبض.') : t('Off: supplier money a collector collects counts as paid to the supplier straight away.', 'مطفأ: مال المورد الذي يجبيه الجابي يُحتسب مدفوعاً للمورد فوراً.'));
   h += '</div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('What residents see', 'ما يراه السكان')) + '</h2></div><div class="card pad">';
@@ -8825,7 +8832,7 @@ function renderJoin() {
   h += '<div class="ob-stage">' + obScene(4, 8, j.info ? j.info.building : '…', false) + '</div><div class="ob-body">';
   if (j.error) h += '<h1>' + esc(t('This invite doesn\'t work', 'هذه الدعوة لا تعمل')) + '</h1><p class="sub">' + esc(j.error) + '</p>';
   else if (!j.info) h += '<h1>…</h1>';
-  else h += '<h1>' + esc(t('You\'re invited to ' + j.info.building, 'أنت مدعو إلى ' + (j.info.building_ar || j.info.building))) + '</h1><p class="sub">' + esc(j.info.role === 'collector' ? t('As the collector: tick who paid, keep track of the cash you hold, hand it over in one tap.', 'كجابٍ: علّم من سدّد، تابع النقد معك، وسلّمه بلمسة.') : t('As co-manager, with full access to the books.', 'كمدير مساعد مع وصول كامل للحسابات.')) + '</p>';
+  else h += '<h1>' + esc(j.info.compound ? t('Collect for ' + j.info.building, 'اجبِ لـ ' + (j.info.building_ar || j.info.building)) : t('You\'re invited to ' + j.info.building, 'أنت مدعو إلى ' + (j.info.building_ar || j.info.building))) + '</h1><p class="sub">' + esc(j.info.role === 'collector' ? t('As the collector: tick who paid, keep track of the cash you hold, hand it over in one tap.', 'كجابٍ: علّم من سدّد، تابع النقد معك، وسلّمه بلمسة.') : t('As co-manager, with full access to the books.', 'كمدير مساعد مع وصول كامل للحسابات.')) + '</p>';
   h += '</div><div class="ob-foot">';
   if (j.info && j.info.valid) {
     h += '<button class="btn pri block" onclick="UI.screen=\'auth\';UI.auth={mode:\'up\',invite:Object.assign({code:UI.join.code},UI.join.info)};render()">' + esc(t('Create my account', 'أنشئ حسابي')) + '</button>';
@@ -9161,7 +9168,7 @@ function renderOverview() {
   order.forEach(function(c) {
     var comp = c ? (ov.comps || []).filter(function(x) { return x.id === c; })[0] : null;
     var canEd = comp && isCloud() && SESSION_UID() === comp.created_by;
-    h += '<div class="sec"><div class="sec-h"><h2>' + esc(c ? (comp ? (LANG === 'ar' && comp.name_ar ? comp.name_ar : comp.name) : t('Compound', 'مجمّع')) : (order.length > 1 ? t('Other buildings', 'بنايات أخرى') : t('Buildings', 'البنايات'))) + '</h2>' + (canEd ? '<button onclick="UI.sheet={name:\'compname\',data:{id:' + jsArg(comp.id) + '}};render()">✎ ' + esc(t('Rename', 'إعادة تسمية')) + '</button>' : '') + '</div><div class="stack">';
+    h += '<div class="sec"><div class="sec-h"><h2>' + esc(c ? (comp ? (LANG === 'ar' && comp.name_ar ? comp.name_ar : comp.name) : t('Compound', 'مجمّع')) : (order.length > 1 ? t('Other buildings', 'بنايات أخرى') : t('Buildings', 'البنايات'))) + '</h2>' + (canEd ? '<span class="row" style="gap:12px"><button onclick="UI.sheet={name:\'compcol\',data:{id:' + jsArg(comp.id) + '}};render();loadCompCollectors(' + jsArg(comp.id) + ')">👤 ' + esc(t('Collectors', 'الجباة')) + '</button><button onclick="UI.sheet={name:\'compname\',data:{id:' + jsArg(comp.id) + '}};render()">✎ ' + esc(t('Rename', 'إعادة تسمية')) + '</button></span>' : '') + '</div><div class="stack">';
     groups[c].forEach(function(r) { h += overviewCard(r); });
     h += '</div></div>';
   });
@@ -9189,6 +9196,44 @@ function saveCompName(id) {
     (UI.ov.comps || []).forEach(function(x) { if (x.id === id) { x.name = nm; if ('name_ar' in row) x.name_ar = row.name_ar; } });
     closeSheet(); toast(t('Saved', 'تم الحفظ')); render();
   }, function(e) { sheetErr(e.message); });
+}
+/* Compound collectors: invite once, works in the shared book and every building that accepts them. */
+function loadCompCollectors(id) {
+  cloudCall(SB.from('compound_collectors').select('*').eq('compound_id', id)).then(function(r) {
+    if (UI.sheet && UI.sheet.name === 'compcol') { UI.sheet.data.list = r || []; render(); }
+  }, function(e) { if (UI.sheet) { UI.sheet.data.list = []; UI.sheet.data.err = e.message; render(); } });
+}
+SHEETS.compcol = function(d) {
+  var comp = ((UI.ov && UI.ov.comps) || []).filter(function(x) { return x.id === d.id; })[0];
+  if (!comp) return '';
+  var cname = LANG === 'ar' && comp.name_ar ? comp.name_ar : comp.name;
+  var h = '<h3>' + esc(t('Collectors for ' + cname, 'جباة ' + cname)) + '</h3>';
+  if (d.code) {
+    var link = ((window.BINAYATI_CONFIG || {}).publicUrl || (location.origin + location.pathname)) + '?join=' + d.code;
+    var msg = t('Hi ' + (d.name || '') + ', join ' + cname + ' on the Natour app as the collector: ', 'مرحباً ' + (d.name || '') + '، انضم إلى ' + cname + ' على تطبيق ناطور كجابٍ: ') + link;
+    h += '<p class="lead">' + esc(t('One link for the whole compound. He gets the shared book and every building that lets compound collectors work there. It works once and expires in 14 days.', 'رابط واحد لكل المجمّع. يحصل على الدفتر المشترك وكل بناية تسمح لجباة المجمّع. يعمل مرة واحدة وينتهي بعد 14 يوماً.')) + '</p><div class="linkbox"><span class="grow">' + esc(link) + '</span></div>';
+    h += '<div class="foot"><button class="btn sec" onclick="copyText(' + jsArg(link) + ')">' + esc(t('Copy', 'نسخ')) + '</button><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=' + esc(encodeURIComponent(msg)) + '">WhatsApp</a></div>';
+    return h;
+  }
+  h += '<p class="lead">' + esc(t('Invite a collector once for the whole compound. Each building decides in its Settings whether he collects there; its books stay private.', 'ادعُ جابياً مرة واحدة لكل المجمّع. كل بناية تقرر في إعداداتها إن كان يجبي فيها؛ حساباتها تبقى خاصة.')) + '</p>';
+  var list = d.list;
+  if (!list) h += '<div class="muted">…</div>';
+  else if (list.length) h += '<div class="card list">' + list.map(function(c) { return '<div class="li"><div class="ic">' + esc((c.display_name || '?').charAt(0).toUpperCase()) + '</div><div class="grow"><b>' + esc(c.display_name || '—') + '</b><small>' + esc(t('Compound collector', 'جابي المجمّع')) + '</small></div><button class="btn sm sec" onclick="removeCompCollector(' + jsArg(d.id) + ',' + jsArg(c.user_id) + ',' + jsArg(c.display_name || '') + ')">' + esc(t('Remove', 'إزالة')) + '</button></div>'; }).join('') + '</div>';
+  h += '<label class="field" style="margin-top:12px"><span>' + esc(t('Their name', 'اسمه')) + '</span><input class="input" id="cc-name" placeholder="' + esc(t('e.g. Anas', 'مثلاً أنس')) + '"></label>';
+  h += '<label class="field"><span>' + esc(t('In Arabic (optional)', 'بالعربية (اختياري)')) + '</span><input class="input" id="cc-ar" dir="rtl" placeholder="أنس"></label>';
+  h += '<div id="sheet-err" class="err">' + esc(d.err || '') + '</div><div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Close', 'إغلاق')) + '</button><button class="btn pri" onclick="makeCompInvite(' + jsArg(d.id) + ')">' + esc(t('Create link', 'أنشئ الرابط')) + '</button></div>';
+  return h;
+};
+function makeCompInvite(id) {
+  var nm = val('cc-name').trim(), ar = val('cc-ar').trim();
+  if (!nm) return sheetErr(t('Write his name first', 'اكتب اسمه أولاً'));
+  rpc('create_compound_invite', { p_compound: id, p_display_name: nm, p_display_name_ar: ar || null }).then(function(code) {
+    UI.sheet.data.code = code; UI.sheet.data.name = nm; render();
+  }, function(e) { sheetErr(e.message); });
+}
+function removeCompCollector(id, uid, nm) {
+  if (!confirm(t('Remove ' + nm + ' from every building of the compound?', 'إزالة ' + nm + ' من كل بنايات المجمّع؟'))) return;
+  rpc('remove_compound_collector', { p_compound: id, p_user: uid }).then(function() { toast(t('Removed', 'أُزيل')); loadCompCollectors(id); }, fail);
 }
 function overviewCard(r) {
   var b = r.b;

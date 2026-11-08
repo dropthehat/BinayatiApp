@@ -23,11 +23,14 @@ One file, `index.html`. It is already connected to the Supabase project **BINAYA
 - **Collected** means money that came in for a charge, whoever holds it.
 - **With the collector** means cash ticked by the collector that has not been handed over yet.
 - **In the safe** = opening balance + money paid to a manager or by transfer + confirmed handovers − expenses.
-- **Supplier services** (moteur, internet) are collected per subscriber and shown as "held for suppliers" until you record paying them.
+- **Supplier services** (moteur, internet, the collector's fee) count as passed to the supplier as soon as a collector collects them, unless the charge is paid from the safe or the building asks collectors to confirm. They are shown apart from building money.
+- **Shared book (water, EDL):** a bill's money stays with the collector until every apartment has paid it, then counts as paid to the supplier.
+- **Compound collectors:** invite a collector once for a compound; each building chooses in Settings whether he collects there.
 - **Arrears** carry over automatically: anything unpaid from an earlier month shows on the apartment's card and bill.
 - **Shares** let a bigger apartment or a shop carry more or less of a split bill.
 
 ## Files
 - `index.html` connects to your Supabase project.
 - `local.html` is the same app, saving to the phone only. Use it for demos.
+- `../natour-test/index.html` is the same app on the same data with a "Test version" banner (built by `build.js` too). Edit `src/`, then run `node build.js`; never edit the built pages by hand.
 - `schema.sql` is the full database setup, already applied. Keep it to rebuild the project elsewhere.

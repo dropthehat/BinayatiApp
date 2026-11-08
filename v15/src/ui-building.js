@@ -51,7 +51,7 @@ function renderUnitsSec() {
     if (bl.length > 1) h += '<div class="daylbl">' + esc(g.b ? blockLabel(g.b) : t('No block', 'بلا بلوك')) + '</div>';
     h += '<div class="card list">';
     g.us.slice().sort(function(a, b) { return (a.sort || 0) - (b.sort || 0) || String(a.code).localeCompare(String(b.code), 'en', { numeric: true }); }).forEach(function(u) {
-      h += '<button class="li" onclick="openSheet(\'unitEdit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(bl.length > 1 ? u.code : unitTag(u)) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc([u.phone ? '\u2066' + u.phone + '\u2069' : t('no phone', 'بلا هاتف'), num(u.weight) !== 1 ? t('share ×', 'حصة ×') + num(u.weight) : '', u.active === false ? t('inactive', 'غير فعّالة') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
+      h += '<button class="li" onclick="openSheet(\'unitEdit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(bl.length > 1 ? u.code : unitTag(u)) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc([placedHere(u) ? floorName(u.floor) + (u.spot ? ' · ' + u.spot : '') : '', u.phone ? '\u2066' + u.phone + '\u2069' : t('no phone', 'بلا هاتف'), num(u.weight) !== 1 ? t('share ×', 'حصة ×') + num(u.weight) : '', u.active === false ? t('inactive', 'غير فعّالة') : ''].filter(Boolean).join(' · ')) + '</small></div><span class="chev">›</span></button>';
     });
     h += '</div>';
   });
@@ -66,6 +66,15 @@ SHEETS.unitEdit = function(d) {
   h += '<div class="two"><label class="field"><span>' + esc(t('Code', 'الرمز')) + '</span><input class="input" id="u-code" value="' + esc(v.code) + '" placeholder="' + esc(t('2B or Shop 1', '2B أو محل 1')) + '"' + (u ? '' : ' data-autofocus') + '></label>';
   h += '<label class="field"><span>' + esc(t('Share', 'الحصة')) + '</span><input class="input" id="u-w" inputmode="decimal" value="' + esc(v.weight == null ? 1 : v.weight) + '"></label></div>';
   var blist = blocks();
+  // Where it sits: floor and position. Empty = read from the code (2B → floor 2).
+  var lay = currentLayout(blist.length > 1 ? (v.block || d.block || blist[0]) : null), fl = [], fv = v.floor != null && v.floor !== '' ? String(v.floor) : '';
+  for (var fi = -Math.max(3, lay.under); fi <= Math.max(lay.floors, 12); fi++) fl.push(fi);
+  var guess = unitLevel(v.code);
+  h += '<div class="two"><label class="field"><span>' + esc(t('Floor', 'الطابق')) + '</span><select class="input" id="u-floor" onchange="unitSpotHint()"><option value="">' + esc(guess != null ? t('Auto · ' + floorName(guess), 'تلقائي · ' + floorName(guess)) : t('Not set', 'غير محدد')) + '</option>' +
+       fl.map(function(f) { return '<option value="' + f + '"' + (fv === String(f) ? ' selected' : '') + '>' + esc(floorName(f)) + '</option>'; }).join('') + '</select></label>';
+  h += '<label class="field"><span>' + esc(t('Position', 'الموقع')) + '</span><select class="input" id="u-spot" onchange="unitSpotHint()"><option value="">—</option>' +
+       'ABCDEFGH'.split('').map(function(s) { return '<option value="' + s + '"' + (String(v.spot || '').toUpperCase() === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></label></div>';
+  h += '<small class="hint" id="u-spot-hint" style="display:block;margin:2px 0 8px">' + esc(t('Where it is in the building, for the picture and the order of the list. Its code stays the same.', 'مكانها في البناية، للصورة وترتيب القائمة. رمزها لا يتغيّر.')) + '</small>';
   h += '<label class="field"><span>' + esc(t('Block (only for compounds with several blocks)', 'البلوك (للمجمّعات فقط)')) + '</span><input class="input" id="u-block" list="u-blocks" value="' + esc(v.block || (d.block || '')) + '" placeholder="' + esc(t('e.g. A', 'مثلاً A')) + '"><datalist id="u-blocks">' + blist.map(function(b) { return '<option value="' + esc(b) + '">'; }).join('') + '</datalist></label>';
   h += '<label class="field"><span>' + esc(t('Resident name', 'اسم الساكن')) + '</span><input class="input" id="u-name" data-tr="u-name-ar" data-tr-kind="name" value="' + esc(v.name) + '"><div class="tr-box" id="trs-u-name"></div></label>';
   h += '<label class="field"><span>' + esc(t('Name in Arabic (optional)', 'الاسم بالعربية (اختياري)')) + '</span><input class="input" id="u-name-ar" data-tr="u-name" data-tr-kind="name" dir="rtl" value="' + esc(v.name_ar || '') + '"><div class="tr-box" id="trs-u-name-ar"></div></label>';
@@ -84,7 +93,48 @@ function saveUnit(id) {
   if (!row.code) return sheetErr(t('Give it a code like 2B', 'أعطها رمزاً مثل 2B'));
   if (S.units.some(function(x) { return x.code === row.code && blockOf(x) === (row.block || '') && x.id !== id; })) return sheetErr(t('That code is already used', 'هذا الرمز مستعمل'));
   if (!id) { row.resident_token = token(); row.sort = S.units.length; }
-  (id ? dbUpdate('units', id, row) : dbInsert('units', row)).then(function() { closeSheet(); toast(t('Saved', 'تم الحفظ')); if (UI.fillNames && id) setTimeout(function() { nextUnnamed(id); }, 250); }, function(e) { sheetErr(e.message); });
+  // Floor and position
+  var u0 = id ? byId(S.units, id) : null, fv = val('u-floor');
+  row.floor = fv === '' ? null : Number(fv);
+  row.spot = row.floor == null ? null : (val('u-spot') || null);
+  var moved = !u0 || String(u0.floor == null ? '' : u0.floor) !== String(row.floor == null ? '' : row.floor) || String(u0.spot || '') !== String(row.spot || '');
+  var spare = null;
+  if (row.floor != null && moved) {
+    var slot = slotCode(row), blk = row.block || '';
+    var there = activeUnits().filter(function(x) { return x.id !== id && blockOf(x) === blk && (placedHere(x) ? slotCode(x) === slot : String(x.code).toUpperCase() === slot); })[0];
+    if (there) {
+      if (!emptyUnit(there) || placedHere(there)) return sheetErr(t(floorName(row.floor) + (row.spot ? ' ' + row.spot : '') + ' already has ' + (unitName(there) || there.code) + '. Move them first.', floorName(row.floor) + (row.spot ? ' ' + row.spot : '') + ' فيها ' + (unitName(there) || there.code) + '. انقلها أولاً.'));
+      spare = there; // empty placeholder from setup: it is replaced
+    }
+  }
+  var btn = document.querySelector('.sheet .foot .btn.pri'); if (btn) btn.disabled = true;
+  (id ? dbUpdate('units', id, row) : dbInsert('units', row)).then(function() {
+    return spare ? dbDelete('units', spare.id) : null;
+  }).then(function() { return moved ? resortUnits() : null; }).then(function() {
+    closeSheet(); toast(spare ? t('Saved · empty ' + spare.code + ' removed', 'تم الحفظ · أزيلت ' + spare.code + ' الفارغة') : t('Saved', 'تم الحفظ'));
+    if (UI.fillNames && id) setTimeout(function() { nextUnnamed(id); }, 250);
+  }, function(e) { if (btn) btn.disabled = false; sheetErr(e.message); });
+}
+function unitSpotHint() {
+  var el = document.getElementById('u-spot-hint'), f = val('u-floor'), s = val('u-spot');
+  if (!el || f === '') return;
+  var slot = slotCode({ floor: Number(f), spot: s }), id = UI.sheet && UI.sheet.data.id, blk = val('u-block').trim().toUpperCase();
+  var there = activeUnits().filter(function(x) { return x.id !== id && blockOf(x) === blk && (placedHere(x) ? slotCode(x) === slot : String(x.code).toUpperCase() === slot); })[0];
+  el.textContent = !there ? t('Free spot.', 'المكان فارغ.') : emptyUnit(there) && !placedHere(there) ? t('Takes the place of the empty ' + there.code + ', which will be removed.', 'تأخذ مكان ' + there.code + ' الفارغة، وستُزال.') : t('Taken by ' + (unitName(there) || there.code) + '.', 'مشغول من ' + (unitName(there) || there.code) + '.');
+  el.style.color = there && !(emptyUnit(there) && !placedHere(there)) ? 'var(--bad)' : '';
+}
+/* Keep the apartment list in building order: underground first, floor by floor, then position. */
+function resortUnits() {
+  var all = S.units.slice().sort(function(a, b) {
+    if (blockOf(a) !== blockOf(b)) return blockOf(a).localeCompare(blockOf(b));
+    var la = unitLevel(a), lb = unitLevel(b);
+    if (la == null) la = 99; if (lb == null) lb = 99;
+    var pa = placedHere(a) ? (a.spot || '') : String(a.code), pb = placedHere(b) ? (b.spot || '') : String(b.code);
+    return la - lb || pa.localeCompare(pb, 'en', { numeric: true });
+  });
+  var p2 = Promise.resolve();
+  all.forEach(function(u, i) { if (u.sort !== i) p2 = p2.then(function() { return dbUpdate('units', u.id, { sort: i }); }); });
+  return p2;
 }
 function deleteUnit(id) {
   var has = S.payments.some(function(p) { return p.unit_id === id && !p.voided_at; });
@@ -422,6 +472,10 @@ SHEETS.charge = function(d) {
     h += '<label class="field"><span>' + esc(t('Currency', 'العملة')) + '</span><div class="seg"><button class="' + (cur === 'USD' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.cur=\'USD\';render()">USD</button><button class="' + (cur === 'LBP' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.cur=\'LBP\';render()">LBP</button></div></label>';
   }
   h += fxField('c-fx', cur, st.fx || v.fx, mt ? 'm-rate' : 'c-amt');
+  if (kind === 'service') {
+    var payer = st.payer || v.payer || 'collector';
+    h += '<label class="field"><span>' + esc(t('Who hands it to the supplier', 'من يسلّمها للمورد')) + '</span><div class="seg"><button class="' + (payer === 'collector' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.payer=\'collector\';render()">' + esc(t('Whoever collects it', 'من يجبيها')) + '</button><button class="' + (payer === 'safe' ? 'on' : '') + '" onclick="keepCharge();UI.sheet.data.payer=\'safe\';render()">' + esc(t('The manager, from the safe', 'المدير من الصندوق')) + '</button></div><small class="hint" style="display:block;margin-top:6px">' + esc(payer === 'safe' ? t('The collector hands this money over with the rest, and you pay the supplier from the safe.', 'الجابي يسلّم هذا المال مع الباقي، وأنت تدفع للمورد من الصندوق.') : setting('sup_confirm') === true ? t('The collector pays the supplier and confirms it on his page (Settings ask collectors to confirm).', 'الجابي يدفع للمورد ويؤكّد ذلك في صفحته (الإعدادات تطلب تأكيد الجباة).') : t('Counted as paid to the supplier as soon as it is collected. It never sits in the safe.', 'تُحتسب مدفوعة للمورد فور جبايتها. لا تدخل الصندوق.')) + '</small></label>';
+  }
   if (mt) h += '<div class="field"><span>' + esc(t(mu[0] + ' used this month (leave empty if not subscribed)', 'الاستهلاك هذا الشهر بال' + mu[1] + ' (فارغ لغير المشترك)')) + '</span><div class="card" id="c-prev" style="padding:4px 12px"></div></div>';
   else h += '<div class="field"><span>' + esc(kind === 'service' ? t('What each subscriber pays (leave empty if not subscribed)', 'ما يدفعه كل مشترك (اتركه فارغاً لغير المشترك)') : t('Per apartment — type to change one. A payment already recorded is not deleted.', 'لكل شقة — اكتب لتغيير واحدة. الدفعة المسجّلة لا تُحذف.')) + '</span><div class="card" id="c-prev" style="padding:4px 12px"></div></div>';
   if (kind !== 'due') h += '<div class="switch-row"><div><b>' + esc(t('Repeat next month', 'كرّر الشهر القادم')) + '</b><small>' + esc(t('Copied when you open the next month', 'يُنسخ عند فتح الشهر التالي')) + '</small></div><button class="sw' + ((st.recurring != null ? st.recurring : v.recurring) ? ' on' : '') + '" id="c-rec" onclick="this.classList.toggle(\'on\');keepCharge()"></button></div>';
@@ -544,6 +598,7 @@ function saveCharge() {
   var d = UI.sheet.data, ch = d.id ? byId(S.charges, d.id) : null;
   var row = { title: (d.title || '').trim(), title_ar: (d.title_ar || '').trim() || null, kind: d.kind, cur: d.cur, amount: d.kind === 'service' ? 0 : num(d.amount),
               split: d.split, overrides: d.ov || {}, pass_through: d.kind === 'service', block: (d.block != null ? d.block : (ch && ch.block)) || null, recurring: d.kind === 'due' ? false : (d.recurring != null ? d.recurring : true) };
+  if (d.kind === 'service') row.payer = d.payer || (ch && ch.payer) || 'collector';
   if (d.meter) {
     if (!(num(d.meter.rate) > 0)) return sheetErr(t('Enter the price per ' + meterUnit(d.meter), 'أدخل السعر لكل ' + meterUnit(d.meter)));
     row.meter = { rate: num(d.meter.rate), fixed: num(d.meter.fixed), kwh: d.meter.kwh || {}, unit: d.meter.unit === 'm3' ? 'm3' : 'kwh' };
@@ -565,7 +620,21 @@ function saveCharge() {
   if (!d.meter && d.kind === 'service' && !Object.keys(row.overrides).length) return sheetErr(t('Enter at least one subscriber', 'أدخل مشتركاً واحداً على الأقل'));
   if (!ch) { row.cycle_id = d.cycle || UI.cycleId; row.sort = chargesOf(row.cycle_id).length; }
   else if (!confirmChargeEdit(ch, row)) return;
-  (ch ? dbUpdate('charges', ch.id, row) : dbInsert('charges', row)).then(function() { closeSheet(); toast(t('Saved', 'تم الحفظ')); }, function(e) { sheetErr(e.message); });
+  var payerChanged = ch && d.kind === 'service' && (ch.payer || 'collector') !== row.payer;
+  (ch ? dbUpdate('charges', ch.id, row) : dbInsert('charges', row)).then(function() {
+    return payerChanged ? supResync() : null;
+  }).then(function() { closeSheet(); toast(t('Saved', 'تم الحفظ')); }, function(e) { sheetErr(e.message); });
+}
+/* Re-count supplier money already collected after "who pays" or the confirm setting changed. */
+function toggleCompoundCollectors(on) {
+  rpc('set_compound_collectors', { p_building: S.building.id, p_on: on }).then(function() {
+    S.building.settings = Object.assign({}, S.building.settings || {}, { compound_collectors: on });
+    return reloadBuilding();
+  }).then(function() { toast(on ? t('The compound\'s collectors can collect here', 'جباة المجمّع يمكنهم الجباية هنا') : t('Compound collectors removed from this building', 'أُزيل جباة المجمّع من هذه البناية')); render(); }, fail);
+}
+function supResync() {
+  if (!isCloud()) return Promise.resolve();
+  return rpc('sup_resync', { p_building: S.building.id }).then(function() { return reloadBuilding(); });
 }
 function chargePayRows(id) {
   return livePayments().filter(function(p) { return p.charge_id === id; });
@@ -819,7 +888,7 @@ function copiedCharge(ch, cycleId, sort) {
   var row = {
     cycle_id: cycleId, kind: ch.kind, title: ch.title, title_ar: ch.title_ar, cur: ch.cur, amount: ch.amount, split: ch.split,
     overrides: ch.meter ? {} : JSON.parse(JSON.stringify(ch.overrides || {})),
-    pass_through: !!ch.pass_through, recurring: true, sort: sort, block: ch.block || null,
+    pass_through: !!ch.pass_through, payer: ch.payer || null, recurring: true, sort: sort, block: ch.block || null,
     meter: ch.meter ? { rate: ch.meter.rate, fixed: ch.meter.fixed || 0, kwh: {}, unit: ch.meter.unit === 'm3' ? 'm3' : 'kwh' } : null
   };
   if (ch.fx) row.fx = ch.fx;
@@ -1024,8 +1093,11 @@ function renderSettingsSec() {
   h += '<button class="btn pri block" style="margin-top:14px" onclick="saveSettings()">' + esc(t('Save', 'حفظ')) + '</button></div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('The building', 'البناية')) + '</h2></div><div class="card pad">';
   h += switchRow('base_cur_usd', setting('base_cur') === 'USD', t('Keep the books in dollars', 'الحسابات بالدولار'), t('Bills entered in LBP are converted at your dollar rate when saved. Totals show in $ only.', 'الفواتير بالليرة تُحوَّل بسعر الدولار عند الحفظ، والمجاميع بالدولار فقط.'));
+  h += switchRow('collector_usd', setting('collector_usd') !== false, t('Collector page in dollars first', 'صفحة الجابي بالدولار أولاً'), t('LBP shows underneath. Bills stay in their own currency.', 'الليرة تظهر تحتها. الفواتير تبقى بعملتها.'));
   if (blocks().length > 1) h += switchRow('safe_per_block', st.safe_mode === 'block', t('A safe per block', 'صندوق لكل بلوك'), t('Each block keeps its own cash and expenses. Off: one shared safe for the compound.', 'كل بلوك له نقده ومصاريفه. مطفأ: صندوق واحد للمجمّع.'));
   h += switchRow('elevator', !!st.elevator, t('Has an elevator', 'فيها مصعد'), t('Shown on the building picture, going up and down', 'يظهر في صورة البناية صاعداً ونازلاً'));
+  if (S.building.compound_id && S.building.kind !== 'shared' && isCloud() && S.role === 'manager') h += '<div class="switch-row"><div><b>' + esc(t('The compound\'s collectors work here', 'جباة المجمّع يعملون هنا')) + '</b><small>' + esc(st.compound_collectors ? t('On: collectors invited for the whole compound can collect in this building. They never see its expenses or safe.', 'مفعّل: جباة المجمّع يمكنهم الجباية هنا، ولا يرون مصاريفها أو صندوقها.') : t('Off: only people you invite yourself can collect here.', 'مطفأ: فقط من تدعوه بنفسك يمكنه الجباية هنا.')) + '</small></div><button class="sw' + (st.compound_collectors ? ' on' : '') + '" onclick="toggleCompoundCollectors(' + !st.compound_collectors + ')"></button></div>';
+  h += switchRow('sup_confirm', st.sup_confirm === true, t('Collectors confirm supplier payments', 'الجباة يؤكّدون الدفع للموردين'), st.sup_confirm === true ? t('Moteur, internet… stay with the collector until he (or you) ticks that the supplier was paid.', 'موتور، إنترنت… تبقى مع الجابي حتى يؤشّر هو (أو أنت) أن المورد قبض.') : t('Off: supplier money a collector collects counts as paid to the supplier straight away.', 'مطفأ: مال المورد الذي يجبيه الجابي يُحتسب مدفوعاً للمورد فوراً.'));
   h += '</div></div>';
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('What residents see', 'ما يراه السكان')) + '</h2></div><div class="card pad">';
   h += switchRow('books_public', st.books_public !== false, t('The building\'s books', 'حسابات البناية'), t('Money in, money out and the safe, on every resident\'s page', 'المقبوض والمصروف والصندوق في صفحة كل ساكن'));
@@ -1037,15 +1109,41 @@ function renderSettingsSec() {
   h += '<button class="li" onclick="exportData()"><div class="ic">⬇︎</div><div class="grow"><b>' + esc(t('Download a copy', 'تنزيل نسخة')) + '</b><small>' + esc(t('Everything in this building, as a file', 'كل بيانات البناية في ملف')) + '</small></div></button>';
   h += '<button class="li" onclick="openSheet(\'server\')"><div class="ic">☁︎</div><div class="grow"><b>' + esc(t('Server', 'الخادم')) + '</b><small>' + esc(isCloud() ? t('Connected · syncing between phones', 'متصل · مزامنة بين الهواتف') : t('Not connected · this phone only', 'غير متصل · هذا الهاتف فقط')) + '</small></div><span class="chev">›</span></button>';
   h += '</div></div>';
+  h += regularBillsSettingsHtml();
   h += renderSupportCard();
+  if (S.role === 'manager' && !UI.pvCol) h += '<div class="sec"><div class="card list"><button class="li" onclick="openSheet(\'delbuilding\',{})"><div class="ic" style="color:var(--bad)">🗑</div><div class="grow"><b style="color:var(--bad)">' + esc(t('Delete this building', 'حذف هذه البناية')) + '</b><small>' + esc(t('Removes it with its apartments, months, payments and expenses', 'تُحذف مع شققها وأشهرها ودفعاتها ومصاريفها')) + '</small></div><span class="chev">›</span></button></div></div>';
   return h;
+}
+/* Delete the whole building: the manager types its name to confirm. */
+SHEETS.delbuilding = function() {
+  var n = S.building.name;
+  var counts = [S.units.length + t(' apartments', ' شقق'), S.cycles.length + t(' months and rounds', ' أشهر ودورات'), livePayments().length + t(' payments', ' دفعات'), liveExpenses().length + t(' expenses', ' مصاريف')];
+  var h = '<h3>' + esc(t('Delete ' + n + '?', 'حذف ' + n + '؟')) + '</h3>';
+  h += '<p class="lead">' + esc(t('Everything in it goes and cannot be brought back: ', 'كل ما فيها يُحذف ولا يمكن استرجاعه: ') + counts.join(', ') + '.') + '</p>';
+  if (S.building.compound_id) h += '<div class="banner warn" style="margin-bottom:10px"><div class="grow">' + esc(t('It belongs to a compound. If the sheet link writes into it, that stops for this building.', 'هي ضمن مجمّع. إذا كان ربط الجدول يكتب فيها، يتوقف ذلك لهذه البناية.')) + '</div></div>';
+  h += '<button class="btn sec block" onclick="exportData()">⬇︎ ' + esc(t('Download a copy first', 'نزّل نسخة أولاً')) + '</button>';
+  h += '<label class="field"><span>' + esc(t('Type the building name to confirm: ', 'اكتب اسم البناية للتأكيد: ') + n) + '</span><input class="input" id="del-name" autocomplete="off" oninput="var b=document.getElementById(\'del-go\');if(b)b.disabled=this.value.trim()!==' + jsArg(n.trim()) + '"></label>';
+  h += '<div id="sheet-err" class="err"></div><div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Keep it', 'أبقها')) + '</button><button class="btn danger" id="del-go" disabled onclick="deleteBuilding()">' + esc(t('Delete for good', 'احذف نهائياً')) + '</button></div>';
+  return h;
+};
+function deleteBuilding() {
+  var typed = val('del-name').trim(), btn = document.getElementById('del-go');
+  if (typed !== S.building.name.trim()) return sheetErr(t('The name does not match', 'الاسم غير مطابق'));
+  if (btn) btn.disabled = true;
+  rpc('delete_building', { p_building: S.building.id, p_confirm: typed }).then(function() {
+    try { localStorage.removeItem('bny15_last'); } catch (e) {}
+    UI.sheet = null; UI.bsec = null; UI.tab = 'home';
+    toast(t('Building deleted', 'حُذفت البناية'));
+    if (isCloud()) return afterSignIn();
+    UI.screen = 'welcome'; render();
+  }).catch(function(e) { if (btn) btn.disabled = false; sheetErr(e.message); });
 }
 function switchRow(key, on, title, sub) {
   return '<div class="switch-row"><div><b>' + esc(title) + '</b><small>' + esc(sub) + '</small></div><button class="sw' + (on ? ' on' : '') + '" onclick="toggleSetting(\'' + key + '\',' + !on + ')"></button></div>';
 }
 function toggleSetting(k, v) {
   var st = Object.assign({}, S.building.settings || {}); if (k === 'base_cur_usd') { k = 'base_cur'; v = v ? 'USD' : null; } if (k === 'offers_on') { k = 'offers_off'; v = !v; } if (k === 'safe_per_block') { if (!confirm(t('This changes how the cash is counted: ' + (v ? 'each block gets its own safe; past money is counted by the apartment\'s block.' : 'all blocks share one safe again.') + ' Nothing is deleted. Continue?', 'هذا يغيّر طريقة احتساب النقد: ' + (v ? 'لكل بلوك صندوقه؛ المال السابق يُحتسب حسب بلوك الشقة.' : 'كل البلوكات تعود لصندوق واحد.') + ' لا شيء يُحذف. متابعة؟'))) return; k = 'safe_mode'; v = v ? 'block' : null; } st[k] = v;
-  dbUpdate('buildings', S.building.id, { settings: st }).then(render, fail);
+  dbUpdate('buildings', S.building.id, { settings: st }).then(function() { return k === 'sup_confirm' ? supResync() : null; }).then(render, fail);
   S.building.settings = st; render();
 }
 function saveSettings() {
@@ -1108,6 +1206,8 @@ SHEETS.menu = function() {
     h += '<button class="li" onclick="demoSignIn(' + (asMgr ? '\'collector\'' : '\'manager\'') + ')"><div class="ic">⇄</div><div class="grow"><b>' + esc(asMgr ? t('Switch to the collector (Anas)', 'بدّل إلى الجابي (أنس)') : t('Switch to the manager (Rima)', 'بدّل إلى المدير (ريما)')) + '</b><small>' + esc(t('Demo: see the same building from the other side', 'تجربة: نفس البناية من الجهة الأخرى')) + '</small></div></button>';
     h += '<button class="li" onclick="demoReset()"><div class="ic">↺</div><div class="grow"><b>' + esc(t('Reset the demo data', 'أعد بيانات التجربة')) + '</b><small>' + esc(t('Back to the original sample', 'العودة للنموذج الأصلي')) + '</small></div></button>';
   }
+  if (colUI()) h += '<button class="li" onclick="openSheet(\'colmore\')"><div class="ic">📇</div><div class="grow"><b>' + esc(t('News & contacts', 'الأخبار وجهات الاتصال')) + '</b></div></button>';
+  if (isManager()) h += '<button class="li" onclick="startColPreview()"><div class="ic">👁</div><div class="grow"><b>' + esc(t('Preview the collector page', 'معاينة صفحة الجابي')) + '</b><small>' + esc(t('What the collector sees. Nothing is saved.', 'ما يراه الجابي. لا يُحفظ شيء.')) + '</small></div></button>';
   if (isCloud() && feature('announcements') && visibleNews().length) h += '<button class="li" onclick="openSheet(\'news\')"><div class="ic">📣</div><div class="grow"><b>' + esc(t('News from the Natour app', 'أخبار تطبيق ناطور')) + '</b><small>' + esc(t('New features, tips and offers', 'ميزات جديدة ونصائح وعروض')) + '</small></div></button>';
   if (isManager() && window.innerWidth >= 760 && !deskActive()) h += '<button class="li" onclick="closeSheet();setDesk(true)"><div class="ic">💻</div><div class="grow"><b>' + esc(t('Laptop view', 'عرض الحاسوب')) + '</b><small>' + esc(t('Tables, the year at a glance, reports to print or download', 'جداول، السنة بنظرة، تقارير للطباعة أو التنزيل')) + '</small></div></button>';
   if (IS_ADMIN && !S.support) h += '<button class="li" onclick="openAdmin()"><div class="ic">🛠</div><div class="grow"><b>Natour app admin</b><small>Features, lists, client support</small></div></button>';
@@ -1127,29 +1227,37 @@ function viewAs(uid) {
   myBuildingList().then(function(l) { UI.multi = l.length > 1; render(); });
 }
 SHEETS.add = function() {
-  var items = [];
+  // Grouped by the question the person is asking: did money come in, go out, or is it something residents will pay?
+  var groups = [];
   if (isManager()) {
-    items.push(['pay', '↓', t('Record a payment', 'سجّل دفعة'), t('Any amount, oldest charges first', 'أي مبلغ، الأقدم أولاً')]);
-    items.push(['expense', '↑', t('Money spent', 'مصروف'), t('Fuel, repairs, cleaning…', 'مازوت، تصليح، تنظيف…')]);
-    if (aiReady() && feature('transfer_scan')) items.splice(1, 0, ['scanpay', '📷', t('Read a transfer screenshot', 'اقرأ لقطة تحويل'), t('Whish, OMT, bank: fills the payment for you', 'Whish، OMT، بنك: تملأ الدفعة عنك')]);
-    if (aiReady() && feature('expense_scan')) items.push(['scanexp', '🧾', t('Scan a receipt', 'امسح إيصالاً'), t('Photo of an invoice becomes an expense', 'صورة الفاتورة تصبح مصروفاً')]);
-    items.push(['charge', '🧾', t('Add a charge', 'أضف رسماً'), t('A bill to split, a fee, a supplier service', 'فاتورة، رسم، خدمة مورّد')]);
-    items.push(['month', '📅', t('Open the next month', 'افتح الشهر التالي'), t('Copies repeating charges for you to review', 'ينسخ الرسوم المتكررة لتراجعها')]);
-    if (collectorsHolding().length) items.push(['handrecv', '⇄', t('Cash received from a collector', 'استلمت نقداً من الجابي'), t('Even if they didn\'t send a handover', 'حتى لو لم يرسل تسليماً')]);
-    items.push(['project', '◆', t('New project', 'مشروع جديد'), t('Solar, elevator, painting…', 'طاقة شمسية، مصعد، دهان…')]);
-    items.push(['task', '✅', t('Add a task', 'أضف مهمة'), t('Reminders that repeat', 'تذكيرات متكررة')]);
+    groups.push([t('Money came in', 'دخل مال'), [
+      ['pay', '↓', t('An apartment paid', 'شقة دفعت'), t('Cash, Whish or bank. A transfer screenshot fills it for you.', 'نقداً أو Whish أو مصرف. لقطة التحويل تملؤها عنك.')],
+      collectorsHolding().length ? ['handrecv', '⇄', t('Cash from the collector', 'نقد من الجابي'), t('He handed you what he collected', 'سلّمك ما جباه')] : null]]);
+    groups.push([t('Money went out', 'خرج مال'), [
+      ['expense', '↑', t('The building paid for something', 'البناية دفعت لشيء'), t('Moteur bill, elevator, cleaning products… Scan the receipt inside.', 'فاتورة الموتور، المصعد، مواد التنظيف… امسح الإيصال من الداخل.')]]]);
+    groups.push([t('What residents pay', 'ما يدفعه السكان'), [
+      ['month', '📅', t('Open the next month', 'افتح الشهر التالي'), t('Copies the monthly fees for you to check', 'ينسخ الرسوم الشهرية لتراجعها')],
+      ['charge', '🧾', t('New bill to split, or a fee', 'فاتورة للتقسيم أو رسم جديد'), t('Added to this month: a repair split by apartment, internet, dish…', 'تُضاف لهذا الشهر: تصليح يُقسم، إنترنت، دش…')],
+      ['project', '◆', t('New project', 'مشروع جديد'), t('Collected separately: solar, painting, elevator…', 'يُجبى وحده: طاقة شمسية، دهان، مصعد…')]]]);
+    groups.push([t('Reminder', 'تذكير'), [['task', '✅', t('Add a task', 'أضف مهمة'), t('Water tank cleaning, elevator check… can repeat', 'تنظيف الخزان، فحص المصعد… يمكن أن يتكرر')]]]);
   } else {
-    items.push(['pay', '↓', t('Record a payment', 'سجّل دفعة'), t('Someone paid part of their bill', 'دفع أحدهم جزءاً من فاتورته')]);
-    items.push(['expense', '↑', t('I spent building cash', 'صرفت من مال البناية'), t('Comes off what you hand over', 'يُخصم مما تسلّمه')]);
-    if (aiReady() && feature('expense_scan')) items.push(['scanexp', '🧾', t('Scan a receipt', 'امسح إيصالاً'), t('Take a photo, the form fills itself', 'صوّر والإستمارة تمتلئ')]);
-    items.push(['handreq', '⇄', t('Hand over cash', 'سلّم النقد'), t('To the manager', 'للمدير')]);
+    groups.push(['', [
+      ['pay', '↓', t('An apartment paid', 'شقة دفعت'), t('Someone paid part of their bill', 'دفع أحدهم جزءاً من فاتورته')],
+      ['expense', '↑', t('I spent building cash', 'صرفت من مال البناية'), t('Comes off what you hand over. Scan the receipt inside.', 'يُخصم مما تسلّمه. امسح الإيصال من الداخل.')],
+      ['handreq', '⇄', t('Hand over cash', 'سلّم النقد'), t('To the manager', 'للمدير')]]]);
   }
-  var need = { pay: 'pay', scanpay: 'pay', expense: 'spend', scanexp: 'spend', charge: 'charges', month: 'charges', project: 'charges', task: 'tasks' };
-  items = items.filter(function(x) { return !need[x[0]] || can(need[x[0]]); });
-  var h = '<h3>' + esc(t('Add', 'إضافة')) + '</h3><div class="card list menu" style="margin-top:10px">';
-  if (!items.length) h += '<p class="muted">' + esc(t('Nothing to add with your permissions.', 'لا شيء لإضافته بصلاحياتك.')) + '</p>';
-  items.forEach(function(x) { h += '<button class="li" onclick="addPick(\'' + x[0] + '\')"><div class="ic">' + x[1] + '</div><div class="grow"><b>' + esc(x[2]) + '</b><small>' + esc(x[3]) + '</small></div></button>'; });
-  return h + '</div>';
+  var need = { pay: 'pay', expense: 'spend', charge: 'charges', month: 'charges', project: 'charges', task: 'tasks' };
+  var ok = function(x) { return x && (!need[x[0]] || can(need[x[0]])) && !(isSharedBook() && (x[0] === 'month' || x[0] === 'charge')); };
+  var h = '<h3>' + esc(t('Add', 'إضافة')) + '</h3>', any = false;
+  groups.forEach(function(g) {
+    var items = g[1].filter(ok);
+    if (!items.length) return;
+    any = true;
+    if (g[0]) h += '<div class="add-h">' + esc(g[0]) + '</div>';
+    h += '<div class="card list menu">' + items.map(function(x) { return '<button class="li" onclick="addPick(\'' + x[0] + '\')"><div class="ic">' + x[1] + '</div><div class="grow"><b>' + esc(x[2]) + '</b><small>' + esc(x[3]) + '</small></div></button>'; }).join('') + '</div>';
+  });
+  if (!any) h += '<p class="muted">' + esc(t('Nothing to add with your permissions.', 'لا شيء لإضافته بصلاحياتك.')) + '</p>';
+  return h;
 };
 function addPick(k) {
   if (k === 'scanpay') { UI.sheet = { name: 'pay', data: {} }; render(); scanTransfer(); return; }
@@ -1165,7 +1273,7 @@ var LAYOUT_CODE = /^(SS\d+|\d+)[A-H]?$/;
 function currentLayout(block) {
   var floors = 0, under = 0, per = 1, by = {};
   activeUnits().filter(function(u) { return block == null || blockOf(u) === block; }).forEach(function(u) {
-    var lv = unitLevel(u.code);
+    var lv = unitLevel(u);
     if (lv == null || lv === 0) return;
     if (lv > 0) floors = Math.max(floors, lv); else under = Math.max(under, -lv);
     by[lv] = (by[lv] || 0) + 1;
@@ -1176,33 +1284,86 @@ function currentLayout(block) {
 function layoutSummary(l) {
   return t(l.floors + ' floors × ' + l.per + (l.under ? ' · ' + l.under + ' underground' : ''), l.floors + ' طوابق × ' + l.per + (l.under ? ' · ' + l.under + ' سفلية' : ''));
 }
-function layoutPlan(l, block) {
+function layoutPlan(l, block, assign, addEmpty) {
   block = block || '';
   var target = layoutCodes(l.floors, l.per, l.under), want = {};
   target.forEach(function(c) { want[c] = 1; });
   var byCode = {};
   S.units.forEach(function(u) { if (blockOf(u) === block) byCode[String(u.code).toUpperCase()] = u; });
-  var add = [], revive = [], drop = [];
-  target.forEach(function(c) { var u = byCode[c]; if (!u) add.push(c); else if (u.active === false) revive.push(u); });
-  activeUnits().forEach(function(u) { var c = String(u.code).toUpperCase(); if (blockOf(u) === block && LAYOUT_CODE.test(c) && !want[c]) drop.push(u); });
-  return { target: target, add: add, revive: revive, drop: drop };
+  assign = assign || layoutAssignStart(target, block);
+  var add = [], revive = [], drop = [], place = [], unplace = [], taken = {}, empty = [];
+  target.forEach(function(c) { if (assign[c]) taken[assign[c]] = c; });
+  target.forEach(function(c) {
+    var a = assign[c] && byId(S.units, assign[c]), u = byCode[c];
+    if (a) {
+      var cur = placedHere(a) ? slotCode(a) : String(a.code).toUpperCase();
+      if (cur !== c || (!placedHere(a) && a !== u)) place.push({ u: a, slot: c });
+      if (u && u !== a && u.active !== false && emptyUnit(u) && !taken[u.id]) drop.push(u);
+      return;
+    }
+    if (u && taken[u.id] && taken[u.id] !== c) return; // that apartment was moved to another spot; its code stays with it
+    if (!u) { if (addEmpty) add.push(c); else empty.push(c); } else if (u.active === false) revive.push(u);
+  });
+  activeUnits().forEach(function(u) {
+    if (blockOf(u) !== block || taken[u.id] || drop.indexOf(u) >= 0) return;
+    var c = String(u.code).toUpperCase();
+    if (placedHere(u)) { if (!want[slotCode(u)]) unplace.push(u); return; }
+    if (LAYOUT_CODE.test(c) && !want[c]) drop.push(u);
+  });
+  return { target: target, add: add, revive: revive, drop: drop, place: place, unplace: unplace, assign: assign, empty: empty };
+}
+/* Who is in which slot now: apartments placed by hand, or whose code is the slot. */
+function layoutAssignStart(target, block) {
+  var a = {}, want = {};
+  target.forEach(function(c) { want[c] = 1; });
+  activeUnits().forEach(function(u) {
+    if (blockOf(u) !== (block || '')) return;
+    var c = placedHere(u) ? slotCode(u) : String(u.code).toUpperCase();
+    if (want[c] && !a[c] && !emptyUnit(u)) a[c] = u.id;
+  });
+  return a;
+}
+function parseSlot(c) {
+  var m = String(c).match(/^(SS(\d+)|G|(\d+))([A-H]?)$/);
+  if (!m) return null;
+  return { floor: m[2] ? -Number(m[2]) : m[3] ? Number(m[3]) : 0, spot: m[4] || null };
+}
+/* Floor and position set by hand on the apartment. */
+function placedHere(u) { return u.floor != null && u.floor !== ''; }
+function slotCode(u) {
+  var f = Number(u.floor), s = String(u.spot || '').toUpperCase();
+  return (f < 0 ? 'SS' + (-f) : f === 0 ? 'G' : String(f)) + s;
+}
+function floorName(f) {
+  f = Number(f);
+  return f < 0 ? t('Underground ' + (-f) + ' (SS' + (-f) + ')', 'سفلي ' + (-f) + ' (SS' + (-f) + ')') : f === 0 ? t('Ground floor', 'الطابق الأرضي') : t('Floor ' + f, 'الطابق ' + f);
+}
+/* A placeholder made by setup: no name, phone or payments. */
+function emptyUnit(u) {
+  return !unitName(u) && !u.phone && !u.ext_ref && !S.payments.some(function(p) { return p.unit_id === u.id && !p.voided_at; });
 }
 SHEETS.layout = function(d) {
   var bl = blocks();
   if (bl.length > 1 && d.block == null) d.block = bl[0];
   if (!d.l) d.l = currentLayout(bl.length > 1 ? d.block : null);
-  var l = d.l, plan = layoutPlan(l, bl.length > 1 ? d.block : '');
+  var l = d.l, blk = bl.length > 1 ? d.block : '';
+  if (!d.assign) d.assign = layoutAssignStart(layoutCodes(l.floors, l.per, l.under), blk);
+  var plan = layoutPlan(l, blk, d.assign, !!d.addEmpty);
   var h = '<h3>' + esc(t('Floors & apartments', 'الطوابق والشقق')) + '</h3>';
   h += '<div class="chips" style="padding:4px 0 8px;flex-wrap:wrap">';
   bl.forEach(function(b) { h += '<button class="chip' + (d.block === b ? ' on' : '') + '" onclick="UI.sheet.data={block:' + jsArg(b) + '};render()">' + esc(blockLabel(b)) + '</button>'; });
   h += '<button class="chip" onclick="addBlock()">＋ ' + esc(bl.length > 1 ? t('Another block', 'بلوك آخر') : t('This is a compound with blocks', 'هذا مجمّع ببلوكات')) + '</button></div>';
-  h += '<p class="lead">' + esc(t('Fix the building if setup got it wrong. Apartments you renamed yourself are left alone.', 'صحّح البناية إذا أخطأ الإعداد. الشقق التي سمّيتها بنفسك لا تتغير.')) + '</p>';
+  h += '<p class="lead">' + esc(t('This edits ' + S.building.name + '. Set the floors with + and −, then put each apartment in its place. Codes and names stay as they are.', 'هذا يعدّل ' + S.building.name + '. حدّد الطوابق بـ + و −، ثم ضع كل شقة في مكانها. الرموز والأسماء تبقى كما هي.')) + '</p>';
   h += '<div class="ob-stage" style="height:190px;padding:0">' + obScene(plan.target.length, plan.target, d.block ? (S.building.name + ' ' + d.block).slice(0, 12) : S.building.name, false) + '</div>';
   [['floors', t('Floors', 'الطوابق'), 1, 12], ['per', t('Apartments per floor', 'شقق في الطابق'), 1, 6], ['under', t('Underground floors', 'طوابق سفلية'), 0, 3]].forEach(function(x) {
     h += '<div class="ob-step"><div><b>' + esc(x[1]) + '</b></div><div class="stepper"><button onclick="layoutBump(\'' + x[0] + '\',-1,' + x[2] + ',' + x[3] + ')">−</button><span>' + l[x[0]] + '</span><button onclick="layoutBump(\'' + x[0] + '\',1,' + x[2] + ',' + x[3] + ')">+</button></div></div>';
   });
+  h += layoutGridHtml(plan, l, blk);
+  if (plan.empty.length || d.addEmpty) h += '<div class="switch-row"><div><b>' + esc(t('Add empty apartments for the empty spots', 'أضف شققاً فارغة للأماكن الفارغة')) + '</b><small>' + esc(t('Off: empty spots stay empty. Nothing is added.', 'مطفأ: الأماكن الفارغة تبقى فارغة. لا يُضاف شيء.')) + '</small></div><button class="sw' + (d.addEmpty ? ' on' : '') + '" onclick="UI.sheet.data.addEmpty=!UI.sheet.data.addEmpty;render()"></button></div>';
   var lines = [];
-  if (plan.add.length) lines.push(t('Adds ', 'يضيف ') + plan.add.join(', '));
+  if (plan.place.length) lines.push(t('Places ', 'يضع ') + plan.place.map(function(x) { return x.u.code + ' → ' + x.slot; }).join(', '));
+  if (plan.unplace.length) lines.push(t('Takes off the floors ', 'يُخرج من الطوابق ') + plan.unplace.map(function(u) { return u.code; }).join(', '));
+  if (plan.add.length) lines.push(t('Adds empty ', 'يضيف فارغة ') + plan.add.join(', '));
   if (plan.revive.length) lines.push(t('Brings back ', 'يعيد ') + plan.revive.map(function(u) { return u.code; }).join(', '));
   if (plan.drop.length) {
     var paid = plan.drop.filter(function(u) { return S.payments.some(function(p) { return p.unit_id === u.id && !p.voided_at; }); });
@@ -1212,6 +1373,42 @@ SHEETS.layout = function(d) {
   h += '<div id="sheet-err" class="err"></div><div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Cancel', 'إلغاء')) + '</button><button class="btn pri" ' + (lines.length ? '' : 'disabled ') + 'onclick="applyLayout()">' + esc(t('Apply', 'تطبيق')) + '</button></div>';
   return h;
 };
+/* One row per floor, top floor first; a picker per spot listing this block's apartments. */
+function layoutGridHtml(plan, l, blk) {
+  var letters = 'ABCDEFGH', pool = activeUnits().filter(function(u) { return blockOf(u) === (blk || '') && !emptyUnit(u); })
+    .sort(function(a, b) { return (a.sort || 0) - (b.sort || 0); });
+  var used = {}; Object.keys(plan.assign).forEach(function(c) { if (plan.target.indexOf(c) >= 0 && plan.assign[c]) used[plan.assign[c]] = c; });
+  var rows = [];
+  for (var f = l.floors; f >= 1; f--) rows.push(f);
+  for (var b = 1; b <= l.under; b++) rows.push(-b);
+  var h = '<div class="sec-h" style="margin-top:12px"><h2 style="font-size:15px">' + esc(t('Who lives where', 'من يسكن أين')) + '</h2>' + (pool.some(function(u) { return !used[u.id]; }) ? '<button onclick="layoutFill()">' + esc(t('Fill in list order', 'املأ بالترتيب')) + '</button>' : '') + '</div><div class="card pad" style="padding:8px 12px">';
+  rows.forEach(function(f) {
+    h += '<div class="kv" style="align-items:center;gap:8px"><span style="min-width:44px;font-weight:700">' + esc(f < 0 ? 'SS' + (-f) : String(f)) + '</span><div class="row grow" style="gap:6px;flex-wrap:wrap">';
+    for (var k = 0; k < l.per; k++) {
+      var c = (f < 0 ? 'SS' + (-f) : String(f)) + (l.per === 1 ? '' : letters.charAt(k)), cur = plan.assign[c] || '';
+      h += '<select class="input" style="flex:1;min-width:120px;min-height:40px;padding:6px 8px;font-size:14px" onchange="layoutAssign(' + jsArg(c) + ',this.value)"><option value="">' + esc((l.per === 1 ? '' : letters.charAt(k) + ' · ') + t('empty', 'فارغة')) + '</option>' +
+        pool.map(function(u) { return '<option value="' + esc(u.id) + '"' + (u.id === cur ? ' selected' : '') + '>' + esc((l.per === 1 ? '' : letters.charAt(k) + ' · ') + u.code + (unitName(u) ? ' ' + unitName(u) : '') + (used[u.id] && used[u.id] !== c ? ' (' + used[u.id] + ')' : '')) + '</option>'; }).join('') + '</select>';
+    }
+    h += '</div></div>';
+  });
+  var left = pool.filter(function(u) { return !used[u.id]; });
+  if (left.length) h += '<div class="hint" style="color:var(--warn);padding:6px 0 2px">' + esc(t('Not placed yet: ', 'لم توضع بعد: ') + left.map(function(u) { return u.code; }).join(', ')) + '</div>';
+  return h + '</div>';
+}
+function layoutAssign(c, uid) {
+  var a = UI.sheet.data.assign;
+  if (uid) Object.keys(a).forEach(function(k) { if (a[k] === uid) a[k] = ''; });
+  a[c] = uid || '';
+  render();
+}
+/* Put the apartments not placed yet into the empty spots, from the lowest floor up, in list order. */
+function layoutFill() {
+  var d = UI.sheet.data, blk = blocks().length > 1 ? d.block : '', target = layoutCodes(d.l.floors, d.l.per, d.l.under), a = d.assign;
+  var used = {}; target.forEach(function(c) { if (a[c]) used[a[c]] = 1; });
+  var left = activeUnits().filter(function(u) { return blockOf(u) === (blk || '') && !emptyUnit(u) && !used[u.id]; }).sort(function(x, y) { return (x.sort || 0) - (y.sort || 0); });
+  target.forEach(function(c) { if (!a[c] && left.length) a[c] = left.shift().id; });
+  render();
+}
 function layoutBump(k, dlt, min, max) {
   var l = UI.sheet.data.l, was = l[k];
   l[k] = Math.max(min, Math.min(max, was + dlt));
@@ -1220,7 +1417,12 @@ function layoutBump(k, dlt, min, max) {
 }
 function applyLayout() {
   var blk = blocks().length > 1 ? UI.sheet.data.block : '';
-  var plan = layoutPlan(UI.sheet.data.l, blk), ops = Promise.resolve();
+  var plan = layoutPlan(UI.sheet.data.l, blk, UI.sheet.data.assign, !!UI.sheet.data.addEmpty), ops = Promise.resolve();
+  var btn = document.querySelector('.sheet .foot .btn.pri'); if (btn) btn.disabled = true;
+  // Clear the spots being moved first, then place, so two apartments never share a spot on the way.
+  plan.place.concat(plan.unplace.map(function(u) { return { u: u, slot: null }; })).forEach(function(x) {
+    ops = ops.then(function() { var p = x.slot ? parseSlot(x.slot) : null; return dbUpdate('units', x.u.id, p ? { floor: p.floor, spot: p.spot } : { floor: null, spot: null }); });
+  });
   var base = S.units.length;
   var rows = plan.add.map(function(c, i) { return { code: c, name: '', sort: base + i, weight: 1, lang: 'both', active: true, resident_token: token(), block: blk || null }; });
   if (rows.length) ops = ops.then(function() { return dbInsertMany('units', rows); });
@@ -1230,17 +1432,7 @@ function applyLayout() {
     ops = ops.then(function() { return used ? dbUpdate('units', u.id, { active: false }) : dbDelete('units', u.id); });
   });
   // keep the list in building order: underground first, then floor by floor
-  ops.then(function() {
-    var all = S.units.slice().sort(function(a, b) {
-      if (blockOf(a) !== blockOf(b)) return blockOf(a).localeCompare(blockOf(b));
-      var la = unitLevel(a.code), lb = unitLevel(b.code);
-      if (la == null) la = 99; if (lb == null) lb = 99;
-      return la - lb || String(a.code).localeCompare(String(b.code), 'en', { numeric: true });
-    });
-    var p2 = Promise.resolve();
-    all.forEach(function(u, i) { if (u.sort !== i) p2 = p2.then(function() { return dbUpdate('units', u.id, { sort: i }); }); });
-    return p2;
-  }).then(function() { closeSheet(); toast(t('Building updated', 'تم تحديث البناية')); }, function(e) { sheetErr(e.message); });
+  ops.then(resortUnits).then(function() { closeSheet(); toast(t('Building updated', 'تم تحديث البناية')); }, function(e) { if (btn) btn.disabled = false; sheetErr(e.message); });
 }
 
 /* Turn the building into a compound with blocks, or add one more block. */

@@ -13,12 +13,54 @@ var ICONS = {
   tasks: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>'
 };
 
+/* Where the person is (screen, building, tab, section, bill), kept for this browser tab so
+   a refresh lands on the same page. sessionStorage: a fresh link still opens normally. */
+var PLACE_KEYS = ['tab', 'bsec', 'cycleId', 'block', 'booksView', 'booksCycle', 'billFilter', 'filter'];
+function savePlace(withScroll) {
+  try {
+    if (UI.pvCol || window.NATOUR_PREVIEW) return;
+    if (UI.screen !== 'app' && UI.screen !== 'overview') return;
+    var o = { screen: UI.screen, bid: S.building && S.building.id, ui: {} };
+    if (o.screen === 'app' && !o.bid) return;
+    PLACE_KEYS.forEach(function(k) { o.ui[k] = UI[k] == null ? null : UI[k]; });
+    var old = JSON.parse(sessionStorage.getItem('nt_place') || 'null');
+    o.y = withScroll ? window.scrollY : (old && old.screen === o.screen && old.bid === o.bid && old.ui && old.ui.tab === o.ui.tab ? old.y : 0);
+    sessionStorage.setItem('nt_place', JSON.stringify(o));
+  } catch (e) {}
+}
+function readPlace() { try { return JSON.parse(sessionStorage.getItem('nt_place') || 'null'); } catch (e) { return null; } }
+function applyPlace(pl) { PLACE_KEYS.forEach(function(k) { if (pl.ui && k in pl.ui) UI[k] = pl.ui[k]; }); }
+function restoreScroll(pl) { if (pl && pl.y > 0) setTimeout(function() { window.scrollTo(0, pl.y); }, 60); }
+window.addEventListener('pagehide', function() { savePlace(true); });
+/* Pull down to refresh, for the app saved to the home screen (it has no browser refresh). */
+(function() {
+  var standalone = window.navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  if (!standalone) return;
+  var y0 = null, dy = 0, el = null;
+  function ind() { if (!el) { el = document.createElement('div'); el.className = 'ptr'; el.textContent = '↻'; document.body.appendChild(el); } return el; }
+  document.addEventListener('touchstart', function(e) { y0 = (window.scrollY <= 0 && !UI.sheet && UI.screen !== 'splash') ? e.touches[0].clientY : null; dy = 0; }, { passive: true });
+  document.addEventListener('touchmove', function(e) {
+    if (y0 == null) return;
+    dy = e.touches[0].clientY - y0;
+    if (dy <= 0) { ind().style.transform = 'translate(-50%,-60px)'; return; }
+    var p = Math.min(dy, 120);
+    ind().style.transform = 'translate(-50%,' + (p * 0.6 - 40) + 'px) rotate(' + (p * 3) + 'deg)';
+  }, { passive: true });
+  document.addEventListener('touchend', function() {
+    if (y0 == null) return;
+    y0 = null;
+    if (dy > 80) { var i = ind(); i.style.transform = 'translate(-50%,24px)'; i.classList.add('go'); savePlace(true); setTimeout(function() { location.reload(); }, 150); }
+    else if (el) el.style.transform = 'translate(-50%,-60px)';
+  }, { passive: true });
+})();
+document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'hidden') savePlace(true); });
 function render() {
+  setTimeout(savePlace, 0);
   document.documentElement.lang = LANG;
   document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
   var h = '';
   switch (UI.screen) {
-    case 'splash': h = '<div class="splash"><div class="logo">ن</div></div>'; break;
+    case 'splash': h = UI.skel ? skelScreen() : '<div class="splash"><div class="logo">ن</div></div>'; break;
     case 'welcome': h = renderWelcome(); break;
     case 'ob': h = renderOnboarding(); break;
     case 'auth': h = renderAuth(); break;
@@ -46,6 +88,7 @@ function afterRender() {
 function toast(msg) {
   var el = document.getElementById('toast');
   el.textContent = msg;
+  el.classList.remove('act');
   el.classList.add('pop');
   clearTimeout(el._t);
   el._t = setTimeout(function() { el.classList.remove('pop'); }, 2800);
@@ -57,7 +100,7 @@ function setLang(l) {
   try { localStorage.setItem('bny15_lang', LANG); } catch (e) {}
   render();
 }
-function go(tab) { UI.tab = tab; UI.bsec = null; render(); window.scrollTo(0, 0); }
+function go(tab) { UI.tab = tab; UI.bsec = null; if (colUI() && tab === 'home') loadColBooks(); render(); window.scrollTo(0, 0); }
 
 /* ---------------------------------------------------------------------------
    Sheets (bottom panels)
@@ -91,8 +134,9 @@ function currentCycle() {
   return c;
 }
 function renderTopbar(sub) {
-  var h = '<header class="topbar">';
-  if (UI.multi) h += '<button class="iconbtn" onclick="showOverview()" aria-label="' + esc(t('All my buildings', 'كل بناياتي')) + '">' + (LANG === 'ar' ? '›' : '‹') + ' 🏢</button>';
+  var h = testBuild() ? '<div style="background:#b45309;color:#fff;text-align:center;font-size:12px;font-weight:700;padding:3px 8px;border-radius:8px;margin:6px 12px 0">' + esc(t('Test version', 'نسخة تجريبية')) + '</div>' : '';
+  h += '<header class="topbar">';
+  if (UI.multi && !colUI()) h += '<button class="iconbtn" onclick="showOverview()" aria-label="' + esc(t('All my buildings', 'كل بناياتي')) + '">' + (LANG === 'ar' ? '›' : '‹') + ' 🏢</button>';
   h += '<button class="bpill" onclick="openSheet(\'menu\')" aria-label="' + esc(t('Building menu', 'قائمة البناية')) + '"><span class="logo">' + esc((bName() || 'B').trim().charAt(0).toUpperCase()) + '</span><span class="grow"><b>' + esc(bName()) + '</b>';
   h += '<small><span id="sync-dot" class="sync"></span>' + esc(sub || (roleLabel(S.role) + (isCloud() ? '' : ' · ' + t('on this phone', 'على هذا الهاتف')))) + '</small></span></button>';
   h += '<button class="iconbtn" onclick="setLang()" aria-label="Language">' + (LANG === 'ar' ? 'EN' : 'ع') + '</button>';
@@ -101,9 +145,10 @@ function renderTopbar(sub) {
 }
 function renderDock() {
   var tabs = isManager()
-    ? [['home', t('Home', 'الرئيسية')], ['collect', t('Collect', 'التحصيل')], ['fab'], ['books', t('Books', 'الحسابات')], ['building', t('Building', 'البناية')]]
+    ? [['home', t('Home', 'الرئيسية')], ['collect', isSharedBook() ? t('Bills', 'الفواتير') : t('Collect', 'التحصيل')], ['fab'], ['books', t('Books', 'الحسابات')], ['building', t('Building', 'البناية')]]
     : [['home', t('Home', 'الرئيسية')], ['collect', t('Collect', 'التحصيل')], ['fab'], ['books', t('Books', 'الحسابات')], ['tasks', t('Tasks', 'المهام')]];
   if (!can('books')) tabs = tabs.filter(function(x) { return x[0] !== 'books'; });
+  if (colUI()) tabs = [['collect', t('Collect', 'التحصيل')], ['home', t('Dashboard', 'اللوحة')]].concat(setting('collector_add') ? [['fab']] : []);
   var h = '<nav class="dock">';
   tabs.forEach(function(x) {
     if (x[0] === 'fab') { h += '<button class="fab" onclick="openSheet(\'add\')" aria-label="' + esc(t('Add', 'إضافة')) + '">+</button>'; return; }
@@ -114,8 +159,10 @@ function renderDock() {
 function renderApp() {
   if (!S.building) return renderFatal();
   var body = '';
-  if (UI.tab === 'home') body = isManager() ? renderHomeManager() : renderHomeCollector();
-  else if (UI.tab === 'collect') body = renderCollect();
+  if (colUI() && !UI.colStarted) { UI.colStarted = true; UI.tab = 'collect'; }
+  if (colUI() && UI.tab !== 'home' && UI.tab !== 'collect') UI.tab = 'collect';
+  if (UI.tab === 'home') body = colUI() ? renderColDash() : isManager() ? renderHomeManager() : renderHomeCollector();
+  else if (UI.tab === 'collect') body = colUI() ? renderColCollect() : isSharedBook() && isManager() ? renderSharedBills() : renderCollect();
   else if (UI.tab === 'books') body = renderBooks();
   else if (UI.tab === 'tasks') body = renderTasksScreen();
   else body = renderBuilding();
@@ -143,12 +190,12 @@ function heroHtml(cyc, opts) {
     return { state: state, label: lbl, onclick: opts.noTap ? null : 'openSheet(\'unit\',{id:' + jsArg(u.id) + '})' };
   });
   if (!wins.length) wins = [{ state: 'closed' }];
-  var levels = units.length ? levelsFor(units.map(function(u, i) { return { code: u.code, win: wins[i] }; })) : null;
+  var levels = units.length ? levelsFor(units.map(function(u, i) { return { code: u.code, u: u, win: wins[i] }; })) : null;
   var cash = opts.noSafe ? null : cashState();
   var reveal = HERO_REVEAL; HERO_REVEAL = false;
-  var safe = cash ? { split: true, usdH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.USD) / 40)), lbpH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.LBP) / 4e6)), usd: cash.safe.USD, lbp: cash.safe.LBP, style: setting('safe_style') || 'lobby', tap: opts.noTap ? null : 'go(\'books\')', sub: t('in the safe', 'في الصندوق') } : null;
+  var safe = cash ? { split: true, usdH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.USD) / 40)), lbpH: Math.max(2, Math.min(22, 2 + Math.max(0, cash.safe.LBP) / 4e6)), usd: cash.safe.USD, lbp: cash.safe.LBP, style: setting('safe_style') || 'lobby', tap: opts.noTap ? null : 'go(\'books\')', sub: isSharedBook() ? t('shared safe', 'الصندوق المشترك') : t('in the safe', 'في الصندوق') } : null;
   var html = buildBuildingScene({
-    phase: ph, wins: wins, levels: levels, interactive: !opts.noTap, idp: opts.idp || 'hm', signText: blk ? (S.building.name + ' ' + blk).slice(0, 12) : S.building.name, chip: opts.only || opts.hideWho ? null : heroChipText(cyc, units),
+    phase: ph, wins: wins, levels: levels, interactive: !opts.noTap || !!opts.alive, idp: opts.idp || 'hm', signText: opts.sign || (blk ? (S.building.name + ' ' + blk).slice(0, 12) : S.building.name), chip: opts.only || opts.hideWho ? null : heroChipText(cyc, units),
     safe: safe, elevator: !!setting('elevator'), coreGlow: openTasks().some(function(x) { return x.due_on && x.due_on <= todayIso(); }),
     extraCls: reveal ? 'reveal' : ''
   });
@@ -220,27 +267,100 @@ function monthCard(cyc, clickable) {
 }
 
 /* ---------------------------------------------------------------------------
+   Home — shared book (water, EDL, shared projects). Never shows a building's
+   own safe or books: only the shared safe, bills being collected, projects.
+   --------------------------------------------------------------------------- */
+function renderHomeShared() {
+  var cyc = homeCycle(), cash = cashState();
+  var bl = blocks(), blk = bl.length > 1 && bl.indexOf(UI.block) >= 0 ? UI.block : null;
+  var units = activeUnits().filter(function(u) { return !blk || blockOf(u) === blk; });
+  var h = renderTopbar();
+  h += bl.length > 1 ? blockChips(true) + (blk ? heroHtml(cyc) : heroCompound(cyc)) : heroHtml(cyc);
+  h += renderNewsCard();
+  h += renderContactsCard();
+
+  // Bills still being collected: every published round with money left, newest first.
+  var bills = visibleCycles().filter(function(c) { return c.kind !== 'project'; })
+    .sort(function(a, b) { return String(b.created_at || '').localeCompare(String(a.created_at || '')); }).map(function(c) { return { c: c, s: cycleSummary(c, units) }; })
+    .filter(function(x) { return x.s.units > 0; });
+  var open = bills.filter(function(x) { return x.s.settled < x.s.units || x.c.published === false; }), done = bills.filter(function(x) { return open.indexOf(x) < 0; });
+  h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Bills being collected', 'فواتير قيد الجباية') + (blk ? ' · ' + blockLabel(blk) : '')) + '</h2></div>';
+  if (!open.length) h += '<div class="card empty">' + esc(bills.length ? t('Everything is collected ✓', 'كل شيء مجبى ✓') : t('No bills yet. Water and EDL bills appear here when they are published.', 'لا فواتير بعد. تظهر فواتير المياه والكهرباء هنا عند نشرها.')) + '</div>';
+  open.slice(0, 2).forEach(function(x) { h += sharedBillCard(x.c, x.s); });
+  if (open.length > 2) {
+    if (UI.moreBills) open.slice(2).forEach(function(x) { h += sharedBillCard(x.c, x.s); });
+    h += '<button class="btn sec block sm" style="margin-top:8px" onclick="UI.moreBills=!UI.moreBills;render()">' + esc(UI.moreBills ? t('Show fewer', 'عرض أقل') : t('Older bills still collecting (' + (open.length - 2) + ')', 'فواتير أقدم قيد الجباية (' + (open.length - 2) + ')')) + '</button>';
+  }
+  if (done.length) h += '<p class="hint" style="margin-top:8px">' + esc(t('Fully collected: ', 'مجباة بالكامل: ') + done.slice(0, 6).map(function(x) { return cycleTitle(x.c).split(' · ')[0]; }).join(', ') + (done.length > 6 ? '…' : '')) + '</p>';
+  h += '<p class="hint">' + esc(t(collectorLabel() + ' collects water and EDL and pays the suppliers directly. That money never goes into a safe.', collectorLabel() + ' يجبي المياه والكهرباء ويدفع للموردين مباشرة. هذا المال لا يدخل أي صندوق.')) + '</p></div>';
+
+  // Shared projects: running ones and the ones coming up.
+  var projs = S.cycles.filter(function(c) { return c.kind === 'project' && (c.published !== false || isManager()); });
+  var upcoming = projs.filter(function(c) { return c.published === false; });
+  var running = projs.filter(function(c) { return c.published !== false; }).map(function(c) { return { c: c, s: cycleSummary(c, units) }; }).filter(function(x) { return x.s.settled < x.s.units; });
+  h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Shared projects', 'المشاريع المشتركة')) + '</h2>' + (isManager() ? '<button onclick="openSheet(\'project\',{})">＋ ' + esc(t('New', 'جديد')) + '</button>' : '') + '</div>';
+  if (!running.length && !upcoming.length) h += '<div class="card empty">' + esc(t('No shared project yet. A roof repair or solar panels for the whole compound would go here.', 'لا مشروع مشترك بعد. إصلاح السطح أو الطاقة الشمسية لكل المجمّع يظهر هنا.')) + '</div>';
+  running.forEach(function(x) { h += sharedBillCard(x.c, x.s, '◆ '); });
+  if (upcoming.length) h += '<div class="card list" style="margin-top:8px">' + upcoming.map(function(c) { return '<button class="li" onclick="openCycleAdjust(' + jsArg(c.id) + ')"><div class="ic">◆</div><div class="grow"><b>' + esc(cycleTitle(c)) + '</b><small>' + esc(t('Coming up · not shown to residents yet', 'قريباً · غير ظاهر للسكان بعد')) + '</small></div><span class="chev">›</span></button>'; }).join('') + '</div>';
+  h += '</div>';
+
+  // The shared safe only.
+  h += '<div class="sec"><div class="tiles">';
+  h += tile(t('Shared safe', 'الصندوق المشترك'), fmtPairBig(cash.safe), t('Money held for the compound: projects, shared repairs. Each building\'s own safe stays private.', 'مال المجمّع: مشاريع وتصليحات مشتركة. صندوق كل بناية يبقى خاصاً بها.'), 'go(\'books\')', 'var(--ok)', 'wide');
+  h += '</div></div>';
+
+  var tasks = openTasks().slice(0, 3);
+  h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Coming up', 'قريباً')) + '</h2><button onclick="go(\'building\');UI.bsec=\'tasks\';render()">' + esc(t('All tasks', 'كل المهام')) + '</button></div>';
+  h += tasks.length ? '<div class="card">' + tasks.map(taskRow).join('') + '</div>' : '<div class="card empty">' + esc(t('Nothing due. Add reminders like water tank cleaning.', 'لا مهام. أضف تذكيرات مثل تنظيف خزان المياه.')) + '</div>';
+  h += '</div>';
+  var ev = moneyEvents(6);
+  if (ev.length) h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Latest activity', 'آخر النشاطات')) + '</h2><button onclick="UI.booksView=\'activity\';go(\'books\')">' + esc(t('See all', 'الكل')) + '</button></div><div class="card">' + ev.map(eventRow).join('') + '</div></div>';
+  return h;
+}
+/* One bill or project: how much is in, how much is left, how many apartments paid. */
+/* Shared book money: dollars first (at this book's rate), lira in brackets, unless the
+   "Collector page in dollars first" setting is off. */
+function sharedMoney(p) { return colUsdFirst() ? fmt(pairUsd(p), 'USD') + ' (' + fmt(pairUsd(p) * rate(), 'LBP') + ')' : fmtPair(p); }
+function sharedMoneyHtml(p) { return colUsdFirst() ? '<span class="camt"><b>' + esc(fmt(pairUsd(p), 'USD')) + '</b><small>' + esc(fmt(pairUsd(p) * rate(), 'LBP')) + '</small></span>' : esc(fmtPair(p)); }
+function sharedBillCard(c, s, icon, still) {
+  // Hierarchy: what it is, what is left (the one big number), progress. Details on the Bills page.
+  var left = { USD: s.due.USD - s.paid.USD, LBP: s.due.LBP - s.paid.LBP }, pct = s.dueEq > 0 ? Math.min(100, s.paidEq / s.dueEq * 100) : 0;
+  var parts = cycleTitle(c).split(' · '), name = parts[0], when = parts.slice(1).join(' · ');
+  var done = pairUsd(left) <= 0.005;
+  var h = '<div class="card month bill-card' + (done ? ' done' : '') + '" style="margin-top:8px"' + (still ? '' : ' role="button" tabindex="0" onclick="UI.cycleId=' + jsArg(c.id) + ';go(\'collect\')"') + '>';
+  h += '<div class="bill-top"><div class="grow"><b>' + esc((icon || '') + name) + (c.published === false ? ' <span class="pill">' + esc(t('draft', 'مسودة')) + '</span>' : '') + '</b>' + (when ? '<small>' + esc(when) + '</small>' : '') + '</div>';
+  h += '<div class="bill-left">' + (done ? '<b style="color:var(--ok)">✓ ' + esc(t('All paid', 'مدفوعة')) + '</b>' : '<b>' + esc(colUsdFirst() ? fmt(pairUsd(left), 'USD') : fmtPair(left)) + '</b><small>' + esc(t('left', 'باقٍ')) + '</small>') + '</div></div>';
+  h += '<div class="bar"><i class="paid" style="width:' + pct.toFixed(1) + '%"></i></div>';
+  h += '<div class="bill-foot"><span>' + esc(t(s.settled + '/' + s.units + ' paid', s.settled + '/' + s.units + ' سددوا')) + '</span>' + (still ? '<span>' + esc(t('Collected ', 'محصّل ') + sharedMoney(s.paid)) + '</span>' : '<span class="chev">›</span>') + '</div>';
+  if (still && !done) h += '<div class="bill-foot" style="margin-top:2px"><span></span><span>' + esc(t('Still to collect ', 'المتبقي ') + sharedMoney(left)) + '</span></div>';
+  return h + '</div>';
+}
+
+/* ---------------------------------------------------------------------------
    Home — manager
    --------------------------------------------------------------------------- */
 function homeCycle() { return latestMonth() || currentCycle(); }
 function renderHomeManager() {
+  if (isSharedBook()) return renderHomeShared();
   var cyc = homeCycle();
   var cash = cashState();
   var h = renderTopbar();
   h += blocks().length > 1 ? blockChips(true) + (UI.block && blocks().indexOf(UI.block) >= 0 ? heroHtml(cyc) : heroCompound(cyc)) : heroHtml(cyc);
   h += renderNewsCard();
-  h += renderSetupCard();
+  if (!isSharedBook()) h += renderSetupCard();
   h += renderContactsCard();
 
   cash.pending.forEach(function(ho) {
     h += '<div class="sec"><div class="banner warn"><div class="grow"><b>' + esc(t(memberName(ho.collector_id) + ' handed over ' + fmtPair({ USD: num(ho.usd), LBP: num(ho.lbp) }), memberName(ho.collector_id) + ' سلّم ' + fmtPair({ USD: num(ho.usd), LBP: num(ho.lbp) }))) + '</b>' + esc(t('Confirm once the cash is in your hands.', 'أكّد عند استلام المبلغ.')) + '</div><button class="btn sm ok" onclick="openSheet(\'handover\',{id:' + jsArg(ho.id) + '})">' + esc(t('Review', 'مراجعة')) + '</button></div></div>';
   });
+  h += regularDueHtml();
   visibleCycles().filter(function(c) { return c.published === false && (!cyc || c.id !== cyc.id); }).slice(0, 1).forEach(function(d0) {
     h += '<div class="sec"><div class="banner info"><div class="grow"><b>' + esc(cycleTitle(d0) + t(' is a draft', ' مسودة')) + '</b>' + esc(t('Residents can\'t see it until you show it.', 'السكان لا يرونها حتى تُظهرها.')) + '</div><button class="btn sm pri" onclick="openCycleAdjust(' + jsArg(d0.id) + ')">' + esc(t('Review', 'مراجعة')) + '</button></div></div>';
   });
 
   if (!cyc) {
-    h += '<div class="sec"><div class="card pad"><b>' + esc(t('No month open yet', 'لا يوجد شهر مفتوح')) + '</b><p class="muted">' + esc(t('Open a month to start collecting.', 'افتح شهراً لبدء التحصيل.')) + '</p><button class="btn pri" onclick="newMonth()">' + esc(t('Open this month', 'افتح هذا الشهر')) + '</button></div></div>';
+    if (isSharedBook()) h += '<div class="sec"><div class="card empty">' + esc(t('No bills yet. Water and EDL bills appear here when they are published.', 'لا فواتير بعد. تظهر فواتير المياه والكهرباء هنا عند نشرها.')) + '</div></div>';
+    else h += '<div class="sec"><div class="card pad"><b>' + esc(t('No month open yet', 'لا يوجد شهر مفتوح')) + '</b><p class="muted">' + esc(t('Open a month to start collecting.', 'افتح شهراً لبدء التحصيل.')) + '</p><button class="btn pri" onclick="newMonth()">' + esc(t('Open this month', 'افتح هذا الشهر')) + '</button></div></div>';
     return h;
   }
   h += '<div class="sec">' + monthCard(cyc, true);
@@ -251,11 +371,11 @@ function renderHomeManager() {
   h += tile(t('In the safe', 'في الصندوق'), fmtPairBig(cash.safe), t('Cash the building holds', 'نقد البناية'), 'go(\'books\')', 'var(--ok)');
   var wc = pairUsd(cash.withCollector);
   h += tile(t('With ' + (collectors().length ? collectorLabel() : 'collector'), 'مع ' + (collectors().length ? collectorLabel() : 'الجابي')), fmtPairBig(cash.withCollector),
-            wc > 0.005 ? t('Collected, not handed over', 'محصّل ولم يُسلَّم') : t('Nothing outstanding', 'لا شيء معلّق'), 'go(\'books\')', 'var(--warn)', wc > 0.005 && cash.pending.length ? 'alert' : '');
+            wc > 0.005 ? t('Collected, not handed over', 'محصّل ولم يُسلَّم') : t('Nothing outstanding · tap for details', 'لا شيء معلّق · اضغط للتفاصيل'), 'openSheet(\'colbook\',{})', 'var(--warn)', wc > 0.005 && cash.pending.length ? 'alert' : '');
   var arr = totalArrears(cyc);
   if (arr.units) h += tile(t('Earlier months unpaid', 'متأخرات أشهر سابقة'), fmtPairBig(arr.total), t(arr.units + ' apartment' + (arr.units > 1 ? 's' : ''), arr.units + ' شقق'), 'UI.filter=\'arrears\';go(\'collect\')', 'var(--bad)');
   var sup = cash.supplier;
-  if (pairUsd(sup) > 0.005) h += tile(t('Held for suppliers', 'مستحق للموردين'), fmtPairBig(sup), t('Moteur, internet… still to pay out', 'موتور، إنترنت… للدفع'), 'go(\'books\')', 'var(--info)');
+  if (pairUsd(sup) > 0.005) h += tile(t('Held for suppliers', 'مستحق للموردين'), fmtPairBig(sup), t('Moteur, internet… still to pay out', 'موتور، إنترنت… للدفع'), 'openSheet(\'suppliers\',{})', 'var(--info)');
   h += '</div></div>';
 
   var tasks = openTasks().slice(0, 3);
@@ -263,7 +383,7 @@ function renderHomeManager() {
   h += tasks.length ? '<div class="card">' + tasks.map(taskRow).join('') + '</div>' : '<div class="card empty">' + esc(t('Nothing due. Add reminders like water tank cleaning.', 'لا مهام. أضف تذكيرات مثل تنظيف خزان المياه.')) + '</div>';
   h += '</div>';
 
-  var ev = S.events.slice(-6).reverse();
+  var ev = moneyEvents(6);
   if (ev.length) {
     h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Latest activity', 'آخر النشاطات')) + '</h2><button onclick="UI.booksView=\'activity\';go(\'books\')">' + esc(t('See all', 'الكل')) + '</button></div><div class="card">' + ev.map(eventRow).join('') + '</div></div>';
   }
@@ -339,11 +459,18 @@ function defaultChannel() {
   return setting('default_channel') || 'manager';
 }
 function cycleChips(cur, onPick) {
+  // Shared book: many long bill names, so one tidy picker, newest first.
+  if (isSharedBook()) {
+    var list = visibleCycles().slice().sort(function(a, b) { return String(b.created_at || '').localeCompare(String(a.created_at || '')); });
+    if (!list.length) return '';
+    return '<div class="sec" style="margin-top:4px"><label class="field" style="margin:0"><span>' + esc(t('Bill', 'الفاتورة')) + '</span><select class="input" onchange="' + onPick + '(this.value)">' +
+      list.map(function(c) { return '<option value="' + esc(c.id) + '"' + (cur && c.id === cur.id ? ' selected' : '') + '>' + esc((c.kind === 'project' ? '◆ ' : '') + cycleTitle(c) + (c.published === false ? ' · ' + t('draft', 'مسودة') : '')) + '</option>'; }).join('') + '</select></label></div>';
+  }
   var h = '<div class="chips">';
   visibleCycles().forEach(function(c) {
     h += '<button class="chip' + (cur && c.id === cur.id ? ' on' : '') + '" onclick="' + onPick + '(' + jsArg(c.id) + ')">' + (c.kind === 'project' ? '◆ ' : '') + esc(cycleTitle(c)) + (c.published === false ? ' · ' + esc(t('draft', 'مسودة')) : '') + '</button>';
   });
-  if (isManager()) h += '<button class="chip" onclick="openSheet(\'add\')">＋ ' + esc(t('Month or project', 'شهر أو مشروع')) + '</button>';
+  if (isManager() && !isSharedBook()) h += '<button class="chip" onclick="openSheet(\'add\')">＋ ' + esc(t('Month or project', 'شهر أو مشروع')) + '</button>';
   return h + '</div>';
 }
 /* Block switcher, shown only when the building has blocks. withAll adds an "All" chip. */
@@ -362,13 +489,13 @@ function renderCollect() {
   var cyc = currentCycle();
   var h = renderTopbar(t('Collect', 'التحصيل'));
   h += cycleChips(cyc, 'pickCycle');
-  if (!cyc) return h + '<div class="sec"><div class="card empty">' + esc(t('Open a month first.', 'افتح شهراً أولاً.')) + '</div></div>';
-  h += cycleAdjustBar(cyc);
+  if (!cyc) return h + '<div class="sec"><div class="card empty">' + esc(isSharedBook() ? t('No bills yet. Water and EDL bills appear here when they are published.', 'لا فواتير بعد. تظهر فواتير المياه والكهرباء هنا عند نشرها.') : t('Open a month first.', 'افتح شهراً أولاً.')) + '</div></div>';
+  if (!isSharedBook()) h += cycleAdjustBar(cyc);
   var chs = chargesOf(cyc.id);
   if (!chs.length) {
     return h + '<div class="sec"><div class="card pad"><b>' + esc(t('No charges in ' + cycleTitle(cyc), 'لا رسوم في ' + cycleTitle(cyc))) + '</b><p class="muted">' + esc(t('Add the monthly fee, a bill to split, or a supplier service.', 'أضف الرسم الشهري أو فاتورة للتقسيم أو خدمة مورّد.')) + '</p>' + (isManager() ? '<button class="btn pri" onclick="openSheet(\'charge\',{cycle:' + jsArg(cyc.id) + '})">' + esc(t('Add a charge', 'أضف رسماً')) + '</button>' : '') + '</div></div>';
   }
-  if (isManager()) {
+  if (isManager() && !isSharedBook()) {
     var ch = defaultChannel();
     h += '<div class="sec" style="margin-top:8px"><div class="sec-h"><h2 style="font-size:13px;color:var(--mut)">' + esc(t('When you tick a payment, the money is', 'عند تأشير دفعة، المبلغ')) + '</h2></div><div class="seg">';
     h += '<button class="' + (ch === 'manager' ? 'on' : '') + '" onclick="UI.channel=\'manager\';render()">' + esc(t('Cash to me', 'نقداً معي')) + '</button>';
@@ -404,6 +531,44 @@ function renderCollect() {
   h += '</div>';
   return h;
 }
+/* Shared book, committee view of one bill: totals per block and who still owes. Read-only:
+   ticking is the collector's job (his own page, or the sheet). */
+function renderSharedBills() {
+  var cyc = currentCycle();
+  var h = renderTopbar(t('Bills', 'الفواتير'));
+  h += cycleChips(cyc, 'pickCycle');
+  if (!cyc) return h + '<div class="sec"><div class="card empty">' + esc(t('No bills yet. Water and EDL bills appear here when they are published.', 'لا فواتير بعد. تظهر فواتير المياه والكهرباء هنا عند نشرها.')) + '</div></div>';
+  var bl = blocks(), blk = bl.length > 1 && bl.indexOf(UI.block) >= 0 ? UI.block : null;
+  var units = activeUnits().filter(function(u) { return !blk || blockOf(u) === blk; });
+  // Totals: the whole bill, then each block.
+  h += '<div class="sec">' + sharedBillCard(cyc, cycleSummary(cyc, units), '', true);
+  if (!blk && bl.length > 1) {
+    h += '<div class="card list" style="margin-top:8px">';
+    bl.forEach(function(b) {
+      var s = cycleSummary(cyc, activeUnits().filter(function(u) { return blockOf(u) === b; }));
+      if (!s.units) return;
+      var left = { USD: s.due.USD - s.paid.USD, LBP: s.due.LBP - s.paid.LBP };
+      h += '<button class="li" onclick="UI.block=' + jsArg(b) + ';render()"><div class="ic">' + esc(b) + '</div><div class="grow"><b>' + esc(blockLabel(b)) + '</b><small>' + esc(t(s.settled + ' of ' + s.units + ' paid', s.settled + ' من ' + s.units + ' سددوا') + (pairUsd(left) > 0.005 ? ' · ' + t('left ', 'باقي ') + sharedMoney(left) : '')) + '</small></div><span class="amt' + (pairUsd(left) > 0.005 ? '' : ' in') + '">' + (pairUsd(left) > 0.005 ? s.pct + '%' : '✓') + '</span></button>';
+    });
+    h += '</div>';
+  }
+  h += '</div>';
+  if (bl.length > 1) h += '<div style="margin-top:14px">' + blockChips(true) + '</div>';
+  // Who still owes, then who paid.
+  var rows = units.map(function(u) { var r = unitCycle(u, cyc), left = pair(), paid = pair(); r.cells.forEach(function(x) { addTo(left, x.ch.cur, x.c.left); addTo(paid, x.ch.cur, Math.min(x.c.paid, x.c.due)); }); return { u: u, left: left, paid: paid, any: r.cells.length > 0 }; }).filter(function(x) { return x.any; });
+  var owe = rows.filter(function(x) { return pairUsd(x.left) > 0.005; }), done = rows.filter(function(x) { return pairUsd(x.left) <= 0.005; });
+  var f = UI.billFilter || 'owing';
+  h += '<div class="chips" style="margin-top:4px"><button class="chip' + (f === 'owing' ? ' on' : '') + '" onclick="UI.billFilter=\'owing\';render()">' + esc(t('Still owe', 'لم يسددوا')) + ' <span class="cnt">' + owe.length + '</span></button><button class="chip' + (f === 'paid' ? ' on' : '') + '" onclick="UI.billFilter=\'paid\';render()">' + esc(t('Paid', 'سددوا')) + ' <span class="cnt">' + done.length + '</span></button></div>';
+  var list = f === 'paid' ? done : owe;
+  h += '<div class="sec" style="margin-top:8px">';
+  if (!list.length) h += '<div class="card empty">' + esc(f === 'owing' ? t('Everyone has paid 🎉', 'الجميع سدد 🎉') : t('Nobody yet', 'لا أحد بعد')) + '</div>';
+  else h += '<div class="card list">' + list.map(function(x) {
+    var u = x.u;
+    return '<button class="li" onclick="openSheet(\'unit\',{id:' + jsArg(u.id) + '})"><div class="ic">' + esc(unitTag(u)) + '</div><div class="grow"><b>' + esc(unitName(u) || '—') + '</b><small>' + esc(blk || bl.length < 2 ? '' : blockLabel(blockOf(u))) + '</small></div><span class="amt' + (f === 'paid' ? ' in' : '') + '">' + (f === 'paid' ? '✓ ' + sharedMoneyHtml(x.paid) : sharedMoneyHtml(x.left)) + '</span></button>';
+  }).join('') + '</div>';
+  h += '<p class="hint">' + esc(t(collectorLabel() + ' ticks payments on his own page or in the sheet. This page only shows where each bill stands.', collectorLabel() + ' يؤشّر الدفعات في صفحته أو في الجدول. هذه الصفحة تعرض وضع كل فاتورة فقط.')) + '</p></div>';
+  return h;
+}
 function unitCard(u, cyc, r, b) {
   var owes = pairUsd(r.allLeft) > 0.005;
   var st = !r.cells.length ? 'none' : (owes ? (pairUsd(r.paid) > 0 ? 'part' : 'owes') : 'paid');
@@ -418,7 +583,7 @@ function unitCard(u, cyc, r, b) {
   r.cells.forEach(function(x) {
     var c = x.c, cls = c.state === 'paid' ? (c.pocket ? 'pocket' : 'paid') : c.state === 'part' ? 'part' : '';
     var amt = c.state === 'part' ? fmt(c.left, x.ch.cur) + ' ' + t('left', 'متبقي') : fmt(c.due, x.ch.cur);
-    h += '<button class="tick ' + cls + (x.ch.pass_through ? ' sup' : '') + '" onclick="tapCell(' + jsArg(x.ch.id) + ',' + jsArg(u.id) + ')" aria-pressed="' + (c.state === 'paid') + '"><b>' + (c.state === 'paid' ? '✓ ' : '') + esc(L(x.ch)) + '</b><span>' + esc(amt) + '</span></button>';
+    h += '<button class="tick ' + cls + (x.ch.pass_through ? ' sup' : '') + (isPend(x.ch.id, u.id) ? ' pend' : '') + '" onclick="tapCell(' + jsArg(x.ch.id) + ',' + jsArg(u.id) + ')" aria-pressed="' + (c.state === 'paid') + '"><b>' + (c.state === 'paid' ? '✓ ' : '') + esc(L(x.ch)) + '</b><span>' + esc(amt) + '</span></button>';
   });
   h += '</div>';
   h += '<div class="unit-actions">';
@@ -430,6 +595,8 @@ function unitCard(u, cyc, r, b) {
 
 /* Tap a charge: unpaid → paid in full by the chosen channel; paid → offer to undo. */
 function channelRow() {
+  // Shared book: water and EDL are always collected by the collector, who pays the suppliers.
+  if (isSharedBook() && isManager()) return { channel: 'collector', received_by: (collectors()[0] || {}).user_id || null, method: 'Cash' };
   var ch = defaultChannel();
   if (ch.indexOf('collector:') === 0) return { channel: 'collector', received_by: ch.slice(10), method: 'Cash' };
   if (ch === 'transfer') return { channel: 'transfer', received_by: S.me.id, method: setting('transfer_method') || 'Whish' };
@@ -440,11 +607,11 @@ function tapCell(chId, uId) {
   var ch = byId(S.charges, chId), u = byId(S.units, uId);
   if (!ch || !u) return;
   var c = cell(ch, u);
+  if (isPend(chId, uId) || doubleTap(chId, uId)) return;
   if (c.state === 'paid' || c.state === 'part') { openSheet('cell', { ch: chId, u: uId }); return; }
   var r = channelRow();
-  dbInsert('payments', { charge_id: ch.id, unit_id: u.id, amount: c.left, cur: ch.cur, channel: r.channel, method: r.method, received_by: r.received_by, received_at: nowIso() })
-    .then(function() { render(); }, fail);
-  render();
+  safePay([{ charge_id: ch.id, unit_id: u.id, amount: c.left, cur: ch.cur, channel: r.channel, method: r.method, received_by: r.received_by, received_at: nowIso() }])
+    .then(tickToast, fail);
 }
 function payAll(uId, cycId) {
   var u = byId(S.units, uId), r = channelRow(), rows = [];
@@ -453,16 +620,15 @@ function payAll(uId, cycId) {
     if (c.left > 0) rows.push({ charge_id: ch.id, unit_id: u.id, amount: c.left, cur: ch.cur, channel: r.channel, method: r.method, received_by: r.received_by, received_at: nowIso() });
   });
   if (!rows.length) return;
-  dbInsertMany('payments', rows).then(function() {
-    render();
-    toast(t(unitTag(u) + ' is settled for ' + cycleTitle(byId(S.cycles, cycId)), unitTag(u) + ' سدد ' + cycleTitle(byId(S.cycles, cycId))));
+  safePay(rows).then(function(done) {
+    if (done && done.length) toastUndo(t(unitTag(u) + ' is settled for ' + cycleTitle(byId(S.cycles, cycId)), unitTag(u) + ' سدد ' + cycleTitle(byId(S.cycles, cycId))), done.map(function(r) { return r.id; }));
   }, fail);
-  render();
 }
 function undoPayments(ids) {
+  if (!isCloud()) ids = ids.filter(function(id) { return byId(S.payments, id); });
   var p = Promise.resolve();
   ids.forEach(function(id) { p = p.then(function() { return rpc('void_payment', { p_payment: id }); }); });
-  return p.then(function() { if (isCloud()) reloadBuilding(); closeSheet(); toast(t('Payment undone', 'تم التراجع عن الدفعة')); }, function(e) { fail(e); });
+  return p.then(function() { UI.cb = null; if (isCloud()) reloadBuilding(); closeSheet(); toast(t('Payment undone', 'تم التراجع عن الدفعة')); }, function(e) { fail(e); });
 }
 SHEETS.cell = function(d) {
   var ch = byId(S.charges, d.ch), u = byId(S.units, d.u);
@@ -471,7 +637,7 @@ SHEETS.cell = function(d) {
   var h = '<h3>' + esc(unitTag(u) + ' · ' + L(ch)) + '</h3><p class="lead">' + esc(t('Due', 'المستحق')) + ' ' + esc(fmt(c.due, ch.cur)) + ' · ' + esc(t('Paid', 'المدفوع')) + ' ' + esc(fmt(c.paid, ch.cur)) + '</p>';
   h += '<div class="card list">';
   c.payments.forEach(function(p) {
-    var where = p.channel === 'collector' ? (handoverConfirmed(p.handover_id) ? t('handed over to the safe', 'سُلّم للصندوق') : t('with ', 'مع ') + memberName(p.received_by)) : p.channel === 'transfer' ? (p.method || t('transfer', 'تحويل')) : t('received by ', 'استلمه ') + memberName(p.received_by);
+    var where = p.channel === 'collector' ? (handoverConfirmed(p.handover_id) ? t('handed over to the safe', 'سُلّم للصندوق') : t('with ', 'مع ') + pocketName(p.received_by)) : p.channel === 'transfer' ? (p.method || t('transfer', 'تحويل')) : t('received by ', 'استلمه ') + memberName(p.received_by);
     h += '<div class="li"><div class="ic in">✓</div><div class="grow"><b>' + esc(fmt(p.amount, p.cur)) + '</b><small>' + esc(dateLabel(p.received_at, true) + ' · ' + where) + '</small></div></div>';
   });
   h += '</div>';
@@ -557,7 +723,7 @@ function waText(u, cyc, lang) {
       s += T('Hello ', 'مرحباً ') + (name ? '*' + name + '* ' : '') + '(' + unitTag(u) + ') 👋\n' + lines.join('\n') + '\n\n';
       s += '*' + T('Left to pay: ', 'المتبقي: ') + fmtPair(r.allLeft) + '*';
       if (pairUsd(b.arrears) > 0.005) s += '\n' + T('Plus earlier months: ', 'إضافة لأشهر سابقة: ') + fmtPair(b.arrears);
-      s += '\n' + T('You can hand it to ', 'يمكنك تسليمه إلى ') + (collectors().length ? collectorLabel(lg) : T('the building manager', 'مدير البناية')) + '.';
+      s += '\n' + T('You can hand it to ', 'يمكنك تسليمه إلى ') + payToName(lg) + '.';
     } else {
       s += '🧾 *' + T('Receipt', 'إيصال') + '*\n' + T('Thank you ', 'شكراً ') + (name ? '*' + name + '* ' : '') + '(' + unitTag(u) + ') 🌸\n' + lines.join('\n') + '\n\n';
       s += '✅ *' + T('Fully paid for ', 'مسدد بالكامل عن ') + cycleTitle(cyc, lg) + '*';
@@ -671,15 +837,29 @@ function renderSetupCard() {
 /* Home with several blocks and "All blocks" picked: every building side by side, lit by who paid.
    Tap one to open its full scene. */
 function heroCompound(cyc) {
-  var bl = blocks().slice(0, 4), h = '<div class="hero-multi">';
-  bl.forEach(function(b, i) {
+  var bl = blocks().slice(0, 4);
+  // Work out every block first so all of them share one ground line and scale.
+  var items = bl.map(function(b) {
     var units = activeUnits().filter(function(u) { return blockOf(u) === b; });
-    var paid = 0;
-    var wins = units.map(function(u) { var st = cyc ? unitCycle(u, cyc).state : 'none'; if (st === 'paid') paid++; return { state: st === 'paid' ? 'paid' : (st === 'none' || st === 'closed') ? 'closed' : 'owes' }; });
+    var paid = 0, owes = 0;
+    var wins = units.map(function(u) { var st = cyc ? unitCycle(u, cyc).state : 'none'; if (st === 'paid') paid++; else if (st !== 'none' && st !== 'closed') owes++; return { state: st === 'paid' ? 'paid' : (st === 'none' || st === 'closed') ? 'closed' : 'owes' }; });
     if (!wins.length) wins = [{ state: 'closed' }];
-    var levels = units.length ? levelsFor(units.map(function(u, k) { return { code: u.code, win: wins[k] }; })) : null;
-    var art = buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, wins: wins, levels: levels, signText: (S.building.name + ' ' + b).slice(0, 14), elevator: !!setting('elevator'), idp: 'cb' + i, extraCls: 'studio bh-bare nopop' });
-    h += '<button class="hm-blk" onclick="UI.block=' + jsArg(b) + ';render()">' + art + '<small>' + esc(blockLabel(b) + ' · ' + t(paid + '/' + units.length + ' paid', paid + '/' + units.length + ' سدّد')) + '</small></button>';
+    var levels = units.length ? levelsFor(units.map(function(u, k) { return { code: u.code, u: u, win: wins[k] }; })) : null;
+    return { b: b, units: units, paid: paid, owes: owes, wins: wins, levels: levels };
+  });
+  var frame = { floors: 1, basements: 0, bw: 150 };
+  items.forEach(function(x) {
+    var lv = x.levels || [{ lv: 1, wins: x.wins }];
+    frame.floors = Math.max(frame.floors, lv.filter(function(r) { return r.lv >= 0; }).length);
+    frame.basements = Math.max(frame.basements, lv.filter(function(r) { return r.lv < 0; }).length);
+    var per = Math.min(6, Math.max.apply(null, lv.map(function(r) { return r.wins.length; })));
+    frame.bw = Math.max(frame.bw, per <= 2 ? 150 : per === 3 ? 196 : per === 4 ? 220 : 250);
+  });
+  var h = '<div class="hero-multi">';
+  items.forEach(function(x, i) {
+    var art = buildBuildingScene({ phase: { key: 'day', sunX: 0, sunY: 0 }, bare: true, frame: frame, roofSign: blockLabel(x.b).replace(/^Block\s+/i, '') === x.b ? 'BLOCK ' + x.b : blockLabel(x.b), wins: x.wins, levels: x.levels, signText: isSharedBook() ? x.b : (S.building.name + ' ' + x.b).slice(0, 14), elevator: !!setting('elevator'), idp: 'cb' + i, extraCls: 'studio bh-bare nopop' });
+    var n = x.units.length, cls = !n || x.paid === n ? 'ok' : x.paid / n >= 0.5 ? 'warn' : 'bad';
+    h += '<button class="hm-blk" onclick="UI.block=' + jsArg(x.b) + ';render()" aria-label="' + esc(blockLabel(x.b) + ': ' + x.paid + '/' + n) + '">' + art + '<span class="hm-pill ' + cls + '">' + x.paid + '/' + n + '</span></button>';
   });
   return h + '</div>';
 }

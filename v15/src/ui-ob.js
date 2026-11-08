@@ -278,7 +278,7 @@ function renderJoin() {
   h += '<div class="ob-stage">' + obScene(4, 8, j.info ? j.info.building : '…', false) + '</div><div class="ob-body">';
   if (j.error) h += '<h1>' + esc(t('This invite doesn\'t work', 'هذه الدعوة لا تعمل')) + '</h1><p class="sub">' + esc(j.error) + '</p>';
   else if (!j.info) h += '<h1>…</h1>';
-  else h += '<h1>' + esc(t('You\'re invited to ' + j.info.building, 'أنت مدعو إلى ' + (j.info.building_ar || j.info.building))) + '</h1><p class="sub">' + esc(j.info.role === 'collector' ? t('As the collector: tick who paid, keep track of the cash you hold, hand it over in one tap.', 'كجابٍ: علّم من سدّد، تابع النقد معك، وسلّمه بلمسة.') : t('As co-manager, with full access to the books.', 'كمدير مساعد مع وصول كامل للحسابات.')) + '</p>';
+  else h += '<h1>' + esc(j.info.compound ? t('Collect for ' + j.info.building, 'اجبِ لـ ' + (j.info.building_ar || j.info.building)) : t('You\'re invited to ' + j.info.building, 'أنت مدعو إلى ' + (j.info.building_ar || j.info.building))) + '</h1><p class="sub">' + esc(j.info.role === 'collector' ? t('As the collector: tick who paid, keep track of the cash you hold, hand it over in one tap.', 'كجابٍ: علّم من سدّد، تابع النقد معك، وسلّمه بلمسة.') : t('As co-manager, with full access to the books.', 'كمدير مساعد مع وصول كامل للحسابات.')) + '</p>';
   h += '</div><div class="ob-foot">';
   if (j.info && j.info.valid) {
     h += '<button class="btn pri block" onclick="UI.screen=\'auth\';UI.auth={mode:\'up\',invite:Object.assign({code:UI.join.code},UI.join.info)};render()">' + esc(t('Create my account', 'أنشئ حسابي')) + '</button>';
@@ -315,12 +315,65 @@ function afterSignIn() {
   return cloudMyBuildings().then(function(bs) {
     if (!bs.length) { UI.screen = 'welcome'; render(); tickWelcome(); return; }
     UI.multi = bs.length > 1;
+    // A refresh comes back to the same page (this tab only).
+    var pl = readPlace();
+    if (pl && pl.screen === 'app' && bs.some(function(b) { return b.id === pl.bid; })) {
+      return openBuilding(pl.bid).then(function() { applyPlace(pl); UI.screen = 'app'; render(); restoreScroll(pl); });
+    }
+    if (pl && pl.screen === 'overview' && bs.length > 1) { showOverview(); restoreScroll(pl); return; }
+    if (bs.length > 1 && bs.every(function(b) { return b.role !== 'manager' && b.role !== 'comanager'; })) {
+      var l0 = null; try { l0 = localStorage.getItem('bny15_last'); } catch (e) {}
+      var p0 = bs.filter(function(b) { return b.id === l0; })[0] || bs[0];
+      return openBuilding(p0.id).then(function() { UI.screen = 'app'; UI.tab = 'home'; render(); });
+    }
     if (bs.length > 1) { showOverview(); return; }
     var last = null; try { last = localStorage.getItem('bny15_last'); } catch (e) {}
     var pick = bs.filter(function(b) { return b.id === last; })[0] || (bs.length === 1 ? bs[0] : null);
     if (!pick) { UI.buildings = bs; UI.screen = 'pick'; render(); return; }
     return openBuilding(pick.id).then(function() { UI.screen = 'app'; render(); });
   });
+}
+/* Last loaded building, kept on this phone so the collector sees cards straight away
+   while the fresh copy loads on weak data. Ticks stay safe on old data: the database
+   refuses a second tick of the same cell. */
+function saveSnap() {
+  try {
+    if (!S.building || !S.me) return;
+    var o = {}; Object.keys(S).forEach(function(k) { if (k !== 'events') o[k] = S[k]; });
+    o.events = [];
+    localStorage.setItem('nt_snap', JSON.stringify({ uid: S.me.id, at: Date.now(), s: o }));
+  } catch (e) {}
+}
+function showSnap(sess) {
+  try {
+    var x = JSON.parse(localStorage.getItem('nt_snap') || 'null');
+    if (!x || !sess || x.uid !== sess.user.id || Date.now() - x.at > 14 * 864e5) return false;
+    var pl = readPlace();
+    if (pl && pl.screen !== 'app') return false;
+    if (pl && x.s.building && pl.bid !== x.s.building.id) return false;
+    S = x.s; S._rev = Math.random(); UI.stale = x.at; UI.screen = 'app'; UI.tab = UI.tab || 'home';
+    if (pl) applyPlace(pl);
+    render(); if (pl) restoreScroll(pl); return true;
+  } catch (e) { return false; }
+}
+/* Grey placeholder cards shaped like the real ones, shown while a book loads. */
+function skelCards(n, rows) {
+  var h = '<div class="sec" aria-busy="true" aria-label="' + esc(t('Loading', 'جارٍ التحميل')) + '">';
+  for (var i = 0; i < (n || 4); i++) {
+    h += '<div class="card skel-card"><div class="skel-row"><div class="skel" style="width:38px;height:38px;border-radius:12px"></div><div class="skel" style="flex:1;height:14px;max-width:' + (45 + (i * 17) % 35) + '%"></div><div class="skel" style="width:58px;height:14px"></div></div>';
+    for (var j = 0; j < (rows || 2); j++) h += '<div class="skel-row"><div class="skel" style="width:26px;height:26px;border-radius:8px"></div><div class="skel" style="flex:1;height:12px;max-width:' + (40 + (i + j * 23) % 40) + '%"></div><div class="skel" style="width:46px;height:12px"></div></div>';
+    h += '</div>';
+  }
+  return h + '</div>';
+}
+function skelScreen() {
+  return '<div class="shell"><div class="topbar"><div class="skel" style="width:36px;height:36px;border-radius:12px"></div><div class="skel" style="width:120px;height:16px"></div></div>' +
+    '<div class="sec" style="margin-top:10px"><div class="skel" style="height:44px;border-radius:14px"></div></div>' + skelCards(5, 2) + '</div>';
+}
+function staleBar() {
+  if (!UI.stale) return '';
+  var m = Math.round((Date.now() - UI.stale) / 60000), ago = m < 60 ? m + ' min' : Math.round(m / 60) + ' h';
+  return '<div class="stale-bar">' + esc(SYNC === 'off' ? t('Offline · showing data from ' + ago + ' ago', 'دون اتصال · بيانات منذ ' + ago) : t('Refreshing… showing data from ' + ago + ' ago', 'جارٍ التحديث… بيانات منذ ' + ago)) + '</div>';
 }
 function boot() {
   var q = new URLSearchParams(location.search);
@@ -342,7 +395,13 @@ function boot() {
         }
         return cloudSession().then(function(sess) {
           if (!sess) { UI.screen = 'welcome'; render(); tickWelcome(); return; }
-          return afterSignIn();
+          var snap = !join && showSnap(sess);
+          if (!snap && !join && (!UI.screen || UI.screen === 'splash')) { UI.skel = true; render(); }
+          return afterSignIn().catch(function(e) {
+            if (!snap) throw e;
+            setSync('off'); render();
+            toast(t('No connection. Showing your last saved copy.', 'لا اتصال. تُعرض آخر نسخة محفوظة.'));
+          });
         });
       }
       var db = localLoad();

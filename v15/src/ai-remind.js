@@ -32,7 +32,7 @@ function waTextShort(u, cyc, lang) {
     var name = (lg === 'ar' ? (u.name_ar || u.name) : u.name || '').split(/\s+/)[0];
     var hi = T('Hi', 'مرحباً') + (name ? ' ' + name : '') + ' (' + unitTag(u) + ')';
     var s = owes
-      ? hi + ' 👋 ' + cycleTitle(cyc, lg) + ': *' + fmtPair(r.allLeft) + '* ' + T('still open', 'متبقي') + (pairUsd(b.arrears) > 0.005 ? T(' (+ ' + fmtPair(b.arrears) + ' earlier)', ' (+ ' + fmtPair(b.arrears) + ' سابقاً)') : '') + '.' + (collectors().length ? T(' You can hand it to ' + collectorLabel('en') + '.', ' يمكنك تسليمه إلى ' + collectorLabel('ar') + '.') : '')
+      ? hi + ' 👋 ' + cycleTitle(cyc, lg) + ': *' + fmtPair(r.allLeft) + '* ' + T('still open', 'متبقي') + (pairUsd(b.arrears) > 0.005 ? T(' (+ ' + fmtPair(b.arrears) + ' earlier)', ' (+ ' + fmtPair(b.arrears) + ' سابقاً)') : '') + '.' + (hasCollector() ? T(' You can hand it to ' + collectorLabel('en') + '.', ' يمكنك تسليمه إلى ' + collectorLabel('ar') + '.') : '')
       : hi + ' ✅ ' + T('Received in full for ', 'تم استلام كامل ') + cycleTitle(cyc, lg) + T('. Thank you!', '. شكراً!');
     return s;
   }
@@ -48,10 +48,10 @@ SHEETS.remind = function(d) {
   if (!u || !cyc) return '';
   if (!d.tone) d.tone = suggestTone(u, cyc);
   if (!d.len) d.len = 'long';
-  if (d.text == null) d.text = d.len === 'long' ? waText(u, cyc) : waTextShort(u, cyc);
+  if (d.text == null) d.text = d.status ? colStatusText(u) : d.receipt ? colReceiptText(u, null, d.one ? d.cyc : null) : d.bill ? colBillText(u) : d.len === 'long' ? waText(u, cyc) : waTextShort(u, cyc);
   var h = '<h3>' + esc(t('Message to ', 'رسالة إلى ') + unitTag(u) + (unitName(u) ? ' · ' + unitName(u) : '')) + '</h3>';
   var hist = unitHistory(u, cyc);
-  h += '<p class="lead">' + esc(hist.checked ? t((hist.checked === 1 ? 'Last month' : 'Last ' + hist.checked + ' months') + ': paid ' + hist.paid + ', still open ' + hist.behind + '.', (hist.checked === 1 ? 'الشهر الماضي' : 'آخر ' + hist.checked + ' أشهر') + ': سدد ' + hist.paid + '، متأخر ' + hist.behind + '.') : t('No earlier months yet.', 'لا أشهر سابقة بعد.')) + '</p>';
+  if (!d.receipt && !d.bill) h += '<p class="lead">' + esc(hist.checked ? t((hist.checked === 1 ? 'Last month' : 'Last ' + hist.checked + ' months') + ': paid ' + hist.paid + ', still open ' + hist.behind + '.', (hist.checked === 1 ? 'الشهر الماضي' : 'آخر ' + hist.checked + ' أشهر') + ': سدد ' + hist.paid + '، متأخر ' + hist.behind + '.') : t('No earlier months yet.', 'لا أشهر سابقة بعد.')) + '</p>';
   // Collectors send the plain detailed bill. The manager can step in with a written message,
   // offered straight away when the apartment is behind (a running due).
   var behind = hist.behind > 0 || pairUsd(unitBalance(u, cyc).arrears) > 0.005;

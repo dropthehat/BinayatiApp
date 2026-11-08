@@ -276,6 +276,10 @@ function visibleCycles() {
     return a.kind === 'month' ? -1 : 1;
   });
 }
+/* A shared book holds what several buildings share (water, EDL). Its bills arrive as published rounds, not months. */
+function isSharedBook() { return !!(S.building && S.building.kind === 'shared'); }
+/* testBuild: only the "Test version" banner. Everything else that once lived only on the test page is standard. */
+function testBuild() { return !!(window.BINAYATI_CONFIG || {}).testBuild; }
 function monthCycles() { return visibleCycles().filter(function(c) { return c.kind === 'month'; }); }
 function latestMonth() {
   var cp = currentPeriod(), ms = monthCycles();
@@ -285,12 +289,12 @@ function latestMonth() {
 function cycleOrderKey(c) { return c.kind === 'month' ? (c.period || '') : String(c.created_at || '').slice(0, 7); }
 
 /* Month summary: building money only (supplier pass-through is reported apart). */
-function cycleSummary(cyc) {
+function cycleSummary(cyc, onlyUnits) {
   var s = { due: pair(), paid: pair(), pocket: pair(), dueEq: 0, paidEq: 0, pocketEq: 0, units: 0, settled: 0, owing: [],
             supDue: pair(), supPaid: pair(), pct: 0 };
   if (!cyc) return s;
   var chs = chargesOf(cyc.id);
-  activeUnits().forEach(function(u) {
+  (onlyUnits || activeUnits()).forEach(function(u) {
     var any = false, owes = false, owed = pair();
     chs.forEach(function(ch) {
       var c = cell(ch, u);
@@ -360,6 +364,33 @@ function totalArrears(cyc) {
 /* A safe per block (settings.safe_mode = 'block'): money is counted by the apartment's block,
    expenses by the block chosen when logging them. Without a block it is the whole compound. */
 function safePerBlock() { return setting('safe_mode') === 'block' && blocks().length > 1; }
+/* Shared book: a water or EDL bill (not a project) stays in the collector's pocket until every
+   apartment has paid it. Once it is fully collected it counts as paid to the supplier and leaves
+   his pocket. He never covers a bill with money from other bills. */
+function sharedDirectIds() {
+  var o = {};
+  if (!S.building || S.building.kind !== 'shared') return o;
+  if (S._dirKey === S.payments.length + '|' + S.charges.length + '|' + (S._rev || '')) return S._dir;
+  S.cycles.forEach(function(c) {
+    if (c.kind === 'project') return;
+    if (!sharedBillDone(c)) return;
+    S.charges.forEach(function(ch) { if (ch.cycle_id === c.id) o[ch.id] = 1; });
+  });
+  S._dir = o; S._dirKey = S.payments.length + '|' + S.charges.length + '|' + (S._rev || '');
+  return o;
+}
+/* Every apartment billed in this cycle has paid all of it. */
+function sharedBillDone(c) {
+  var chs = S.charges.filter(function(ch) { return ch.cycle_id === c.id; });
+  if (!chs.length) return false;
+  var any = false;
+  for (var i = 0; i < S.units.length; i++) {
+    var u = S.units[i];
+    if (u.active === false) continue;
+    for (var j = 0; j < chs.length; j++) { var x = cell(chs[j], u); if (x.due > 0) { any = true; if (x.left > 0.005) return false; } }
+  }
+  return any;
+}
 function cashState(blk) {
   var per = !!blk && safePerBlock();
   var first = blocks()[0];
@@ -375,12 +406,13 @@ function cashState(blk) {
   var pockets = {}; // user_id -> {USD, LBP, pending: pair, pendingId}
   var supplier = pair();
   function pk(uid) { return pockets[uid] = pockets[uid] || { USD: 0, LBP: 0, pending: pair(), pendingId: null }; }
-  var passIds = {};
+  var passIds = {}, direct = sharedDirectIds();
   S.charges.forEach(function(c) { if (c.pass_through) passIds[c.id] = true; });
 
   livePayments().forEach(function(p) {
     if (per && unitBlock[p.unit_id] !== blk) return;
     var v = num(p.amount);
+    if (direct[p.charge_id] && p.channel === 'collector' && !handoverConfirmed(p.handover_id)) return; // water/EDL: from the collector straight to the supplier
     if (passIds[p.charge_id]) addTo(supplier, p.cur, v);
     if (p.channel !== 'collector' || handoverConfirmed(p.handover_id)) { addTo(safe, p.cur, v); return; }
     var pocket = pk(p.received_by || 'unknown');
@@ -432,7 +464,7 @@ function memberName(uid, lang) {
   return t('Someone', 'أحدهم');
 }
 function collectors() { return S.members.filter(function(m) { return m.role === 'collector'; }); }
-function isManager() { return S.role === 'manager' || S.role === 'comanager'; }
+function isManager() { return !UI.pvCol && (S.role === 'manager' || S.role === 'comanager'); }
 /* Permissions the owner can switch per person (members.perms). Same rules as private.can() on the server. */
 var PERMS = [
   ['pay', 'Tick payments', 'تأشير الدفعات', 'Mark apartments as paid', 'تأشير الشقق كمدفوعة'],
@@ -460,6 +492,10 @@ function collectorLabel(lang) {
   if ((lang || LANG) === 'ar' && setting('collector_name_ar')) return setting('collector_name_ar');
   return setting('collector_name') || ((lang || LANG) === 'ar' ? 'الجابي' : 'the collector');
 }
+/* Who residents hand cash to: the collector (a member, or the name set on the building), else the manager. */
+var WA_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3z"/></svg>';
+function hasCollector() { return collectors().length > 0 || !!setting('collector_name'); }
+function payToName(lg) { return hasCollector() ? collectorLabel(lg) : ((lg || LANG) === 'ar' ? 'مدير البناية' : 'the building manager'); }
 function roleLabel(r) {
   return { manager: t('Manager', 'المدير'), comanager: t('Co-manager', 'مدير مساعد'), collector: t('Collector', 'الجابي') }[r] || r;
 }
@@ -502,6 +538,8 @@ function catName(k) { var A = (typeof CATS_ALL !== 'undefined' && CATS_ALL) || C
    SS1A / SS2 / -1 → underground, G / GF / 0 → ground, 2B / 12 / 201 → that floor.
    --------------------------------------------------------------------------- */
 function unitLevel(code) {
+  // An apartment placed by hand (floor set in its sheet) wins over its code.
+  if (code && typeof code === 'object') { if (code.floor != null && code.floor !== '') return Number(code.floor); code = code.code; }
   var c = String(code || '').trim().toUpperCase().replace(/\s+/g, '');
   var m;
   if ((m = c.match(/^SS(\d*)/))) return -(Number(m[1]) || 1);
@@ -512,16 +550,17 @@ function unitLevel(code) {
 }
 /* Group scene windows into floors. items: [{code, win}]. Returns null when codes don't say. */
 function levelsFor(items) {
-  var known = items.filter(function(x) { return unitLevel(x.code) != null; });
+  var known = items.filter(function(x) { return unitLevel(x.u || x.code) != null; });
   if (!items.length || known.length < items.length / 2) return null;
   var by = {};
   items.forEach(function(x) {
-    var lv = unitLevel(x.code);
+    var lv = unitLevel(x.u || x.code);
     if (lv == null) lv = 1;
     (by[lv] = by[lv] || []).push(x);
   });
+  function pos(x) { return x.u && x.u.spot ? x.u.spot : String(x.code); }
   return Object.keys(by).map(function(k) {
-    var row = by[k].sort(function(a, b) { return String(a.code).localeCompare(String(b.code), 'en', { numeric: true }); });
+    var row = by[k].sort(function(a, b) { return pos(a).localeCompare(pos(b), 'en', { numeric: true }); });
     // more than 6 on one floor: split into extra rows above so nothing is hidden
     return { lv: Number(k), wins: row.map(function(x) { return x.win; }) };
   }).reduce(function(out, r) {

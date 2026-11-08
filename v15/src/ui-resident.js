@@ -42,7 +42,7 @@ function renderResident() {
   var h = '<div class="shell" style="padding-bottom:24px">';
   h += '<div class="res-head row between"><div><small>' + esc(bName()) + '</small><h1>' + esc(t('Apartment ', 'الشقة ') + unitTag(u)) + '</h1>' + (unitName(u) ? '<div class="muted" style="font-weight:600">' + esc(unitName(u)) + '</div>' : '') + '</div><button class="iconbtn" onclick="setLang()">' + (LANG === 'ar' ? 'EN' : 'ع') + '</button></div>';
   h += renderResidentNews();
-  h += heroHtml(cyc, { block: blockOf(u) || null, idp: 'rs', noTap: true, noSafe: !S.resident.booksPublic, only: S.resident.who ? null : u.id });
+  h += heroHtml(cyc, { block: blockOf(u) || null, idp: 'rs', noTap: true, alive: true, sign: S.building.home_name || (blockOf(u) && S.building.kind === 'shared' ? blockLabel(blockOf(u)) : null), noSafe: !S.resident.booksPublic, only: S.resident.who ? null : u.id });
 
   // The bill
   h += '<div class="sec"><div class="card pad"><div class="row between"><b style="font-size:16px">' + esc(cycleTitle(cyc)) + '</b>' + (r.state === 'paid' ? '<span class="receipt-stamp">✓ ' + esc(t('Paid', 'مسدد')) + '</span>' : '') + '</div>';
@@ -55,21 +55,34 @@ function renderResident() {
   h += '<div class="bill-total"><span>' + esc(t('Left to pay', 'المتبقي')) + '</span><span style="color:' + (pairUsd(owed) > 0.005 ? 'var(--warn)' : 'var(--ok)') + '">' + esc(pairUsd(owed) > 0.005 ? fmtPair(owed) : t('Nothing 🎉', 'لا شيء 🎉')) + '</span></div>';
   if (pairUsd(b.arrears) > 0.005) h += '<div class="hint" style="color:var(--bad)">' + esc(t('Includes earlier months: ', 'يشمل أشهراً سابقة: ') + fmtPair(b.arrears)) + '</div>';
   if (pairUsd(owed) > 0.005) {
-    var col = S.members.filter(function(m) { return m.role === 'collector'; })[0];
-    h += '<p class="hint">' + esc(col ? t('You can hand it to ' + mName(col, 'en') + ', or pay the manager directly.', 'يمكنك تسليمه إلى ' + mName(col, 'ar') + ' أو للمدير مباشرة.') : t('Pay the building manager.', 'ادفع لمدير البناية.')) + '</p>';
+    h += '<p class="hint">' + esc(hasCollector() ? t('You can hand it to ' + collectorLabel('en') + '.', 'يمكنك تسليمه إلى ' + collectorLabel('ar') + '.') : t('Pay the building manager.', 'ادفع لمدير البناية.')) + '</p>';
   }
   h += '</div></div>';
+
+  // Other bills still open for this apartment, and projects
+  var others = visibleCycles().filter(function(c) { return c.id !== cyc.id; }).map(function(c) { var rr = unitCycle(u, c), lf = pair(); rr.cells.forEach(function(x) { addTo(lf, x.ch.cur, x.c.left); }); return { c: c, left: lf, any: rr.cells.length > 0 }; })
+    .filter(function(x) { return x.any && (pairUsd(x.left) > 0.005 || x.c.kind === 'project'); });
+  if (others.length) {
+    h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Also open', 'مفتوحة أيضاً')) + '</h2></div><div class="card list">';
+    others.forEach(function(x) {
+      var done = pairUsd(x.left) <= 0.005;
+      h += '<div class="li"><div class="ic' + (done ? ' in' : '') + '">' + (x.c.kind === 'project' ? '◆' : done ? '✓' : '•') + '</div><div class="grow"><b>' + esc(S.building.kind === 'shared' ? colBillName(x.c) : cycleTitle(x.c)) + '</b><small>' + esc(x.c.kind === 'project' ? t('Project', 'مشروع') : cycleTitle(x.c).split(' · ').slice(1).join(' · ')) + '</small></div><span class="amt' + (done ? ' in' : '') + '">' + esc(done ? '✓' : fmtPair(x.left)) + '</span></div>';
+    });
+    h += '</div></div>';
+  }
 
   // Receipts
   var mine = livePayments().filter(function(p) { return p.unit_id === u.id; }).sort(function(a, c) { return String(c.received_at).localeCompare(String(a.received_at)); });
   h += '<div class="sec"><div class="sec-h"><h2>' + esc(t('Your receipts', 'إيصالاتك')) + '</h2></div>';
   if (!mine.length) h += '<div class="card empty">' + esc(t('No payments yet', 'لا دفعات بعد')) + '</div>';
   else {
-    h += '<div class="card list">';
-    mine.slice(0, 30).forEach(function(p) {
+    var monKey = '';
+    mine.slice(0, 40).forEach(function(p) {
+      var mk = String(p.received_at || '').slice(0, 7);
+      if (mk !== monKey) { if (monKey) h += '</div>'; monKey = mk; h += '<div class="daylbl">' + esc(new Date(mk + '-01T12:00:00').toLocaleDateString(LANG === 'ar' ? 'ar-LB' : 'en-GB', { month: 'long', year: 'numeric' })) + '</div><div class="card list">'; }
       var ch = byId(S.charges, p.charge_id), c = ch && byId(S.cycles, ch.cycle_id);
-      var by = p.received_by_name || memberName(p.received_by);
-      h += '<div class="li"><div class="ic in">✓</div><div class="grow"><b>' + esc((ch ? L(ch) : '') + (c ? ' · ' + cycleTitle(c) : '')) + '</b><small>' + esc(dateLabel(p.received_at, true) + ' · ' + (p.channel === 'transfer' ? (p.method || t('Transfer', 'تحويل')) : t('received by ', 'استلمه ') + by)) + '</small></div><span class="amt in">' + esc(fmt(p.amount, p.cur)) + '</span></div>';
+      var by = p.received_by_name || (p.channel === 'collector' ? collectorLabel() : memberName(p.received_by));
+      h += '<div class="li"><div class="ic in">✓</div><div class="grow"><b>' + esc(S.building.kind === 'shared' && c ? colBillName(c) : (ch ? L(ch) : '') + (c ? ' · ' + cycleTitle(c) : '')) + '</b><small>' + esc(dateLabel(p.received_at, true) + ' · ' + (p.channel === 'transfer' ? (p.method || t('Transfer', 'تحويل')) : t('received by ', 'استلمه ') + by)) + '</small></div><span class="amt in">' + esc(fmt(p.amount, p.cur)) + '</span></div>';
     });
     h += '</div>';
   }

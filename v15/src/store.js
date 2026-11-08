@@ -90,7 +90,74 @@ function applyLocal(tbl, op, row) {
   S._rev = (S._rev || 0) + 1;
 }
 
+/* Collector safety: ticks carry an idempotency key (tick:<charge>:<unit>), unique among
+   non-voided payments in the database. A retry, a double tap or a second phone ticking the
+   same cell can only record it once. Network failures retry with the same rows; a
+   duplicate on retry means the first attempt landed, so it counts as saved. */
+var PEND = {};
+function tickKey(chId, uId) { return 'tick:' + chId + ':' + uId; }
+var LAST_TAP = {};
+function isPend(chId, uId) { return !!PEND[tickKey(chId, uId)]; }
+/* Ignores a second tap on the same cell within 700 ms (a double tap), so it neither
+   records twice nor jumps straight into the undo sheet. */
+function doubleTap(chId, uId) { var k = tickKey(chId, uId), n = Date.now(), d = n - (LAST_TAP[k] || 0); LAST_TAP[k] = n; return d < 700; }
+function isDup(e) { return e && (e.code === '23505' || /duplicate key|already exists/i.test(e.message || '')); }
+function payWrite(rows) {
+  var tries = 0;
+  function go() {
+    return cloudCall(SB.from('payments').insert(rows)).then(function() { return rows; }, function(e) {
+      if (isDup(e)) return 'dup';
+      if (e.net && tries < 3) { tries++; return new Promise(function(ok) { setTimeout(ok, [1500, 4000, 8000][tries - 1]); }).then(go); }
+      throw e;
+    });
+  }
+  return go();
+}
+function safePay(rows, bid) {
+  if (UI.pvCol) return Promise.reject(pvBlocked());
+  rows.forEach(function(r) {
+    toBase('payments', r); r.id = r.id || uuid(); r.building_id = r.building_id || bid || S.building.id;
+    r.client_key = r.client_key || tickKey(r.charge_id, r.unit_id);
+  });
+  rows = rows.filter(function(r) { return !PEND[r.client_key]; });
+  if (!rows.length) return Promise.resolve(null);
+  if (!isCloud()) return dbInsertMany('payments', rows);
+  var mine = S.building && rows[0].building_id === S.building.id;
+  rows.forEach(function(r) { PEND[r.client_key] = 1; if (mine) applyLocal('payments', 'insert', r); });
+  render();
+  return payWrite(rows).then(function(res) {
+    rows.forEach(function(r) { delete PEND[r.client_key]; });
+    if (res === 'dup' || !mine) reloadBuilding();
+    render();
+    return rows;
+  }, function(e) {
+    rows.forEach(function(r) { delete PEND[r.client_key]; });
+    if (mine) { var ids = rows.map(function(r) { return r.id; }); S.payments = S.payments.filter(function(p) { return ids.indexOf(p.id) < 0; }); S._rev++; }
+    render();
+    var u = byId(S.units, rows[0].unit_id);
+    var er = new Error(e.net ? t('Not saved: ' + (u ? unitTag(u) : '') + '. No connection. Tick it again when you have signal.', 'لم يُحفظ: ' + (u ? unitTag(u) : '') + '. لا اتصال. أعد التأشير عند توفر الشبكة.') : e.message);
+    throw er;
+  });
+}
+function toastUndo(msg, ids) {
+  var el = document.getElementById('toast');
+  el.innerHTML = '';
+  var sp = document.createElement('span'); sp.textContent = msg; el.appendChild(sp);
+  var b = document.createElement('button'); b.className = 'toast-act'; b.textContent = t('Undo', 'تراجع');
+  b.onclick = function() { el.classList.remove('pop', 'act'); undoPayments(ids); };
+  el.appendChild(b);
+  el.classList.add('pop', 'act');
+  clearTimeout(el._t);
+  el._t = setTimeout(function() { el.classList.remove('pop', 'act'); }, 6000);
+}
+function tickToast(rows) {
+  if (!rows || !rows.length) return;
+  var u = byId(S.units, rows[0].unit_id), ch = rows.length === 1 && byId(S.charges, rows[0].charge_id);
+  var what = (u ? unitTag(u) : '') + (ch ? ' · ' + L(ch) : rows.length > 1 ? ' · ' + t('all', 'الكل') : '');
+  toastUndo(t('Saved ', 'حُفظ ') + what, rows.map(function(r) { return r.id; }));
+}
 function dbInsert(tbl, row) {
+  if (UI.pvCol) return Promise.reject(pvBlocked());
   toBase(tbl, row);
   row.id = row.id || uuid();
   if (tbl !== 'buildings' && !row.building_id) row.building_id = S.building.id;
@@ -109,6 +176,7 @@ function dbInsert(tbl, row) {
   }, function(e) { S[tbl] = S[tbl].filter(function(r) { return r.id !== row.id; }); S._rev++; render(); throw e; });
 }
 function dbInsertMany(tbl, rows) {
+  if (UI.pvCol) return Promise.reject(pvBlocked());
   rows.forEach(function(r) { toBase(tbl, r); });
   rows.forEach(function(r) { r.id = r.id || uuid(); if (!r.building_id) r.building_id = S.building.id; if (!r.created_at && tbl !== 'payments') r.created_at = nowIso(); });
   if (!isCloud()) {
@@ -122,6 +190,7 @@ function dbInsertMany(tbl, rows) {
   return cloudCall(SB.from(tbl).insert(rows)).then(function() { return rows; }, function(e) { reloadBuilding(); throw e; });
 }
 function dbUpdate(tbl, id, patch) {
+  if (UI.pvCol) return Promise.reject(pvBlocked());
   if (patch.cur === 'LBP') toBase(tbl, patch);
   var row = Object.assign({ id: id }, patch);
   if (!isCloud()) {
@@ -141,6 +210,7 @@ function dbUpdate(tbl, id, patch) {
   }, function(e) { if (before) applyLocal(tbl, 'update', before); render(); throw e; });
 }
 function dbDelete(tbl, id) {
+  if (UI.pvCol) return Promise.reject(pvBlocked());
   if (!isCloud()) {
     var db = localLoad();
     var x = byId(db[tbl], id);
@@ -157,10 +227,15 @@ function dbDelete(tbl, id) {
 function cloudCall(q) {
   setSync('busy');
   return q.then(function(res) {
-    if (res.error) { setSync('live'); throw new Error(niceError(res.error)); }
+    if (res.error) {
+      setSync('live');
+      var er = new Error(niceError(res.error)); er.code = res.error.code;
+      if (/Failed to fetch|NetworkError|Load failed|fetch failed/i.test(res.error.message || '')) { er.net = true; setSync('off'); }
+      throw er;
+    }
     setSync('live');
     return res.data;
-  }, function(e) { setSync('off'); throw new Error(t('No connection. Check your internet.', 'لا يوجد اتصال. تحقق من الإنترنت.')); });
+  }, function(e) { setSync('off'); var er = new Error(t('No connection. Check your internet.', 'لا يوجد اتصال. تحقق من الإنترنت.')); er.net = true; throw er; });
 }
 function niceError(e) {
   var m = (e && (e.message || e.error_description)) || String(e);
@@ -177,6 +252,7 @@ function niceError(e) {
 
 /* RPCs: the server functions in schema.sql, with local equivalents. */
 function rpc(name, args) {
+  if (UI.pvCol) return Promise.reject(pvBlocked());
   if (isCloud()) return cloudCall(SB.rpc(name, args));
   return Promise.resolve().then(function() { return LOCAL_RPC[name](args); });
 }
@@ -196,6 +272,15 @@ var LOCAL_RPC = {
     localLoad().invites.push(row); applyLocal('invites', 'insert', row); localSave();
     return code;
   },
+  delete_building: function(a) {
+    var db = localLoad();
+    ['members', 'units', 'cycles', 'charges', 'payments', 'handovers', 'expenses', 'tasks', 'events', 'invites'].forEach(function(k) { if (db[k]) db[k] = db[k].filter(function(r) { return r.building_id !== a.p_building; }); });
+    db.buildings = db.buildings.filter(function(b) { return b.id !== a.p_building; });
+    if (db.current === a.p_building) db.current = null;
+    localSave();
+    return null;
+  },
+  sup_resync: function() { return 0; },
   request_handover: function(a) {
     var me = S.me.id, u = 0, l = 0;
     var pays = S.payments.filter(function(p) { return p.channel === 'collector' && p.received_by === me && !p.handover_id && !p.voided_at; });
@@ -333,8 +418,8 @@ function cloudSignUp(username, password, name) {
 function cloudMyBuildings() {
   return cloudSession().then(function(sess) {
     if (!sess) return [];
-    return cloudCall(SB.from('members').select('building_id, role, display_name, buildings(id, name, name_ar)').eq('user_id', sess.user.id))
-      .then(function(rows) { return (rows || []).map(function(r) { return { id: r.building_id, role: r.role, name: r.buildings && r.buildings.name, name_ar: r.buildings && r.buildings.name_ar }; }); });
+    return cloudCall(SB.from('members').select('building_id, role, display_name, buildings(id, name, name_ar, kind)').eq('user_id', sess.user.id))
+      .then(function(rows) { return (rows || []).map(function(r) { return { id: r.building_id, role: r.role, name: r.buildings && r.buildings.name, name_ar: r.buildings && r.buildings.name_ar, kind: r.buildings && r.buildings.kind }; }); });
   });
 }
 function cloudBuildingState(bid, light) {
@@ -367,6 +452,8 @@ function cloudLoadBuilding(bid) {
   setSync('busy');
   return cloudBuildingState(bid).then(function(ns) {
     S = scopeToMyBlocks(ns);
+    UI.stale = false;
+    saveSnap();
     setSync('live');
     subscribe(bid);
     return loadConfig(bid);

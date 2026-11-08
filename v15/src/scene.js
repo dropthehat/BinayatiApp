@@ -61,7 +61,9 @@ function buildBuildingScene(o) {
  var floors = upRows.length, basements = downRows.length, rowsN = floors + basements;
  // More than 5 floors above ground: a tower. Floors keep a readable height and the picture grows taller instead.
  var tower = floors > 5;
- var fh = tower ? Math.max(12, Math.min(22, Math.floor(340 / rowsN))) : rowsN <= 5 ? 28 : Math.max(14, Math.floor(150 / rowsN));
+ // o.frame: several buildings drawn side by side share one ground line, one scale and one roof height.
+ var rowsFit = o.frame ? Math.max(rowsN, o.frame.floors + o.frame.basements) : rowsN;
+ var fh = tower ? Math.max(12, Math.min(22, Math.floor(340 / rowsN))) : rowsFit <= 5 ? 28 : Math.max(14, Math.floor(150 / rowsFit));
  var bw = maxPer <= 2 ? 150 : maxPer === 3 ? 196 : maxPer === 4 ? 220 : 250;
  var bx = 183 - bw / 2, bx2 = bx + bw;
  var lobbyTop = 197, top = lobbyTop - floors * fh;
@@ -75,7 +77,12 @@ function buildBuildingScene(o) {
  var vbBot = (basements ? bH : 0) + 256, vbY = basements ? bH : 0;
  if (tower) vbY = Math.max(vbBot - 440, Math.min(vbY, top - 60));
  var vbH = vbBot - vbY;
- var vb = o.bare ? (bx - 66) + ' ' + (top - 42) + ' ' + (bw + 132) + ' ' + (240 - (top - 42) + bH) : '0 ' + vbY + ' 366 ' + vbH;
+ var vb;
+ if (o.bare && o.frame) {
+   var vbW = Math.max(bw, o.frame.bw || bw) + 132, topF = lobbyTop - Math.max(floors, o.frame.floors) * fh - (o.roofSign ? 80 : 42);
+   var bF = Math.max(basements, o.frame.basements); bF = bF ? bF * fh + 6 : 0;
+   vb = (183 - vbW / 2) + ' ' + topF + ' ' + vbW + ' ' + (240 - topF + bF);
+ } else vb = o.bare ? (bx - 66) + ' ' + (top - 42) + ' ' + (bw + 132) + ' ' + (240 - (top - 42) + bH) : '0 ' + vbY + ' 366 ' + vbH;
  var s = '<svg class="bh-art" viewBox="' + vb + '" preserveAspectRatio="' + (o.bare ? 'xMidYMax meet' : 'xMidYMid slice') + '" xmlns="http://www.w3.org/2000/svg" aria-hidden="' + (o.interactive ? 'false' : 'true') + '">';
  s += '<defs>';
  s += '<linearGradient id="' + P + 'Sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sky1)"/><stop offset="0.55" style="stop-color:var(--sky2)"/><stop offset="1" style="stop-color:var(--sky3)"/></linearGradient>';
@@ -486,6 +493,11 @@ function buildBuildingScene(o) {
  s += '</g>';
  }
 
+ if (o.roofSign) { // a name in big letters above the roof, Hollywood style
+   var rsT = String(o.roofSign).toUpperCase().slice(0, 10), rsY = top - 40, rsW = Math.min(bw + 60, 24 + rsT.length * 19);
+   s += '<g class="bh-roofsign"><rect x="' + (183 - rsW / 2 + 8) + '" y="' + (rsY + 4) + '" width="1.6" height="' + (top - rsY - 10) + '" fill="#9AA3A0"/><rect x="' + (183 + rsW / 2 - 10) + '" y="' + (rsY + 4) + '" width="1.6" height="' + (top - rsY - 10) + '" fill="#9AA3A0"/>';
+   s += '<text x="183" y="' + rsY + '" style="font-size:26px;font-weight:900;letter-spacing:1px;text-anchor:middle;fill:#FFFFFF;stroke:#1B2422;stroke-width:4px;paint-order:stroke">' + esc(rsT) + '</text></g>';
+ }
  if (o.safe && SAFE_BUB) { s += SAFE_BUB; SAFE_BUB = ''; }
  s += '</svg>';
 

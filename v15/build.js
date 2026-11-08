@@ -92,4 +92,6 @@ if (window.NATOUR_PREVIEW) previewBoot(); else boot();
 }
 fs.writeFileSync(path.join(D, 'index.html'), page({ url: 'https://ehatjqqmdmgptqbkgrzb.supabase.co', key: 'sb_publishable_rnuIP7E5qOBxf1JG5a0Jzw_iyDJ74Zi', publicUrl: 'https://dropthehat.github.io/BinayatiApp/v15/' }));
 fs.writeFileSync(path.join(D, 'local.html'), page({ url: '', key: '', publicUrl: '' }));
+// The test address: same app, same data, with a "Test version" banner. Links it sent keep working.
+fs.writeFileSync(path.join(D, '..', 'natour-test', 'index.html'), page({ url: 'https://ehatjqqmdmgptqbkgrzb.supabase.co', key: 'sb_publishable_rnuIP7E5qOBxf1JG5a0Jzw_iyDJ74Zi', publicUrl: 'https://dropthehat.github.io/BinayatiApp/natour-test/', testBuild: true }));
 console.log('built', fs.statSync(path.join(D, 'index.html')).size);

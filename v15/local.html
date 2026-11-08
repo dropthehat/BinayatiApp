@@ -9931,13 +9931,16 @@ function colTickBill(uId, cId) {
   UI.cJust = uId + '|' + cId; setTimeout(function() { if (UI.cJust === uId + '|' + cId) UI.cJust = null; }, 900);
   chargesOf(cId).forEach(function(ch) { var x = cell(ch, u); if (x.left > 0 && x.state !== 'part') colTick(uId, S.building.id, ch.id, uId); });
 }
+/* Bills or People: remembered across refreshes. */
+function colMode() { if (!UI.cMode) { try { UI.cMode = localStorage.getItem('bny15_cmode') === 'apt' ? 'apt' : 'bill'; } catch (e) { UI.cMode = 'bill'; } } return UI.cMode; }
+function colSetMode(m) { UI.cMode = m; try { localStorage.setItem('bny15_cmode', m); } catch (e) {} }
 function renderColCollect() { return '<div class="colpg">' + renderColCollectIn() + '</div>'; }
 function renderColCollectIn() {
   var h = colPreviewBar() + renderTopbar(t('Collect', 'التحصيل')) + staleBar();
   if (!UI.cb) loadColBooks();
-  var books = colBooks(), people = UI.cMode === 'apt';
+  var books = colBooks(), people = colMode() === 'apt';
   // Bills: follow each bill and its supplier. People: collect from someone at the door.
-  h += '<div class="sec" style="margin-top:6px"><div class="modesw"><button class="' + (!people ? 'on' : '') + '" aria-pressed="' + !people + '" onclick="UI.cMode=\'bill\';render();window.scrollTo(0,0)">' + esc(t('Bills', 'الفواتير')) + '</button><button class="' + (people ? 'on' : '') + '" aria-pressed="' + people + '" onclick="UI.cMode=\'apt\';render();window.scrollTo(0,0)">' + esc(t('People', 'الأشخاص')) + '</button></div></div>';
+  h += '<div class="sec" style="margin-top:6px"><div class="modesw"><button class="' + (!people ? 'on' : '') + '" aria-pressed="' + !people + '" onclick="colSetMode(\'bill\');render();window.scrollTo(0,0)">' + esc(t('Bills', 'الفواتير')) + '</button><button class="' + (people ? 'on' : '') + '" aria-pressed="' + people + '" onclick="colSetMode(\'apt\');render();window.scrollTo(0,0)">' + esc(t('People', 'الأشخاص')) + '</button></div></div>';
   if (!UI.cb) return h + skelCards(3, 3);
   if (people) {
     // People: everyone in one list by block. Books only show as tabs when they are not linked
@@ -10006,7 +10009,7 @@ function colGoBlock(b, dir) {
   UI.cBlk = b; render(); colRestore(pl);
 }
 function colSwipe(dir) {
-  if (UI.cMode === 'apt') {
+  if (colMode() === 'apt') {
     var list = [null].concat(blocks().length > 1 ? blocks() : []);
     if (list.length < 2) return;
     var i = list.indexOf(blocks().indexOf(UI.cBlk) >= 0 ? UI.cBlk : null), j = i + dir;
@@ -10041,7 +10044,7 @@ function colSwipe(dir) {
     colSwipe(dir);
   }, { passive: true });
 })();
-function colOpenBill(bid, cid) { colSwitch(bid, function() { UI.tab = 'collect'; UI.cMode = 'bill'; UI.cBill = cid; var c = byId(S.cycles, cid); if (c) UI.cFam = bid + '|' + colFamOf(c); }); }
+function colOpenBill(bid, cid) { colSwitch(bid, function() { UI.tab = 'collect'; colSetMode('bill'); UI.cBill = cid; var c = byId(S.cycles, cid); if (c) UI.cFam = bid + '|' + colFamOf(c); }); }
 function renderColDash() {
   var h = colPreviewBar() + renderTopbar(t('Dashboard', 'لوحة المعلومات'));
   if (!UI.cb) { loadColBooks(); return h + skelCards(3, 3); }

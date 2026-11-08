@@ -9936,6 +9936,7 @@ function renderColCollectIn() {
   var books = colBooks(), people = UI.cMode === 'apt';
   // Bills: follow each bill and its supplier. People: collect from someone at the door.
   h += '<div class="sec" style="margin-top:6px"><div class="modesw"><button class="' + (!people ? 'on' : '') + '" aria-pressed="' + !people + '" onclick="UI.cMode=\'bill\';render();window.scrollTo(0,0)">' + esc(t('Bills', 'الفواتير')) + '</button><button class="' + (people ? 'on' : '') + '" aria-pressed="' + people + '" onclick="UI.cMode=\'apt\';render();window.scrollTo(0,0)">' + esc(t('People', 'الأشخاص')) + '</button></div></div>';
+  if (!UI.cb) return h + skelCards(3, 3);
   if (people) {
     // People: everyone in one list by block. Books only show as tabs when they are not linked
     // to the shared book (a collector working in two unrelated buildings).

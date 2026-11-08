@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F1F5F4">
+<meta name="theme-color" content="#F1F5F4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1513" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Natour">
 <title>Natour · ناطور</title>
@@ -300,7 +301,7 @@ textarea.input { min-height: 80px; resize: vertical; }
 .linkbox { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 12px; background: var(--bg2); font-size: 12.5px; font-weight: 600; word-break: break-all; }
 
 /* Toast */
-.toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translate(-50%, 20px); opacity: 0; pointer-events: none; background: var(--ink); color: var(--bg); padding: 11px 16px; border-radius: 14px; font-size: 13.5px; font-weight: 700; z-index: 200; max-width: calc(100% - 32px); transition: all .25s ease; text-align: center; }
+.toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translate(-50%, 20px); opacity: 0; pointer-events: none; background: var(--card); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 10px 28px rgba(0,0,0,.28); padding: 11px 16px; border-radius: 14px; font-size: 13.5px; font-weight: 700; z-index: 200; max-width: calc(100% - 32px); transition: all .25s ease; text-align: center; }
 .toast.pop { opacity: 1; transform: translate(-50%, 0); }
 
 /* Onboarding — full screen, never scrolls */
@@ -318,14 +319,18 @@ textarea.input { min-height: 80px; resize: vertical; }
 .ob-body { flex: 0 0 auto; padding: 14px 22px 0; }
 .ob-body h1 { margin: 0; font-size: 25px; line-height: 1.15; font-weight: 600; letter-spacing: -.015em; }
 .ob-body p.sub { margin: 6px 0 0; font-size: 14.5px; color: var(--mut); line-height: 1.45; }
+.more-inv { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.more-inv .btn { width: 100%; }
 .ob-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-bottom: 12px; }
 .pw-wrap { position: relative; display: block; }
 .pw-wrap .input { width: 100%; padding-inline-end: 72px; }
 .pw-eye { position: absolute; inset-block: 0; inset-inline-end: 6px; border: 0; background: none; color: var(--acc); font-weight: 700; font-size: 13.5px; padding: 0 10px; min-width: 44px; }
-.pw-rule { display: flex; align-items: center; gap: 8px; margin: -4px 0 8px; font-size: 13px; font-weight: 600; color: var(--mut); }
-.pw-rule i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line); flex: none; }
+.rules { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 12px; }
+.pw-rule { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; font-weight: 600; line-height: 1.35; color: var(--bad); }
+.pw-rule i { width: 16px; height: 16px; margin-top: 1px; border-radius: 50%; border: 2px solid var(--bad); flex: none; display: grid; place-items: center; font-style: normal; font-size: 10px; line-height: 1; color: #fff; }
 .pw-rule.ok { color: var(--ok); }
 .pw-rule.ok i { background: var(--ok); border-color: var(--ok); }
+.pw-rule.ok i::after { content: "✓"; }
 .ob-foot { flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px; padding: 16px 22px calc(16px + env(safe-area-inset-bottom)); }
 .ob-foot .row .btn { flex: 1; }
 .ob-step { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; }
@@ -8917,10 +8922,10 @@ function renderAuth() {
   else h += '<h1>' + esc(up ? t('Create your account', 'أنشئ حسابك') : t('Welcome back', 'أهلاً بعودتك')) + '</h1>';
   if (up) h += '<label class="field"><span>' + esc(t('Your name', 'اسمك')) + '</span><input class="input" id="au-name" dir="ltr" data-tr="au-name-ar" data-tr-kind="name" value="' + esc(a.name || (a.invite && a.invite.display_name) || '') + '" autocomplete="name"><div class="tr-box" id="trs-au-name"></div></label>';
   if (up && a.invite) h += '<label class="field"><span>' + esc(t('Your name in Arabic', 'اسمك بالعربية')) + '</span><input class="input" id="au-name-ar" dir="rtl" data-tr="au-name" data-tr-kind="name" value="' + esc(a.nameAr || a.invite.display_name_ar || '') + '"><div class="tr-box" id="trs-au-name-ar"></div></label>';
-  h += '<label class="field"><span>' + esc(t('Username or email', 'اسم المستخدم أو البريد')) + '</span><input class="input" id="au-user" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" dir="ltr" placeholder="' + esc(t('e.g. anas', 'مثلاً anas')) + '"' + (up ? '' : ' data-autofocus') + '></label>';
+  h += '<label class="field"><span>' + esc(t('Username or email', 'اسم المستخدم أو البريد')) + '</span><input class="input" id="au-user" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" dir="ltr" oninput="pwCheck()" placeholder=""' + esc(t('e.g. anas', 'مثلاً anas')) + '"' + (up ? '' : ' data-autofocus') + '></label>';
   if (up) h += '<div class="hint">' + esc(t('No email needed: pick any username, like anas or abuali.', 'لا حاجة لبريد: اختر أي اسم مستخدم مثل anas أو abuali.')) + '</div>';
   h += '<label class="field"><span>' + esc(t('Password', 'كلمة المرور')) + '</span><div class="pw-wrap"><input class="input" id="au-pass" type="password" autocomplete="' + (up ? 'new-password' : 'current-password') + '" oninput="pwCheck()" onkeydown="if(event.key===\'Enter\')authGo()"><button type="button" class="pw-eye" onclick="pwToggle()" aria-label="' + esc(t('Show password', 'إظهار كلمة المرور')) + '">' + esc(t('Show', 'إظهار')) + '</button></div></label>';
-  if (up) h += '<div class="pw-rule" id="pw-rule"><i></i><span>' + esc(t('At least 6 characters', '6 أحرف على الأقل')) + '</span></div>';
+  if (up) h += '<div class="rules"><div class="pw-rule" id="pw-rule"><i></i><span>' + esc(t('Password: at least 6 characters', 'كلمة المرور: 6 أحرف على الأقل')) + '</span></div><div class="pw-rule" id="un-rule"><i></i><span>' + esc(t('Username: 3 to 30 letters or numbers, no spaces (or use an email)', 'اسم المستخدم: من 3 إلى 30 حرفاً أو رقماً بلا مسافات (أو بريد)')) + '</span></div></div>';
   h += '<div id="ob-err" class="err"></div></div>';
   h += '<div class="ob-foot"><button class="btn pri block" id="au-go" onclick="authGo()">' + esc(up ? t('Create account', 'أنشئ الحساب') : t('Sign in', 'دخول')) + '</button>';
   h += '<button class="btn ghost block" onclick="UI.auth.mode=\'' + (up ? 'in' : 'up') + '\';render()">' + esc(up ? t('I already have an account', 'لدي حساب') : t('New here? Create an account', 'جديد؟ أنشئ حساباً')) + '</button></div>';
@@ -8929,6 +8934,8 @@ function renderAuth() {
 function pwCheck() {
   var r = document.getElementById('pw-rule'), el = document.getElementById('au-pass');
   if (r && el) r.classList.toggle('ok', el.value.length >= 6);
+  var ur = document.getElementById('un-rule'), ue = document.getElementById('au-user');
+  if (ur && ue) { var u = ue.value.trim(); ur.classList.toggle('ok', /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(u) || /^[\p{L}\p{N}]{3,30}$/u.test(u)); }
 }
 function pwToggle() {
   var el = document.getElementById('au-pass'), b = document.querySelector('.pw-eye');
@@ -9375,13 +9382,20 @@ SHEETS.compcol = function(d) {
     h += '<div class="foot"><button class="btn sec" onclick="copyText(' + jsArg(link) + ')">' + esc(t('Copy', 'نسخ')) + '</button><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=' + esc(encodeURIComponent(msg)) + '">WhatsApp</a></div>';
     return h;
   }
-  h += '<p class="lead">' + esc(t('Invite a collector once for the whole compound. Each building decides in its Settings whether he collects there; its books stay private.', 'ادعُ جابياً مرة واحدة لكل المجمّع. كل بناية تقرر في إعداداتها إن كان يجبي فيها؛ حساباتها تبقى خاصة.')) + '</p>';
-  var list = d.list;
+  var list = d.list, has = !!(list && list.length), form = !has || d.more;
+  if (!has) h += '<p class="lead">' + esc(t('Invite a collector once for the whole compound. Each building decides in its Settings whether he collects there; its books stay private.', 'ادعُ جابياً مرة واحدة لكل المجمّع. كل بناية تقرر في إعداداتها إن كان يجبي فيها؛ حساباتها تبقى خاصة.')) + '</p>';
+  else h += '<p class="lead">' + esc(t('Collecting for the whole compound. Each building decides in its Settings whether he collects there.', 'يجبي لكل المجمّع. كل بناية تقرر في إعداداتها إن كان يجبي فيها.')) + '</p>';
   if (!list) h += '<div class="muted">…</div>';
-  else if (list.length) h += '<div class="card list">' + list.map(function(c) { return '<div class="li"><div class="ic">' + esc((c.display_name || '?').charAt(0).toUpperCase()) + '</div><div class="grow"><b>' + esc(c.display_name || '—') + '</b><small>' + esc(t('Compound collector', 'جابي المجمّع')) + '</small></div><button class="btn sm sec" onclick="removeCompCollector(' + jsArg(d.id) + ',' + jsArg(c.user_id) + ',' + jsArg(c.display_name || '') + ')">' + esc(t('Remove', 'إزالة')) + '</button></div>'; }).join('') + '</div>';
+  else if (has) h += '<div class="card list">' + list.map(function(c) { return '<div class="li"><div class="ic">' + esc((c.display_name || '?').charAt(0).toUpperCase()) + '</div><div class="grow"><b>' + esc(c.display_name || '—') + '</b><small>' + esc(t('Compound collector · active', 'جابي المجمّع · فعّال')) + '</small></div><button class="btn sm sec" onclick="removeCompCollector(' + jsArg(d.id) + ',' + jsArg(c.user_id) + ',' + jsArg(c.display_name || '') + ')">' + esc(t('Remove', 'إزالة')) + '</button></div>'; }).join('') + '</div>';
+  if (has && !d.more) {
+    h += '<div class="more-inv"><button class="btn sec sm" onclick="UI.sheet.data.more=true;render()">+ ' + esc(t('Invite another collector', 'ادعُ جابياً آخر')) + '</button></div>';
+    h += '<div id="sheet-err" class="err">' + esc(d.err || '') + '</div><div class="foot"><button class="btn pri" onclick="closeSheet()">' + esc(t('Done', 'تم')) + '</button></div>';
+    return h;
+  }
+  if (has) h += '<div class="more-inv"><b>' + esc(t('Invite another collector', 'ادعُ جابياً آخر')) + '</b><div class="hint">' + esc(t('This makes a new one-time link for a different person. It does not resend anything to the collector above.', 'هذا ينشئ رابطاً جديداً لمرة واحدة لشخص آخر. لا يعيد إرسال شيء للجابي أعلاه.')) + '</div></div>';
   h += '<label class="field" style="margin-top:12px"><span>' + esc(t('Their name', 'اسمه')) + '</span><input class="input" id="cc-name" placeholder="' + esc(t('e.g. Anas', 'مثلاً أنس')) + '"></label>';
   h += '<label class="field"><span>' + esc(t('In Arabic (optional)', 'بالعربية (اختياري)')) + '</span><input class="input" id="cc-ar" dir="rtl" placeholder="أنس"></label>';
-  h += '<div id="sheet-err" class="err">' + esc(d.err || '') + '</div><div class="foot"><button class="btn sec" onclick="closeSheet()">' + esc(t('Close', 'إغلاق')) + '</button><button class="btn pri" onclick="makeCompInvite(' + jsArg(d.id) + ')">' + esc(t('Create link', 'أنشئ الرابط')) + '</button></div>';
+  h += '<div id="sheet-err" class="err">' + esc(d.err || '') + '</div><div class="foot"><button class="btn sec" onclick="' + (has ? 'UI.sheet.data.more=false;render()' : 'closeSheet()') + '">' + esc(has ? t('Back', 'رجوع') : t('Close', 'إغلاق')) + '</button><button class="btn pri" onclick="makeCompInvite(' + jsArg(d.id) + ')">' + esc(t('Create link', 'أنشئ الرابط')) + '</button></div>';
   return h;
 };
 function makeCompInvite(id) {

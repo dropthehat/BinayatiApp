@@ -820,7 +820,8 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .bill-foot { display: flex; justify-content: space-between; align-items: center; color: var(--mut); font-size: 13px; }
 .bill-card.done { opacity: .8; }
 html.standalone { overscroll-behavior-y: none; }
-.ptr { position: fixed; top: 0; left: 0; right: 0; z-index: 70; height: calc(env(safe-area-inset-top) + var(--pull, 0px)); background: var(--bg); border-radius: 0 0 22px 22px; box-shadow: 0 10px 22px rgba(0,0,0,.16); overflow: hidden; visibility: hidden; pointer-events: none; transition: height .3s cubic-bezier(.2,.9,.3,1); }
+html.standalone #app { position: relative; }
+.ptr { position: fixed; top: 0; left: 0; right: 0; z-index: 70; height: calc(env(safe-area-inset-top) + var(--pull, 0px)); visibility: hidden; pointer-events: none; transition: height .3s cubic-bezier(.2,.9,.3,1); }
 .ptr.on { visibility: visible; }
 .ptr.drag { transition: none; }
 .ptr-pill { position: absolute; left: 50%; bottom: 9px; width: 44px; height: 44px; margin-left: -22px; border-radius: 50%; background: var(--card); border: 1px solid var(--line); display: grid; place-items: center; transform: scale(calc(.55 + .45 * var(--pr, 0))); opacity: calc(var(--pr, 0) * 1.5); }
@@ -5610,7 +5611,7 @@ function softRefresh() {
   return cloudLoadBuilding(S.building.id).then(function() { render(); return UI.cb ? loadColBooks() : null; });
 }
 /* Pull down to refresh, for the app saved to the home screen (it has no browser refresh).
-   A curtain follows the finger with a ring that fills; past the mark it turns green, release spins it. */
+   The page follows the finger down and a ring fills in the gap; past the mark it turns green, release spins it. */
 (function() {
   var standalone = window.navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
   if (!standalone) return;
@@ -5628,16 +5629,19 @@ function softRefresh() {
     raf = 0; if (!pulling) return;
     var pull = MAXP * (1 - Math.exp(-dy / 110)), pr = Math.min(pull / TH, 1), e = ind();
     e.style.setProperty('--pull', pull.toFixed(1) + 'px'); e.style.setProperty('--pr', pr.toFixed(3));
+    APP.style.top = pull.toFixed(1) + 'px';
     arc.style.strokeDasharray = (pr * 100).toFixed(1) + ' 100';
     if ((pr >= 1) !== ready) { ready = pr >= 1; e.classList.toggle('ready', ready); if (ready && navigator.vibrate) { try { navigator.vibrate(8); } catch (x) {} } }
   }
   function collapse() {
     var e = ind(); e.classList.remove('drag'); e.style.setProperty('--pull', '0px');
-    setTimeout(function() { e.classList.remove('on', 'ready', 'go', 'done'); e.style.setProperty('--pr', '0'); busy = false; ready = false; }, 300);
+    APP.style.transition = 'top .3s cubic-bezier(.2,.9,.3,1)'; APP.style.top = '0px';
+    setTimeout(function() { e.classList.remove('on', 'ready', 'go', 'done'); e.style.setProperty('--pr', '0'); APP.style.transition = ''; APP.style.top = ''; busy = false; ready = false; }, 320);
   }
   function go() {
     var e = ind(), t0 = Date.now(); busy = true;
     e.classList.add('go'); e.style.setProperty('--pull', '62px'); e.style.setProperty('--pr', '1');
+    APP.style.transition = 'top .25s cubic-bezier(.2,.9,.3,1)'; APP.style.top = '62px';
     savePlace(true);
     softRefresh().then(function() {
       setTimeout(function() { e.classList.add('done'); setTimeout(collapse, 500); }, Math.max(0, 750 - (Date.now() - t0)));
@@ -5645,7 +5649,7 @@ function softRefresh() {
   }
   document.addEventListener('touchstart', function(e) {
     var t = e.touches[0];
-    y0 = (window.scrollY <= 0 && !UI.sheet && UI.screen !== 'splash' && !busy && e.touches.length === 1) ? t.clientY : null;
+    y0 = (window.scrollY <= 0 && !UI.sheet && ['splash', 'welcome', 'ob', 'auth', 'join'].indexOf(UI.screen) < 0 && !busy && e.touches.length === 1) ? t.clientY : null;
     x0 = t.clientX; dy = 0; pulling = false;
   }, { passive: true });
   document.addEventListener('touchmove', function(e) {
@@ -5653,7 +5657,7 @@ function softRefresh() {
     var t = e.touches[0], ddy = t.clientY - y0;
     if (!pulling) {
       // Only a clear downward drag starts it, so side swipes and taps are left alone.
-      if (ddy > 10 && ddy > Math.abs(t.clientX - x0) * 1.5 && window.scrollY <= 0) { pulling = true; y0 = t.clientY; ind().classList.add('on', 'drag'); ready = false; }
+      if (ddy > 10 && ddy > Math.abs(t.clientX - x0) * 1.5 && window.scrollY <= 0) { pulling = true; y0 = t.clientY; ind().classList.add('on', 'drag'); APP.style.transition = 'none'; ready = false; }
       else return;
     }
     dy = Math.max(0, t.clientY - y0);
@@ -5770,8 +5774,16 @@ function renderDock() {
   });
   return h + '</nav>';
 }
+/* The collector's pages stay light for now, whatever the phone's setting. */
+var _themeWas;
+function colLight(on) {
+  var r = document.documentElement, metas = document.querySelectorAll('meta[name="theme-color"]');
+  if (on && _themeWas === undefined) { _themeWas = r.getAttribute('data-theme'); r.setAttribute('data-theme', 'light'); [].forEach.call(metas, function(m) { m.setAttribute('content', '#F1F5F4'); }); }
+  else if (!on && _themeWas !== undefined) { if (_themeWas) r.setAttribute('data-theme', _themeWas); else r.removeAttribute('data-theme'); _themeWas = undefined; [].forEach.call(metas, function(m) { m.setAttribute('content', m.getAttribute('media') && m.getAttribute('media').indexOf('dark') >= 0 ? '#0F1513' : '#F1F5F4'); }); }
+}
 function renderApp() {
   if (!S.building) return renderFatal();
+  colLight(colUI());
   var body = '';
   if (colUI() && !UI.colStarted) { UI.colStarted = true; UI.tab = 'collect'; }
   if (colUI() && UI.tab !== 'home' && UI.tab !== 'collect') UI.tab = 'collect';

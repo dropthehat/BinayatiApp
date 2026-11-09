@@ -830,23 +830,7 @@ html.standalone #app { position: relative; }
 .ptr { position: fixed; top: 0; left: 0; right: 0; z-index: 70; height: calc(env(safe-area-inset-top) + var(--pull, 0px)); visibility: hidden; pointer-events: none; transition: height .3s cubic-bezier(.2,.9,.3,1); }
 .ptr.on { visibility: visible; }
 .ptr.drag { transition: none; }
-.ptr-pill { position: absolute; left: 50%; bottom: 9px; width: 44px; height: 44px; margin-left: -22px; border-radius: 50%; background: var(--card); border: 1px solid var(--line); display: grid; place-items: center; transform: scale(calc(.55 + .45 * var(--pr, 0))); opacity: calc(var(--pr, 0) * 1.5); }
-.ptr-pill svg { position: absolute; inset: -1px; width: 44px; height: 44px; transform: rotate(calc(-90deg + var(--pr, 0) * 140deg)); }
-.ptr-pill circle { fill: none; stroke-width: 3; }
-.ptr-pill .trk { stroke: var(--line); }
-.ptr-pill .arc { stroke: var(--acc); stroke-linecap: round; }
-.ptr-pill b { font-weight: 600; font-size: 18px; line-height: 1; color: var(--acc); }
-.ptr-pill i { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 50%; background: var(--ok); color: #fff; font-style: normal; font-weight: 700; opacity: 0; scale: .4; transition: opacity .2s, scale .25s cubic-bezier(.3,1.6,.5,1); }
-.ptr.ready .arc { stroke: var(--ok); }
-.ptr.ready .ptr-pill { animation: ptrpop .35s ease-out; }
-.ptr.go .arc { stroke-dasharray: 30 70 !important; }
-.ptr.go svg { animation: ptrspin .85s linear infinite; }
-.ptr.go b { animation: ptrbob .85s ease-in-out infinite; }
-.ptr.done i { opacity: 1; scale: 1; }
-.ptr.done svg, .ptr.done b { opacity: 0; }
-@keyframes ptrspin { to { rotate: 360deg; } }
 @keyframes ptrpop { 50% { scale: 1.22; } }
-@keyframes ptrbob { 50% { scale: 1.18; } }
 .colpg.fadein { animation: ntfade .28s ease-out; }
 @keyframes ntfade { from { opacity: 0; } }
 #app.refreshed .sec { animation: ntrefresh .32s ease-out; }
@@ -935,6 +919,25 @@ html.standalone #app { position: relative; }
 .hero-multi::after { height: 56px; }
 .hero-multi { gap: 0; } .hero-multi .hm-blk + .hm-blk { margin-inline-start: 0; }
 .hero-multi .hm-blk + .hm-blk { margin-inline-start: -1px; }
+
+.ptr.hide { opacity: 0; transition: none; }
+.ptr-door { position: absolute; left: 50%; bottom: 8px; width: 40px; height: 48px; margin-left: -20px; box-sizing: border-box; border: 2px solid #98A29E; border-bottom-width: 0; border-radius: 8px 8px 0 0; background: #FFE08A; overflow: hidden; transform-origin: 50% 100%; transform: scale(calc(.6 + .4 * var(--pr, 0))); opacity: calc(var(--pr, 0) * 1.6); }
+.ptr-door i { position: absolute; top: 0; bottom: 0; width: 50%; background: linear-gradient(90deg, #BCC5C1, #E8EDEA 45%, #AEB8B3); }
+.ptr-door i:nth-child(1) { left: 0; transform: translateX(calc(var(--pr, 0) * -8px)); }
+.ptr-door i:nth-child(2) { right: 0; transform: translateX(calc(var(--pr, 0) * 8px)); }
+.ptr.ready .ptr-door { border-color: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 35%, transparent); animation: ptrpop .35s ease-out; }
+/* The full-screen elevator doors. */
+.elv { position: fixed; inset: 0; z-index: 400; overflow: hidden; touch-action: none; }
+.elv-d { position: absolute; top: 0; bottom: 0; width: 50.3%; transition: transform .46s cubic-bezier(.65, 0, .25, 1);
+  background: repeating-linear-gradient(0deg, rgba(255,255,255,.10) 0 1px, transparent 1px 3px), linear-gradient(90deg, #A9B2AE, #DCE2DF 16%, #F2F5F3 30%, #C4CCC8 54%, #E3E8E5 80%, #AEB7B3); box-shadow: inset 0 0 46px rgba(0,0,0,.2); }
+.elv-l { left: 0; transform: translateX(-101%); border-right: 1px solid rgba(0,0,0,.35); }
+.elv-r { right: 0; transform: translateX(101%); border-left: 1px solid rgba(0,0,0,.35); }
+.elv.closed .elv-d { transform: none; }
+.elv-disp { position: absolute; z-index: 2; top: calc(env(safe-area-inset-top) + 22px); left: 50%; transform: translateX(-50%); min-width: 92px; padding: 9px 18px; border-radius: 12px; background: #101312; box-shadow: 0 0 0 3px #2B302E, inset 0 0 12px #000; color: #FF9A3C; font: 700 30px/1 ui-monospace, Menlo, monospace; letter-spacing: .08em; text-align: center; text-shadow: 0 0 10px rgba(255,154,60,.7); display: flex; gap: 10px; justify-content: center; align-items: center; opacity: 0; transition: opacity .15s; }
+.elv-disp span { font-size: 20px; }
+.elv.closed .elv-disp { opacity: 1; transition: opacity .2s .35s; }
+.elv.ding .elv-disp { color: #5BE3A0; text-shadow: 0 0 12px rgba(91,227,160,.9); animation: elvding .3s ease-out; }
+@keyframes elvding { 50% { filter: brightness(2); } }
 
 /* ---- living building scene ---- */
 .bh { position: relative; margin: 0 16px 12px; border-radius: 26px; overflow: hidden; aspect-ratio: 366 / 256; box-shadow: var(--shadow-lg); background: var(--sky2); }
@@ -5619,18 +5622,15 @@ function softRefresh() {
   return cloudLoadBuilding(S.building.id).then(function() { APP.classList.add('refreshed'); render(); return UI.cb ? loadColBooks() : null; }).then(clear, function(e) { clear(); throw e; });
 }
 /* Pull down to refresh, for the app saved to the home screen (it has no browser refresh).
-   The page follows the finger down and a ring fills in the gap; past the mark it turns green, release spins it. */
+   The page follows the finger and a little elevator door opens in the gap. Release: the doors close over the
+   whole screen, the page reloads behind them, a floor counter climbs, and the doors open on the fresh data. */
 (function() {
   var standalone = window.navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
   if (!standalone) return;
   document.documentElement.classList.add('standalone');
-  var TH = 58, MAXP = 96, x0 = null, y0 = null, dy = 0, pulling = false, busy = false, ready = false, raf = 0, el = null, arc = null;
+  var TH = 58, MAXP = 96, x0 = null, y0 = null, dy = 0, pulling = false, busy = false, ready = false, raf = 0, el = null, elv = null, floor = 1, ticker = 0;
   function ind() {
-    if (!el) {
-      el = document.createElement('div'); el.className = 'ptr';
-      el.innerHTML = '<div class="ptr-pill"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="trk" cx="22" cy="22" r="18"/><circle class="arc" cx="22" cy="22" r="18" pathLength="100"/></svg><b>ن</b><i>✓</i></div>';
-      document.body.appendChild(el); arc = el.querySelector('.arc');
-    }
+    if (!el) { el = document.createElement('div'); el.className = 'ptr'; el.innerHTML = '<div class="ptr-door"><i></i><i></i></div>'; document.body.appendChild(el); }
     return el;
   }
   function paint() {
@@ -5638,29 +5638,40 @@ function softRefresh() {
     var pull = MAXP * (1 - Math.exp(-dy / 110)), pr = Math.min(pull / TH, 1), e = ind();
     e.style.setProperty('--pull', pull.toFixed(1) + 'px'); e.style.setProperty('--pr', pr.toFixed(3));
     APP.style.top = pull.toFixed(1) + 'px';
-    arc.style.strokeDasharray = (pr * 100).toFixed(1) + ' 100';
     if ((pr >= 1) !== ready) { ready = pr >= 1; e.classList.toggle('ready', ready); if (ready && navigator.vibrate) { try { navigator.vibrate(8); } catch (x) {} } }
   }
   function collapse() {
     var e = ind(); e.classList.remove('drag'); e.style.setProperty('--pull', '0px');
     APP.style.transition = 'top .3s cubic-bezier(.2,.9,.3,1)'; APP.style.top = '0px';
-    setTimeout(function() { e.classList.remove('on', 'ready', 'go', 'done'); e.style.setProperty('--pr', '0'); APP.style.transition = ''; APP.style.top = ''; busy = false; ready = false; }, 320);
+    setTimeout(function() { e.classList.remove('on', 'ready', 'hide'); e.style.setProperty('--pr', '0'); APP.style.transition = ''; APP.style.top = ''; busy = false; ready = false; }, 320);
+  }
+  /* The doors: two steel panels and a floor display. */
+  function makeElv(closed) {
+    var d = document.createElement('div'); d.className = 'elv' + (closed ? ' closed' : '');
+    d.innerHTML = '<div class="elv-d elv-l"></div><div class="elv-d elv-r"></div><div class="elv-disp"><span>▲</span><b></b></div>';
+    document.body.appendChild(d);
+    var b = d.querySelector('b'); b.textContent = floor;
+    clearInterval(ticker); ticker = setInterval(function() { if (floor < 30) floor++; b.textContent = floor; }, 380);
+    return d;
+  }
+  function openElv() {
+    var d = elv; if (!d) return;
+    clearInterval(ticker); d.classList.add('ding');
+    setTimeout(function() { d.classList.remove('closed'); setTimeout(function() { if (d.parentNode) d.remove(); elv = null; busy = false; }, 700); }, 300);
   }
   function go() {
-    // A full reload, like Safari's: the ring keeps spinning here, and again on the new page until the data is in.
-    var e = ind(); busy = true;
-    e.classList.add('go'); e.style.setProperty('--pull', '62px'); e.style.setProperty('--pr', '1');
-    APP.style.transition = 'top .25s cubic-bezier(.2,.9,.3,1)'; APP.style.top = '62px';
+    busy = true; ind().classList.add('hide');
+    elv = makeElv(false); void elv.offsetWidth; elv.classList.add('closed');
     savePlace(true);
-    try { sessionStorage.setItem('nt_ptr', '1'); } catch (x) {}
-    setTimeout(function() { location.reload(); }, 220);
+    setTimeout(function() { APP.style.transition = 'none'; APP.style.top = '0px'; }, 460);
+    setTimeout(function() { try { sessionStorage.setItem('nt_ptr', String(floor)); } catch (x) {} location.reload(); }, 560);
   }
-  var resume = false;
-  try { resume = sessionStorage.getItem('nt_ptr') === '1'; sessionStorage.removeItem('nt_ptr'); } catch (x) {}
+  var resume = null;
+  try { resume = sessionStorage.getItem('nt_ptr'); sessionStorage.removeItem('nt_ptr'); } catch (x) {}
   if (resume) {
-    var e0 = ind(), fin = false; busy = true;
-    e0.classList.add('on', 'go'); e0.style.setProperty('--pull', '62px'); e0.style.setProperty('--pr', '1'); APP.style.top = '62px';
-    window.PTR_RESUME = function() { if (fin) return; fin = true; e0.classList.add('done'); setTimeout(collapse, 280); };
+    floor = parseInt(resume, 10) || 1; busy = true; elv = makeElv(true);
+    var fin = false;
+    window.PTR_RESUME = function() { if (fin) return; fin = true; openElv(); };
     setTimeout(function() { window.PTR_RESUME(); }, 10000);
   }
   document.addEventListener('touchstart', function(e) {

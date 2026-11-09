@@ -772,6 +772,9 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .pcard .crow.tap:active { background: var(--soft); }
 .pcard.open .crow.tap { background: color-mix(in srgb, var(--soft) 60%, transparent); }
 .chips.wrapc { flex-wrap: wrap; overflow: visible; }
+.csticky:empty { display: none; }
+.colpg .csticky .chip { min-height: 32px; padding: 0 11px; font-size: 13px; }
+.colpg .csticky .chips { gap: 6px; }
 .csticky { position: sticky; top: env(safe-area-inset-top); z-index: 6; background: var(--bg); padding: 6px 0 8px; margin-top: 4px; box-shadow: 0 10px 12px -12px rgba(0,0,0,.5); }
 .clist { min-height: 100vh; }
 .clist.slide-l { animation: slideL .22s ease-out; }
@@ -10033,10 +10036,10 @@ function renderColCollectIn() {
   if (!people) return h + colBillView();
   var tot = colBookTotals();
   h += '<div class="sec" style="margin-top:10px"><div class="row between"><span class="muted" style="font-weight:600">' + esc(t('Still to collect', 'باقي للتحصيل')) + '</span>' + colTotal(tot.left) + '</div></div>';
-  h += '<div id="cstick-a"></div><div class="csticky" id="cstick"><div class="sec" style="margin-top:0"><input class="input" type="search" placeholder="' + esc(t('Find a name or apartment…', 'ابحث عن اسم أو شقة…')) + '" value="' + esc(UI.cQ || '') + '" oninput="colFilter(this.value)"></div>';
+  h += '<div class="sec" style="margin-top:10px"><input class="input" type="search" placeholder="' + esc(t('Find a name or apartment…', 'ابحث عن اسم أو شقة…')) + '" value="' + esc(UI.cQ || '') + '" oninput="colFilter(this.value)"></div><div id="cstick-a"></div><div class="csticky" id="cstick">';
   var bl = blocks(), blk = bl.length > 1 && bl.indexOf(UI.cBlk) >= 0 ? UI.cBlk : null;
   if (bl.length > 1) {
-    h += '<div class="chips wrapc" style="margin-top:8px"><button class="chip' + (!blk ? ' on' : '') + '" onclick="colGoBlock(null)">' + esc(t('All', 'الكل')) + '</button>';
+    h += '<div class="chips wrapc"><button class="chip' + (!blk ? ' on' : '') + '" onclick="colGoBlock(null)">' + esc(t('All', 'الكل')) + '</button>';
     bl.forEach(function(b) {
       var n = activeUnits().filter(function(u) { return blockOf(u) === b && colCells(u).some(function(k) { return k.x.left > 0; }); }).length;
       h += '<button class="chip' + (blk === b ? ' on' : '') + '" onclick="colGoBlock(' + jsArg(b) + ')">' + esc(blockLabel(b)) + (n ? ' <span class="cnt">' + n + '</span>' : ' ✓') + '</button>';
@@ -10050,7 +10053,7 @@ function renderColCollectIn() {
     var rows = activeUnits().filter(function(u) { return !b || blockOf(u) === b; }).map(colRow).filter(Boolean);
     if (!rows.length) return;
     shown += rows.length;
-    h += '<div class="sec pgroup" style="margin-top:12px">' + (b && !blk ? '<div class="pgroup-h">' + esc(blockLabel(b)) + '</div>' : '') + '<div class="cstack">' + rows.join('') + '</div></div>';
+    h += '<div class="sec pgroup" style="margin-top:12px">' + (b ? '<div class="pgroup-h">' + esc(blockLabel(b)) + '</div>' : '') + '<div class="cstack">' + rows.join('') + '</div></div>';
   });
   if (!shown) h += '<div class="sec"><div class="card empty">' + esc(t('Everyone has paid ✓', 'الجميع سدّد ✓')) + '</div></div>';
   h += '</div>';

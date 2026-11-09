@@ -874,6 +874,13 @@ html.standalone #app { position: relative; }
 .colpg .bsec-h b { font-size: 15px; font-weight: 600; }
 .colpg .bsec-h .camt b { color: var(--ink); font-weight: 500; font-size: 14px; } .colpg .bsec-h .camt small { color: var(--mut); }
 .colpg .bsec > .brow:first-child { border-top: 0; }
+/* Block headers: solid accent bar that sticks under the chips while its block scrolls, so you always know which block you are in */
+.colpg .bsec { overflow: clip; }
+.colpg .bsec-h { position: sticky; top: calc(env(safe-area-inset-top) + var(--stk, 52px)); z-index: 5; padding: 11px 14px; background: color-mix(in srgb, var(--acc) 88%, #000); color: #fff; border-bottom: 0; border-left: 6px solid color-mix(in srgb, var(--acc) 55%, #fff); box-shadow: 0 6px 12px -6px rgba(0,0,0,.45); }
+.colpg .bsec-h b { font-size: 17px; font-weight: 700; letter-spacing: .01em; color: #fff; }
+.colpg .bsec-h .camt b { color: #fff; font-weight: 700; font-size: 16px; } .colpg .bsec-h .camt small { color: rgba(255,255,255,.8); }
+.colpg .bsec-h > span { color: #fff; font-weight: 700; }
+.colpg .bsec + .bsec { margin-top: 22px; }
 .colpg .brow { min-height: 64px; }
 .colpg .brow .grow b { font-weight: 500; }
 .colpg .bamt .camt b { font-weight: 600; }
@@ -10036,6 +10043,7 @@ function colBillView() {
     });
     h += '</div>';
   });
+  setTimeout(function() { var e = document.getElementById('cstick'); if (e) document.documentElement.style.setProperty('--stk', Math.max(0, e.offsetHeight - 2) + 'px'); }, 0);
   if (allPaid.length) h += '<div class="sec"><p class="muted" style="margin:4px 4px 0">✓ ' + esc(t('Everyone paid in ', 'الجميع دفع في ') + allPaid.join(', ')) + '</p></div>';
   return h + '</div>';
 }

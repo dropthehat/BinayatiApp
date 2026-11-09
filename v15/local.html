@@ -5587,7 +5587,7 @@ var ICONS = {
 
 /* Where the person is (screen, building, tab, section, bill), kept for this browser tab so
    a refresh lands on the same page. sessionStorage: a fresh link still opens normally. */
-var PLACE_KEYS = ['tab', 'bsec', 'cycleId', 'block', 'booksView', 'booksCycle', 'billFilter', 'filter'];
+var PLACE_KEYS = ['tab', 'bsec', 'cycleId', 'block', 'booksView', 'booksCycle', 'billFilter', 'filter', 'cFam', 'cBill', 'cBlk'];
 function savePlace(withScroll) {
   try {
     if (UI.pvCol || window.NATOUR_PREVIEW) return;
@@ -5601,7 +5601,7 @@ function savePlace(withScroll) {
   } catch (e) {}
 }
 function readPlace() { try { return JSON.parse(sessionStorage.getItem('nt_place') || 'null'); } catch (e) { return null; } }
-function applyPlace(pl) { PLACE_KEYS.forEach(function(k) { if (pl.ui && k in pl.ui) UI[k] = pl.ui[k]; }); }
+function applyPlace(pl) { PLACE_KEYS.forEach(function(k) { if (pl.ui && k in pl.ui) UI[k] = pl.ui[k]; }); if (pl.ui && pl.ui.tab) UI.colStarted = true; }
 function restoreScroll(pl) { if (pl && pl.y > 0) setTimeout(function() { window.scrollTo(0, pl.y); }, 60); }
 window.addEventListener('pagehide', function() { savePlace(true); });
 /* Refresh the data in place (no page reload): the open building, and the collector's books if they are loaded. */

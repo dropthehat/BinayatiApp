@@ -9837,8 +9837,9 @@ function colReceiptText(u, lang, cycId) {
 }
 /* One WhatsApp message with the apartment's whole status: what it paid lately, what is still
    to pay, the total left, who to hand it to, and the link. */
-function colStatusText(u, lang) {
-  var all = colCells(u).filter(function(k) { return k.x.due > 0; });
+function colStatusText(u, lang, only) {
+  // `only`: a bill (cycle) id. Sent from a bill tab, the message covers just that bill.
+  var all = colCells(u).filter(function(k) { return k.x.due > 0 && (!only || k.c.id === only); });
   var owed = all.filter(function(k) { return k.x.left > 0; });
   var paid = all.filter(function(k) { return k.x.state === 'paid'; }), latest = '', newest = {};
   paid.forEach(function(k) { k.x.payments.forEach(function(p) { var d = String(p.received_at || '').slice(0, 10); if (d > latest) latest = d; }); });
@@ -9847,7 +9848,7 @@ function colStatusText(u, lang) {
     if (!newest[fam] || key > newest[fam].key) newest[fam] = { key: key, id: k.c.id };
   });
   var keep = {}; Object.keys(newest).forEach(function(f) { keep[newest[f].id] = 1; });
-  paid = paid.filter(function(k) { return keep[k.c.id] || k.x.payments.some(function(p) { return String(p.received_at || '').slice(0, 10) === latest; }); });
+  if (!only) paid = paid.filter(function(k) { return keep[k.c.id] || k.x.payments.some(function(p) { return String(p.received_at || '').slice(0, 10) === latest; }); });
   var left = pair(); owed.forEach(function(k) { addTo(left, k.ch.cur, k.x.left); });
   function one(lg) {
     var T = function(en, ar) { return lg === 'ar' ? ar : en; };
@@ -10037,7 +10038,7 @@ function colBillView() {
       var firstCh = chargesOf(c.id).filter(function(ch) { return cell(ch, u).due > 0; })[0];
       h += '<div class="brow' + (paid ? ' paid' : '') + '"><button class="bchk' + (paid ? ' on' : '') + (pend ? ' pend' : '') + (paid && UI.cJust === u.id + '|' + c.id ? ' just' : '') + '" aria-pressed="' + paid + '" aria-label="' + esc(t('Paid', 'دفع')) + '" onclick="' + (paid ? 'openSheet(\'cell\',{ch:' + jsArg(firstCh.id) + ',u:' + jsArg(u.id) + '})' : 'colTickBill(' + jsArg(u.id) + ',' + jsArg(c.id) + ')') + '">' + (paid ? PEN_TICK : '') + '</button>';
       h += '<div class="grow"><b>' + esc(unitName(u) || unitTag(u)) + '</b><small>' + esc(unitTag(u)) + '</small></div><span class="bamt">' + colTotal(paid ? x.due : x.left) + '</span>';
-      if (u.phone) h += '<button class="bico wa" aria-label="' + esc(t('WhatsApp status', 'الوضع على واتساب')) + '" onclick="openSheet(\'remind\',{status:true,u:' + jsArg(u.id) + '})">' + WA_ICON + '</button>';
+      if (u.phone) h += '<button class="bico wa" aria-label="' + esc(t('WhatsApp status', 'الوضع على واتساب')) + '" onclick="openSheet(\'remind\',{status:true,only:' + jsArg(c.id) + ',u:' + jsArg(u.id) + '})">' + WA_ICON + '</button>';
       else h += '<span class="bico none"></span>';
       h += '</div>';
     });
@@ -10449,10 +10450,10 @@ SHEETS.remind = function(d) {
   if (!u || !cyc) return '';
   if (!d.tone) d.tone = suggestTone(u, cyc);
   if (!d.len) d.len = 'long';
-  if (d.text == null) d.text = d.status ? colStatusText(u) : d.receipt ? colReceiptText(u, null, d.one ? d.cyc : null) : d.bill ? colBillText(u) : d.len === 'long' ? waText(u, cyc) : waTextShort(u, cyc);
+  if (d.text == null) d.text = d.status ? colStatusText(u, null, d.only) : d.receipt ? colReceiptText(u, null, d.one ? d.cyc : null) : d.bill ? colBillText(u) : d.len === 'long' ? waText(u, cyc) : waTextShort(u, cyc);
   var h = '<h3>' + esc(t('Message to ', 'رسالة إلى ') + unitTag(u) + (unitName(u) ? ' · ' + unitName(u) : '')) + '</h3>';
   var hist = unitHistory(u, cyc);
-  if (!d.receipt && !d.bill) h += '<p class="lead">' + esc(hist.checked ? t((hist.checked === 1 ? 'Last month' : 'Last ' + hist.checked + ' months') + ': paid ' + hist.paid + ', still open ' + hist.behind + '.', (hist.checked === 1 ? 'الشهر الماضي' : 'آخر ' + hist.checked + ' أشهر') + ': سدد ' + hist.paid + '، متأخر ' + hist.behind + '.') : t('No earlier months yet.', 'لا أشهر سابقة بعد.')) + '</p>';
+  if (!d.receipt && !d.bill && !d.only) h += '<p class="lead">' + esc(hist.checked ? t((hist.checked === 1 ? 'Last month' : 'Last ' + hist.checked + ' months') + ': paid ' + hist.paid + ', still open ' + hist.behind + '.', (hist.checked === 1 ? 'الشهر الماضي' : 'آخر ' + hist.checked + ' أشهر') + ': سدد ' + hist.paid + '، متأخر ' + hist.behind + '.') : t('No earlier months yet.', 'لا أشهر سابقة بعد.')) + '</p>';
   // Collectors send the plain detailed bill. The manager can step in with a written message,
   // offered straight away when the apartment is behind (a running due).
   var behind = hist.behind > 0 || pairUsd(unitBalance(u, cyc).arrears) > 0.005;

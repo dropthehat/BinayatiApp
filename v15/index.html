@@ -9838,8 +9838,11 @@ function colReceiptText(u, lang, cycId) {
 /* One WhatsApp message with the apartment's whole status: what it paid lately, what is still
    to pay, the total left, who to hand it to, and the link. */
 function colStatusText(u, lang, only) {
-  // `only`: a bill (cycle) id. Sent from a bill tab, the message covers just that bill.
+  // `only`: a bill (cycle) id, sent from a bill tab. That bill is the topic of the message (paid or still to pay);
+  // other bills of the same category (Water / EDL) are mentioned only if they are still open. Other categories are left out.
+  var oc = only ? byId(S.cycles, only) : null, ofam = oc ? colFamOf(oc) : null, extra = [];
   var all = colCells(u).filter(function(k) { return k.x.due > 0 && (!only || k.c.id === only); });
+  if (only) extra = colCells(u).filter(function(k) { return k.c.id !== only && k.x.left > 0 && colFamOf(k.c) === ofam; });
   var owed = all.filter(function(k) { return k.x.left > 0; });
   var paid = all.filter(function(k) { return k.x.state === 'paid'; }), latest = '', newest = {};
   paid.forEach(function(k) { k.x.payments.forEach(function(p) { var d = String(p.received_at || '').slice(0, 10); if (d > latest) latest = d; }); });
@@ -9849,14 +9852,15 @@ function colStatusText(u, lang, only) {
   });
   var keep = {}; Object.keys(newest).forEach(function(f) { keep[newest[f].id] = 1; });
   if (!only) paid = paid.filter(function(k) { return keep[k.c.id] || k.x.payments.some(function(p) { return String(p.received_at || '').slice(0, 10) === latest; }); });
-  var left = pair(); owed.forEach(function(k) { addTo(left, k.ch.cur, k.x.left); });
+  var left = pair(); owed.concat(extra).forEach(function(k) { addTo(left, k.ch.cur, k.x.left); });
   function one(lg) {
     var T = function(en, ar) { return lg === 'ar' ? ar : en; };
     var name = lg === 'ar' ? (u.name_ar || u.name) : u.name;
     var s = '🏢 *' + colHomeName(u, lg) + '*\n\n' + T('Hello ', 'مرحباً ') + (name ? '*' + name + '* ' : '') + '(' + unitTag(u) + ') 👋';
     if (paid.length) s += '\n\n✅ *' + T('Paid', 'مدفوع') + '*\n' + paid.map(function(k) { return '• ' + k.title + ': ' + colPlain(k.x.due, k.ch.cur); }).join('\n');
-    if (owed.length) {
-      s += '\n\n⏳ *' + T('Still to pay', 'المتبقي') + '*\n' + owed.map(function(k) { return '• ' + k.title + ': ' + colPlain(k.x.left, k.ch.cur); }).join('\n');
+    if (owed.length) s += '\n\n⏳ *' + T('Still to pay', 'المتبقي') + '*\n' + owed.map(function(k) { return '• ' + k.title + ': ' + colPlain(k.x.left, k.ch.cur); }).join('\n');
+    if (extra.length) s += '\n\n' + (owed.length ? '⏳ *' + T('Also still open', 'وأيضاً غير مسدّد') : '📌 *' + T('Still open in the same category', 'ما زال مفتوحاً من نفس الفئة')) + '*\n' + extra.map(function(k) { return '• ' + k.title + ': ' + colPlain(k.x.left, k.ch.cur); }).join('\n');
+    if (owed.length || extra.length) {
       s += '\n\n*' + T('Total left: ', 'المجموع المتبقي: ') + colPlainPair(left) + '*\n' + T('You can hand it to ', 'يمكنك تسليمه إلى ') + payToName(lg) + '.';
     } else s += '\n\n🎉 *' + T('Nothing left to pay. Thank you!', 'لا شيء متبقٍ. شكراً!') + '*';
     if (u.resident_token) s += '\n\n' + T('Your bill and receipts:', 'فاتورتك وإيصالاتك:') + '\n' + residentLink(u);

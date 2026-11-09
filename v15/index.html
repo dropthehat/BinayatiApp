@@ -5647,13 +5647,21 @@ function softRefresh() {
     setTimeout(function() { e.classList.remove('on', 'ready', 'go', 'done'); e.style.setProperty('--pr', '0'); APP.style.transition = ''; APP.style.top = ''; busy = false; ready = false; }, 320);
   }
   function go() {
-    var e = ind(), t0 = Date.now(); busy = true;
+    // A full reload, like Safari's: the ring keeps spinning here, and again on the new page until the data is in.
+    var e = ind(); busy = true;
     e.classList.add('go'); e.style.setProperty('--pull', '62px'); e.style.setProperty('--pr', '1');
     APP.style.transition = 'top .25s cubic-bezier(.2,.9,.3,1)'; APP.style.top = '62px';
     savePlace(true);
-    softRefresh().then(function() {
-      e.classList.add('done'); setTimeout(collapse, 280);
-    }, function() { setTimeout(function() { location.reload(); }, 150); });
+    try { sessionStorage.setItem('nt_ptr', '1'); } catch (x) {}
+    setTimeout(function() { location.reload(); }, 220);
+  }
+  var resume = false;
+  try { resume = sessionStorage.getItem('nt_ptr') === '1'; sessionStorage.removeItem('nt_ptr'); } catch (x) {}
+  if (resume) {
+    var e0 = ind(), fin = false; busy = true;
+    e0.classList.add('on', 'go'); e0.style.setProperty('--pull', '62px'); e0.style.setProperty('--pr', '1'); APP.style.top = '62px';
+    window.PTR_RESUME = function() { if (fin) return; fin = true; e0.classList.add('done'); setTimeout(collapse, 280); };
+    setTimeout(function() { window.PTR_RESUME(); }, 10000);
   }
   document.addEventListener('touchstart', function(e) {
     var t = e.touches[0];
@@ -5681,6 +5689,7 @@ function softRefresh() {
 })();
 document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'hidden') savePlace(true); });
 function render() {
+  if (window.PTR_RESUME && UI.screen && UI.screen !== 'splash' && !UI.stale) window.PTR_RESUME();
   setTimeout(savePlace, 0);
   document.documentElement.lang = LANG;
   document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';

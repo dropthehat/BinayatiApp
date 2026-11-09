@@ -827,7 +827,7 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .bill-card.done { opacity: .8; }
 html.standalone { overscroll-behavior-y: none; }
 html.standalone #app { position: relative; }
-.ptr { position: fixed; top: 0; left: 0; right: 0; z-index: 70; height: calc(env(safe-area-inset-top) + var(--pull, 0px)); visibility: hidden; pointer-events: none; transition: height .3s cubic-bezier(.2,.9,.3,1); }
+.ptr { position: fixed; top: env(safe-area-inset-top); left: 0; right: 0; z-index: 70; height: var(--pull, 0px); overflow: hidden; visibility: hidden; pointer-events: none; border-bottom: 2px solid #8E9894; box-shadow: 0 8px 16px rgba(0,0,0,.16); transition: height .3s cubic-bezier(.2,.9,.3,1), border-color .2s; }
 .ptr.on { visibility: visible; }
 .ptr.drag { transition: none; }
 @keyframes ptrpop { 50% { scale: 1.22; } }
@@ -919,24 +919,20 @@ html.standalone #app { position: relative; }
 .hero-multi::after { height: 56px; }
 .hero-multi { gap: 0; } .hero-multi .hm-blk + .hm-blk { margin-inline-start: 0; }
 .hero-multi .hm-blk + .hm-blk { margin-inline-start: -1px; }
-
-.ptr.hide { opacity: 0; transition: none; }
-.ptr-door { position: absolute; left: 50%; bottom: 8px; width: 40px; height: 48px; margin-left: -20px; box-sizing: border-box; border: 2px solid #98A29E; border-bottom-width: 0; border-radius: 8px 8px 0 0; background: #FFE08A; overflow: hidden; transform-origin: 50% 100%; transform: scale(calc(.6 + .4 * var(--pr, 0))); opacity: calc(var(--pr, 0) * 1.6); }
-.ptr-door i { position: absolute; top: 0; bottom: 0; width: 50%; background: linear-gradient(90deg, #BCC5C1, #E8EDEA 45%, #AEB8B3); }
-.ptr-door i:nth-child(1) { left: 0; transform: translateX(calc(var(--pr, 0) * -8px)); }
-.ptr-door i:nth-child(2) { right: 0; transform: translateX(calc(var(--pr, 0) * 8px)); }
-.ptr.ready .ptr-door { border-color: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 35%, transparent); animation: ptrpop .35s ease-out; }
-/* The full-screen elevator doors. */
-.elv { position: fixed; inset: 0; z-index: 400; overflow: hidden; touch-action: none; }
-.elv-d { position: absolute; top: 0; bottom: 0; width: 50.3%; transition: transform .46s cubic-bezier(.65, 0, .25, 1);
-  background: repeating-linear-gradient(0deg, rgba(255,255,255,.10) 0 1px, transparent 1px 3px), linear-gradient(90deg, #A9B2AE, #DCE2DF 16%, #F2F5F3 30%, #C4CCC8 54%, #E3E8E5 80%, #AEB7B3); box-shadow: inset 0 0 46px rgba(0,0,0,.2); }
-.elv-l { left: 0; transform: translateX(-101%); border-right: 1px solid rgba(0,0,0,.35); }
-.elv-r { right: 0; transform: translateX(101%); border-left: 1px solid rgba(0,0,0,.35); }
-.elv.closed .elv-d { transform: none; }
-.elv-disp { position: absolute; z-index: 2; top: calc(env(safe-area-inset-top) + 22px); left: 50%; transform: translateX(-50%); min-width: 92px; padding: 9px 18px; border-radius: 12px; background: #101312; box-shadow: 0 0 0 3px #2B302E, inset 0 0 12px #000; color: #FF9A3C; font: 700 30px/1 ui-monospace, Menlo, monospace; letter-spacing: .08em; text-align: center; text-shadow: 0 0 10px rgba(255,154,60,.7); display: flex; gap: 10px; justify-content: center; align-items: center; opacity: 0; transition: opacity .15s; }
-.elv-disp span { font-size: 20px; }
-.elv.closed .elv-disp { opacity: 1; transition: opacity .2s .35s; }
-.elv.ding .elv-disp { color: #5BE3A0; text-shadow: 0 0 12px rgba(91,227,160,.9); animation: elvding .3s ease-out; }
+/* The elevator in the gap: the cabin inside, and two steel doors that part as you pull. */
+.ptr-in { position: absolute; inset: 0; background: linear-gradient(180deg, #FFF4D2 0 16%, #E6CB9B 16% 84%, #85735C 84% 100%); }
+.ptr-in::before { content: ""; position: absolute; left: 6%; right: 6%; top: 52%; height: 5px; border-radius: 3px; background: linear-gradient(180deg, #F1F4F2, #A4ADA9); box-shadow: 0 3px 4px rgba(0,0,0,.25); }
+.ptr-in::after { content: ""; position: absolute; left: 50%; top: 16%; bottom: 16%; width: 1px; background: rgba(0,0,0,.12); }
+.ptr-d { position: absolute; top: 0; bottom: 0; width: 50.3%; background: repeating-linear-gradient(0deg, rgba(255,255,255,.10) 0 1px, transparent 1px 3px), linear-gradient(90deg, #A9B2AE, #DCE2DF 16%, #F2F5F3 30%, #C4CCC8 54%, #E3E8E5 80%, #AEB7B3); box-shadow: inset 0 0 26px rgba(0,0,0,.2); transition: transform .45s cubic-bezier(.65, 0, .25, 1); }
+.ptr-d.l { left: 0; transform: translateX(calc(var(--door, 0) * -101%)); border-right: 1px solid rgba(0,0,0,.35); }
+.ptr-d.r { right: 0; transform: translateX(calc(var(--door, 0) * 101%)); border-left: 1px solid rgba(0,0,0,.35); }
+.ptr.drag .ptr-d { transition: none; }
+.ptr-disp { position: absolute; z-index: 3; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; gap: 8px; align-items: center; padding: 5px 14px; border-radius: 9px; background: #101312; box-shadow: 0 0 0 2px #2B302E, inset 0 0 8px #000; color: #FF9A3C; font: 700 22px/1 ui-monospace, Menlo, monospace; letter-spacing: .06em; text-shadow: 0 0 8px rgba(255,154,60,.7); opacity: 0; transition: opacity .15s; }
+.ptr-disp span { font-size: 15px; }
+.ptr.go .ptr-disp { opacity: 1; }
+.ptr.ding .ptr-disp { color: #5BE3A0; text-shadow: 0 0 10px rgba(91,227,160,.9); animation: elvding .3s ease-out; }
+.ptr.ding.go .ptr-disp { opacity: 0; transition-delay: .2s; }
+.ptr.ready { border-bottom-color: var(--ok); }
 @keyframes elvding { 50% { filter: brightness(2); } }
 
 /* ---- living building scene ---- */
@@ -5622,57 +5618,44 @@ function softRefresh() {
   return cloudLoadBuilding(S.building.id).then(function() { APP.classList.add('refreshed'); render(); return UI.cb ? loadColBooks() : null; }).then(clear, function(e) { clear(); throw e; });
 }
 /* Pull down to refresh, for the app saved to the home screen (it has no browser refresh).
-   The page follows the finger and a little elevator door opens in the gap. Release: the doors close over the
-   whole screen, the page reloads behind them, a floor counter climbs, and the doors open on the fresh data. */
+   The page follows the finger and an elevator door opens in the gap, showing the cabin inside. Release: the
+   doors close, a floor counter climbs while the data refreshes in place, then the doors open and the page settles. */
 (function() {
   var standalone = window.navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
   if (!standalone) return;
   document.documentElement.classList.add('standalone');
-  var TH = 58, MAXP = 96, x0 = null, y0 = null, dy = 0, pulling = false, busy = false, ready = false, raf = 0, el = null, elv = null, floor = 1, ticker = 0;
+  var TH = 58, HOLD = 70, MAXP = 96, x0 = null, y0 = null, dy = 0, pulling = false, busy = false, ready = false, raf = 0, el = null, disp = null, floor = 1, ticker = 0;
   function ind() {
-    if (!el) { el = document.createElement('div'); el.className = 'ptr'; el.innerHTML = '<div class="ptr-door"><i></i><i></i></div>'; document.body.appendChild(el); }
+    if (!el) {
+      el = document.createElement('div'); el.className = 'ptr';
+      el.innerHTML = '<div class="ptr-in"></div><i class="ptr-d l"></i><i class="ptr-d r"></i><div class="ptr-disp"><span>▲</span><b>1</b></div>';
+      document.body.appendChild(el); disp = el.querySelector('.ptr-disp b');
+    }
     return el;
   }
   function paint() {
     raf = 0; if (!pulling) return;
     var pull = MAXP * (1 - Math.exp(-dy / 110)), pr = Math.min(pull / TH, 1), e = ind();
-    e.style.setProperty('--pull', pull.toFixed(1) + 'px'); e.style.setProperty('--pr', pr.toFixed(3));
+    e.style.setProperty('--pull', pull.toFixed(1) + 'px'); e.style.setProperty('--door', pr.toFixed(3));
     APP.style.top = pull.toFixed(1) + 'px';
     if ((pr >= 1) !== ready) { ready = pr >= 1; e.classList.toggle('ready', ready); if (ready && navigator.vibrate) { try { navigator.vibrate(8); } catch (x) {} } }
   }
   function collapse() {
-    var e = ind(); e.classList.remove('drag'); e.style.setProperty('--pull', '0px');
+    var e = ind(); clearInterval(ticker); e.classList.remove('drag', 'ready'); e.style.setProperty('--pull', '0px'); e.style.setProperty('--door', '0');
     APP.style.transition = 'top .3s cubic-bezier(.2,.9,.3,1)'; APP.style.top = '0px';
-    setTimeout(function() { e.classList.remove('on', 'ready', 'hide'); e.style.setProperty('--pr', '0'); APP.style.transition = ''; APP.style.top = ''; busy = false; ready = false; }, 320);
+    setTimeout(function() { e.classList.remove('on', 'go', 'ding'); APP.style.transition = ''; APP.style.top = ''; busy = false; ready = false; }, 340);
   }
-  /* The doors: two steel panels and a floor display. */
-  function makeElv(closed) {
-    var d = document.createElement('div'); d.className = 'elv' + (closed ? ' closed' : '');
-    d.innerHTML = '<div class="elv-d elv-l"></div><div class="elv-d elv-r"></div><div class="elv-disp"><span>▲</span><b></b></div>';
-    document.body.appendChild(d);
-    var b = d.querySelector('b'); b.textContent = floor;
-    clearInterval(ticker); ticker = setInterval(function() { if (floor < 30) floor++; b.textContent = floor; }, 380);
-    return d;
-  }
-  function openElv() {
-    var d = elv; if (!d) return;
-    clearInterval(ticker); d.classList.add('ding');
-    setTimeout(function() { d.classList.remove('closed'); setTimeout(function() { if (d.parentNode) d.remove(); elv = null; busy = false; }, 700); }, 300);
+  function arrive() {
+    var e = ind(); clearInterval(ticker); e.classList.add('ding'); e.style.setProperty('--door', '1');
+    setTimeout(collapse, 260);
   }
   function go() {
-    busy = true; ind().classList.add('hide');
-    elv = makeElv(false); void elv.offsetWidth; elv.classList.add('closed');
+    var e = ind(); busy = true; floor = 1; disp.textContent = floor;
+    e.classList.remove('drag'); e.classList.add('go'); e.style.setProperty('--pull', HOLD + 'px'); e.style.setProperty('--door', '0');
+    APP.style.transition = 'top .3s cubic-bezier(.2,.9,.3,1)'; APP.style.top = HOLD + 'px';
+    clearInterval(ticker); ticker = setInterval(function() { if (floor < 30) floor++; disp.textContent = floor; }, 330);
     savePlace(true);
-    setTimeout(function() { APP.style.transition = 'none'; APP.style.top = '0px'; }, 460);
-    setTimeout(function() { try { sessionStorage.setItem('nt_ptr', String(floor)); } catch (x) {} location.reload(); }, 560);
-  }
-  var resume = null;
-  try { resume = sessionStorage.getItem('nt_ptr'); sessionStorage.removeItem('nt_ptr'); } catch (x) {}
-  if (resume) {
-    floor = parseInt(resume, 10) || 1; busy = true; elv = makeElv(true);
-    var fin = false;
-    window.PTR_RESUME = function() { if (fin) return; fin = true; openElv(); };
-    setTimeout(function() { window.PTR_RESUME(); }, 10000);
+    softRefresh().then(arrive, function() { setTimeout(function() { location.reload(); }, 150); });
   }
   document.addEventListener('touchstart', function(e) {
     var t = e.touches[0];
@@ -5700,7 +5683,6 @@ function softRefresh() {
 })();
 document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'hidden') savePlace(true); });
 function render() {
-  if (window.PTR_RESUME && UI.screen && UI.screen !== 'splash' && !UI.stale) window.PTR_RESUME();
   setTimeout(savePlace, 0);
   document.documentElement.lang = LANG;
   document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';

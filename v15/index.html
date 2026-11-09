@@ -9880,6 +9880,13 @@ function colPayAll(uId) {
   var u = byId(S.units, uId);
   colCells(u).filter(function(k) { return k.x.left > 0 && k.x.state !== 'part'; }).forEach(function(k) { colTick(uId, k.bid, k.ch.id, k.uid); });
 }
+var SEARCH_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>';
+function colSearch(on) {
+  UI.cSearch = !!on;
+  if (!on) UI.cQ = '';
+  render();
+  if (on) { var el = document.getElementById('cq'); if (el) el.focus(); }
+}
 function colToggleU(id) { UI.cOpenU = UI.cOpenU || {}; UI.cOpenU[id] = !UI.cOpenU[id]; render(); }
 function colRow(u) {
   // People mode: one total for everything this person owes, one button to settle it, details on demand.
@@ -10034,8 +10041,9 @@ function renderColCollectIn() {
   }
   if (!people) return h + colBillView();
   var tot = colBookTotals();
-  h += '<div class="sec" style="margin-top:10px"><div class="row between"><span class="muted" style="font-weight:600">' + esc(t('Still to collect', 'باقي للتحصيل')) + '</span>' + colTotal(tot.left) + '</div></div>';
-  h += '<div class="sec" style="margin-top:10px"><input class="input" type="search" placeholder="' + esc(t('Find a name or apartment…', 'ابحث عن اسم أو شقة…')) + '" value="' + esc(UI.cQ || '') + '" oninput="colFilter(this.value)"></div><div id="cstick-a"></div><div class="csticky" id="cstick">';
+  h += '<div class="sec" style="margin-top:10px"><div class="row between"><span class="muted" style="font-weight:600">' + esc(t('Still to collect', 'باقي للتحصيل')) + '</span>' + '<span class="row" style="gap:8px;align-items:center">' + colTotal(tot.left) + '<button class="bico" aria-label="' + esc(t('Search', 'بحث')) + '" onclick="colSearch(true)">' + SEARCH_ICON + '</button></span></div></div>';
+  if (UI.cSearch || UI.cQ) h += '<div class="sec" style="margin-top:8px"><div class="row" style="gap:8px;align-items:center"><input class="input grow" id="cq" type="search" placeholder="' + esc(t('Find a name or apartment…', 'ابحث عن اسم أو شقة…')) + '" value="' + esc(UI.cQ || '') + '" oninput="colFilter(this.value)"><button class="bico" aria-label="' + esc(t('Close search', 'إغلاق البحث')) + '" onclick="colSearch(false)">✕</button></div></div>';
+  h += '<div id="cstick-a"></div><div class="csticky" id="cstick">';
   var bl = blocks(), blk = bl.length > 1 && bl.indexOf(UI.cBlk) >= 0 ? UI.cBlk : null;
   if (bl.length > 1) {
     h += '<div class="chips wrapc"><button class="chip' + (!blk ? ' on' : '') + '" onclick="colGoBlock(null)">' + esc(t('All', 'الكل')) + '</button>';
@@ -10048,12 +10056,14 @@ function renderColCollectIn() {
   h += '</div><div class="clist' + (UI.cSlide ? ' slide-' + UI.cSlide : '') + '">';
   UI.cSlide = null;
   var groups = bl.length > 1 ? (blk ? [blk] : bl) : [null], shown = 0;
+  var paidB = [];
   groups.forEach(function(b) {
     var rows = activeUnits().filter(function(u) { return !b || blockOf(u) === b; }).map(colRow).filter(Boolean);
-    if (!rows.length) return;
+    if (!rows.length) { if (b && !blk) paidB.push(blockLabel(b)); return; }
     shown += rows.length;
     h += '<div class="sec pgroup" style="margin-top:12px">' + (b ? '<div class="pgroup-h">' + esc(blockLabel(b)) + '</div>' : '') + '<div class="cstack">' + rows.join('') + '</div></div>';
   });
+  if (shown && paidB.length) h += '<div class="sec"><p class="muted" style="margin:10px 4px 0">✓ ' + esc(t('Everyone paid in ', 'الجميع دفع في ') + paidB.join(', ')) + '</p></div>';
   if (!shown) h += '<div class="sec"><div class="card empty">' + esc(t('Everyone has paid ✓', 'الجميع سدّد ✓')) + '</div></div>';
   h += '</div>';
   h += '<div class="sec" style="margin-top:12px"><button class="btn ghost block" onclick="UI.cShowPaid=!UI.cShowPaid;render()">' + esc(UI.cShowPaid ? t('Hide who paid', 'إخفاء من دفع') : t('Show who paid too', 'إظهار من دفع أيضاً')) + '</button></div>';

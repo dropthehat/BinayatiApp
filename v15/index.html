@@ -849,6 +849,8 @@ html.standalone #app { position: relative; }
 @keyframes ptrbob { 50% { scale: 1.18; } }
 .colpg.fadein { animation: ntfade .28s ease-out; }
 @keyframes ntfade { from { opacity: 0; } }
+#app.refreshed .sec { animation: ntrefresh .32s ease-out; }
+@keyframes ntrefresh { from { opacity: .3; } }
 .add-h { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--mut); margin: 16px 4px 6px; }
 .add-h:first-of-type { margin-top: 8px; }
 .camt { display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
@@ -5613,7 +5615,8 @@ window.addEventListener('pagehide', function() { savePlace(true); });
 /* Refresh the data in place (no page reload): the open building, and the collector's books if they are loaded. */
 function softRefresh() {
   if (!isCloud() || UI.screen !== 'app' || !S.building) return Promise.reject(new Error('full reload'));
-  return cloudLoadBuilding(S.building.id).then(function() { render(); return UI.cb ? loadColBooks() : null; });
+  var clear = function() { setTimeout(function() { APP.classList.remove('refreshed'); }, 400); };
+  return cloudLoadBuilding(S.building.id).then(function() { APP.classList.add('refreshed'); render(); return UI.cb ? loadColBooks() : null; }).then(clear, function(e) { clear(); throw e; });
 }
 /* Pull down to refresh, for the app saved to the home screen (it has no browser refresh).
    The page follows the finger down and a ring fills in the gap; past the mark it turns green, release spins it. */
@@ -5649,7 +5652,7 @@ function softRefresh() {
     APP.style.transition = 'top .25s cubic-bezier(.2,.9,.3,1)'; APP.style.top = '62px';
     savePlace(true);
     softRefresh().then(function() {
-      setTimeout(function() { e.classList.add('done'); setTimeout(collapse, 500); }, Math.max(0, 750 - (Date.now() - t0)));
+      e.classList.add('done'); setTimeout(collapse, 280);
     }, function() { setTimeout(function() { location.reload(); }, 150); });
   }
   document.addEventListener('touchstart', function(e) {

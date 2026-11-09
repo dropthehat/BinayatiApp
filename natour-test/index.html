@@ -768,6 +768,9 @@ i.due { background: var(--line); } i.got { background: var(--acc); } i.out { bac
 .bico.none { border-color: transparent; }
 .bico.wa { color: #25D366; border-color: color-mix(in srgb, #25D366 45%, var(--line)); }
 .pcard .crow { padding-bottom: 10px; }
+.pcard .crow.tap { cursor: pointer; border-radius: 16px; -webkit-tap-highlight-color: transparent; transition: background .15s; }
+.pcard .crow.tap:active { background: var(--soft); }
+.pcard.open .crow.tap { background: color-mix(in srgb, var(--soft) 60%, transparent); }
 .chips.wrapc { flex-wrap: wrap; overflow: visible; }
 .csticky { position: sticky; top: env(safe-area-inset-top); z-index: 6; background: var(--bg); padding: 6px 0 8px; margin-top: 4px; box-shadow: 0 10px 12px -12px rgba(0,0,0,.5); }
 .clist { min-height: 100vh; }
@@ -9875,6 +9878,7 @@ function colPayAll(uId) {
   var u = byId(S.units, uId);
   colCells(u).filter(function(k) { return k.x.left > 0 && k.x.state !== 'part'; }).forEach(function(k) { colTick(uId, k.bid, k.ch.id, k.uid); });
 }
+function colToggleU(id) { UI.cOpenU = UI.cOpenU || {}; UI.cOpenU[id] = !UI.cOpenU[id]; render(); }
 function colRow(u) {
   // People mode: one total for everything this person owes, one button to settle it, details on demand.
   var ticked = UI.cTicked && UI.cTicked[u.id], cells = colCells(u);
@@ -9884,7 +9888,7 @@ function colRow(u) {
   var paidCells = cells.filter(function(k) { return k.x.state === 'paid'; });
   var open = UI.cOpenU && UI.cOpenU[u.id], settled = !owed.length;
   var q = (unitTag(u) + ' ' + (unitName(u) || '') + ' ' + (u.name_ar || '')).toLowerCase();
-  var h = '<div class="ccard pcard' + (settled ? ' settled' : '') + '" data-q="' + esc(q) + '"><div class="crow"><div class="ucode">' + esc(unitTag(u)) + '</div><div class="grow"><div class="uname">' + esc(unitName(u) || unitTag(u)) + '</div><small class="muted">' + esc(settled ? t('All paid ✓', 'سدّد الكل ✓') : t(owed.length + (owed.length === 1 ? ' bill' : ' bills') + ' to pay', owed.length + ' فواتير')) + '</small></div>';
+  var h = '<div class="ccard pcard' + (settled ? ' settled' : '') + (open ? ' open' : '') + '" data-q="' + esc(q) + '"><div class="crow tap" role="button" tabindex="0" aria-expanded="' + !!open + '" onclick="colToggleU(' + jsArg(u.id) + ')"><div class="ucode">' + esc(unitTag(u)) + '</div><div class="grow"><div class="uname">' + esc(unitName(u) || unitTag(u)) + '</div><small class="muted">' + esc(settled ? t('All paid ✓', 'سدّد الكل ✓') : t(owed.length + (owed.length === 1 ? ' bill' : ' bills') + ' to pay', owed.length + ' فواتير')) + '</small></div>';
   if (!settled) h += '<div class="ptotal">' + colTotal(left) + '</div>';
   h += '</div>';
   h += '<div class="row" style="gap:8px;padding:0 12px 12px;align-items:center">';
@@ -9892,7 +9896,7 @@ function colRow(u) {
   else h += '<span class="grow" style="color:var(--ok);font-weight:700">✓ ' + esc(t('Nothing left to pay', 'لا شيء متبقٍ')) + '</span>';
   if (u.phone) h += '<button class="bico wa" aria-label="' + esc(t('WhatsApp status', 'الوضع على واتساب')) + '" onclick="openSheet(\'remind\',{status:true,u:' + jsArg(u.id) + '})">' + WA_ICON + '</button>';
 
-  h += '<button class="bico" aria-expanded="' + !!open + '" aria-label="' + esc(t('Details', 'التفاصيل')) + '" onclick="UI.cOpenU=UI.cOpenU||{};UI.cOpenU[' + jsArg(u.id) + ']=!UI.cOpenU[' + jsArg(u.id) + '];render()">' + (open ? '▴' : '▾') + '</button></div>';
+  h += '</div>';
   if (open) {
     var shown = cells.filter(function(k) { return k.x.due > 0 && (UI.cShowPaid || k.x.left > 0 || ticked || k.x.state === 'paid'); });
     h += '<div class="crow-ticks">';
